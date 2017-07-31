@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { NavigationEnd } from '@angular/router';
 import { Http } from '@angular/http';
-import { appConfig } from '../../../../../app-config';
+import { appConfig } from '../../../../../../time-common/config/app-config';
 
 declare const ga: Function;
 

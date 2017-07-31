@@ -6,12 +6,15 @@
       "es6",
       "dom"
     ],
+    "types": [ "node" ],
+    "typeRoots": [ "./node_modules/@types" ],
     "noImplicitAny": false,
     "sourceMap": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "moduleResolution": "node",
-    "noUnusedLocals": false
+    "noUnusedLocals": false,
+    "allowJs": true
   },
   "compileOnSave": false,
   "exclude": [

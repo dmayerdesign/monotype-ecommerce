@@ -2,10 +2,8 @@ import { Component, OnInit, Input } from '@angular/core';
 import { Http } from '@angular/http';
 import { Subscription } from 'rxjs';
 
+import { appConfig } from '../../../../../../../time-common/config/app-config';
 import { UtilService } from '../../services';
-import { User } from '../../../../../../common/types';
-
-import { appConfig as app_config } from '../../../../../../app-config';
 
 declare const google: any;
 declare const navigator: any;
@@ -13,14 +11,13 @@ declare let window: any;
 
 @Component({
 	selector: 'site-locator',
-	template: require('./site-locator.component.html'),
-	styles: [require('./site-locator.component.scss')],
+	templateUrl: './site-locator.component.html',
+	styleUrls: ['./site-locator.component.scss'],
 })
 export class SiteLocatorComponent implements OnInit {
 
 	@Input() initialLatLng: { lat: number, lng: number };
-	private tutors: User[];
-	private tutors$: Subscription; 
+
 	public filter: {
 		filterKey: string;
 		filterValue: string;
@@ -40,7 +37,7 @@ export class SiteLocatorComponent implements OnInit {
 			/*****************************
 			 * Get these from the database
 			 ****************************/
-			const markers = app_config.locator_map_markers;
+			const markers = appConfig.locator_map_markers;
 			let bounds = new google.maps.LatLngBounds();
 	        
 	    // Display multiple markers on a map
@@ -145,7 +142,7 @@ export class SiteLocatorComponent implements OnInit {
 
 		let theScript = document.createElement("script");
 		theScript.id = "mapsApiScript"
-		theScript.src = `https://maps.googleapis.com/maps/api/js?key=${app_config.google_maps_api_key}&libraries=places&callback=initGoogleMapsSiteLocator`;
+		theScript.src = `https://maps.googleapis.com/maps/api/js?key=${appConfig.google_maps_api_key}&libraries=places&callback=initGoogleMapsSiteLocator`;
 		document.body.appendChild(theScript);
 
 	}
