@@ -1,0 +1,9 @@
+time-admin-deploy
+time-client-deploy
+dist
+node_modules/
+/_*.txt
+.DS_Store
+.sonar
+.env
+.vscode
