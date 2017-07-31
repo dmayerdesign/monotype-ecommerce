@@ -4,7 +4,6 @@
     "target": "es5",
     "lib": [
       "es6",
-      "es2016",
       "dom"
     ],
     "noImplicitAny": false,
@@ -16,7 +15,6 @@
   },
   "compileOnSave": false,
   "exclude": [
-    "node_modules",
-    "source/client"
+    "node_modules"
   ]
 }

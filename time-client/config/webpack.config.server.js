@@ -8,7 +8,7 @@ const version = require('../package.json').version;
 module.exports = {
     name: 'server',
     target: 'node',
-    entry: path.resolve(__dirname, '../source/server/bootstrap.ts'),
+    entry: path.resolve(__dirname, '../src/server/bootstrap.ts'),
     output: {
         path: path.resolve(__dirname, '../dist/'),
         filename: 'server.js',
@@ -26,7 +26,7 @@ module.exports = {
           ],
           exclude: /node_modules/,
           include: [
-            path.resolve(__dirname, '../source/server'),
+            path.resolve(__dirname, '../src/server'),
           ],
         },
         {
@@ -36,7 +36,7 @@ module.exports = {
           ],
           exclude: /node_modules/,
           include: [
-            path.resolve(__dirname, '../source/server'),
+            path.resolve(__dirname, '../src/server'),
           ],
         },
         {test: /\.pug$/, loader: 'pug-loader'},
