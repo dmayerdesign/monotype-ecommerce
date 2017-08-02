@@ -27,9 +27,9 @@ import {
 	styles: [require('./modal.component.scss')],
 })
 export class ModalComponent implements OnInit {
-	private isShowing: boolean;
+	public isShowing: boolean;
 	private isTransitioning: boolean;
-	private fadeIn: boolean;
+	public fadeIn: boolean;
 	private modalInner: HTMLElement;
 	@Input() closeModalCallback: (...args: any[]) => any;
 	@Input() title: string;

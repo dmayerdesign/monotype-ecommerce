@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { MongoDBClient } from '../utils/mongodb/client';
 import { User } from '../models/user';
-import TYPES from '../constant/types';
+import TYPES from '../constants/inversify/types';
 
 @injectable()
 export class UserService {

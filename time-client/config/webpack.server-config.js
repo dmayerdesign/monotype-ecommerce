@@ -8,7 +8,7 @@ const version = require('../package.json').version;
 module.exports = {
     name: 'server',
     target: 'node',
-    entry: path.resolve(__dirname, '../src/server/bootstrap.ts'),
+    entry: path.resolve(__dirname, '../src/server/server.ts'),
     output: {
         path: path.resolve(__dirname, '../dist/'),
         filename: 'server.js',

@@ -1,6 +1,6 @@
 import { expect } from 'jasmine-node';
-import { UserController } from '../../controller/user';
-import { UserService } from '../../service/user';
+import { UserController } from '../../controllers/user.controller';
+import { UserService } from '../../services/user.service';
 
 class MongoDBClientMock {
   public db;

@@ -4,8 +4,8 @@ import {
 import { injectable, inject } from 'inversify';
 import { Request } from 'express';
 import { User } from '../models/user';
-import { UserService } from '../service/user';
-import TYPES from '../constant/types';
+import { UserService } from '../services/user.service';
+import TYPES from '../constants/inversify/types';
 
 @injectable()
 @controller('/user')

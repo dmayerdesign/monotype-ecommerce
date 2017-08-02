@@ -12,6 +12,7 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 import { NgModel } from '@angular/forms';
+import { IMyOptions, MyDatePicker } from 'mydatepicker';
 
 import { UtilService } from '../../services';
 
@@ -20,17 +21,24 @@ import { UtilService } from '../../services';
   templateUrl: './form-field.component.html',
 })
 export class FormFieldComponent implements OnInit, AfterViewInit, OnChanges {
-  private value: any;
-  private valid: boolean;
-  private invalid: any[] = [];
-  private showingValidation: string;
-  private describedby: string;
-  private tooltip: string;
-  private pristine: boolean = true;
-  private isTimeOfDay: boolean;
-  private isAfterViewInit: boolean;
-  private prefilled: boolean;
-  private selectOptionDefault: {name: string; value?: any} = {name: '', value: undefined};
+  value: any;
+  valid: boolean;
+  invalid: any[] = [];
+  showingValidation: string;
+  describedby: string;
+  tooltip: string;
+  pristine: boolean = true;
+  isDatepicker: boolean;
+  isTimeOfDay: boolean;
+  datePickerOptions: IMyOptions = {
+    dateFormat: "mm/dd/yyyy",
+    markCurrentDay: true,
+  };
+  mdpNativeElement: ElementRef;
+  mdpInput: HTMLInputElement;
+  isAfterViewInit: boolean;
+  prefilled: boolean;
+  selectOptionDefault: {name: string; value?: any} = {name: '', value: undefined};
 
   @Input() isInput: boolean = true;
   @Input() isSelect: boolean;
@@ -68,18 +76,30 @@ export class FormFieldComponent implements OnInit, AfterViewInit, OnChanges {
 
   @Output() modelChange: EventEmitter<string> = new EventEmitter<string>();
   @Output() validate: EventEmitter<string[]> = new EventEmitter<string[]>();
-
+  
   constructor(
     private cd: ChangeDetectorRef,
     private util: UtilService,
   ) { }
 
   ngOnInit() {
-    if (this.isSelect || this.isAutocomplete) this.isInput = false;
+    if (this.isSelect || this.isDatepicker || this.isAutocomplete) this.isInput = false;
     if (this.validators.indexOf("date") > -1) {
       this.maxlength = 10;
     } else {
       this.maxlength = 5000;
+    }
+    if (this.type === "datepicker") {
+      let date = new Date();
+      this.isInput = false;
+      this.isDatepicker = true;
+      if (this.disablePast) {
+        this.datePickerOptions.disableUntil = {
+          day: date.getDate() - 1,
+          month: date.getMonth() + 1,
+          year: date.getFullYear(),
+        };
+      }
     }
     if (this.type === 'timeOfDay') {
       this.isInput = false;
@@ -90,6 +110,7 @@ export class FormFieldComponent implements OnInit, AfterViewInit, OnChanges {
     if (this.isSelect) {
       this.selectOptionDefault.name = this.selectOptionDefaultText || 'Select ' + this.label.toLowerCase();
       if (!this.value) this.value = this.selectOptionDefault.value;
+      // this.cd.detectChanges();
     }
     if (this.type === "textarea") this.isInput = false;
   }
@@ -119,6 +140,10 @@ export class FormFieldComponent implements OnInit, AfterViewInit, OnChanges {
 
   onChange(value: any) {
     this.value = value;
+
+    // if (this.type === "datepicker" && this.isAfterViewInit) {
+    //   this.updateDatepickerValue();
+    // }
 
     this.modelChange.emit(this.value);
     this.doValidation();
@@ -262,9 +287,10 @@ export class FormFieldComponent implements OnInit, AfterViewInit, OnChanges {
     this.setValidationVisible(this.invalid[0]);
   }
 
-  onBlur(value?: any) {
+  onBlur(value?: any, mdpReason?: 1|2) {
     this.doValidation();
-    if (this.value) this.pristine = false;
+    if (this.value && this.type !== 'datepicker') this.pristine = false;
+    if (this.value && this.value.value && this.type === 'datepicker' && mdpReason === 2) this.pristine = false;
   }
 
   setValidationVisible(validation?: 'required'|'email'|'date'|'password'|'confirmPassword'|'username'|'sanitary'|'zip'|'maxLength'|'interval') {
@@ -280,4 +306,10 @@ export class FormFieldComponent implements OnInit, AfterViewInit, OnChanges {
   trackByIndex(index: number, value: number) {
     return index;
   }
+
+  // updateDatepickerValue() {
+  //   this.mdpNativeElement = this.datePicker.elem.nativeElement;
+  //   this.mdpInput = <HTMLInputElement>this.mdpNativeElement.querySelector("input");
+  //   this.textValue = this.mdpInput.value;
+  // }
 }

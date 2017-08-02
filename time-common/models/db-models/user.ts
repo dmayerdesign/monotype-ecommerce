@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import * as passportLocalMongoose from 'passport-local-mongoose';
-import authConfig from '../../config/auth-config';
+import authConfig from '../../../time-client/src/server/config/auth-config';
 
 const usernameField = authConfig.MONGOOSE_USERNAME_FIELD;
 const keylen = authConfig.PASSWORD_SALT_KEYLEN;

@@ -10,6 +10,7 @@ import { ToastModule } from 'ng2-toastr/ng2-toastr';
 import { NgUploaderModule } from 'ngx-uploader';
 import { NguiAutoCompleteModule } from '@ngui/auto-complete';
 import { ClickOutsideModule } from 'ng-click-outside';
+import { MyDatePickerModule } from 'mydatepicker';
 
 /**
  * COMPONENTS
@@ -18,6 +19,7 @@ import {
   FormFieldComponent,
   SiteLocatorComponent,
   ModalComponent,
+  TooltipComponent,
 } from './components';
 
 /**
@@ -49,6 +51,7 @@ import {
     NgUploaderModule,
     NguiAutoCompleteModule,
     ClickOutsideModule,
+    MyDatePickerModule,
   ],
   declarations: [
     FormFieldComponent,
@@ -56,11 +59,13 @@ import {
     ModalComponent,
     FocusOnDirective,
     TruncatePipe,
+    TooltipComponent,
   ],
   exports: [
     FormFieldComponent,
     SiteLocatorComponent,
     ModalComponent,
+    TooltipComponent,
     FocusOnDirective,
     ClickOutsideModule,
     NgUploaderModule,

@@ -12,8 +12,8 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 	styles: [require('./tooltip.component.scss')],
 })
 export class TooltipComponent {
-	private isShowing: boolean;
-	private fadeIn: boolean;
+	public isShowing: boolean;
+	public fadeIn: boolean;
 	@Output() showChange = new EventEmitter<boolean>();
 
 	@Input() get show(): boolean {
