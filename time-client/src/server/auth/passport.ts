@@ -1,22 +1,21 @@
-const passport = require('passport');
-// const LocalStrategy = require('passport-local').Strategy;
-const FacebookStrategy = require('passport-facebook').Strategy;
-require('dotenv').config({silent: true});
-import { user as User } from '../../../../time-common/models';
+import * as passport from 'passport';
+import * as passportFacebook from 'passport-facebook';
+import User from '../../../../time-common/models/db-models/user';
 
-function passportConfig() {
+const FacebookStrategy = passportFacebook.Strategy;
+
+export function passportConfig() {
 
   /**
    * Configure local strategy
    */
-  // passport.use(new LocalStrategy(User.authenticate()));
-  passport.use(User.createStrategy());
+  passport.use((<any>User).createStrategy());
 
   /**
    * Configure session
    */
-  passport.serializeUser(User.serializeUser());
-  passport.deserializeUser(User.deserializeUser());
+  passport.serializeUser((<any>User).serializeUser());
+  passport.deserializeUser((<any>User).deserializeUser());
 
   /**
    * Get Facebook profile for signup
@@ -57,7 +56,7 @@ function passportConfig() {
 /*
  * Login Required middleware.
  */
-const isAuthenticated = (req, res, next) => {
+export const isAuthenticated = (req, res, next) => {
   if (req.isAuthenticated() && req.user.emailIsVerified) {
     return next();
   }
@@ -73,7 +72,7 @@ const isAuthenticated = (req, res, next) => {
 /*
  * Check admin role
  */
-const isAuthorized = (req, res, next) => {
+export const isAuthorized = (req, res, next) => {
   if (req.isAuthenticated()) {
     if (req.user.adminKey === process.env.ADMIN_KEY) {
       return next();
@@ -88,5 +87,3 @@ const isAuthorized = (req, res, next) => {
     console.log("User not authenticated");
   }
 };
-
-export { passportConfig, isAuthenticated, isAuthorized }

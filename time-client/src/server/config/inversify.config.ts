@@ -7,7 +7,8 @@ import * as helmet from 'helmet';
 import TYPES from '../constants/inversify/types';
 import TAGS from '../constants/inversify/tags';
 
-import { FooController } from '../controllers/foo.controller';
+import { HomeController, UserController, ProductsController } from '../controllers';
+import { ProductService, UserService } from '../services';
 
 // load everything needed to the Container
 let container = new Container();
@@ -15,14 +16,13 @@ let container = new Container();
 if ((<any>process.env).ENVIRONMENT === 'DEV') {
   let logger = makeLoggerMiddleware();
   container.applyMiddleware(logger);
-  require('dotenv').config({silent: true});
+  // require('dotenv').config({silent: true});
 }
 
-container.bind<interfaces.Controller>(TYPE.Controller).to(FooController).whenTargetNamed('FooController');
-
-// container.bind<interfaces.Controller>(TYPE.Controller).to(HomeController).whenTargetNamed(TAGS.HomeController);
-// container.bind<interfaces.Controller>(TYPE.Controller).to(UserController).whenTargetNamed(TAGS.UserController);
-// container.bind<DBClient>(TYPES.DBClient).to(DBClient);
-// container.bind<UserService>(TYPES.UserService).to(UserService);
+container.bind<UserService>(TYPES.UserService).to(UserService);
+container.bind<ProductService>(TYPES.ProductService).to(ProductService);
+container.bind<interfaces.Controller>(TYPE.Controller).to(HomeController).whenTargetNamed(TAGS.HomeController);
+container.bind<interfaces.Controller>(TYPE.Controller).to(UserController).whenTargetNamed(TAGS.UserController);
+container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsController).whenTargetNamed(TAGS.ProductsController);
 
 export { container }

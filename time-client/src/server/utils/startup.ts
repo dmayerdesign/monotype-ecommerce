@@ -1,13 +1,13 @@
-import rp from 'request-promise';
-import { timer as Timer } from '../../../../time-common/models';
+import * as rp from 'request-promise';
+import { Timer } from '../../../../time-common/models';
 
 export function initStartupTasks() {
 
 	/**
-   * Keep server from going to sleep
-   */
+     * Keep server from going to sleep
+     */
 	setInterval(function() {
-		rp({uri: "http://" + process.env.DOMAIN + "/ping"});
+		rp({uri: process.env.CLIENT_URL + "/ping"});
 		// console.log("pinged the server");
 	}, 300000);
 
@@ -36,7 +36,7 @@ export function initStartupTasks() {
 
 				rp({
 					method: timer.method,
-					uri: "http://" + process.env.DOMAIN + timer.endpoint,
+					uri: process.env.CLIENT_URL + timer.endpoint,
 					json: true,
 					body: data,
 				});

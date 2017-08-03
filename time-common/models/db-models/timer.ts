@@ -1,6 +1,6 @@
-import mongoose from 'mongoose';
+import { Schema, Model, model } from 'mongoose';
 
-export const timerSchema = new mongoose.Schema({
+export const timerSchema = new Schema({
 	type: String,
 	endpoint: String,
 	method: String,
@@ -9,4 +9,4 @@ export const timerSchema = new mongoose.Schema({
 	data: {},
 }, { timestamps: true });
 
-export const timer = mongoose.model('Timer', timerSchema);
+export const Timer: Model<any> = model('Timer', timerSchema);

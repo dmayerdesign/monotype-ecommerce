@@ -26,22 +26,23 @@ module.exports = {
           ],
           exclude: /node_modules/,
           include: [
+            path.resolve(__dirname, '../../time-common'),
             path.resolve(__dirname, '../src/server'),
           ],
         },
-        {
-          test: /\.js$/,
-          use: [
-            'babel-loader',
-          ],
-          exclude: /node_modules/,
-          include: [
-            path.resolve(__dirname, '../src/server'),
-          ],
-        },
-        {test: /\.pug$/, loader: 'pug-loader'},
-        {test: /\.html$/, loader: 'raw-loader'},
-        { test:  /\.json$/, loader: 'json-loader' },
+        // {
+        //   test: /\.js$/,
+        //   use: [
+        //     'babel-loader',
+        //   ],
+        //   exclude: /node_modules/,
+        //   include: [
+        //     path.resolve(__dirname, '../src/server'),
+        //   ],
+        // },
+        {test: /\.pug$/, use: 'pug-loader'},
+        {test: /\.html$/, use: 'raw-loader'},
+        {test:  /\.json$/, use: 'json-loader'},
       ],
       exprContextCritical: false,
     },

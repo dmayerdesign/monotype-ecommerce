@@ -1,6 +1,6 @@
-import mongoose from 'mongoose';
+import { Schema, Model, model } from 'mongoose';
 
-export const messageSchema = new mongoose.Schema({
+export const messageSchema: Schema = new Schema({
 	author: {
 		userId: String,
 		firstName: String,
@@ -15,4 +15,4 @@ export const messageSchema = new mongoose.Schema({
 	read: Boolean,
 }, { timestamps: true });
 
-export const message = mongoose.model('Message', messageSchema);
+export const Message: Model<any> = model('Message', messageSchema);

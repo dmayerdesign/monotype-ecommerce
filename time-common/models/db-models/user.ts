@@ -1,15 +1,13 @@
-import mongoose from 'mongoose';
-import * as passportLocalMongoose from 'passport-local-mongoose';
+import { Schema, Model, model } from 'mongoose';
 import authConfig from '../../../time-client/src/server/config/auth-config';
+import { IUser } from '../interfaces';
+import { addressSchema } from './';
+const passportLocalMongoose = require('passport-local-mongoose');
 
 const usernameField = authConfig.MONGOOSE_USERNAME_FIELD;
 const keylen = authConfig.PASSWORD_SALT_KEYLEN;
 
-export const addressSchema = new mongoose.Schema({
-  street1: String,
-});
-
-export const userSchema = new mongoose.Schema({
+export const userSchema: Schema = new Schema({
   email: { type: String, required: true },
   emailIsVerified: Boolean,
   emailVerificationToken: String,
@@ -35,8 +33,30 @@ export const userSchema = new mongoose.Schema({
     bio: String,
   },
   facebookId: String,
+  googleId: String,
+
+  orders: [String],
+  stripeCustomerId: String,
+
+  cart: [{
+    SKU: String,
+    quantity: Number,
+    unitCost: Number,
+    totalCost: Number,
+  }],
 }, { timestamps: true });
+
+// export class UserModel<T> extends Model<T> {
+//   createStrategy: () => any;
+//   serializeUser: () => any;
+//   deserializeUser: () => any;
+
+//   constructor() {
+//     super();
+//   }
+// }
 
 userSchema.plugin(passportLocalMongoose, { usernameField, keylen }); // Takes care of password salting/hashing
 
-export const user = mongoose.model('User', userSchema);
+export const User: Model<IUser> = model('User', userSchema);
+export default model('User', userSchema);

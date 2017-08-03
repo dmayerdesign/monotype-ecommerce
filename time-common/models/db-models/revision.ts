@@ -1,10 +1,10 @@
-import mongoose from 'mongoose';
+import { Schema, Model, model } from 'mongoose';
 
-export const revisionSchema = new mongoose.Schema({
-	id: mongoose.Schema.Types.ObjectId,
+export const revisionSchema = new Schema({
+	id: Schema.Types.ObjectId,
 	field: String,
 	value: {},
 	meta: {},
 }, { timestamps: true });
 
-export const revision = mongoose.model('Revision', revisionSchema);
+export const Revision: Model<any> = model('Revision', revisionSchema);

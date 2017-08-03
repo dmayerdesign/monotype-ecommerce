@@ -3,12 +3,12 @@ import { injectable } from 'inversify';
 import { Request, Response } from 'express';
 
 @injectable()
-@controller('/')
+@controller('/api/v1/foo')
 export class HomeController {
 
-  // @httpGet('/')
-  // public get(@response() res: Response): any {
-  //   res.sendFile('index.html', { root: 'dist/public' });
-  // }
+  @httpGet('/')
+  public get(@response() res: Response): any {
+    res.json({works: true})
+  }
 
 }

@@ -1,3 +1,5 @@
+require('dotenv').config({silent: true});
+
 import 'reflect-metadata';
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
@@ -12,7 +14,8 @@ import * as passport from 'passport';
 import { container } from './config/inversify.config';
 import { passportConfig } from './auth/passport';
 import { mongoConnection } from './db/mongo.connection';
-import { CONSTANTS } from './constants/constants';
+import CONSTANTS from './constants/constants';
+import { initStartupTasks } from './utils/startup';
 
 const MongoStore = require('connect-mongo')(session);
 
@@ -27,7 +30,6 @@ function serverConfig(app) {
   // require('express-ws')(app);
 
   app.set('port', CONSTANTS.PORT);
-
   app.use(express.static('dist/public'));
   app.use('/scripts', express.static('node_modules'));
   app.use('/static', express.static('dist/public/static'));
@@ -52,6 +54,7 @@ function serverConfig(app) {
   app.use(passport.session());
 
   passportConfig();
+  initStartupTasks();
 
   if (process.env.ENVIRONMENT !== "DEV") {
     app.get('*.js', (req, res, next) => {
@@ -65,7 +68,7 @@ function serverConfig(app) {
     res.sendStatus(200);
   });
 
-  app.get('/(^[^foo].*)', (req, res) => {
+  app.get('/(^[^api/].*)', (req, res) => {
     res.sendFile('index.html', { root: 'dist/public' });
   });
 }
@@ -81,13 +84,5 @@ mongoConnection.connect(() => {
     .build()
     .listen(CONSTANTS.PORT, () => console.log(`Server started on port ${CONSTANTS.PORT} :)`));
 });
-
-
-/**
- * Start the app
- */
-// const app = server.build();
-// app.listen(app.get('port'));
-// 
 
 exports = module.exports = server;

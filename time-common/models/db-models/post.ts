@@ -1,6 +1,6 @@
-import mongoose from 'mongoose';
+import { Schema, Model, model } from 'mongoose';
 
-export const linkEmbedSchema = new mongoose.Schema({
+export const linkEmbedSchema = new Schema({
 	url: String,
 	type: String,
 	thumbnail_url: String,
@@ -9,7 +9,7 @@ export const linkEmbedSchema = new mongoose.Schema({
 	provider_url: String,
 });
 
-export const postSchema = new mongoose.Schema({
+export const postSchema = new Schema({
 	author: {
 		userId: String,
 		firstName: String,
@@ -46,4 +46,4 @@ export const postSchema = new mongoose.Schema({
 	}
 }, { timestamps: true });
 
-export const post = mongoose.model('Post', postSchema);
+export const Post: Model<any> = model('Post', postSchema);

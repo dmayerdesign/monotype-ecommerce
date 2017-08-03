@@ -3,7 +3,7 @@ import {
 } from 'inversify-express-utils';
 import { injectable, inject } from 'inversify';
 import { Request } from 'express';
-import { User } from '../models/user';
+import { IUser } from '../../../../time-common/models/interfaces/user';
 import { UserService } from '../services/user.service';
 import TYPES from '../constants/inversify/types';
 
@@ -14,22 +14,17 @@ export class UserController {
   constructor( @inject(TYPES.UserService) private userService: UserService) { }
 
   @httpGet('/')
-  public getUsers(): Promise<User[]> {
-    return this.userService.getUsers();
-  }
-
-  @httpGet('/:id')
-  public getUser(request: Request): Promise<User> {
+  public getUser(request: Request): Promise<IUser> {
     return this.userService.getUser(request.params.id);
   }
 
   @httpPost('/')
-  public newUser(request: Request): Promise<User> {
+  public newUser(request: Request): Promise<IUser> {
     return this.userService.newUser(request.body);
   }
 
   @httpPut('/:id')
-  public updateUser(request: Request): Promise<User> {
+  public updateUser(request: Request): Promise<IUser> {
     return this.userService.updateUser(request.params.id, request.body);
   }
 
