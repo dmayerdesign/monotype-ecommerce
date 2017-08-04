@@ -1,6 +1,6 @@
 import * as passport from 'passport';
 import * as passportFacebook from 'passport-facebook';
-import User from '../../../../time-common/models/db-models/user';
+import { User } from '../models/user';
 
 const FacebookStrategy = passportFacebook.Strategy;
 
@@ -9,13 +9,13 @@ export function passportConfig() {
   /**
    * Configure local strategy
    */
-  passport.use((<any>User).createStrategy());
+  passport.use(User.createStrategy());
 
   /**
    * Configure session
    */
-  passport.serializeUser((<any>User).serializeUser());
-  passport.deserializeUser((<any>User).deserializeUser());
+  passport.serializeUser(User.serializeUser());
+  passport.deserializeUser(User.deserializeUser());
 
   /**
    * Get Facebook profile for signup

@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
-import { IUser } from '../../../../time-common/models/interfaces';
-import { User } from '../../../../time-common/models/db-models/user';
+import { IUser } from '../models/interfaces';
+import { User } from '../models';
 import TYPES from '../constants/inversify/types';
 
 @injectable()

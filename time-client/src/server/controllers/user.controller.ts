@@ -3,7 +3,7 @@ import {
 } from 'inversify-express-utils';
 import { injectable, inject } from 'inversify';
 import { Request } from 'express';
-import { IUser } from '../../../../time-common/models/interfaces/user';
+import { IUser } from '../models/interfaces/user';
 import { UserService } from '../services/user.service';
 import TYPES from '../constants/inversify/types';
 

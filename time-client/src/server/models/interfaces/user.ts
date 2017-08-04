@@ -1,7 +1,7 @@
-import { Document } from 'mongoose';
-import { IAddress } from './';
+import { Document, PassportLocalDocument, PassportLocalModel, model } from 'mongoose';
+import { IAddress } from '../../../../../time-common/models/interfaces';
 
-export interface IUser extends Document {
+export interface IUser extends PassportLocalDocument {
   email: string;
   emailIsVerified?: boolean;
   emailVerificationToken?: string;

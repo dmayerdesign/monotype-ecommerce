@@ -1,8 +1,9 @@
-import { Schema, Model, model } from 'mongoose';
-import authConfig from '../../../time-client/src/server/config/auth-config';
-import { IUser } from '../interfaces';
-import { addressSchema } from './';
-const passportLocalMongoose = require('passport-local-mongoose');
+import * as mongoose from 'mongoose';
+import * as passportLocalMongoose from 'passport-local-mongoose';
+import { Schema, Model, PassportLocalModel, PassportLocalSchema, PassportLocalDocument, model } from 'mongoose';
+import authConfig from '../config/auth-config';
+import { IUser } from './interfaces';
+import { addressSchema } from '../../../../time-common/models/db-models';
 
 const usernameField = authConfig.MONGOOSE_USERNAME_FIELD;
 const keylen = authConfig.PASSWORD_SALT_KEYLEN;
@@ -46,17 +47,6 @@ export const userSchema: Schema = new Schema({
   }],
 }, { timestamps: true });
 
-// export class UserModel<T> extends Model<T> {
-//   createStrategy: () => any;
-//   serializeUser: () => any;
-//   deserializeUser: () => any;
-
-//   constructor() {
-//     super();
-//   }
-// }
-
 userSchema.plugin(passportLocalMongoose, { usernameField, keylen }); // Takes care of password salting/hashing
 
-export const User: Model<IUser> = model('User', userSchema);
-export default model('User', userSchema);
+export const User: PassportLocalModel<IUser> = (<PassportLocalModel<IUser>>model<IUser>('User', userSchema));
