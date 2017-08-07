@@ -17,7 +17,7 @@ export class ProductsController implements interfaces.Controller {
     @httpGet('/')
     private get(
         @queryParam('query') query: any,
-        @queryParam('page') start: number,
+        @queryParam('page') page: number,
     ): void {
         this.productService.get(query, page);
     }
