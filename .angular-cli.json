@@ -1,12 +1,12 @@
 {
-  "$schema": "../node_modules/@angular/cli/lib/config/schema.json",
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "project": {
     "name": "time-client"
   },
   "apps": [
     {
-      "root": "./src/client",
-      "outDir": "./dist/public",
+      "root": "./time-client/src/client",
+      "outDir": "./time-client/dist/public",
       "assets": [
         "assets",
         "favicon.ico"
@@ -31,26 +31,26 @@
   ],
   "e2e": {
     "protractor": {
-      "config": "./protractor.conf.js"
+      "config": "./time-client/protractor.conf.js"
     }
   },
   "lint": [
     {
-      "project": "src/client/tsconfig.app.json",
+      "project": "time-client/src/client/tsconfig.app.json",
       "exclude": "**/node_modules/**"
     },
     {
-      "project": "src/client/tsconfig.spec.json",
+      "project": "time-client/src/client/tsconfig.spec.json",
       "exclude": "**/node_modules/**"
     },
     {
-      "project": "e2e/tsconfig.e2e.json",
+      "project": "time-client/e2e/tsconfig.e2e.json",
       "exclude": "**/node_modules/**"
     }
   ],
   "test": {
     "karma": {
-      "config": "./karma.conf.js"
+      "config": "./time-client/karma.conf.js"
     }
   },
   "defaults": {

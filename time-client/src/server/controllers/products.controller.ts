@@ -15,28 +15,28 @@ export class ProductsController implements interfaces.Controller {
     constructor( @inject(TYPES.ProductService) private productService: ProductService ) {}
 
     @httpGet('/')
-    private index(req: express.Request, res: express.Response, next: express.NextFunction): Promise<IProduct[]> {
-        return this.productService.get(req.query.id);
+    private get(
+        @queryParam('query') query: any,
+        @queryParam('page') start: number,
+    ): void {
+        this.productService.get(query, page);
     }
 
-    @httpGet('/')
-    private list(@queryParam('start') start: number, @queryParam('count') count: number): Promise<IProduct[]> {
-        return this.productService.get({});
-    }
-
-    @httpGet('/')
-    private async create(@response() res: express.Response) {
-        try {
-            // await this.fooService.create(req.body)
-            res.json({ Hello: true });
-        } catch (err) {
-            res.status(400).json({ error: err.message })
-        }
+    @httpGet('/test')
+    private test(
+        @response() res: express.Response,
+    ): void {
+        this.productService.test()
+            .then(data => res.status(201).json(data))
+            .catch(data => res.status(400).json({error: true}))
     }
 
     @httpDelete('/:id')
-    private delete(@requestParam("id") id: string, @response() res: express.Response): Promise<any> {
-        return this.productService.deleteOne(id)
+    private delete(
+        @requestParam("id") id: string,
+        @response() res: express.Response,
+    ): void {
+        this.productService.deleteOne(id)
             .then(() => res.sendStatus(204))
             .catch((err) => {
                 res.status(400).json({ error: err.message })

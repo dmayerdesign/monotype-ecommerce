@@ -1,9 +1,17 @@
 import { inject, injectable } from 'inversify';
-import { IProduct } from '../../../../time-common/models/interfaces';
-import { Product } from '../../../../time-common/models/db-models';
+import { BasicCrudService } from '@time/api-services';
+import { IProduct } from '@time/interfaces';
+import { Product } from '@time/models';
+import { CONSTANTS } from '@time/constants';
 
 @injectable()
 export class ProductService {
+
+    public test(): Promise<any> {
+        return new Promise<any>((resolve) => {
+            resolve({ test: "success" });
+        });
+    }
 
     public getOne(id: string): Promise<IProduct> {
         return new Promise<IProduct>((resolve, reject) => {
@@ -14,12 +22,14 @@ export class ProductService {
         });
     }
 
-    public get(query: any): Promise<IProduct[]> {
+    public get(query: any, page?: number): Promise<IProduct[]> {
         return new Promise<IProduct[]>((resolve, reject) => {
             Product.find(query, (error, data: IProduct[]): void => {
                 if (error) reject(error);
                 else resolve(data);
-            });
+            })
+            .skip((page - 1) * CONSTANTS.productsPerPage)
+            .limit(CONSTANTS.productsPerPage);
         });
     }
 

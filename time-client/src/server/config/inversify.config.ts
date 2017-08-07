@@ -16,7 +16,6 @@ let container = new Container();
 if ((<any>process.env).ENVIRONMENT === 'DEV') {
   let logger = makeLoggerMiddleware();
   container.applyMiddleware(logger);
-  // require('dotenv').config({silent: true});
 }
 
 container.bind<UserService>(TYPES.UserService).to(UserService);

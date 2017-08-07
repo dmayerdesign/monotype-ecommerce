@@ -1,4 +1,4 @@
-require('dotenv').config({silent: true});
+require('dotenv').config();
 
 import 'reflect-metadata';
 import * as express from 'express';
@@ -27,8 +27,6 @@ function serverErrorConfig(app) {
 }
 
 function serverConfig(app) {
-  // require('express-ws')(app);
-
   app.set('port', CONSTANTS.PORT);
   app.use(express.static('dist/public'));
   app.use('/scripts', express.static('node_modules'));
@@ -63,10 +61,6 @@ function serverConfig(app) {
       next();
     });
   }
-
-  app.get('/ping', (req, res) => {
-    res.sendStatus(200);
-  });
 
   app.get('/(^[^api/].*)', (req, res) => {
     res.sendFile('index.html', { root: 'dist/public' });

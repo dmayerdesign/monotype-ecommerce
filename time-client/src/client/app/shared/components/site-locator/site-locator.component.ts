@@ -2,7 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { Http } from '@angular/http';
 import { Subscription } from 'rxjs';
 
-import { appConfig } from '../../../../../../../time-common/config/app-config';
+import { appConfig } from '../../../../../../../app-config';
 import { UtilService } from '../../services';
 
 declare const google: any;

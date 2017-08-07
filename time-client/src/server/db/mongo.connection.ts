@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-const q = require('q');
+import * as q from 'q';
 
 //use q promises
 global.Promise = q.Promise;

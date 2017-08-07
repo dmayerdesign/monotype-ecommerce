@@ -7,6 +7,18 @@
       "es2016",
       "dom"
     ],
+    "baseUrl": ".",
+    "paths": {
+      "@time/*": [
+        "../../../time-common/*"
+      ],
+      "@time/models": [
+        "../../../time-common/models/db-models"
+      ],
+      "@time/interfaces": [
+        "../../../time-common/models/interfaces"
+      ]
+    },
     "noImplicitAny": false,
     "sourceMap": false,
     "emitDecoratorMetadata": true,

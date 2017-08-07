@@ -78,7 +78,7 @@
     "@types/mongoose": "^4.7.19",
     "@types/morgan": "1.7.32",
     "@types/node": "6.0.60",
-    "@types/passport-local-mongoose": "^4.0.10",
+    "@types/passport-local-mongoose": "4.0.10",
     "autoprefixer": "6.5.3",
     "awesome-typescript-loader": "^3.2.2",
     "babel-core": "6.25.0",
