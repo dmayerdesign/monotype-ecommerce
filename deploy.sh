@@ -10,7 +10,6 @@ export ENVIRONMENT="STAGE";
 
 npm run build:prod || exit;
 
-cd ..;
 # echo "git add";
 git add .;
 
@@ -40,6 +39,6 @@ git push;
 # echo "Deploying to Heroku";
 git push heroku master;
 # echo "cd ../time-client";
-cd ../time-client;
+cd ..;
 
 exit;

@@ -11,7 +11,7 @@
     "dev:server": "npm run build:server && concurrently \"npm run watch:server\" \"cd time-client; nodemon dist/server.js\"",
     "build:prod": "rimraf ./time-client-deploy/dist; mkdir -p ./time-client-deploy/dist; npm run build:prod-app && npm run build:prod-server",
     "build:app": "ng build",
-    "build:prod-app": "cd ./time-client-deploy; npm i; cd ./time-client; ng build --prod --environment=prod && cp -r dist/public ./time-client-deploy/dist",
+    "build:prod-app": "cd time-client-deploy; npm i; cd ..; ng build --prod --environment=prod && cp -r ./time-client/dist/public ./time-client-deploy/dist",
     "build:server": "webpack --config time-client/config/webpack.server-config.js",
     "build:prod-server": "cp .env ./time-client-deploy/.env; webpack --config time-client/config/webpack.prod-server-config.js",
     "test:app": "ng test",

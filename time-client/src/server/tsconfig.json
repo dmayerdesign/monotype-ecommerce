@@ -1,12 +1,6 @@
 {
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es5",
-    "lib": [
-      "es6",
-      "es2016",
-      "dom"
-    ],
     "baseUrl": ".",
     "paths": {
       "@time/*": [
@@ -18,16 +12,6 @@
       "@time/interfaces": [
         "../../../time-common/models/interfaces"
       ]
-    },
-    "noImplicitAny": false,
-    "sourceMap": false,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "moduleResolution": "node",
-    "noUnusedLocals": false
-  },
-  "compileOnSave": false,
-  "exclude": [
-    "node_modules"
-  ]
+    }
+  }
 }

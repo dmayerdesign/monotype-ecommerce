@@ -1,4 +1,4 @@
-import { expect } from 'jasmine-node';
+import { expect, describe } from 'jasmine-node';
 import { HomeController } from '../../controllers/home.controller';
 
 describe('HomeController', () => {
