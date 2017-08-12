@@ -8,7 +8,6 @@ export function initStartupTasks() {
      */
 	setInterval(function() {
 		rp({uri: process.env.CLIENT_URL + "/ping"});
-		// console.log("pinged the server");
 	}, 300000);
 
 	/**

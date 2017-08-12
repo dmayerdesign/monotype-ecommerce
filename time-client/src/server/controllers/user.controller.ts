@@ -1,35 +1,53 @@
 import {
-  controller, httpGet, httpPost, httpPut, httpDelete
+  controller,
+  httpGet,
+  httpPost,
+  httpPut,
+  httpDelete,
 } from 'inversify-express-utils';
-import { injectable, inject } from 'inversify';
-import { Request } from 'express';
+import { injectable, inject, Container } from 'inversify';
+import * as express from 'express';
+import { Request, Response } from 'express';
 import { IUser } from '../models/interfaces/user';
 import { UserService } from '../services/user.service';
-import TYPES from '../constants/inversify/types';
+import TYPES from '@time/constants/inversify/types';
+import CONSTANTS from '@time/constants';
+import { Authenticate } from '../auth/authenticate';
+import { handleError } from '@time/api-utils';
 
 @injectable()
-@controller('/user')
+@controller('/api/v1/user')
 export class UserController {
 
-  constructor( @inject(TYPES.UserService) private userService: UserService) { }
+  constructor(
+    @inject(TYPES.Authenticate) private auth: Authenticate,
+    @inject(TYPES.UserService) private userService: UserService,
+  ) { }
 
   @httpGet('/')
-  public getUser(request: Request): Promise<IUser> {
-    return this.userService.getUser(request.params.id);
+  public async getUser(req: Request, res: Response): Promise<IUser> {
+    const user = await this.auth.authenticatedUser(req, res);
+    return this.userService.getUser(req.user._id);
   }
 
-  @httpPost('/')
-  public newUser(request: Request): Promise<IUser> {
-    return this.userService.newUser(request.body);
+  @httpPost('/register')
+  public createUser(req: Request): Promise<IUser> {
+    return this.userService.register(req.body);
   }
 
-  @httpPut('/:id')
-  public updateUser(request: Request): Promise<IUser> {
-    return this.userService.updateUser(request.params.id, request.body);
+  @httpGet('/is-logged-in')
+  public checkLogin(req: Request, res: Response): Promise<any> {
+    return this.userService.isUserLoggedIn(req);
+  }
+
+  @httpPut('/update')
+  public async updateUser(req: Request, res: Response): Promise<IUser> {
+    const user = await this.auth.authenticatedUser(req, res);
+    return this.userService.updateUser(user._id, req.body);
   }
 
   @httpDelete('/:id')
-  public deleteUser(request: Request): Promise<any> {
-    return this.userService.deleteUser(request.params.id);
+  public deleteUser(req: Request): Promise<any> {
+    return this.userService.deleteUser(req.params.id);
   }
 }

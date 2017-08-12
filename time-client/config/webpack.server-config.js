@@ -19,6 +19,7 @@ module.exports = {
         '@time/interfaces': path.resolve(__dirname, '../../time-common/models/interfaces'),
         '@time/models': path.resolve(__dirname, '../../time-common/models/db-models'),
         '@time/api-services': path.resolve(__dirname, '../../time-common/api-services'),
+        '@time/api-utils': path.resolve(__dirname, '../../time-common/api-utils'),
         '@time/constants': path.resolve(__dirname, '../../time-common/constants'),
       },
       extensions: ['.ts', '.js', '.json', '.pug', '.html'],
@@ -35,6 +36,10 @@ module.exports = {
             path.resolve(__dirname, '../../time-common'),
             path.resolve(__dirname, '../src/server'),
           ],
+        },
+        {
+          test: /node_modules\/JSONStream\/index\.js$/,
+          use: ['shebang-loader', 'babel-loader']
         },
         {test: /\.pug$/, use: 'pug-loader'},
         {test: /\.html$/, use: 'raw-loader'},

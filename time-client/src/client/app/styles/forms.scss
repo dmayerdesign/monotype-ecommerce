@@ -1,0 +1,372 @@
+@import './settings';
+
+@mixin placeholder($color, $weight) {
+	&::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+	  color: $color;
+	  font-weight: $weight;
+	}
+	&::-moz-placeholder { /* Firefox 19+ */
+	  color: $color;
+	  font-weight: $weight;
+	}
+	&:-ms-input-placeholder { /* IE 10+ */
+	  color: $color;
+	  font-weight: $weight;
+	}
+	&:-moz-placeholder { /* Firefox 18- */
+	  color: $color;
+	  font-weight: $weight;
+	}
+}
+
+@mixin input() {
+	display: block;
+	box-sizing: border-box;
+	background-color: #fafafa;
+	color: $textColorDark;
+	width: 100%;
+	box-shadow: rgba(0,0,0,0.15) 0rem 0.1rem 0.2rem inset;
+	padding: 0.9rem 0rem 0.9rem 1.4rem;
+	border: 0 none;
+	border-bottom: 0.4rem solid $textColor;
+	font-weight: 400;
+	border-radius: 0.1rem;
+	font-size: 1.4rem;
+
+	@include placeholder($placeholderColor, 400);
+
+	&[disabled] {
+		// box-shadow: none;
+		border-bottom-color: #ccc;
+		opacity: 0.8;
+		border-radius: 0.1rem;
+	}
+}
+
+form {
+	font-size: 1.6rem;
+
+	.form-inner {
+		width: 100%;
+		max-width: 50rem;
+		margin: 0 auto;
+	}
+}
+
+button, input, optgroup, select, textarea {
+	box-sizing: border-box;
+	font-family: 'Roboto', Helvetica, sans-serif;
+	color: $textColor;
+
+	&:focus {
+		outline: none;
+	}
+}
+
+form-field {
+	display: block;
+
+	// &::after {
+	// 	content: " ";
+	// 	display: block;
+	// 	visibility: hidden;
+	// 	clear: both;
+	// }
+}
+
+.form-field-inner {
+	float: left;
+	padding-right: 0;
+	padding-left: 0;
+	position: relative;
+	display: block;
+	width: 100%;
+
+	input, select, textarea {
+		display: block;
+		width: 100%;
+		height: 4.4rem;
+		margin: 0;
+		padding: 0;
+		margin-bottom: 1.3rem;
+	}
+
+	textarea {
+		padding: 1.5rem;
+		height: 10rem;
+		line-height: 1.4;
+	}
+
+	.form-field-text-after {
+		position: absolute;
+		    top: 1.4rem;
+		    left: 100%;
+	    margin-left: 0.6rem;
+	}
+
+	.form-field-error {
+		position: absolute;
+			top: 0.84rem;
+			left: 100%;
+			z-index: 100;
+		background-color: $errorRed;
+		border-radius: 1.3em;
+		height: 2.3em;
+		width: auto;
+		padding: 0.5em 1.2em;
+		margin: 0 0 0 -1rem;
+		font-size: 1.2rem;
+		white-space: nowrap;
+		line-height: 1.2;
+		color: #fff;
+	}
+
+	&.showing-label .form-field-error {
+		top: auto;
+		bottom: 2.2rem;
+	}
+
+	&.text-align-center {
+		input {
+			padding-left: 0 !important;
+			padding-right: 0 !important;
+		}
+	}
+
+	&.col-sm-6.left, &.col-sm-6.right {
+		// float: left;
+		width: 50% !important;
+		padding-left: 0.5rem;
+		padding-right: 0;
+	}
+	&.col-sm-6.left {
+		padding-left: 0;
+		padding-right: 0.5rem;
+
+		.form-field-error {
+			right: 100%;
+			left: auto;
+			text-align: right;
+			margin: 0 -1rem 0 0;
+		}
+	}
+}
+
+search-field, .search-field {
+	input {
+		text-align: left;
+	    background: $lightGrey !important;
+	    border-bottom: 0 !important;
+	    box-shadow: none !important;
+	    border-radius: 0.4rem !important;
+	    border: 1px solid darken($lightGrey, 2%) !important;
+	}
+	input:focus {
+		border: 1px solid $primary !important;
+	}
+	.has-error input {
+		border: 1px solid $errorRed !important;
+	}
+}
+
+.address-form-layout {
+	& > *:nth-child(1) .form-field-inner {
+		width: 60%;
+		padding-right: 0.5rem;
+
+		input {
+			margin-bottom: 0.8rem;
+		}
+	}
+	& > *:nth-child(2) .form-field-inner {
+		width: 40%;
+		padding-left: 0.5rem;
+
+		input {
+			margin-bottom: 0.8rem;
+		}
+	}
+	& > *:nth-child(3) .form-field-inner {
+		width: 50%;
+		padding-right: 1rem;
+	}
+	& > *:nth-child(4) .form-field-inner {
+		width: 25%;
+		padding-right: 1rem;
+	}
+	& > *:nth-child(5) .form-field-inner {
+		width: 25%;
+	}
+}
+
+fieldset {
+	legend {
+		width: 100%;
+		margin-bottom: 0.5rem;
+	}
+}
+
+label, .label {
+	display: inline-block;
+	margin: 0 0 0.4rem 0;
+	font-size: 1.4rem;
+	letter-spacing: 0;
+	cursor: pointer;
+	font-weight: 400;
+	color: $textColor;
+
+	&.label {
+		cursor: default;
+	}
+
+	html.placeholder &.hidden-label {
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		position: absolute;
+		  top: -99999rem;
+		  left: -99999rem;
+	}
+
+	&.uppercase-label {
+		color: $textColor;
+		font-size: 1.2rem;
+		text-transform: uppercase;
+		font-weight: bold;
+	}
+
+	&.sm-label {
+	font-weight: 500;
+	font-size: 1.2rem;
+	margin-bottom: 0.2rem;
+
+		&.uppercase-label {
+			font-size: 1rem;
+		}
+	}
+
+	&.inline {
+		margin-right: 0.5rem;
+	}
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), textarea {
+	@include input();
+
+	&:focus {
+		background: #fff;
+		border-bottom-color: $primaryLight;
+	}
+
+	&.has-error, .has-error & {
+		border-bottom-color: $errorRed;
+	}
+
+	&.floating, .floating & {
+		box-shadow: 0 0.2rem 0.4rem rgba(0,0,0,0.2);
+	}
+
+	&.inline {
+		display: inline-block !important;
+	}
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+	float: left;
+	clear: left;
+
+	+ label {
+		float: left;
+		margin-left: 1.4rem;
+		margin-bottom: 1rem;
+
+		span {
+			float: left;
+		}
+
+		small {
+			float: left;
+			clear: both;
+			color: $linkColor;
+			font-size: 1.1rem;
+			padding-top: 0.2rem;
+		}
+	}
+}
+
+textarea {
+	height: 11.6rem;
+	padding-top: 1rem;
+	font-size: 1.3rem;
+	transition: font-size 0.3s;
+}
+
+fieldset {
+  border: 0 none;
+  margin: 0;
+  padding: 0;
+}
+
+select {
+	font-size: 1.4rem;
+	background: $grey;
+	color: $textColorDark;
+	border: 1px solid darken($grey, 2%);
+}
+
+select.sm-field {
+	font-size: 1.2rem;
+	height: 3.2rem;
+}
+
+input.large {
+	font-size: 3.2rem;
+	font-weight: 300 !important;
+	padding-top: 0.9rem !important;
+	padding-bottom: 1.2rem !important;
+	@include placeholder($placeholderColor, 300);
+}
+
+input.sm-field {
+	font-size: 1.3rem;
+	width: 16.8rem !important;
+}
+
+// input.upload {
+// 	position: relative;
+// }
+
+input[type="number"] {
+	width: 9rem !important;
+}
+
+.disabled {
+	opacity: 0.8;
+	cursor: default;
+}
+
+
+@media screen and (max-width: 767px) {
+	*:not(.modal-container .address-form-layout .form-field-inner) .form-field-inner {
+		width: 100%;
+		padding-left: 0 !important;
+		padding-right: 0 !important;
+	    margin: 0 auto;
+	    float: none !important;
+	}
+
+	.form-field-inner.col-sm-6.left .form-field-error,
+	.form-field-inner.col-sm-6.right .form-field-error {
+		top: 3.1rem;
+		left: 0;
+		right: auto;
+		margin-left: 0;
+		margin-right: 0;
+		z-index: 101;
+		font-size: 1rem;
+	}
+	.form-field-inner.col-2-2 .form-field-error {
+		margin-left: 0.5rem !important;
+	}
+}

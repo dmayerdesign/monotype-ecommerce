@@ -14,7 +14,6 @@ import * as passport from 'passport';
 import { container } from './config/inversify.config';
 import { passportConfig } from './auth/passport';
 import { mongoConnection } from './db/mongo.connection';
-import CONSTANTS from './constants/constants';
 import { initStartupTasks } from './utils/startup';
 
 const MongoStore = require('connect-mongo')(session);
@@ -27,10 +26,11 @@ function serverErrorConfig(app) {
 }
 
 function serverConfig(app) {
-  app.set('port', CONSTANTS.PORT);
+  app.set('port', process.env.PORT);
   app.use(express.static('dist/public'));
   app.use('/scripts', express.static('node_modules'));
-  app.use('/static', express.static('dist/public/static'));
+  app.use('/assets', express.static('dist/public/assets'));
+  app.use('/images', express.static('dist/public/assets/images'));
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(morgan('dev'));
@@ -65,6 +65,8 @@ function serverConfig(app) {
   app.get('/(^[^api/].*)', (req, res) => {
     res.sendFile('index.html', { root: 'dist/public' });
   });
+
+  app.get('/ping', (req, res) => res.sendStatus(204));
 }
 
 /**
@@ -76,7 +78,7 @@ mongoConnection.connect(() => {
     .setConfig(serverConfig)
     .setErrorConfig(serverErrorConfig)
     .build()
-    .listen(CONSTANTS.PORT, () => console.log(`Server started on port ${CONSTANTS.PORT} :)`));
+    .listen(process.env.PORT, () => console.log(`Server started on port ${process.env.PORT} :)`));
 });
 
 exports = module.exports = server;

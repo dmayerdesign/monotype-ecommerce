@@ -2,6 +2,7 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "target": "es2016",
     "paths": {
       "@time/*": [
         "../../../time-common/*"

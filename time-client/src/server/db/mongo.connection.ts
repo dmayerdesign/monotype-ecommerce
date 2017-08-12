@@ -1,8 +1,9 @@
 import * as mongoose from 'mongoose';
-import * as q from 'q';
+import * as Promise from 'bluebird';
 
-//use q promises
-global.Promise = q.Promise;
+global.Promise = Promise;
+(<any>mongoose).Promise = global.Promise;
+if (process.env.ENVIRONMENT === "DEV") mongoose.set('debug', true);
 
 export const mongoConnection = {
 	connect(done) {

@@ -1,0 +1,210 @@
+// $primary: #57CED2;
+$primary: #46C2C5;
+$primaryLight: #66C8CB;
+$primaryLighter: #82E8E8;
+$accent: #DC7B57;
+$orange: $accent;
+$action: $accent;
+$green: #64a050;
+$brightGreen: #62C148;
+$blue: #47A4C7;
+$red: #E96363;
+$darkRed: #bc3333;
+$errorRed: #E96363;
+$textColor: #727176;
+$textColorLight: #A19CB0;
+$textColorDark: #424145;
+$linkColor: $textColorDark;
+$placeholderColor: $textColor;
+$navTextColor: #3B908F;
+$grey: #EDEDF0;
+
+$offWhiteBlue: #f2f1f7;
+$lightGrey: $offWhiteBlue;
+$offWhite: #f9f9f9;
+
+$rightShadow: 0.2rem 0rem 0.4rem rgba(0,0,0,0.2);
+$panelShadow: 0rem 0.2rem 0.2rem rgba(0,0,0,0.15);
+$cardShadow: $panelShadow;
+$boxShadow: $panelShadow;
+$innerShadow: inset 0rem 0.2rem 0.2rem rgba(0,0,0,0.2);
+$textShadow: 0rem 0.1rem 0.1rem rgba(0,0,0,0.2);
+
+$navHeight: 7rem;
+
+@mixin primaryGradient($actn, $light) {
+  @if $light {
+    // nothing
+  } @else {
+    $light: 0%;
+  }
+  @if $actn {
+    // nothing
+  } @else {
+    $actn: 'lighten';
+  }
+
+  background: $primary;
+
+  @if ($actn == 'lighten') {
+    background-image: linear-gradient(to top right, lighten(#49C1C4, $light), lighten(#5FD3D2, $light));
+  }
+  @if ($actn == 'darken') {
+    background-image: linear-gradient(to top right, darken(#49C1C4, $light), darken(#5FD3D2, $light));
+  }
+}
+@mixin actionGradient($actn, $light) {
+  @if $light {
+    // nothing
+  } @else {
+    $light: 0%;
+  }
+  @if $actn {
+    // nothing
+  } @else {
+    $actn: 'lighten';
+  }
+
+  background: $accent;
+
+  @if ($actn == 'lighten') {
+    background-image: linear-gradient(to top right, lighten(#CF654F, $light), lighten(#EC9461, $light));
+  }
+  @if ($actn == 'darken') {
+    background-image: linear-gradient(to top right, darken(#CF654F, $light), darken(#EC9461, $light));
+  }
+}
+
+@mixin redBtn($actn, $light) {
+  @if $light {
+    // nothing
+  } @else {
+    $light: 0%;
+  }
+  @if $actn {
+    // nothing
+  } @else {
+    $actn: 'lighten';
+  }
+
+  background-image: none;
+
+  @if ($actn == 'lighten') {
+    background-color: lighten($red, $light);
+  }
+  @if ($actn == 'darken') {
+    background-color: darken($red, $light);
+  }
+}
+
+@mixin transition($trans) {
+  -webkit-transition: $trans;
+  -moz-transition: $trans;
+  -ms-transition: $trans;
+  -o-transition: $trans;
+  transition: $trans;
+}
+
+@mixin primary($opacity) {
+  background-color: rgba(70,193,197,$opacity);
+}
+
+@keyframes fade-in-up {
+  0% {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  25% {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-right {
+  0% {
+    transform: translateX(-0.8rem);
+    opacity: 0;
+  }
+  90% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out-right {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  90% {
+    transform: translateX(0.8rem);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0.8rem);
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in-left {
+  0% {
+    transform: translateX(0.8rem);
+    opacity: 0;
+  }
+  90% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out-left {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  90% {
+    transform: translateX(-0.8rem);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-0.8rem);
+    opacity: 0;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@mixin fade-in-up($duration) {
+  animation: fade-in-up $duration cubic-bezier(0,0.6,0.4,1);
+}
+@mixin fade-in-right($duration) {
+  animation: fade-in-right $duration cubic-bezier(0,0.6,0.4,1);
+}
+@mixin fade-out-right($duration) {
+  animation: fade-out-right $duration cubic-bezier(0,0.6,0.4,1);
+}
+@mixin fade-in-left($duration) {
+  animation: fade-in-left $duration cubic-bezier(0,0.6,0.4,1);
+}
+@mixin fade-out-left($duration) {
+  animation: fade-out-left $duration cubic-bezier(0,0.6,0.4,1);
+}

@@ -2,23 +2,16 @@ import { Injectable, Inject, EventEmitter } from '@angular/core';
 import { Http, Response, Headers, RequestOptions, RequestOptionsArgs } from '@angular/http';
 import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, CanActivate, CanActivateChild } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
-import 'rxjs/add/observable/throw';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/map';
 
-// import { User } from '../../../../../common/types';
+import { IUser } from '../../../../server/models/interfaces';
 import { UtilService } from './util.service';
-
-class User {
-	name: any;
-}
 
 @Injectable()
 export class UserService {
 	
 	private isUserLoggedIn: boolean = false;
-	public user: User;
-	public user$: Subject<User> = new Subject<User>();
+	public user: IUser;
+	public user$: Subject<IUser> = new Subject<IUser>();
 	public sessionInvalid$: Subject<boolean> = new Subject<boolean>();
 	public notifications = { sessions: 0, conversations: 0 };
 	public notifications$: Subject<{sessions: number; conversations: number}> = new Subject();
@@ -51,7 +44,7 @@ export class UserService {
 		return this.http.post('/api/v1/logout', {});
 	}
 
-	verifyEmail(token: string): Observable<User> {
+	verifyEmail(token: string): Observable<IUser> {
 		return this.http.get(`/api/v1/verify-email/${token}`)
 			.map((res: Response) => res.json())
 			.catch(this.util.catchHttpError);
@@ -88,7 +81,7 @@ export class UserService {
 		return this.isUserLoggedIn;
 	}
 
-	onLogin(user: User): void {
+	onLogin(user: IUser): void {
 		user = this.cleanUser(user);
 		this.user = user;
 		this.isUserLoggedIn = true;
@@ -120,7 +113,7 @@ export class UserService {
 		this.notifications$.next({sessions, conversations});
 	}
 
-	edit(user: any, done?: (err?: any, user?: User) => void) {
+	edit(user: any, done?: (err?: any, user?: IUser) => void) {
 		this.http.post('/api/v1/user/edit', user)
 			.map((res: Response) => res.json())
 			.catch(this.util.catchHttpError)
@@ -136,7 +129,7 @@ export class UserService {
 			);
 	}
 
-	editPassword(newPassword: string, resetToken?: string, done?: (err?: any, user?: User) => void) {
+	editPassword(newPassword: string, resetToken?: string, done?: (err?: any, user?: IUser) => void) {
 		this.http.post('/api/v1/reset-password', {newPassword, resetToken})
 			.map((res: Response) => res.json())
 			.catch(this.util.catchHttpError)
@@ -152,7 +145,7 @@ export class UserService {
 			);
 	}
 
-	forgotPassword(email: string): Observable<User> {
+	forgotPassword(email: string): Observable<IUser> {
 		return this.http.post('/api/v1/send-forgot-password', {email})
 			.map((res: Response) => res.json())
 			.catch(this.util.catchHttpError);

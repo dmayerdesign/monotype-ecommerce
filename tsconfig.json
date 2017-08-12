@@ -3,8 +3,8 @@
     "module": "commonjs",
     "target": "es5",
     "lib": [
-      "es6",
       "dom",
+      "es2015",
       "es2016"
     ],
     "types": [ "node" ],
@@ -19,6 +19,7 @@
   },
   "compileOnSave": false,
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist/"
   ]
 }

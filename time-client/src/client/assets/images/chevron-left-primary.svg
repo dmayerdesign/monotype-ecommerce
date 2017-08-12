@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="10px" height="18px" viewBox="0 0 10 18" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 45 (43475) - http://www.bohemiancoding.com/sketch -->
+    <title>ic_back</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Screens" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+        <g id="Appointment---Completed-(student)" transform="translate(-255.000000, -93.000000)" stroke-width="2" stroke="#46C1C5">
+            <g id="ic_back" transform="translate(256.000000, 94.000000)">
+                <g id="back">
+                    <path d="M8,0 L0,8" id="Line"></path>
+                    <path d="M0,8 L8,16" id="Line"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

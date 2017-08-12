@@ -1,24 +1,64 @@
+import { injectable } from 'inversify';
 import * as passport from 'passport';
 import * as passportFacebook from 'passport-facebook';
-import { User } from '../models/user';
+import { Request, Response, NextFunction } from 'express';
+import { User } from '../models';
+import { IUser } from '../models/interfaces';
+import { handleError } from '@time/api-utils';
+import CONSTANTS from '@time/constants';
 
 const FacebookStrategy = passportFacebook.Strategy;
 
-export function passportConfig() {
+const facebookStrategyConfig = {
+  clientID: process.env.FACEBOOK_APP_ID,
+  clientSecret: process.env.FACEBOOK_APP_SECRET,
+  callbackURL: process.env.CLIENT_URL + '/auth/facebook/callback',
+  profileFields: ['id', 'emails', 'name', 'displayName', 'gender', 'picture.type(large)']
+};
 
+/**
+ * Runs the passport configuration for user authentication via email + password and Facebook
+ */
+export function passportConfig() {
   /**
-   * Configure local strategy
+   * Configures local strategy
    */
   passport.use(User.createStrategy());
 
   /**
-   * Configure session
+   * Configures session
    */
   passport.serializeUser(User.serializeUser());
   passport.deserializeUser(User.deserializeUser());
 
   /**
-   * Get Facebook profile for signup
+   * Configures facebook strategy
+   */
+  passport.use(new FacebookStrategy(facebookStrategyConfig, (accessToken, refreshToken, profile, done) => {
+      User.findOne({ email: profile.emails[0].value }, (err, localUser) => {
+        if (err) {
+          return done(err);
+        }
+        if (localUser) {
+          return done(CONSTANTS.ERRORS.userEmailExists);
+        }
+
+        User.findOne({ facebookId: profile.id }, (err, user) => {
+          if (err) throw err;
+          if (user) return done(null, user);
+
+          const newUser = new User(buildUserFromFacebookProfile(profile));
+          newUser.save((error, user) => {
+            if (error) throw error;
+            return done(null, user);
+          });
+        });
+      });
+    }
+  ));
+
+  /**
+   * Gets Facebook profile for signup
    */
   passport.use(new FacebookStrategy({
     clientID: process.env.FACEBOOK_APP_ID,
@@ -50,40 +90,18 @@ export function passportConfig() {
       done(null, newUser);
     });
   }));
-
 }
 
-/*
- * Login Required middleware.
- */
-export const isAuthenticated = (req, res, next) => {
-  if (req.isAuthenticated() && req.user.emailIsVerified) {
-    return next();
+function buildUserFromFacebookProfile(profile: any): any {
+  return {
+    lastName: profile.name.familyName,
+    firstName: profile.name.givenName,
+    email: profile.emails[0].value,
+    facebookId: profile.id,
+    profile: { gender: profile.gender },
+    avatar: {
+      large: profile.picture,
+      thumbnail: profile.picture,
+    },
   }
-  else if (req.isAuthenticated() && !req.user.emailIsVerified) {
-    res.status(403).json({error: "Account not yet verified"});
-    console.error("Account not yet verified");
-    return;
-  }
-  res.status(401).json({error: "User authentication error"});
-  console.log("User not authenticated");
-};
-
-/*
- * Check admin role
- */
-export const isAuthorized = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    if (req.user.adminKey === process.env.ADMIN_KEY) {
-      return next();
-    }
-    else {
-      res.status(401).json({error: "User not authorized"});
-      console.log("User not authorized");
-    }
-  }
-  else {
-    res.status(401).json({error: "User authentication error"});
-    console.log("User not authenticated");
-  }
-};
+} 

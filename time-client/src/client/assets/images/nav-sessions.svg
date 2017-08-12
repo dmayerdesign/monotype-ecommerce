@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="20px" height="19px" viewBox="0 0 20 19" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 43 (38999) - http://www.bohemiancoding.com/sketch -->
+    <title>ic_message</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Symbols" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="MASTHEAD---post-login-(tutor)" transform="translate(-792.000000, -27.000000)">
+            <g id="MASTHEAD---post-login">
+                <g id="ic_message" transform="translate(790.000000, 25.000000)">
+                    <g id="Group" transform="translate(3.000000, 3.000000)">
+                        <path d="M0,2.99253976 C0,1.33980569 1.35292554,0 2.99253976,0 L15.0074602,0 C16.6601943,0 18,1.34226429 18,2.99878564 L18,10.0012144 C18,11.6573979 16.6513555,13 14.9996703,13 L11.0003297,13 C9.34329338,13 6.85379505,13.7163781 5.45775796,14.5889013 L2.54224204,16.4110987 C1.13820053,17.2886247 0,16.6470745 0,15.0074602 L0,2.99253976 Z" id="Rectangle" stroke="#3B908F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <circle id="Oval" fill="#3B908F" cx="5" cy="7" r="1"></circle>
+                        <circle id="Oval-Copy" fill="#3B908F" cx="9" cy="7" r="1"></circle>
+                        <circle id="Oval-Copy-2" fill="#3B908F" cx="13" cy="7" r="1"></circle>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
