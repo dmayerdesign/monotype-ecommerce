@@ -61,11 +61,6 @@ function serverConfig(app) {
       next();
     });
   }
-
-  app.get('/(^[^api/].*)', (req, res) => {
-    res.sendFile('index.html', { root: 'dist/public' });
-  });
-
   app.get('/ping', (req, res) => res.sendStatus(204));
 }
 

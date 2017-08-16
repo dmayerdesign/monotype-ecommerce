@@ -1,7 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
-
-import { ProductService } from './shared/services';
 
 @Component({
   selector: 'app-root',
@@ -10,13 +7,10 @@ import { ProductService } from './shared/services';
 })
 export class AppComponent implements OnInit {
   title: string = 'app';
-  products$: Observable<any[]>;
 
-  constructor(
-    private productService: ProductService,
-  ) {}
+  constructor() {}
 
   ngOnInit() {
-    this.products$ = this.productService.get();
+    console.log("On app init");
   }
 }

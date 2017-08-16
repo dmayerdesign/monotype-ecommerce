@@ -1,5 +1,5 @@
 export const TAGS = {
-    HomeController: 'HomeController',
+    AppController: 'AppController',
     UserController: 'UserController',
     ProductsController: 'ProductsController',
 };

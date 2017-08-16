@@ -27,8 +27,13 @@ export const productSchema = new Schema({
 	isDefaultVariation: Boolean, 	// Defines the default product variation
 	parentSKU: String, 				// The SKU of the parent product
 
+	/* Attributes */
 	attributes: [attributeRefSchema],
-	variableAttributes: [String],
+	variableAttributes: [Schema.Types.ObjectId],
+
+	/* Taxonomy */
+	taxonomyTerms: [Schema.Types.ObjectId],
+	taxonomyTermSlugs: [String],
 
 	/* Shipping */
 	units: { 						// Only if not using global defaults
@@ -46,15 +51,9 @@ export const productSchema = new Schema({
 	/* Additional tax */
 	additionalTax: Number,
 
-	/* Organizational */
-	taxonomies: [{
-		key: String,
-		values: [String]
-	}],
-
+	/* Sales */
 	stockQuantity: Number,
 	totalSales: Number,
-
 	enteredIntoStripe: Boolean,
 
 }, { timestamps: true });

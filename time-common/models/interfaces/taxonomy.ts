@@ -4,12 +4,6 @@ import { ITerm } from './';
 export interface ITaxonomy extends Document {
 	name: string; // "Disc Type" | "Brand",
 	pluralName: string;
+	slug: string; // "disc-type" | "brand",
 	description?: string;
-	key: string; // "disc-type" | "brand",
-	terms: Types.ObjectId[];
-}
-
-export interface ITaxonomyRef {
-	key: string;
-	values: string[];
 }

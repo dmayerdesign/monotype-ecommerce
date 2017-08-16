@@ -5,13 +5,14 @@ import { TYPES } from '@time/constants/inversify';
 import { IProduct } from '@time/interfaces';
 import { Product } from '@time/models';
 import { CONSTANTS } from '@time/constants';
-import { DbClient } from '@time/api-utils';
+import { DbClient, ProductSearch, ProductSearchUtils, MongoQueries } from '@time/api-utils';
 
 @injectable()
 export class ProductService {
 
     constructor(
         @inject(TYPES.DbClient) private dbClient: DbClient<IProduct>,
+        @inject(TYPES.ProductSearchUtils) private productSearchUtils: ProductSearchUtils,
     ) {}
 
     public getOne(id: string): Promise<IProduct> {
@@ -23,11 +24,94 @@ export class ProductService {
         });
     }
 
-    public get(query: any, page: number = 1, res?: Response): Promise<IProduct[]> {
+    /**
+     * Get an unfiltered list of parent & standalone products,
+     * or use a search/filter query
+     *
+     * @param {SearchBody} body - The search options
+     * @param {express.Response} res - (optional) The express Response - pass this in if you want the documents fetched as a stream and piped into the response
+     */
+    public search(body: ProductSearch.Body, res?: Response): Promise<IProduct[]> {
+        const searchRegExp = new RegExp(body.search, 'gi');
+        let searchQueries: any = [];
+        let allQuery: any;
+        let filterQuery: MongoQueries.And;
+
+        /**
+         * If it's a search or filter, create a basic `$and` query for parent and standalone products
+         * Else, display parent and standalone products unfiltered;
+         */
+        if (body.search || body.filters) {
+            if (body.search) {
+                searchQueries = [
+                    { name: { $regex: searchRegExp } },
+                    { description: { $regex: searchRegExp } },
+                ];
+            }
+            if (body.filters && body.filters.length) {
+                filterQuery = {
+                    $and: [
+                        { isVariation: { $ne: true } },
+                        ...searchQueries,
+                    ],
+                };
+            }
+        }
+        else {
+            allQuery = { isVariation: { $ne: true } };
+        }
+        
+        /**
+         * Convert each filter to MongoDB query syntax and add it to `filterQuery.$and`
+         */
+        body.filters.forEach(filter => {
+            const isPropertyFilter: boolean = filter.type === 'property' ? true : false;
+            const isAttrFilter: boolean = filter.type === 'attribute' ? true : false;
+            const isTaxFilter: boolean = filter.type === 'taxonomy' ? true : false;
+
+            // TODO: Query product variations too!
+
+            /*
+             * Property Filter
+             * 
+             */
+            if (isPropertyFilter) {
+                filterQuery = this.productSearchUtils.propertyFilter(filter, filterQuery);
+            }
+
+            /*
+             * Attribute Filter - performs an `$elemMatch` on `Product.attributes`
+             * Product attributes have the shape { key: string; value: any; }
+             */
+            if (isAttrFilter) {
+                filterQuery = this.productSearchUtils.attributeFilter(filter, filterQuery);
+            }
+
+            /*
+             * Taxonomy Filter - performs an `$elemMatch` on `Product.taxonomies`
+             * Product attributes have the shape { key: string; value: any; }
+             */
+            if (isTaxFilter) {
+                filterQuery = this.productSearchUtils.taxonomyFilter(filter, filterQuery);
+            }
+        });
+
+        return this.get(allQuery || filterQuery, body.page, res);
+    }
+
+    /**
+     * Retrieve a list of products
+     * 
+     * @param {object} query - The database query
+     * @param {number} page - (optional) The page number, which determines how many documents to skip
+     * @param {express.Response} res - (optional) The express Response - pass this in if you want the documents fetched as a stream and piped into the response
+     */
+    public get(query: Object, page: number = 1, res?: Response): Promise<IProduct[]> {
         const skip = (page - 1) * CONSTANTS.PAGINATION.productsPerPage;
         const limit = CONSTANTS.PAGINATION.productsPerPage;
 
         return new Promise<IProduct[]>((resolve, reject) => {
+
             /**
              * Stream the products
              */
@@ -36,6 +120,7 @@ export class ProductService {
                     .catch(err => reject(err));
                 resolve();
             }
+            
             /**
              * Retrieve the products normally, loading them into memory
              */

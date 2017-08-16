@@ -5,7 +5,7 @@
   },
   "apps": [
     {
-      "root": "./src/client",
+      "root": "./time-client/src/client",
       "outDir": "./dist/public",
       "assets": [
         "assets",

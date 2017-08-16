@@ -4,6 +4,7 @@ export const TYPES = {
     ProductService: Symbol('ProductService'),
     WoocommerceMigrationService: Symbol('WoocommerceMigrationService'),
     Authenticate: Symbol('Authenticate'),
+    ProductSearchUtils: Symbol('ProductSearchUtils'),
 };
 
 export default TYPES;

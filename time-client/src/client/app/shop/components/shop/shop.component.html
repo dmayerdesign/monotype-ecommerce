@@ -1,0 +1,8 @@
+<div>
+  <!-- <pre>
+    <code *ngFor="let product of products$ | async">{{product.name}}</code>
+  </pre> -->
+  <div *ngFor="let product of products$ | async">
+    <p><strong>{{product.name}}</strong></p>
+  </div>
+</div>

@@ -3,7 +3,7 @@ import { Http, Response, Headers, RequestOptions, RequestOptionsArgs } from '@an
 import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, CanActivate, CanActivateChild } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
 
-import { IUser } from '../../../../server/models/interfaces';
+import { IUser } from '../interfaces/user';
 import { UtilService } from './util.service';
 
 @Injectable()

@@ -1,5 +1,4 @@
-import { Document } from 'mongoose';
-import { ITaxonomyRef } from './';
+import { Document, Types } from 'mongoose';
 
 export interface IAttributeRef {
     key: string;
@@ -31,8 +30,13 @@ export interface IProduct extends Document {
 	isVariation?: boolean; // Defines a product variation with a parent product
 	parentSKU?: string; // The slug of the parent product
 
+	/* Attributes */
 	attributes?: IAttributeRef[];
 	variableAttributes?: string[];
+
+	/* Taxonomy */
+	taxonomyTerms: Array<Types.ObjectId | string>;
+	taxonomyTermSlugs: string[];
 
 	/* Shipping */
 	units?: { // Only if not using global defaults
@@ -50,11 +54,8 @@ export interface IProduct extends Document {
 	/* Additional tax */
 	additionalTax?: number;
 
-	/* Organizational */
-	taxonomies: ITaxonomyRef[];
-
+	/* Sales */
 	stockQuantity?: number;
 	totalSales?: number;
-
 	enteredIntoStripe?: boolean;
 }

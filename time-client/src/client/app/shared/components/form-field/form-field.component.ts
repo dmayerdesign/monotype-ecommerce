@@ -110,7 +110,6 @@ export class FormFieldComponent implements OnInit, AfterViewInit, OnChanges {
     if (this.isSelect) {
       this.selectOptionDefault.name = this.selectOptionDefaultText || 'Select ' + this.label.toLowerCase();
       if (!this.value) this.value = this.selectOptionDefault.value;
-      // this.cd.detectChanges();
     }
     if (this.type === "textarea") this.isInput = false;
   }
@@ -140,11 +139,6 @@ export class FormFieldComponent implements OnInit, AfterViewInit, OnChanges {
 
   onChange(value: any) {
     this.value = value;
-
-    // if (this.type === "datepicker" && this.isAfterViewInit) {
-    //   this.updateDatepickerValue();
-    // }
-
     this.modelChange.emit(this.value);
     this.doValidation();
     this.validate.emit(this.invalid);
@@ -198,7 +192,6 @@ export class FormFieldComponent implements OnInit, AfterViewInit, OnChanges {
     }
 
     if (this.validators.indexOf('date') > -1) {
-      // let dateStr: string = (this.type === 'date') ? this.value : (this.type === 'datepicker') ? (this.value && this.value.value) : '';
       if (this.type === 'date') {
         let dateStr = this.value;
         if (dateStr && !dateStr.match(datePattern)) {
@@ -218,9 +211,6 @@ export class FormFieldComponent implements OnInit, AfterViewInit, OnChanges {
           if (this.type === 'date') {
             this.value = dateStr;
           }
-          // else if (this.type === 'datepicker') {
-          //   this.textValue = dateStr;
-          // }
         }
         else if (this.invalid.indexOf("date") > -1) {
           this.invalid.splice(this.invalid.indexOf("date"), 1);
@@ -306,10 +296,4 @@ export class FormFieldComponent implements OnInit, AfterViewInit, OnChanges {
   trackByIndex(index: number, value: number) {
     return index;
   }
-
-  // updateDatepickerValue() {
-  //   this.mdpNativeElement = this.datePicker.elem.nativeElement;
-  //   this.mdpInput = <HTMLInputElement>this.mdpNativeElement.querySelector("input");
-  //   this.textValue = this.mdpInput.value;
-  // }
 }

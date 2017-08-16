@@ -1,20 +1,19 @@
 import { Document, Types } from 'mongoose';
-import { IAttributeRef } from './';
 
 export interface ITerm extends Document {
+	taxonomy: Types.ObjectId | string;
 	name: string;
 	pluralName: string;
 	slug: string;
 	description?: string;
-	taxonomy: Types.ObjectId;
-	children: ITerm[];
-	parent: ITerm;
-	ancestors: ITerm[];
+	children: Array<Types.ObjectId | string>;
+	parent: Types.ObjectId | string;
+	ancestors: Array<Types.ObjectId | string>;
 
-    settings?: {
+    settings: {
 		attributes: {
-			default?: IAttributeRef[];
-			variable?: Types.ObjectId[];
+			default: Array<Types.ObjectId | string>;
+			variable: Array<Types.ObjectId | string>;
 		};
 	};
 }

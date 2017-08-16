@@ -14,42 +14,41 @@ export class WoocommerceMigrationService {
 		return new Promise<any>((resolve, reject) => {
 			let newProducts = [];
 
-			productsJSON.forEach(product => {
+			(<any>productsJSON).forEach(product => {
 
-				let newProduct: any = { ...product };
+				let newProduct: IProduct = Object.assign({}, product);
 				let attributes = [];
-				let taxonomies = [];
+				let taxonomyTermSlugs = [];
 
 				Object.keys(product).forEach(key => {
 					if (typeof newProduct[key] !== "undefined" && newProduct[key] !== undefined && newProduct[key] !== "") {
-						console.log("FIELD (" + key + ")", newProduct[key]);
 
-						if (key.indexOf('attributes.') > -1) {
+						if (key.indexOf("attributes.") > -1) {
 							let attribute: any = {};
 							attribute.key = key.replace("attributes.", "");
-							attribute.name = attribute.key.replace(/([A-Z])/g, ' $1').replace(/^./, function(str){ return str.toUpperCase(); });
+							// attribute.name = attribute.key.replace(/([A-Z])/g, ' $1').replace(/^./, function(str){ return str.toUpperCase(); });
 							attribute.value = product[key];
 							attributes.push(attribute);
 							delete newProduct[key];
 						}
-						if (key.indexOf('taxonomies.') > -1) {
-							let taxonomy = {
-								key: key.replace("taxonomies.", ""),
-								values: product[key].split("|"),
-							};
-							taxonomies.push(taxonomy);
+						if (key.indexOf("taxonomies.") > -1) {
+							let terms = product[key].split("|");
+							terms.forEach(term => {
+								taxonomyTermSlugs.push(
+									key.replace("taxonomies.", "") + "-" + term
+								);
+							});
 							delete newProduct[key];
 						}
 						if (key === "netWeight") {
-							newProduct[key] = newProduct[key].replace(/g/g, "");
-							if ( newProduct[key].indexOf("|") > -1 ) {
+							newProduct[key] = (<any>newProduct[key]).replace(/g/g, "");
+							if ( (<any>newProduct[key]).indexOf("|") > -1 ) {
 								delete newProduct[key];
 							}
 						}
 						if (key === "price") {
-							console.log("Price:", newProduct[key]);
 							if ( newProduct[key].toString().indexOf("-") > -1 ) {
-								newProduct.priceRange = newProduct[key].split("-");
+								newProduct.priceRange = (<any>newProduct[key]).split("-");
 								newProduct.priceRange[0] = +newProduct.priceRange[0];
 								newProduct.priceRange[1] = +newProduct.priceRange[1];
 								delete newProduct[key];
@@ -57,7 +56,7 @@ export class WoocommerceMigrationService {
 						}
 						if (key === "salePrice") {
 							if ( newProduct[key].toString().indexOf("-") > -1 ) {
-								newProduct.salePriceRange = newProduct[key].split("-");
+								newProduct.salePriceRange = (<any>newProduct[key]).split("-");
 								newProduct.salePriceRange[0] = +newProduct.salePriceRange[0];
 								newProduct.salePriceRange[1] = +newProduct.salePriceRange[1];
 								delete newProduct[key];
@@ -65,15 +64,15 @@ export class WoocommerceMigrationService {
 						}
 
 						if (key === "class") {
-							if (newProduct.class === "Variable") {
+							if ((<string>newProduct.class) === "Variable") {
 								newProduct.isParent = true;
 								newProduct.class = "parent";
 							}
-							if (newProduct.class === "Variation") {
+							if ((<string>newProduct.class) === "Variation") {
 								newProduct.isVariation = true;
 								newProduct.class = "variation";
 							}
-							if (newProduct.class === "Simple Product") {
+							if ((<string>newProduct.class) === "Simple Product") {
 								newProduct.isStandalone = true;
 								newProduct.class = "standalone";
 							}
@@ -88,10 +87,13 @@ export class WoocommerceMigrationService {
 							}
 						}
 					}
+					else {
+						delete newProduct[key];
+					}
 				});
 
 				newProduct.attributes = attributes;
-				newProduct.taxonomies = taxonomies;
+				newProduct.taxonomyTermSlugs = taxonomyTermSlugs;
 
 				let stats: {
 					fade?: number;
@@ -127,20 +129,19 @@ export class WoocommerceMigrationService {
 				};
 
 				if (stability(stats)) {
-					newProduct.taxonomies.push({
-						key: "stability",
-						values: [ stability(stats) ],
-					});
+					newProduct.taxonomyTermSlugs.push(
+						"stability-" + stability(stats)
+					);
 
 					newProduct.attributes.push({
 						key: "stability",
-						name: "Stability",
 						value: stability(stats),
+						// visible: true,
 					});
 				}
 
-				delete newProduct.stability;
-				delete newProduct.featuredImage;
+				delete (<any>newProduct).stability;
+				delete (<any>newProduct).featuredImage;
 
 				/**
 				 * Add images
@@ -148,26 +149,24 @@ export class WoocommerceMigrationService {
 				if (!newProduct.isParent) {
 					let isDisc;
 					let imageBaseUrl = `${appConfig.cloudfront_url}/product-images/`;
-					newProduct.taxonomies.forEach(tax => {
-						if (tax.key === "brand") {
-							tax.values.forEach(term => {
-								if (term.indexOf("MVP") > -1) {
-									imageBaseUrl += "mvp-";
-								}
-								if (term.indexOf("Axiom") > -1) {
-									imageBaseUrl += "axiom-";
-								}
-								if (term.indexOf("Discraft") > -1) {
-									imageBaseUrl += "discraft-";
-								}
-							});
+					newProduct.taxonomyTermSlugs.forEach(term => {
+						if (term.indexOf("brand") === 0) {
+							if (term.indexOf("MVP") > -1) {
+								imageBaseUrl += "mvp-";
+							}
+							if (term.indexOf("Axiom") > -1) {
+								imageBaseUrl += "axiom-";
+							}
+							if (term.indexOf("Discraft") > -1) {
+								imageBaseUrl += "discraft-";
+							}
 						}
 					});
 
 					isDisc = newProduct.attributes.some(attr => attr.key === "productType" && attr.value === "disc");
 
-					if (newProduct.isVariation) imageBaseUrl += `${newProduct.parentSKU.toLowerCase()}-`;
-					else imageBaseUrl += `${newProduct.SKU.toLowerCase()}-`;
+					if (newProduct.parentSKU && newProduct.isVariation) imageBaseUrl += `${newProduct.parentSKU.toLowerCase()}-`;
+					else if (newProduct.SKU) imageBaseUrl += `${newProduct.SKU.toLowerCase()}-`;
 
 					if (isDisc) {
 						newProduct.attributes.forEach(attr => {
@@ -198,6 +197,7 @@ export class WoocommerceMigrationService {
 					newProduct.images = [];
 					newProduct.thumbnails = [];
 				}
+				delete (<any>newProduct).thumbnail;
 
 				newProducts.push(newProduct);
 			});

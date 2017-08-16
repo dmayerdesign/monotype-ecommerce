@@ -39,6 +39,8 @@ import {
   GAService,
   AuthGuardService,
   SEOService,
+  UtilService,
+  UIService,
 } from './services';
 
 @NgModule({
@@ -54,7 +56,7 @@ import {
     MyDatePickerModule,
   ],
   declarations: [
-    // FormFieldComponent,
+    FormFieldComponent,
     SiteLocatorComponent,
     ModalComponent,
     FocusOnDirective,
@@ -62,7 +64,7 @@ import {
     TooltipComponent,
   ],
   exports: [
-    // FormFieldComponent,
+    FormFieldComponent,
     SiteLocatorComponent,
     ModalComponent,
     TooltipComponent,
@@ -81,6 +83,8 @@ export class SharedModule {
         GAService,
         AuthGuardService,
         SEOService,
+        UtilService,
+        UIService,
       ],
     }
   }

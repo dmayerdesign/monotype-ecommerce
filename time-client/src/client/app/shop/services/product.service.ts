@@ -4,17 +4,17 @@ import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, CanActivate, CanAc
 import { Observable, Subject } from 'rxjs';
 
 import { IProduct } from '../../../../../../time-common/models/interfaces';
-import { UtilService } from './util.service';
+import { UtilService } from '../../shared/services/util.service';
 
 @Injectable()
 export class ProductService {
     constructor (
 		private http: Http,
-		private router: Router,
 		private util: UtilService,
 	) {}
 
     get(): Observable<IProduct[]> {
-        return this.http.get('/api/v1/products').map(res => res.json());
+        return this.http.get('/api/v1/products')
+            .map(res => res.json());
     }
 }
