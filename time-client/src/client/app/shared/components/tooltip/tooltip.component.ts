@@ -9,7 +9,7 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 		[ngStyle]="{'opacity': fadeIn ? 1 : 0}">
 	<ng-content></ng-content>
 </div>`,
-	styles: [require('./tooltip.component.scss')],
+	styleUrls: ['./tooltip.component.scss'],
 })
 export class TooltipComponent {
 	public isShowing: boolean;

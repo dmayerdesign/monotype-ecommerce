@@ -3,6 +3,7 @@ import { Http, Response, Headers, RequestOptions, RequestOptionsArgs } from '@an
 import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, CanActivate, CanActivateChild } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
 
+import { appConfig } from '../../../../../../app-config'
 import { IProduct } from '../../../../../../time-common/models/interfaces';
 import { UtilService } from '../../shared/services/util.service';
 
@@ -14,7 +15,7 @@ export class ProductService {
 	) {}
 
     get(): Observable<IProduct[]> {
-        return this.http.get('/api/v1/products')
+        return this.http.get(`${appConfig.client_url}/api/v1/products`)
             .map(res => res.json());
     }
 }

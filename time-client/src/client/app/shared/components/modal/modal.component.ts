@@ -24,7 +24,7 @@ import {
 		</div>
 	</div>
 </div>`,
-	styles: [require('./modal.component.scss')],
+	styleUrls: ['./modal.component.scss'],
 })
 export class ModalComponent implements OnInit {
 	public isShowing: boolean;

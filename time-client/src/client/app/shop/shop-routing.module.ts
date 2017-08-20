@@ -10,7 +10,7 @@ import { ShopComponent } from './components/shop/shop.component';
   imports: [
   	RouterModule.forChild([
   		{ 
-        path: '',
+        path: 'shop',
         children: [
           // { path: 'for/:taxonomy/:value', component: TaxonomyComponent },
           // { path: 'product/:slug', component: ProductDetailComponent },

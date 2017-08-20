@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
-import * as Promise from 'bluebird';
+// import * as Promise from 'bluebird';
 
-global.Promise = Promise;
+// global.Promise = Promise;
 (<any>mongoose).Promise = global.Promise;
 if (process.env.ENVIRONMENT === "DEV") mongoose.set('debug', true);
 

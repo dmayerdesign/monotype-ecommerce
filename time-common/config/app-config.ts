@@ -2,9 +2,9 @@ require('dotenv').config({silent: true});
 declare const process: any;
 
 // CONSTANTS
-const dev_url = "localhost:3000";
-const stage_url = "localhost:3000";
-const prod_url = "localhost:3000";
+const dev_url = "http://localhost:3000";
+const stage_url = "http://localhost:3000";
+const prod_url = "http://localhost:3000";
 
 /********************************
 **********             **********

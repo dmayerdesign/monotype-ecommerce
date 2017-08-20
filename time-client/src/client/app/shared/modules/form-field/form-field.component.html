@@ -1,13 +1,13 @@
 <div [ngClass]="['form-field-inner clearfix pull-left', (textAlign ? 'text-align-' + textAlign : ''), (twoColLeft ? 'col-sm-6 left' : ''), (twoColRight ? 'col-sm-6 right' : ''), ((!twoColLeft && !twoColRight && !autoWidth) ? 'full-width' : ''), ((formSubmitted || !pristine) && showingValidation?.length ? 'has-error' : ''), (invalid[0] ? 'error-' + invalid[0] : ''), (invalid[1] ? 'error-' + invalid[1] : ''), (invalid[2] ? 'error-' + invalid[2] : ''), (invalid[3] ? 'error-' + invalid[3] : ''), (disabled ? 'disabled' : ''), (showLabel ? 'showing-label' : '')]">
 
 	<label 	[attr.id]="id + '-label'"
-			[attr.for]="id + (isSelect ? '-select' : '-input')"
+			[attr.for]="id + (type === 'select' ? '-select' : '-input')"
 			[ngClass]="[showLabel ? '' : 'visually-hidden', labelClass]"
 			[ngStyle]="{'font-size': labelFontSize}">{{label}}</label>
 
-	<input  *ngIf="isInput"
-			[ngModel]="value"
-			(ngModelChange)="onChange($event)"
+	<input  *ngIf="type === 'text'"
+			[value]="value"
+			(change)="onChange($event)"
 			(blur)="onBlur()"
 			(keypress)="onKeyup($event)"
 			(keyup)="onKeyup($event)"
@@ -22,7 +22,7 @@
 			[disabled]="disabled || 'false'"
 			[ngStyle]="{'text-align': textAlign}">
 
-	<input *ngIf="isAutocomplete"
+	<input *ngIf="type === 'autoComplete'"
 			auto-complete
 			[ngModel]="value"
 			(valueChanged)="onChange($event)"
@@ -39,19 +39,19 @@
 			[list-formatter]="autocompleteFormatter"
 			loading-text="Loading...">
 
-	<my-date-picker
+	<!-- <my-date-picker
 			#datePicker
-			*ngIf="isDatepicker && value"
+			*ngIf="type ==='datePicker'"
 			[name]="name"
 			[options]="datePickerOptions"
 			[ngModel]="value"
 			(dateChanged)="onChange($event)"
 			(inputFocusBlur)="onBlur($event.value, $event.reason)"
-			(inputFieldChanged)="onChange($event)"></my-date-picker>
+			(inputFieldChanged)="onChange($event)"></my-date-picker> -->
 
-	<select *ngIf="isSelect"
-			[ngModel]="value"
-			(ngModelChange)="onChange($event)"
+	<select *ngIf="type === 'select'"
+			[value]="value"
+			(change)="onChange($event)"
 			(blur)="onBlur()"
 			[attr.id]="id + '-select'"
 			[ngClass]="[inputClass]"
@@ -68,8 +68,8 @@
 	</select>
 
 	<textarea *ngIf="type === 'textarea'"
-			[ngModel]="value"
-			(ngModelChange)="onChange($event)"
+			[value]="value"
+			(change)="onChange($event)"
 			(blur)="onBlur()"
 			(keypress)="onKeyup($event)"
 			(keyup)="onKeyup($event)"

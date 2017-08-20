@@ -7,16 +7,18 @@ import { CommonModule } from '@angular/common';
  * EXTERNAL MODULES
  */
 import { ToastModule } from 'ng2-toastr/ng2-toastr';
-import { NgUploaderModule } from 'ngx-uploader';
 import { NguiAutoCompleteModule } from '@ngui/auto-complete';
 import { ClickOutsideModule } from 'ng-click-outside';
-import { MyDatePickerModule } from 'mydatepicker';
+
+/**
+ * FEATURE MODULES
+ */
+import { FormFieldModule } from './modules/form-field'
 
 /**
  * COMPONENTS
  */
 import {
-  FormFieldComponent,
   SiteLocatorComponent,
   ModalComponent,
   TooltipComponent,
@@ -48,15 +50,13 @@ import {
     CommonModule,
     HttpModule,
   	FormsModule,
-  	ReactiveFormsModule,
+    ReactiveFormsModule,
+    FormFieldModule,
     ToastModule.forRoot(),
-    NgUploaderModule,
     NguiAutoCompleteModule,
     ClickOutsideModule,
-    MyDatePickerModule,
   ],
   declarations: [
-    FormFieldComponent,
     SiteLocatorComponent,
     ModalComponent,
     FocusOnDirective,
@@ -64,13 +64,11 @@ import {
     TooltipComponent,
   ],
   exports: [
-    FormFieldComponent,
     SiteLocatorComponent,
     ModalComponent,
     TooltipComponent,
     FocusOnDirective,
     ClickOutsideModule,
-    NgUploaderModule,
     TruncatePipe,
   ],
 })

@@ -61,7 +61,9 @@ export class ProductsController implements interfaces.Controller {
         @request() req: Request,
         @response() res: Response,
     ): Promise<IProduct> {
+        //
         // await this.auth.authorizedUser(req, res);
+        //
         return this.wms.createProductsFromExportedJSON();
     }
 }
