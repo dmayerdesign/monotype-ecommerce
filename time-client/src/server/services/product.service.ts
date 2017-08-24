@@ -35,7 +35,7 @@ export class ProductService {
         const searchRegExp = new RegExp(body.search, 'gi');
         let searchQueries: any = [];
         let allQuery: any;
-        let filterQuery: MongoQueries.And;
+        let searchQuery: MongoQueries.And;
 
         /**
          * If it's a search or filter, create a basic `$and` query for parent and standalone products
@@ -49,7 +49,7 @@ export class ProductService {
                 ];
             }
             if (body.filters && body.filters.length) {
-                filterQuery = {
+                searchQuery = {
                     $and: [
                         { isVariation: { $ne: true } },
                         ...searchQueries,
@@ -62,9 +62,10 @@ export class ProductService {
         }
         
         /**
-         * Convert each filter to MongoDB query syntax and add it to `filterQuery.$and`
+         * Convert each filter to MongoDB query syntax and add it to `searchQuery.$and`
          */
         body.filters.forEach(filter => {
+            
             const isPropertyFilter: boolean = filter.type === 'property' ? true : false;
             const isAttrFilter: boolean = filter.type === 'attribute' ? true : false;
             const isTaxFilter: boolean = filter.type === 'taxonomy' ? true : false;
@@ -76,27 +77,32 @@ export class ProductService {
              * 
              */
             if (isPropertyFilter) {
-                filterQuery = this.productSearchUtils.propertyFilter(filter, filterQuery);
+                searchQuery = this.productSearchUtils.propertyFilter(filter, searchQuery);
             }
 
             /*
-             * Attribute Filter - performs an `$elemMatch` on `Product.attributes`
-             * Product attributes have the shape { key: string; value: any; }
+             * Attribute Key/Value Filter - performs an `$elemMatch` on `Product.attributeValues`
              */
-            if (isAttrFilter) {
-                filterQuery = this.productSearchUtils.attributeFilter(filter, filterQuery);
+            if (isAttrFilter && filter.key) {
+                searchQuery = this.productSearchUtils.attributeKeyValueFilter(filter, searchQuery);
+            }
+
+            /*
+             * Attribute Value Filter - performs an `$elemMatch` on `Product.attributeValues`
+             */
+            if (isAttrFilter && !filter.key) {
+                searchQuery = this.productSearchUtils.attributeValueFilter(filter, searchQuery);
             }
 
             /*
              * Taxonomy Filter - performs an `$elemMatch` on `Product.taxonomies`
-             * Product attributes have the shape { key: string; value: any; }
              */
             if (isTaxFilter) {
-                filterQuery = this.productSearchUtils.taxonomyFilter(filter, filterQuery);
+                searchQuery = this.productSearchUtils.taxonomyFilter(filter, searchQuery);
             }
         });
 
-        return this.get(allQuery || filterQuery, body.page, res);
+        return this.get(allQuery || searchQuery, body.page, res);
     }
 
     /**

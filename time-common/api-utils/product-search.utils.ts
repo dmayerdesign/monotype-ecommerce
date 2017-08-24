@@ -1,74 +1,145 @@
-import { injectable } from 'inversify';
-import { ProductSearch, MongoQueries } from './';
+import { injectable } from 'inversify'
+import { ProductSearch, MongoQueries } from './'
 
 @injectable()
 export class ProductSearchUtils {
 
     public propertyFilter(filter: ProductSearch.Filter, query: MongoQueries.And): MongoQueries.And {
+        let newQuery = { ...query }
+
         if (filter.values && filter.values.length) {
-            let propertyVOs = [];
+            let propertyVOs = []
             filter.values.forEach(val => {
-                let propertyVO: any = {};
-                propertyVO[filter.key] = val;
-                propertyVOs.push(propertyVO);
-            });
-            query.$and.push({ $or: propertyVOs });
+                let propertyVO: any = {}
+                propertyVO[filter.key] = val
+                propertyVOs.push(propertyVO)
+            })
+            newQuery.$and.push({ $or: propertyVOs })
         }
         if (filter.range) {
-            let lowerLimit = {};
-            let upperLimit = {};
-            lowerLimit[filter.key] = { $gte: filter.range[0] };
-            upperLimit[filter.key] = { $lte: filter.range[1] };
-            query.$and.push(lowerLimit);
-            query.$and.push(upperLimit);
+            const lowerLimit: any = {
+                [filter.key]: { $gte: filter.range[0] },
+            }
+            const upperLimit: any = {
+                [filter.key]: { $lte: filter.range[1] },
+            }
+
+            newQuery.$and = newQuery.$and.concat([lowerLimit, upperLimit])
         }
-        return { ...query };
+        return newQuery
     }
 
-    public attributeFilter(filter: ProductSearch.Filter, query: MongoQueries.And): MongoQueries.And {
-        let attributeVOs = [];
+    public attributeKeyValueFilter(filter: ProductSearch.Filter, query: MongoQueries.And): MongoQueries.And {
+        let newQuery = { ...query }
+        let attributeVOs = []
+
         if (filter.values && filter.values.length) {
-            filter.values.forEach(attributeValue => {
-                attributeVOs.push({ value: attributeValue });
-            });
-            query.$and.push({
-                attributes: {
-                    $elemMatch: { key: filter.key, $or: attributeVOs },
-                },
-            });
+            attributeVOs = filter.values.map(attributeValue => {
+                return { value: attributeValue }
+            })
+            newQuery.$and.push({
+                $or: [
+                    {
+                        attributeValues: {
+                            $elemMatch: {
+                                attribute: filter.key,
+                                $or: attributeVOs,
+                            },
+                        },
+                    },
+                    {
+                        variableAttributeValues: {
+                            $elemMatch: {
+                                attribute: filter.key,
+                                $or: attributeVOs,
+                            },
+                        },
+                    },
+                ],
+            })
         }
         if (filter.range) {
-            let lowerLimit = {};
-            let upperLimit = {};
-            lowerLimit[filter.key] = { value: { $gte: filter.range[0] } };
-            upperLimit[filter.key] = { value: { $lte: filter.range[1] } };
+            const lowerLimit: any = {
+                [filter.key]: {
+                    value: { $gte: filter.range[0] },
+                }
+            }
+            const upperLimit: any = {
+                [filter.key]: {
+                    value: { $lte: filter.range[1] },
+                }
+            }
 
-            attributeVOs = [lowerLimit, upperLimit];
+            attributeVOs = [lowerLimit, upperLimit]
 
-            query.$and.push({
-                attributes: {
-                    $elemMatch: { key: filter.key, $and: attributeVOs },
-                },
-            });
+            newQuery.$and.push({
+                $or: [
+                    {
+                        attributeValues: {
+                            $elemMatch: {
+                                attribute: filter.key,
+                                $and: attributeVOs,
+                            },
+                        },
+                    },
+                    {
+                        variableAttributeValues: {
+                            $elemMatch: {
+                                attribute: filter.key,
+                                $and: attributeVOs,
+                            },
+                        },
+                    },
+                ],
+            })
         }
-        return { ...query };
+        return newQuery
+    }
+
+    public attributeValueFilter(filter: ProductSearch.Filter, query: MongoQueries.And): MongoQueries.And {
+        let newQuery = { ...query }
+        let attributeValueIds = []
+
+        if (filter.values && filter.values.length) {
+            attributeValueIds = filter.values.map(valueId => {
+                return { valueId }
+            })
+            newQuery.$and.push({
+                $or: [
+                    {
+                        "attributeValues.valueId": {
+                            $in: attributeValueIds,
+                        },
+                    },
+                    {
+                        "variableAttributeValues.valueId": {
+                            $in: attributeValueIds,
+                        },
+                    },
+                ],
+            })
+        }
+
+        return newQuery
     }
 
     public taxonomyFilter(filter: ProductSearch.Filter, query: MongoQueries.And): MongoQueries.And {
+        let newQuery = { ...query }
+
         if (filter.values && filter.values.length) {
-            let taxonomyVOs = [];
+            let taxonomyVOs = []
             filter.values.forEach(val => {
                 const filterItem = {
                     values: val,
-                };
-                taxonomyVOs.push(filterItem);
-            });
-            query.$and.push({
+                }
+                taxonomyVOs.push(filterItem)
+            })
+            newQuery.$and.push({
                 taxonomies: {
                     $elemMatch: { key: filter.key, $or: taxonomyVOs },
                 },
-            });
+            })
         }
-        return { ...query };
+        return newQuery
     }
 }

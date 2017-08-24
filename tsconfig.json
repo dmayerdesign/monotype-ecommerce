@@ -17,6 +17,7 @@
     "noUnusedLocals": false,
     "allowJs": true
   },
+  "outDir": "tsc/",
   "compileOnSave": false,
   "exclude": [
     "node_modules",

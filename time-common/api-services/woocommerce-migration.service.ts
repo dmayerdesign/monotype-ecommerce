@@ -17,18 +17,18 @@ export class WoocommerceMigrationService {
 			(<any>productsJSON).forEach(product => {
 
 				let newProduct: IProduct = Object.assign({}, product);
-				let attributes = [];
+				let attributeValues = [];
 				let taxonomyTermSlugs = [];
 
 				Object.keys(product).forEach(key => {
 					if (typeof newProduct[key] !== "undefined" && newProduct[key] !== undefined && newProduct[key] !== "") {
 
 						if (key.indexOf("attributes.") > -1) {
-							let attribute: any = {};
-							attribute.key = key.replace("attributes.", "");
-							// attribute.name = attribute.key.replace(/([A-Z])/g, ' $1').replace(/^./, function(str){ return str.toUpperCase(); });
-							attribute.value = product[key];
-							attributes.push(attribute);
+							let attributeValue = {
+								attribute: key.replace("attributes.", ""),
+								value: product[key],
+							};
+							attributeValues.push(attributeValue);
 							delete newProduct[key];
 						}
 						if (key.indexOf("taxonomies.") > -1) {
@@ -92,26 +92,31 @@ export class WoocommerceMigrationService {
 					}
 				});
 
-				newProduct.attributes = attributes;
+				newProduct.attributeValues = attributeValues;
 				newProduct.taxonomyTermSlugs = taxonomyTermSlugs;
 
+
+				/**
+				 * Flight stats
+				 */
 				let stats: {
 					fade?: number;
 					glide?: number;
 					speed?: number;
 					turn?: number;
 				} = {};
-				newProduct.attributes.forEach(attribute => {
-					if (attribute.key === 'fade') {
+
+				newProduct.attributeValues.forEach(attribute => {
+					if (attribute.attribute === 'fade') {
 						stats.fade = +attribute.value;
 					}
-					if (attribute.key === 'glide') {
+					if (attribute.attribute === 'glide') {
 						stats.glide = +attribute.value;
 					}
-					if (attribute.key === 'speed') {
+					if (attribute.attribute === 'speed') {
 						stats.speed = +attribute.value;
 					}
-					if (attribute.key === 'turn') {
+					if (attribute.attribute === 'turn') {
 						stats.turn = +attribute.value;
 					}
 				});
@@ -133,10 +138,9 @@ export class WoocommerceMigrationService {
 						"stability-" + stability(stats)
 					);
 
-					newProduct.attributes.push({
-						key: "stability",
+					newProduct.attributeValues.push({
+						attribute: "stability",
 						value: stability(stats),
-						// visible: true,
 					});
 				}
 
@@ -163,21 +167,21 @@ export class WoocommerceMigrationService {
 						}
 					});
 
-					isDisc = newProduct.attributes.some(attr => attr.key === "productType" && attr.value === "disc");
+					isDisc = newProduct.attributeValues.some(attr => attr.attribute === "productType" && attr.value === "disc");
 
 					if (newProduct.parentSKU && newProduct.isVariation) imageBaseUrl += `${newProduct.parentSKU.toLowerCase()}-`;
 					else if (newProduct.SKU) imageBaseUrl += `${newProduct.SKU.toLowerCase()}-`;
 
 					if (isDisc) {
-						newProduct.attributes.forEach(attr => {
-							if (attr.key === "plastic") {
+						newProduct.attributeValues.forEach(attr => {
+							if (attr.attribute === "plastic") {
 								imageBaseUrl += `${attr.value.toLowerCase()}-`;
 							}
 						});
 						imageBaseUrl += newProduct.netWeight.toString().replace(".", "");
 					} else {
-						newProduct.attributes.forEach(attr => {
-							if (attr.key === "color") {
+						newProduct.attributeValues.forEach(attr => {
+							if (attr.attribute === "color") {
 								imageBaseUrl += `${attr.value.toLowerCase()}-`;
 							}
 						});

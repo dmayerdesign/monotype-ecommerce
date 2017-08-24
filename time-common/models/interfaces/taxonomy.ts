@@ -1,5 +1,4 @@
 import { Document, Types } from 'mongoose';
-import { ITerm } from './';
 
 export interface ITaxonomy extends Document {
 	name: string; // "Disc Type" | "Brand",

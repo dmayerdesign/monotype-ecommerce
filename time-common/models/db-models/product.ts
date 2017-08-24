@@ -1,6 +1,5 @@
-import { Schema, Model, model } from 'mongoose';
-import { IProduct } from '../';
-import { attributeSchema, attributeRefSchema } from './';
+import { Schema, Model, model } from 'mongoose'
+import { IProduct } from '../'
 
 export const productSchema = new Schema({
 	/* Aesthetic */
@@ -28,8 +27,21 @@ export const productSchema = new Schema({
 	parentSKU: String, 				// The SKU of the parent product
 
 	/* Attributes */
-	attributes: [attributeRefSchema],
-	variableAttributes: [Schema.Types.ObjectId],
+	/* own attributes */
+	attributeValues: [{
+		attributeId: Schema.Types.ObjectId,
+		attribute: Schema.Types.Mixed, // Attribute.slug
+		valueId: Schema.Types.ObjectId,
+		value: Schema.Types.Mixed,
+	}],
+	/* variation attributes */
+	variableAttributes: [Schema.Types.ObjectId], // Attribute IDs
+	variableAttributeValues: [{
+		attributeId: Schema.Types.ObjectId,
+		attribute: Schema.Types.Mixed,
+		valueId: Schema.Types.ObjectId,
+		value: Schema.Types.Mixed,
+	}],
 
 	/* Taxonomy */
 	taxonomyTerms: [Schema.Types.ObjectId],
@@ -38,12 +50,12 @@ export const productSchema = new Schema({
 	/* Shipping */
 	units: { 						// Only if not using global defaults
 		weight: String,
-		length: String
+		length: String,
 	},
 	dimensions: {
 		length: Number,
 		width: Number,
-		height: Number
+		height: Number,
 	},
 	shippingWeight: Number,
 	netWeight: Number,
@@ -54,23 +66,21 @@ export const productSchema = new Schema({
 	/* Sales */
 	stockQuantity: Number,
 	totalSales: Number,
-	enteredIntoStripe: Boolean,
+	isEnteredIntoStripe: Boolean,
 
-}, { timestamps: true });
-
-// .index({ name: "text", description: "text" });
+}, { timestamps: true })
 
 productSchema.pre('save', function(next) {
-	let product = this;
+	let product = this
   if (!product.slug && product.isNew) {
-    product.slug = product.name.toLowerCase().replace(/[^a-zA-Z0-9]/g, "-");
+    product.slug = product.name.toLowerCase().replace(/[^a-zA-Z0-9]/g, "-")
   }
   if (product.isNew || product.isModified('class')) {
-  	product.isStandalone = product.class === 'standalone';
-  	product.isParent = product.class === 'parent';
-  	product.isVariation = product.class === 'variation';
+  	product.isStandalone = product.class === 'standalone'
+  	product.isParent = product.class === 'parent'
+  	product.isVariation = product.class === 'variation'
   }
-  next();
-});
+  next()
+})
 
-export const Product: Model<IProduct> = model('Product', productSchema);
+export const Product: Model<IProduct> = model('Product', productSchema)
