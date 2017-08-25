@@ -1,11 +1,11 @@
 import { injectable, inject } from 'inversify';
 import { Response } from 'express';
 import { Error } from 'mongoose';
-import { TYPES } from '@time/constants/inversify';
-import { IProduct } from '@time/interfaces';
-import { Product } from '@time/models';
-import { CONSTANTS } from '@time/constants';
-import { DbClient, ProductSearch, ProductSearchUtils, MongoQueries } from '@time/api-utils';
+import { TYPES } from '@dannymayer/time-common/constants/inversify';
+import { IProduct } from '@dannymayer/time-common/models/interfaces';
+import { Product } from '@dannymayer/time-common/models/db-models';
+import { CONSTANTS } from '@dannymayer/time-common/constants';
+import { DbClient, ProductSearch, ProductSearchUtils, MongoQueries } from '@dannymayer/time-common/api-utils';
 
 @injectable()
 export class ProductService {

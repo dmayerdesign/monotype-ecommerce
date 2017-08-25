@@ -3,7 +3,7 @@ import { HttpClient, HttpResponse, HttpHeaders } from '@angular/common/http'
 import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, CanActivate, CanActivateChild } from '@angular/router'
 import { Observable, Subject } from 'rxjs'
 
-import { appConfig } from '../../../../../../app-config'
+import { appConfig } from '../../../../../../time-common/config/app-config'
 import { IProduct } from '../../../../../../time-common/models/interfaces'
 import { UtilService } from '../../shared/services/util.service'
 

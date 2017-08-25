@@ -1,24 +1,30 @@
 import * as express from 'express';
 import { Request, Response } from 'express';
 import {
-  interfaces, controller, request, response, httpGet, httpPost, httpPut, httpDelete, queryParam, requestParam
+  interfaces,
+  controller,
+  request,
+  response,
+  httpGet,
+  httpPost,
+  httpPut,
+  httpDelete,
+  queryParam,
+  requestParam,
 } from 'inversify-express-utils';
 import { injectable, inject } from 'inversify';
 
-import CONSTANTS from '@time/constants';
-import { TYPES } from '@time/constants/inversify/types';
-import { handleError } from '@time/api-utils';
+import CONSTANTS, { TYPES } from '@dannymayer/time-common/constants';
+import { handleError } from '@dannymayer/time-common/api-utils';
 import { ProductService } from '../services';
-import { IProduct } from '@time/interfaces';
-import { WoocommerceMigrationService } from '@time/api-services';
-import { Authenticate } from '../auth/authenticate';
+import { IProduct } from '@dannymayer/time-common/models/interfaces';
+import { WoocommerceMigrationService } from '@dannymayer/time-common/api-services';
 
-@controller('/api/v1/products')
 @injectable()
+@controller('/api/v1/products')
 export class ProductsController implements interfaces.Controller {
 
     constructor(
-        @inject(TYPES.Authenticate) private auth: Authenticate,
         @inject(TYPES.ProductService) private productService: ProductService,
         @inject(TYPES.WoocommerceMigrationService) private wms: WoocommerceMigrationService,
     ) {}
@@ -56,14 +62,11 @@ export class ProductsController implements interfaces.Controller {
             .catch((err) => handleError(err, res));
     }
 
-    @httpGet('/migrate')
+    @httpGet('/migrate', TYPES.isAuthorized)
     private async migrate(
         @request() req: Request,
         @response() res: Response,
     ): Promise<IProduct> {
-        //
-        // await this.auth.authorizedUser(req, res);
-        //
         return this.wms.createProductsFromExportedJSON();
     }
 }

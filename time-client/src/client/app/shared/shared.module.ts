@@ -49,7 +49,7 @@ import {
 @NgModule({
   imports: [
     CommonModule,
-    HttpModule,
+    HttpClientModule,
   	FormsModule,
     ReactiveFormsModule,
     FormFieldModule,

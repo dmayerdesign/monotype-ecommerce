@@ -1,3 +1,4 @@
+time-common
 time-admin-deploy
 time-client-deploy
 dist
@@ -41,3 +42,4 @@ e2e/*.map
 # System Files
 .DS_Store
 Thumbs.db
+Icon

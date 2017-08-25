@@ -10,23 +10,20 @@ import * as express from 'express';
 import { Request, Response } from 'express';
 import { IUser } from '../models/interfaces/user';
 import { UserService } from '../services/user.service';
-import TYPES from '@time/constants/inversify/types';
-import CONSTANTS from '@time/constants';
-import { Authenticate } from '../auth/authenticate';
-import { handleError } from '@time/api-utils';
+import TYPES from '@dannymayer/time-common/constants/inversify/types';
+import CONSTANTS from '@dannymayer/time-common/constants';
+import { handleError } from '@dannymayer/time-common/api-utils';
 
 @injectable()
 @controller('/api/v1/user')
 export class UserController {
 
   constructor(
-    @inject(TYPES.Authenticate) private auth: Authenticate,
     @inject(TYPES.UserService) private userService: UserService,
   ) { }
 
-  @httpGet('/')
+  @httpGet('/', TYPES.isAuthenticated)
   public async getUser(req: Request, res: Response): Promise<IUser> {
-    const user = await this.auth.authenticatedUser(req, res);
     return this.userService.getUser(req.user._id);
   }
 
@@ -40,10 +37,9 @@ export class UserController {
     return this.userService.isUserLoggedIn(req);
   }
 
-  @httpPut('/update')
+  @httpPut('/update', TYPES.isAuthenticated)
   public async updateUser(req: Request, res: Response): Promise<IUser> {
-    const user = await this.auth.authenticatedUser(req, res);
-    return this.userService.updateUser(user._id, req.body);
+    return this.userService.updateUser(req.user._id, req.body);
   }
 
   @httpDelete('/:id')

@@ -3,8 +3,8 @@ import { Request } from 'express';
 import * as simpleEncryptor from 'simple-encryptor';
 import { IUser } from '../models/interfaces';
 import { User } from '../models';
-import TYPES from '@time/constants/inversify/types';
-import CONSTANTS from '@time/constants';
+import TYPES from '@dannymayer/time-common/constants/inversify/types';
+import CONSTANTS from '@dannymayer/time-commonconstants';
 
 const encryptor = simpleEncryptor(process.env.PW_ENCRYPTION_KEY);
 

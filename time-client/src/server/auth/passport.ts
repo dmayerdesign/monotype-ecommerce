@@ -4,8 +4,8 @@ import * as passportFacebook from 'passport-facebook';
 import { Request, Response, NextFunction } from 'express';
 import { User } from '../models';
 import { IUser } from '../models/interfaces';
-import { handleError } from '@time/api-utils';
-import CONSTANTS from '@time/constants';
+import { handleError } from '@dannymayer/time-common/api-utils';
+import CONSTANTS from '@dannymayer/time-common/constants';
 
 const FacebookStrategy = passportFacebook.Strategy;
 
