@@ -6,7 +6,7 @@ import 'rxjs/add/observable/throw';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/map';
 
-import { UIService } from './ui.service';
+import { UiService } from './ui.service';
 
 class ExpressResponse extends Response {
 	_body: string;
@@ -19,7 +19,7 @@ export class UtilService {
 
 	constructor(
 		private titleService: Title,
-		private ui: UIService,
+		private ui: UiService,
 	) {}
 
 	setTitle(title: string): void {

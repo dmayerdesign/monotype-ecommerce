@@ -9,7 +9,6 @@ import * as express from 'express'
 import * as bodyParser from 'body-parser'
 import * as helmet from 'helmet'
 import { InversifyExpressServer } from 'inversify-express-utils'
-
 import * as morgan from 'morgan'
 import * as validator from 'express-validator'
 import * as session from 'express-session'
@@ -20,15 +19,10 @@ import { passportConfig } from './auth/passport'
 import { mongoConnection } from './db/mongo.connection'
 import { initStartupTasks } from './utils/startup'
 
-  /** ANGULAR UNIVERSAL - imports */
+/** ANGULAR UNIVERSAL - imports */
 import 'zone.js/dist/zone-node'
 import * as ngUniversal from '@nguniversal/express-engine'
 import { AppServerModule } from '../client/app/app.server.module'
-// const mainAppBundlePath: string = glob.sync('**/server-app/*bundle.js')[0]
-// const appServerContents = mainAppBundlePath ? fs.readFileSync(mainAppBundlePath, "utf8") : null
-// const appServer = appServerContents ? requireFromString(appServerContents) : {}
-// const appServer = require('./server-app/main.bundle.js')
-// console.log("" + appServer.AppServerModule)
 
 const MongoStore = require('connect-mongo')(session)
 

@@ -13,16 +13,9 @@ import { ShopComponent } from './shop/components/shop/shop.component'
   imports: [
     // The AppServerModule should import your AppModule followed
     // by the ServerModule from @angular/platform-server.
-    // SiteModule,
-    // ShopModule,
     AppModule,
     ServerModule,
   ],
-  
-  // entryComponents: [
-  //   HomeComponent,
-  //   ShopComponent,
-  // ],
   
   // Since the bootstrapped component is not inherited from your
   // imported AppModule, it needs to be repeated here.

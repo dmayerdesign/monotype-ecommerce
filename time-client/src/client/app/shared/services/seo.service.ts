@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@angular/core';
 import { Title, DOCUMENT } from '@angular/platform-browser';
  
 @Injectable()
-export class SEOService {
+export class SeoService {
 
   private headElement: HTMLElement;
   private metaDescription: HTMLElement;

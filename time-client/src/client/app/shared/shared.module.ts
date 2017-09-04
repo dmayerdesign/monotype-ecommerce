@@ -3,18 +3,18 @@ import { HttpModule } from '@angular/http'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { CommonModule } from '@angular/common'
 import { HttpClientModule } from '@angular/common/http'
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 
 /**
  * EXTERNAL MODULES
  */
-import { ToastModule } from 'ng2-toastr/ng2-toastr'
-import { NguiAutoCompleteModule } from '@ngui/auto-complete'
+import { ToastrModule } from 'ngx-toastr'
 import { ClickOutsideModule } from 'ng-click-outside'
 
 /**
  * FEATURE MODULES
  */
-import { FormFieldModule } from './modules/form-field'
+import { FormFieldModule } from '@time/common/ng-modules/form-field'
 
 /**
  * COMPONENTS
@@ -39,11 +39,11 @@ import { TruncatePipe } from './pipes'
  * SERVICES
  */
 import {
-  GAService,
+  GAnalyticsService,
   AuthGuardService,
-  SEOService,
+  SeoService,
   UtilService,
-  UIService,
+  UiService,
 } from './services'
 
 @NgModule({
@@ -52,10 +52,15 @@ import {
     HttpClientModule,
   	FormsModule,
     ReactiveFormsModule,
-    FormFieldModule,
-    ToastModule.forRoot(),
-    NguiAutoCompleteModule,
+    BrowserAnimationsModule,
+    ToastrModule.forRoot({
+      timeOut: 6000,
+      positionClass: "toast-top-center",
+      maxOpened: 1,
+      preventDuplicates: true,
+    }),
     ClickOutsideModule,
+    FormFieldModule,
   ],
   declarations: [
     SiteLocatorComponent,
@@ -79,11 +84,11 @@ export class SharedModule {
     return {
       ngModule: SharedModule,
       providers: [
-        GAService,
+        GAnalyticsService,
         AuthGuardService,
-        SEOService,
+        SeoService,
         UtilService,
-        UIService,
+        UiService,
       ],
     }
   }

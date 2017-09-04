@@ -3,12 +3,11 @@ import { Container } from 'inversify';
 import { makeLoggerMiddleware } from 'inversify-logger-middleware';
 import * as express from 'express';
 
-import { TYPES, TAGS } from '@dannymayer/time-common/constants/inversify';
+import { TYPES, TAGS } from '@time/common/constants/inversify';
 
 import { AppController, UserController, ProductsController } from '../controllers';
-import { ProductService, UserService } from '../services';
-import { WoocommerceMigrationService } from '@dannymayer/time-common/api-services';
-import { DbClient, ProductSearchUtils } from '@dannymayer/time-common/api-utils';
+import { ProductService, UserService, WoocommerceMigrationService } from '../services';
+import { DbClient, ProductSearchUtils } from '@time/common/api-utils';
 
 /**
  * Middleware

@@ -3,7 +3,7 @@ import { Http, Response, Headers, RequestOptions, RequestOptionsArgs } from '@an
 import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, CanActivate, CanActivateChild } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
 
-import { IUser } from '../interfaces/user';
+import { IUser } from '@time/common/models/interfaces';
 import { UtilService } from './util.service';
 
 @Injectable()
@@ -27,13 +27,13 @@ export class UserService {
 	}
 
 	signup(user): Observable<any> {
-		return this.http.post('/api/v1/signup', user) // , <RequestOptionsArgs>{headers: headers, withCredentials: true})
+		return this.http.post('/api/signup', user) // , <RequestOptionsArgs>{headers: headers, withCredentials: true})
 			.map((res: Response) => res.json())
 			.catch(this.util.catchHttpError);
 	}
 
 	login(credentials: {email: string; password: string}): Observable<any> {
-		return this.http.post('/api/v1/login/local', credentials)
+		return this.http.post('/api/login/local', credentials)
 			.map((res: Response) => res.json())
 			.catch(this.util.catchHttpError);
 	}
@@ -41,23 +41,23 @@ export class UserService {
 	logout(): Observable<any> {
 		console.log("Logging out");
 		this.onLogout();
-		return this.http.post('/api/v1/logout', {});
+		return this.http.post('/api/logout', {});
 	}
 
 	verifyEmail(token: string): Observable<IUser> {
-		return this.http.get(`/api/v1/verify-email/${token}`)
+		return this.http.get(`/api/verify-email/${token}`)
 			.map((res: Response) => res.json())
 			.catch(this.util.catchHttpError);
 	}
 
 	getOne(id: string): Observable<any> {
-		return this.http.get('/api/v1/user/' + id)
+		return this.http.get('/api/user/' + id)
 			.map((res: Response) => res.json())
 			.catch(this.util.catchHttpError);
 	}
 
 	getCurrent(): Observable<any> {
-		return this.http.get('/api/v1/current-user')
+		return this.http.get('/api/current-user')
 			.map((res: Response) => res.json());
 	}
 
@@ -94,7 +94,7 @@ export class UserService {
 	}
 
 	getNotifications(): void {
-		this.http.get('/api/v1/notifications')
+		this.http.get('/api/notifications')
 			.map((res: Response) => res.json())
 			.catch(this.util.catchHttpError)
 			.subscribe(
@@ -114,7 +114,7 @@ export class UserService {
 	}
 
 	edit(user: any, done?: (err?: any, user?: IUser) => void) {
-		this.http.post('/api/v1/user/edit', user)
+		this.http.post('/api/user/edit', user)
 			.map((res: Response) => res.json())
 			.catch(this.util.catchHttpError)
 			.subscribe(
@@ -130,7 +130,7 @@ export class UserService {
 	}
 
 	editPassword(newPassword: string, resetToken?: string, done?: (err?: any, user?: IUser) => void) {
-		this.http.post('/api/v1/reset-password', {newPassword, resetToken})
+		this.http.post('/api/reset-password', {newPassword, resetToken})
 			.map((res: Response) => res.json())
 			.catch(this.util.catchHttpError)
 			.subscribe(
@@ -146,7 +146,7 @@ export class UserService {
 	}
 
 	forgotPassword(email: string): Observable<IUser> {
-		return this.http.post('/api/v1/send-forgot-password', {email})
+		return this.http.post('/api/send-forgot-password', {email})
 			.map((res: Response) => res.json())
 			.catch(this.util.catchHttpError);
 	}

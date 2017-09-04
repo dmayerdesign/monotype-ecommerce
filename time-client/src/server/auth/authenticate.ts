@@ -1,8 +1,8 @@
 import { injectable } from 'inversify';
 import { Request, Response, NextFunction } from 'express';
-import { IUser } from '../models/interfaces';
-import { handleError } from '@dannymayer/time-common/api-utils';
-import CONSTANTS from '@dannymayer/time-common/constants';
+import { IUser } from '@time/common/models/interfaces';
+import { handleError } from '@time/common/api-utils';
+import CONSTANTS from '@time/common/constants';
 
 @injectable()
 export class Authenticate {

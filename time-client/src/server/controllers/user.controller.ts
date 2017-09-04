@@ -8,14 +8,14 @@ import {
 import { injectable, inject, Container } from 'inversify';
 import * as express from 'express';
 import { Request, Response } from 'express';
-import { IUser } from '../models/interfaces/user';
+import { IUser } from '@time/common/models/interfaces';
 import { UserService } from '../services/user.service';
-import TYPES from '@dannymayer/time-common/constants/inversify/types';
-import CONSTANTS from '@dannymayer/time-common/constants';
-import { handleError } from '@dannymayer/time-common/api-utils';
+import TYPES from '@time/common/constants/inversify/types';
+import CONSTANTS from '@time/common/constants';
+import { handleError } from '@time/common/api-utils';
 
 @injectable()
-@controller('/api/v1/user')
+@controller('/api/user')
 export class UserController {
 
   constructor(

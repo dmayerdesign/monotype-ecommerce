@@ -9,17 +9,13 @@ import { AppComponent } from './app.component'
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
   ],
   imports: [
     BrowserModule.withServerTransition({appId: 'time-client-universal'}),
     SiteModule,
     ShopModule,
-    RouterModule.forRoot([
-      // { path: '', loadChildren: './site/site.module#SiteModule' },
-      // { path: 'shop', loadChildren: './shop/shop.module#ShopModule' },
-      // { path: '**', redirectTo: '' },
-    ]),
+    RouterModule.forRoot([]),
   ],
   providers: [],
   bootstrap: [AppComponent]

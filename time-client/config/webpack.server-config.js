@@ -15,15 +15,11 @@ module.exports = {
     },
     externals: nodeModules,
     resolve: {
-      // alias: {
-      //   '@time/interfaces': path.resolve(__dirname, '../../time-common/models/interfaces'),
-      //   '@time/models': path.resolve(__dirname, '../../time-common/models/db-models'),
-      //   '@time/modules': path.resolve(__dirname, '../../time-common/modules'),
-      //   '@time/api-services': path.resolve(__dirname, '../../time-common/api-services'),
-      //   '@time/api-utils': path.resolve(__dirname, '../../time-common/api-utils'),
-      //   '@time/constants': path.resolve(__dirname, '../../time-common/constants'),
-      // },
       extensions: ['.ts', '.js', '.json', '.pug', '.html'],
+      alias: {
+        "@time/common": path.resolve(__dirname, '../../time-common'),
+        "@time/app-config": path.resolve(__dirname, '../../app-config.ts'),
+      },
     },
     module: {
       rules: [
@@ -33,16 +29,13 @@ module.exports = {
             'ts-loader',
             'angular2-template-loader',
           ],
-          exclude: /node_modules/,
-          include: [
-            path.resolve(__dirname, '../../time-common'),
-            path.resolve(__dirname, '../src/server'),
-            path.resolve(__dirname, '../src/client'),
+          exclude: [
+            /node_modules/,
           ],
         },
         {
           test: /node_modules\/JSONStream\/index\.js$/,
-          use: ['shebang-loader', 'babel-loader']
+          use: ['shebang-loader']
         },
         {
           test: /\.(css|scss)$/,
@@ -51,7 +44,6 @@ module.exports = {
             'css-loader',
             'sass-loader',
           ],
-          // exclude: [/node_modules/, /assets\/css/],
         },
         {test: /\.pug$/, use: 'pug-loader'},
         {test: /\.html$/, use: 'raw-loader'},
@@ -61,9 +53,13 @@ module.exports = {
           use: 'url-loader',
         },
       ],
-      exprContextCritical: false,
     },
     plugins: [
       new webpack.IgnorePlugin(/^vertx$/),
+      // Prevents errors in the server-rendered Angular app when `document` or `window` are accessed
+      new webpack.DefinePlugin({
+        window: undefined,
+        document: undefined,
+      }),
     ],
 };

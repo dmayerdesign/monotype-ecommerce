@@ -1,5 +1,5 @@
 import * as rp from 'request-promise';
-import { Timer } from '../../../../time-common/models';
+import { Timer } from '@time/common/models';
 
 export function initStartupTasks() {
 

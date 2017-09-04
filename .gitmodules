@@ -1,0 +1,3 @@
+[submodule "time-common"]
+	path = time-common
+	url = https://github.com/dmayerdesign/time-common.git

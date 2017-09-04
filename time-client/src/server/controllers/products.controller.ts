@@ -1,5 +1,5 @@
-import * as express from 'express';
-import { Request, Response } from 'express';
+import * as express from 'express'
+import { Request, Response } from 'express'
 import {
   interfaces,
   controller,
@@ -11,17 +11,18 @@ import {
   httpDelete,
   queryParam,
   requestParam,
-} from 'inversify-express-utils';
-import { injectable, inject } from 'inversify';
+} from 'inversify-express-utils'
+import { injectable, inject } from 'inversify'
 
-import CONSTANTS, { TYPES } from '@dannymayer/time-common/constants';
-import { handleError } from '@dannymayer/time-common/api-utils';
-import { ProductService } from '../services';
-import { IProduct } from '@dannymayer/time-common/models/interfaces';
-import { WoocommerceMigrationService } from '@dannymayer/time-common/api-services';
+import { appConfig } from '@time/app-config'
+import CONSTANTS, { TYPES } from '@time/common/constants'
+import { handleError } from '@time/common/api-utils'
+import { ProductService } from '../services'
+import { IProduct } from '@time/common/models/interfaces'
+import { WoocommerceMigrationService } from '../services'
 
 @injectable()
-@controller('/api/v1/products')
+@controller('/api/products')
 export class ProductsController implements interfaces.Controller {
 
     constructor(
@@ -35,9 +36,14 @@ export class ProductsController implements interfaces.Controller {
         @queryParam('page') page: number,
         @response() res: Response,
     ): Promise<IProduct[]> {
-        query = query ? JSON.parse(query) : {};
-        res.setHeader('content-type', 'application/json');
-        return this.productService.get(query, page, res);
+        const test = true
+        if (test) {
+            handleError("Some error", res, "Hello!", 401)
+            return
+        }
+        query = query ? JSON.parse(query) : {}
+        res.setHeader('content-type', 'application/json')
+        return this.productService.get(query, page, res)
     }
 
     @httpGet('/update-test')
@@ -49,7 +55,7 @@ export class ProductsController implements interfaces.Controller {
                 SKU: "FFFFFFFF",
             })
             .then(data => res.json(data))
-            .catch(err => handleError(err, res));
+            .catch(err => handleError(err, res))
     }
 
     @httpDelete('/:id')
@@ -59,7 +65,7 @@ export class ProductsController implements interfaces.Controller {
     ): void {
         this.productService.deleteOne(id)
             .then(() => res.sendStatus(CONSTANTS.HTTP.SUCCESS_noContent))
-            .catch((err) => handleError(err, res));
+            .catch((err) => handleError(err, res))
     }
 
     @httpGet('/migrate', TYPES.isAuthorized)
@@ -67,6 +73,6 @@ export class ProductsController implements interfaces.Controller {
         @request() req: Request,
         @response() res: Response,
     ): Promise<IProduct> {
-        return this.wms.createProductsFromExportedJSON();
+        return this.wms.createProductsFromExportedJSON(appConfig)
     }
 }

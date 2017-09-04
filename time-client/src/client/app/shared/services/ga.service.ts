@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { NavigationEnd } from '@angular/router';
 import { Http } from '@angular/http';
-import { appConfig } from '../../../../../../time-common/config/app-config';
+import { appConfig } from '@time/app-config';
 
 declare const ga: Function;
 
 @Injectable()
-export class GAService {
+export class GAnalyticsService {
 
   constructor(
     private http: Http,
@@ -18,7 +18,7 @@ export class GAService {
 
   send(event, location, currentRoute): void {
     if (event instanceof NavigationEnd) {
-      let newRoute = location.path() || '/';  // When the route is '/', location.path actually returns ''
+      let newRoute = location.path() || '/';   // When the route is '/', location.path actually returns ''
       if (currentRoute !== newRoute) {         // If the route has changed, send the new route to analytics
         ga('send', 'pageview', newRoute);
         currentRoute = newRoute;
