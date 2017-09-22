@@ -1,16 +1,23 @@
-import { ModuleWithProviders, NgModule } from '@angular/core'
+import { HTTP_INTERCEPTORS } from '@angular/common/http'
 import { HttpClientModule } from '@angular/common/http'
-import { HttpService } from './http.service'
+import { ModuleWithProviders, NgModule } from '@angular/core'
+import { TimeHttpResponseInterceptor } from './http-response.interceptor'
+import { TimeHttpService } from './http.service'
 
 @NgModule({
-    imports: [ HttpClientModule ]
+    imports: [ HttpClientModule ],
 })
 export class TimeHttpModule {
     public static forRoot(): ModuleWithProviders {
         return {
             ngModule: TimeHttpModule,
             providers: [
-                HttpService,
+                TimeHttpService,
+                {
+                    provide: HTTP_INTERCEPTORS,
+                    useClass: TimeHttpResponseInterceptor,
+                    multi: true,
+                },
             ],
         }
     }

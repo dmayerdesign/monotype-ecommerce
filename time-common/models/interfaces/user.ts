@@ -1,4 +1,4 @@
-import { Document, model } from 'mongoose'
+import { model, Document } from 'mongoose'
 import { IAddress } from './address'
 
 export interface PassportLocalDocument {

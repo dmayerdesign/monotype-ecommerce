@@ -2,10 +2,10 @@ import { Injectable, Inject, EventEmitter } from '@angular/core'
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { Observable } from 'rxjs/Observable'
 import { Subject } from 'rxjs/Subject'
-import 'rxjs/add/operator/catch'
+import 'rxjs/add/operator/catch';
 
 import { appConfig } from '@time/app-config'
-import { HttpService, SimpleError } from '@time/common/http'
+import { TimeHttpService, SimpleError } from '@time/common/http'
 import { IProduct } from '@time/common/models/interfaces'
 import { ProductSearch } from '@time/common/api-utils'
 import { UtilService } from '../../shared/services'
@@ -18,10 +18,10 @@ export class ProductService {
     private productsErrorSubject = new Subject<SimpleError>()
     
     constructor (
-		private http: HttpClient,
+        private http: HttpClient,
         private util: UtilService,
-        private httpService: HttpService,
-	) {
+        private httpService: TimeHttpService,
+    ) {
         this.products$ = this.productsSubject.asObservable()
         this.productsError$ = this.productsErrorSubject.asObservable()
     }
@@ -30,11 +30,11 @@ export class ProductService {
         const params = new HttpParams()
         if (page) params.set("page", page + "")
         if (query) params.set("page", JSON.stringify(query))
-        
+
         this.http.get(appConfig.client_url + "/api/products", { params })
             .subscribe(
                 (products: IProduct[]) => this.productsSubject.next(products),
-                (error: HttpErrorResponse) => this.productsErrorSubject.next(new SimpleError(error))
+                (error: HttpErrorResponse) => this.productsErrorSubject.next(new SimpleError(error)),
             )
     }
 
@@ -42,7 +42,7 @@ export class ProductService {
         this.http.get(appConfig.client_url + "/api/product/" + slug)
             .subscribe(
                 (products: IProduct[]) => this.productsSubject.next(products),
-                (error: HttpErrorResponse) => this.productsErrorSubject.next(new SimpleError(error))
+                (error: HttpErrorResponse) => this.productsErrorSubject.next(new SimpleError(error)),
             )
     }
 }
