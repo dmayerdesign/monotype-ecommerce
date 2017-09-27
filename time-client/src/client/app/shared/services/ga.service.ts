@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { NavigationEnd } from '@angular/router';
-import { Http } from '@angular/http';
 import { appConfig } from '@time/app-config';
 
 declare const ga: Function;
@@ -8,9 +7,7 @@ declare const ga: Function;
 @Injectable()
 export class GAnalyticsService {
 
-  constructor(
-    private http: Http,
-  ) {}
+  constructor() {}
 
   getTracking(): string {
     return appConfig.google_analytics_tracking_code;
@@ -20,7 +17,7 @@ export class GAnalyticsService {
     if (event instanceof NavigationEnd) {
       let newRoute = location.path() || '/';   // When the route is '/', location.path actually returns ''
       if (currentRoute !== newRoute) {         // If the route has changed, send the new route to analytics
-        ga('send', 'pageview', newRoute);
+        ga('send', 'pageview', newRoute)
         currentRoute = newRoute;
       }
     }
@@ -38,12 +35,12 @@ export class GAnalyticsService {
       a.async = 1;
       a.src = g;
       m.parentNode.insertBefore(a, m);
-    };
-    
-    init(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+    }
 
-    ga('create', this.getTracking(), 'auto');
-    ga('send', 'pageview');
+    init(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga')
+
+    ga('create', this.getTracking(), 'auto')
+    ga('send', 'pageview')
   }
 }
 

@@ -1,9 +1,8 @@
 import { HttpClient } from '@angular/common/http'
 import { EventEmitter, Inject, Injectable } from '@angular/core'
-import { ActivatedRouteSnapshot, CanActivate, CanActivateChild, Router, RouterStateSnapshot } from '@angular/router'
+import { CanActivate, CanActivateChild, Router } from '@angular/router'
 import { Observable, Subject } from 'rxjs/Rx'
 
-import { TimeHttpResponseInterceptor } from '@time/common/http'
 import { IUser } from '@time/common/models/interfaces'
 import { UtilService } from './util.service'
 
@@ -18,14 +17,7 @@ export class UserService {
         private http: HttpClient,
         private router: Router,
         private util: UtilService,
-        private timeHttp: TimeHttpResponseInterceptor,
-    ) {
-        this.timeHttp.user$.subscribe(user => {
-            if (user === false) {
-                console.log("INVALID SESSION")
-            }
-        })
-    }
+    ) {}
 
     public signup(user): Observable<any> {
         return this.http.post('/api/signup', user)

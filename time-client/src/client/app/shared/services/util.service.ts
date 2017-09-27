@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core'
 import { Title } from '@angular/platform-browser'
 import { Observable } from 'rxjs/Observable'
+import { Subject } from 'rxjs/Subject'
 import 'rxjs/add/observable/throw'
 import 'rxjs/add/operator/catch'
 import 'rxjs/add/operator/map'
@@ -11,17 +12,18 @@ import { UiService } from './ui.service'
 export class UtilService {
 
     private dateMidnightMillis: number
+    public userError$ = new Subject<any>()
 
     constructor(
         private titleService: Title,
         private ui: UiService,
     ) {}
 
-    setTitle(title: string): void {
+    public setTitle(title: string): void {
         this.titleService.setTitle(title + ' | A2EE')
     }
 
-    handleError(serverMsg: any, msg?: string): boolean {
+    public handleError(serverMsg: any, msg?: string): boolean {
         if (typeof serverMsg === "string") {
             if (serverMsg.charAt(0) === "{") serverMsg = JSON.parse(serverMsg).error
         }
@@ -33,7 +35,7 @@ export class UtilService {
         else return false
     }
 
-    getFromLocalStorage(key: string): any {
+    public getFromLocalStorage(key: string): any {
         const item = localStorage.getItem(key)
         if (item && item.length) {
             if (item.charAt(0) === '[' || item.charAt(0) === '{') {
@@ -46,18 +48,18 @@ export class UtilService {
         return null
     }
 
-    gToOz(pK: number): number {
+    public gToOz(pK: number): number {
             const nearExact = pK / 453.59237
             const lbs = Math.floor(nearExact)
             const oz = (nearExact - lbs) * 16
             return oz
     }
 
-    ozToG(pK: number): number {
+    public ozToG(pK: number): number {
         return pK * 28.3495
     }
 
-    getTimes(noAmPm?: boolean): Array<{name: string; value: number}> {
+    public getTimes(noAmPm?: boolean): Array<{name: string; value: number}> {
         const options = []
         const loop = (amPm: 'am'|'pm') => {
             for (let i = 0; i < 48; i++) { // 15 minute increments
@@ -94,7 +96,7 @@ export class UtilService {
         return options
     }
 
-    getTimesMap(): any {
+    public getTimesMap(): any {
             const times = this.getTimes()
             const map = {}
             times.forEach(time => {

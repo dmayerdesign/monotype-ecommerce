@@ -1,28 +1,39 @@
 import { Injectable } from '@angular/core'
-import { CanActivate, CanActivateChild, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router'
-import { UserService } from './user.service'
+import {
+    ActivatedRouteSnapshot,
+    CanActivate,
+    CanActivateChild,
+    Router,
+    RouterStateSnapshot,
+} from '@angular/router'
+import { RouteStateService } from './route-state.service'
 import { UiService } from './ui.service'
+import { UserService } from './user.service'
 
 @Injectable()
 export class AuthGuardService implements CanActivate, CanActivateChild {
 
-	constructor(
-		private userService: UserService,
-		private router: Router,
-    private ui: UiService,
-	) {}
+    constructor(
+        private userService: UserService,
+        private router: Router,
+        private routeState: RouteStateService,
+        private ui: UiService,
+    ) {}
 
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-    if (this.userService.user) {
-    	return true
-    } else {
-      this.router.navigate(['/home/login'], { queryParams: { target: state.url }})
-    	return false
+    public canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
+        if (this.userService.user) {
+            return true
+        }
+        else {
+            const redirectTo = this.routeState.previousUrl || '/'
+            this.router.navigate([redirectTo])
+            // this.router.navigate(['/home/login'], { queryParams: { target: state.url }})
+            return false
+        }
     }
-  }
 
-  canActivateChild(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-    return this.canActivate(route, state)
-  }
+    public canActivateChild(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
+        return this.canActivate(route, state)
+    }
 
 }

@@ -11,7 +11,6 @@ export class SimpleError {
     public status: number
 
     constructor(error?: HttpErrorResponse) {
-        console.error(error)
         this.message = error ? error.error : null
         this.status = error ? error.status : null
     }

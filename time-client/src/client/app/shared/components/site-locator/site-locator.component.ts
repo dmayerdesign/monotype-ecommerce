@@ -1,5 +1,4 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Http } from '@angular/http';
 import { Subscription } from 'rxjs';
 
 import { appConfig } from '@time/app-config';
@@ -27,7 +26,6 @@ export class SiteLocatorComponent implements OnInit {
 	};
 
 	constructor(
-		private http: Http,
 		private util: UtilService,
 	) {}
 
@@ -87,38 +85,38 @@ export class SiteLocatorComponent implements OnInit {
 					})(marker, i));
 
 					if (markers.length === 1) {
-						map.setCenter(position);
-						map.setZoom(10);
-					} else {
+                        map.setCenter(position);
+                        map.setZoom(10);
+                    } else {
 						// Automatically center the map fitting all markers on the screen
-						map.fitBounds(bounds);
-					}
-				}
-			}
+                        map.fitBounds(bounds);
+                    }
+                }
+            }
 
 			// Listen for the event fired when the user selects a prediction and retrieve
 			// more details for that place.
-			searchBox.addListener('places_changed', () => {
-				let places = searchBox.getPlaces();
-				bounds = new google.maps.LatLngBounds();
+            searchBox.addListener('places_changed', () => {
+                const places = searchBox.getPlaces();
+                bounds = new google.maps.LatLngBounds();
 
-				if (places.length == 0) return;
+                if (places.length == 0) return;
 
 				// For each place, get the icon, name and location.
-				places.forEach((place) => {
-					if (!place.geometry) {
-						console.log("Returned place contains no geometry");
-						return;
-					}
-					if (place.geometry.viewport) {
+                places.forEach((place) => {
+                    if (!place.geometry) {
+                        console.log("Returned place contains no geometry");
+                        return;
+                    }
+                    if (place.geometry.viewport) {
 						// Only geocodes have viewport.
-						bounds.union(place.geometry.viewport);
-					} else {
-						bounds.extend(place.geometry.location);
-					}
-				});
-				map.fitBounds(bounds);
-			});
+                        bounds.union(place.geometry.viewport);
+                    } else {
+                        bounds.extend(place.geometry.location);
+                    }
+                });
+                map.fitBounds(bounds);
+            })
 
 			// GEOLOCATION - Set bounds to include current location
 			/**
@@ -134,17 +132,17 @@ export class SiteLocatorComponent implements OnInit {
 				});
 			}
 			**/
-		}
+        }
 
-		if (document.getElementById("mapsApiScript")) {
-			document.body.removeChild(document.getElementById("mapsApiScript"));
-		}
+        if (document.getElementById("mapsApiScript")) {
+            document.body.removeChild(document.getElementById("mapsApiScript"))
+        }
 
-		let theScript = document.createElement("script");
-		theScript.id = "mapsApiScript"
-		theScript.src = `https://maps.googleapis.com/maps/api/js?key=${appConfig.google_maps_api_key}&libraries=places&callback=initGoogleMapsSiteLocator`;
-		document.body.appendChild(theScript);
+        const theScript = document.createElement("script")
+        theScript.id = "mapsApiScript"
+        theScript.src = `https://maps.googleapis.com/maps/api/js?key=${appConfig.google_maps_api_key}&libraries=places&callback=initGoogleMapsSiteLocator`
+        document.body.appendChild(theScript)
 
-	}
+    }
 
 }
