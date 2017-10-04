@@ -1,91 +1,107 @@
-import { injectable } from 'inversify'
+import { IAuthResponse } from '@time/common/models/interfaces'
+import * as bcrypt from 'bcrypt-nodejs'
 import { Request } from 'express'
-import { IUser } from '@time/common/models/interfaces'
-import { User } from '@time/common/models'
-import TYPES from '@time/common/constants/inversify/types'
+import { injectable } from 'inversify'
+import * as jwt from 'jsonwebtoken'
+
 import CONSTANTS from '@time/common/constants'
+import TYPES from '@time/common/constants/inversify/types'
+import { ILogin, IUser, User } from '@time/common/models'
+import { jwtConfig } from "../auth/passport"
 
 @injectable()
 export class UserService {
 
-    public getUser(id: string): Promise<IUser> {
-        return new Promise<IUser>((resolve, reject) => {
-            User.findById(id, (error, user: IUser): void => {
-                if (error) reject(error)
-                else resolve(this.cleanUser(user))
-            })
+    public register(user: IUser): Promise<IAuthResponse> {
+        return new Promise<IAuthResponse>((resolve, reject) => {
+            const plainTextPassword = user.password
+            let salt, hash
+
+            // Hash password
+            try {
+                salt = bcrypt.genSaltSync(10)
+                hash = bcrypt.hashSync(plainTextPassword, salt)
+            }
+            catch (error) {
+                reject({error, status: 400})
+            }
+
+            User
+                .findOne({
+                    email: user.email
+                })
+                .then(existingUser => {
+                    if (!existingUser) {
+                        // Create User in DB
+                        const newUser = new User({
+                            firstName: user.firstName,
+                            lastName: user.lastName,
+                            email: user.email,
+                            password: hash,
+                        })
+
+                        newUser.save().then((savedUser) => {
+                            const payload = {
+                                email: savedUser.email,
+                                firstName: savedUser.firstName,
+                                lastName: savedUser.lastName,
+                            }
+                            const authToken = jwt.sign(payload, jwtConfig.secretOrKey)
+
+                            resolve({ authToken })
+                        })
+                        .catch((error) => reject({error, status: 400}))
+                    }
+                    else {
+                        reject({
+                            error: new Error(CONSTANTS.ERRORS.userEmailExists),
+                            status: CONSTANTS.HTTP.SUCCESS_ok,
+                        })
+                    }
+                }).catch((error) => reject({error, status: 400}))
         })
     }
 
-    public isUserLoggedIn(req: Request): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
-            if (req.isAuthenticated() && req.user) {
-                resolve({ isLoggedIn: true })
-            }
-            else {
-                resolve({ isLoggedIn: false })
-            }
-        })
-    }
+    public login(credentials: ILogin): Promise<IAuthResponse> {
+        return new Promise<IAuthResponse>((resolve, reject) => {
 
-    public register(user: IUser): Promise<IUser> {
-        return new Promise<IUser>((resolve, reject) => {
-            
-            /** Initialize, decrypt password **/
-            const password: string = user.password
-            let invalidInput: boolean = false
-            delete user.password
+            /////////////////////////
+            // FOR TESTING
+            /////////////////////////
 
-            /** Create email verification token **/
-            user.emailVerificationToken = (Date.now().toString(36) + Math.random().toString(36).substr(4))
+            const authToken = jwt.sign({
+                email: "test@example.com"
+            }, jwtConfig.secretOrKey)
+            resolve({ authToken })
 
-            /** Validations **/
-            const inputsToSanitize = [
-                user.firstName,
-                user.lastName,
-            ]
-            inputsToSanitize.forEach(input => {
-                if (input && input.match(/\W+/)) invalidInput = true
-            })
-            if (!user.lastName) invalidInput = true
-            if (invalidInput)
-                reject(new Error(`${CONSTANTS.ERRORS.TAGS.registrationError} Invalid registration.`))
-            if (!user.email.match(CONSTANTS.REGEX.emailAddress))
-                reject(new Error(`${CONSTANTS.ERRORS.TAGS.registrationError} Please provide a valid email address.`))
-            if (!password)
-                reject(new Error(`${CONSTANTS.ERRORS.TAGS.registrationError} You must choose a valid password.`))
-
-            User.find({email: user.email}).then(users => {
-                if (users && users.length) {
-                    return reject(new Error(`${CONSTANTS.ERRORS.TAGS.registrationError} ${CONSTANTS.ERRORS.userEmailExists}`))
-                }
-                // User.register(new User(user), password, (err, newUser) => {
-                //     if (err) return reject(err)
-                //     resolve(newUser)
-
-                    /*
-                    let notificationEmailOptions = { ...appConfig.emailOptions.default }
-                    let verificationEmailOptions = { ...appConfig.emailOptions.default }
-                    notificationEmailOptions.user = newUser
-                    notificationEmailOptions.fields = []
-                    verificationEmailOptions.user = newUser
-
-                    this.emailService.sendUserJoinedNotification(notificationEmailOptions)
-
-                    this.emailService.sendEmailVerification(verificationEmailOptions, (err, data) => {
-                        if (catchErr(res, err, "There was an error sending your verification email.")) return
-                        resolve(newUser)
-                    })
-                    */
-                // })
-            })
+            /*
+            return User
+                .findOne({
+                    email: credentials.email
+                })
+                .then(user => {
+                    try {
+                        const authenticated: boolean = bcrypt.compareSync(credentials.password, user.password)
+                        if (authenticated) {
+                            const authToken = jwt.sign(this.cleanUser(user), jwtConfig.secretOrKey)
+                            resolve({ authToken })
+                        } else {
+                            return reject({error: new Error(CONSTANTS.ERRORS.invalidPassword), status: 401})
+                        }
+                    }
+                    catch (error) {
+                        reject({error, status: 400})
+                    }
+                })
+                .catch((error) => reject({error, status: 400}))
+            */
         })
     }
 
     public updateUser(id: string, update: any): Promise<IUser> {
         return new Promise<IUser>((resolve, reject) => {
             User.findByIdAndUpdate(id, update, { new: true }, (error, user) => {
-                if (error) reject(error)
+                if (error) reject({error})
                 else resolve(user)
             })
         })
@@ -94,14 +110,14 @@ export class UserService {
     public deleteUser(id: string): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             User.findByIdAndRemove(id, (error) => {
-                if (error) reject(error)
+                if (error) reject({error})
                 else resolve()
             })
         })
     }
 
     private cleanUser(user: IUser): IUser {
-        let cleanUser = Object.assign({}, user)
+        const cleanUser = Object.assign({}, user)
         delete cleanUser.adminKey
         delete cleanUser.password
         return cleanUser

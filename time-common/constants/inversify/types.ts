@@ -7,6 +7,6 @@ export const TYPES = {
     ProductSearchUtils: Symbol('ProductSearchUtils'),
     isAuthenticated: Symbol('isAuthenticated'),
     isAuthorized: Symbol('isAuthorized'),
-};
+}
 
-export default TYPES;
+export default TYPES

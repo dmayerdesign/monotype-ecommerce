@@ -1,11 +1,11 @@
-import { injectable, inject } from 'inversify'
-import { Response } from 'express'
-import { Error } from 'mongoose'
-import { TYPES } from '@time/common/constants/inversify'
-import { IProduct } from '@time/common/models/interfaces'
-import { Product } from '@time/common/models/api-models'
+import { DbClient, MongoQueries, ProductSearch, ProductSearchUtils } from '@time/common/api-utils'
 import { CONSTANTS } from '@time/common/constants'
-import { DbClient, ProductSearch, ProductSearchUtils, MongoQueries } from '@time/common/api-utils'
+import { TYPES } from '@time/common/constants/inversify'
+import { Product } from '@time/common/models/api-models'
+import { IProduct } from '@time/common/models/interfaces'
+import { Response } from 'express'
+import { inject, injectable } from 'inversify'
+import { Error } from 'mongoose'
 
 @injectable()
 export class ProductService {
@@ -68,7 +68,7 @@ export class ProductService {
          */
         if (body.filters) {
             body.filters.forEach(filter => {
-                
+
                 const isPropertyFilter: boolean = filter.type === 'property' ? true : false
                 const isAttrFilter: boolean = filter.type === 'attribute' ? true : false
                 const isTaxFilter: boolean = filter.type === 'taxonomy' ? true : false
@@ -77,7 +77,7 @@ export class ProductService {
 
                 /*
                 * Property Filter
-                * 
+                *
                 */
                 if (isPropertyFilter) {
                     searchQuery = this.productSearchUtils.propertyFilter(filter, searchQuery)
@@ -111,7 +111,7 @@ export class ProductService {
 
     /**
      * Retrieve a list of products
-     * 
+     *
      * @param {object} query - The database query
      * @param {number} page - (optional) The page number, which determines how many documents to skip
      * @param {express.Response} res - (optional) The express Response - pass this in if you want the documents fetched as a stream and piped into the response
@@ -130,7 +130,7 @@ export class ProductService {
                     .catch(err => reject(err))
                 resolve()
             }
-            
+
             /**
              * Retrieve the products normally, loading them into memory
              */

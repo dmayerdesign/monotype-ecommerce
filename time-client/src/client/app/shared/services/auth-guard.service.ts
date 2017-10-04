@@ -17,7 +17,6 @@ export class AuthGuardService implements CanActivate, CanActivateChild {
         private userService: UserService,
         private router: Router,
         private routeState: RouteStateService,
-        private ui: UiService,
     ) {}
 
     public canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {

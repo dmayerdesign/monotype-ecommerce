@@ -3,8 +3,6 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http'
 import { ModuleWithProviders, NgModule } from '@angular/core'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
-import { RouterModule } from '@angular/router'
-import { TimeHttpModule } from '@time/common/http'
 
 /**
  * EXTERNAL MODULES
@@ -15,7 +13,8 @@ import { ToastrModule } from 'ngx-toastr'
 /**
  * FEATURE MODULES
  */
-import { FormFieldModule } from '@time/common/ng-modules/form-field'
+import { TimeFormsModule } from '@time/common/ng-modules/forms'
+import { TimeHttpModule, TimeHttpResponseInterceptor } from '@time/common/ng-modules/http'
 
 /**
  * COMPONENTS
@@ -42,10 +41,10 @@ import { TruncatePipe } from './pipes'
 import {
     AuthGuardService,
     GAnalyticsService,
-    HttpResponseInterceptor,
     RouteStateService,
     SeoService,
     UiService,
+    UserService,
     UtilService,
 } from './services'
 
@@ -64,7 +63,7 @@ import {
         }),
         TimeHttpModule.forRoot(),
         ClickOutsideModule,
-        FormFieldModule,
+        TimeFormsModule,
     ],
     declarations: [
         SiteLocatorComponent,
@@ -92,13 +91,9 @@ export class SharedModule {
                 AuthGuardService,
                 SeoService,
                 UtilService,
+                UserService,
                 UiService,
                 RouteStateService,
-                // {
-                //     provide: HTTP_INTERCEPTORS,
-                //     useClass: HttpResponseInterceptor,
-                //     multi: true,
-                // },
             ],
         }
     }

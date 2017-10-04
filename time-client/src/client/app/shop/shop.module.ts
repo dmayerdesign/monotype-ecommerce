@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common'
 import { HTTP_INTERCEPTORS } from '@angular/common/http'
 import { NgModule } from '@angular/core'
 import { RouterModule } from '@angular/router'
-import { HttpResponseInterceptor } from '../shared/services/http-response.interceptor'
 
 import { SharedModule } from '../shared/shared.module'
 
@@ -36,12 +35,6 @@ import { ProductService } from './services'
     ],
     providers: [
         ProductService,
-        // HttpResponseInterceptor,
-        {
-            provide: HTTP_INTERCEPTORS,
-            useClass: HttpResponseInterceptor,
-            multi: true,
-        },
     ],
 })
 export class ShopModule { }

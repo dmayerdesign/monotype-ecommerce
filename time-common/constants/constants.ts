@@ -7,6 +7,7 @@ export const CONSTANTS = {
         },
         emailNotVerified: "Your email hasn't yet been verified. Follow the link in the email we sent you to verify your account.",
         genericErrorMessage: "Oops! Something went wrong. Please try again.",
+        invalidPassword: "Wrong password. Try again.",
         userEmailExists: "Looks like there's already an account with that email. Try logging in!",
         usernameExists: "Looks like there's already an account with that username. Try logging in!",
         userNotAuthorized: "You don't have permission to do that. Sorry!",
@@ -48,6 +49,6 @@ export const CONSTANTS = {
     WARNINGS: {
         userNotLoggedIn: "You're not logged in.",
     },
-};
+}
 
-export default CONSTANTS;
+export default CONSTANTS

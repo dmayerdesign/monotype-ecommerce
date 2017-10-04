@@ -15,7 +15,8 @@
     "forin": true,
     "import-blacklist": [
       true,
-      "rxjs"
+      "rxjs",
+      "rxjs/Rx"
     ],
     "import-spacing": true,
     "indent": [
@@ -27,7 +28,7 @@
     "label-position": true,
     "max-line-length": [
       true,
-      140
+      200
     ],
     "member-access": true,
     "member-ordering": [
@@ -74,12 +75,7 @@
     "no-use-before-declare": true,
     "no-var-keyword": true,
     "object-literal-sort-keys": false,
-    "one-line": [
-      true,
-      "check-open-brace",
-      "check-catch",
-      "check-whitespace"
-    ],
+    "one-line": false,
     "ordered-imports": [
       true,
       {
@@ -94,13 +90,7 @@
       true,
       "never"
     ],
-    "trailing-comma": [
-      true,
-      {
-        "multiline": "always",
-        "singleline": "never"
-      }
-    ],
+    "trailing-comma": false,
     "triple-equals": [
       true,
       "allow-null-check"

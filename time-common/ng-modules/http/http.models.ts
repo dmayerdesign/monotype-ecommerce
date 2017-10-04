@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http'
-import { IUser } from '../models/interfaces'
+import { IUser } from '../../models/interfaces'
 
 export class TimeHttpResponse {
     public user?: IUser
@@ -11,7 +11,7 @@ export class SimpleError {
     public status: number
 
     constructor(error?: HttpErrorResponse) {
-        this.message = error ? error.error : null
-        this.status = error ? error.status : null
+        this.message = error ? error.error : undefined
+        this.status = error ? error.status : undefined
     }
 }

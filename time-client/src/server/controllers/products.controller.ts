@@ -1,24 +1,24 @@
 import * as express from 'express'
 import { Request, Response } from 'express'
+import { inject, injectable } from 'inversify'
 import {
-  interfaces,
   controller,
-  request,
-  response,
+  httpDelete,
   httpGet,
   httpPost,
   httpPut,
-  httpDelete,
+  interfaces,
   queryParam,
+  request,
   requestParam,
+  response,
 } from 'inversify-express-utils'
-import { injectable, inject } from 'inversify'
 
 import { appConfig } from '@time/app-config'
-import CONSTANTS, { TYPES } from '@time/common/constants'
 import { handleError } from '@time/common/api-utils'
-import { ProductService } from '../services'
+import CONSTANTS, { TYPES } from '@time/common/constants'
 import { IProduct } from '@time/common/models/interfaces'
+import { ProductService } from '../services'
 import { WoocommerceMigrationService } from '../services'
 
 @injectable()
@@ -30,7 +30,7 @@ export class ProductsController implements interfaces.Controller {
         @inject(TYPES.WoocommerceMigrationService) private wms: WoocommerceMigrationService,
     ) {}
 
-    @httpGet('/')
+    @httpGet('/', TYPES.isAuthenticated)
     private get(
         @queryParam('query') query: string,
         @queryParam('page') page: number,
@@ -38,8 +38,7 @@ export class ProductsController implements interfaces.Controller {
     ): Promise<IProduct[]> {
         const test = true
         if (test) {
-            handleError("Some error", res, "Hello!", 401)
-            return
+            return new Promise(resolve => resolve([]))
         }
         query = query ? JSON.parse(query) : {}
         res.setHeader('content-type', 'application/json')

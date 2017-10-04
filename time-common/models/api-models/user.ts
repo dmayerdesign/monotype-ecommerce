@@ -1,8 +1,8 @@
-import * as mongoose from 'mongoose';
-import { Schema, Model, model } from 'mongoose';
-import authConfig from '../../config/auth.config';
-import { IUser } from '../interfaces';
-import { addressSchema } from './address';
+import * as mongoose from 'mongoose'
+import { model, Model, Schema } from 'mongoose'
+import authConfig from '../../config/auth.config'
+import { IUser } from '../interfaces'
+import { addressSchema } from './address'
 
 export const userSchema: Schema = new Schema({
   email: { type: String, required: true },
@@ -21,7 +21,7 @@ export const userSchema: Schema = new Schema({
     large: String,
     thumbnail: String,
   },
-  address: addressSchema,
+  // address: addressSchema,
   phoneNumber: String,
 
   profile: {
@@ -41,6 +41,6 @@ export const userSchema: Schema = new Schema({
     unitCost: Number,
     totalCost: Number,
   }],
-}, { timestamps: true });
+}, { timestamps: true })
 
-export const User: Model<IUser> = model<IUser>('User', userSchema);
+export const User: Model<IUser> = model<IUser>('User', userSchema)

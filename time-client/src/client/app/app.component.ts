@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core'
 import { ToastrService } from 'ngx-toastr'
+import { IFlash } from './shared/models/ui.models'
 import { RouteStateService } from './shared/services/route-state.service'
 import { UiService } from './shared/services/ui.service'
-import { IFlash } from './shared/services/ui.service'
 import { UtilService } from './shared/services/util.service'
 
 @Component({

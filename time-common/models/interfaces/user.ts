@@ -1,13 +1,7 @@
 import { model, Document } from 'mongoose'
 import { IAddress } from './address'
 
-export interface PassportLocalDocument {
-  createStrategy: Function
-  serializeUser: Function
-  deserializeUser: Function
-}
-
-export interface IUser extends Document, PassportLocalDocument {
+export interface IUser extends Document {
   email: string
   emailIsVerified?: boolean
   emailVerificationToken?: string
@@ -32,4 +26,13 @@ export interface IUser extends Document, PassportLocalDocument {
     bio?: string
   }
   facebookId?: string
+}
+
+export interface ILogin {
+  email: string
+  password: string
+}
+
+export interface IAuthResponse {
+  authToken: string
 }

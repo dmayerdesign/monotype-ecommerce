@@ -1,9 +1,9 @@
 import { AfterViewInit, Component, OnInit } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
 
-import { SimpleError } from '@time/common/http'
 import { IProduct } from '@time/common/models/interfaces'
-import { UiService } from '../../../shared/services'
+import { SimpleError } from '@time/common/ng-modules/http'
+import { UiService, UserService } from '../../../shared/services'
 import { ProductService } from '../../services'
 
 @Component({
@@ -18,6 +18,7 @@ export class ShopComponent implements OnInit, AfterViewInit {
 
   constructor(
     private productService: ProductService,
+    private userService: UserService,
     private ui: UiService,
   ) { }
 
@@ -26,16 +27,14 @@ export class ShopComponent implements OnInit, AfterViewInit {
   }
 
   public ngAfterViewInit() {
+    // this.userService.login({email: "sadfasf", password: "asdfasdfdsf"})
     this.products$ = this.productService.products$
     this.productService.products$.subscribe(
       products => {
         this.products = products
       },
-      err => {
-        console.log("Error in sub")
-      },
     )
-    // this.productService.productsError$.subscribe(err => this.ui.flashError(err))
+    this.productService.productsError$.subscribe(err => console.log("Error in shop component", err))
   }
 
 }
