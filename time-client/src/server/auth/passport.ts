@@ -1,16 +1,16 @@
+import { NextFunction, Request, Response } from 'express'
+import { injectable } from 'inversify'
+import * as passport from 'passport'
+import * as FacebookStrategy from 'passport-facebook'
+import * as passportJWT from 'passport-jwt'
+
 import { handleError } from '@time/common/api-utils'
 import CONSTANTS from '@time/common/constants'
 import { User } from '@time/common/models'
 import { IUser } from '@time/common/models/interfaces'
-import { NextFunction, Request, Response } from 'express'
-import { injectable } from 'inversify'
-import * as passport from 'passport'
-import * as passportFacebook from 'passport-facebook'
-import * as passportJWT from 'passport-jwt'
 
 const ExtractJwt = passportJWT.ExtractJwt
 const JwtStrategy = passportJWT.Strategy
-const FacebookStrategy = passportFacebook.Strategy
 
 const facebookStrategyConfig = {
   clientID: process.env.FACEBOOK_APP_ID,
@@ -31,20 +31,20 @@ export function passportConfig() {
 
     passport.use(new JwtStrategy(jwtConfig, (payload, next) => {
 
-        console.log("Payload:", payload)
-
         // FOR TESTING
+        console.log("Payload:", payload)
         if (payload.email) {
             next(null, payload)
         }
-
-        // User.findById(payload._id).then((user) => {
-        //     if (user) {
-        //         next(null, user)
-        //     } else {
-        //         next(user.errors, null)
-        //     }
-        // })
+        /*
+        User.findById(payload._id).then((user) => {
+            if (user) {
+                next(null, user)
+            } else {
+                next(user.errors, null)
+            }
+        })
+        */
     }))
 
    /**

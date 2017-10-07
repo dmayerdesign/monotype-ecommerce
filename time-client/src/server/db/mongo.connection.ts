@@ -1,7 +1,9 @@
-import * as mongoose from 'mongoose'
+import mongoose = require('mongoose')
 
-(<any>mongoose).Promise = global.Promise
-if (process.env.ENVIRONMENT === 'DEV') mongoose.set('debug', true)
+import { isDev } from '../utils/env'
+
+mongoose.Promise = global.Promise
+if (isDev()) mongoose.set('debug', true)
 
 export const mongoConnection = {
     connect(done) {

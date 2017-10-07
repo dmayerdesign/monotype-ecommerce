@@ -1,5 +1,4 @@
 export namespace ProductSearch {
-
     export interface Filter {
         type: 'property'|'attribute'|'taxonomy'
         key: string
@@ -12,5 +11,4 @@ export namespace ProductSearch {
         filters?: Array<Filter>
         page?: number
     }
-
 }

@@ -42,7 +42,7 @@ export const productSchema = new Schema({
 	/* own attributes */
     attributeValues: [{
         attributeId: Schema.Types.ObjectId,
-        attribute: Schema.Types.Mixed, // Attribute.slug
+        attribute: String, // Attribute.slug
         valueId: Schema.Types.ObjectId,
         value: Schema.Types.Mixed,
     }],
@@ -50,7 +50,7 @@ export const productSchema = new Schema({
     variableAttributes: [Schema.Types.ObjectId], // Attribute IDs
     variableAttributeValues: [{
         attributeId: Schema.Types.ObjectId,
-        attribute: Schema.Types.Mixed,
+        attribute: String,
         valueId: Schema.Types.ObjectId,
         value: Schema.Types.Mixed,
     }],
@@ -83,16 +83,18 @@ export const productSchema = new Schema({
 }, { timestamps: true })
 
 productSchema.pre('save', function(next) {
-    const product = this
-  if (!product.slug && product.isNew) {
-    product.slug = product.name.toLowerCase().replace(/[^a-zA-Z0-9]/g, "-")
-  }
-  if (product.isNew || product.isModified('class')) {
-      product.isStandalone = product.class === 'standalone'
-      product.isParent = product.class === 'parent'
-      product.isVariation = product.class === 'variation'
-  }
-  next()
+    const product = <IProduct>this
+    if (!product.slug && product.isNew) {
+        product.slug = product.name.toLowerCase().replace(/[^a-zA-Z0-9]/g, "-")
+    }
+    if (product.isNew || product.isModified('class')) {
+        product.isStandalone = product.class === 'standalone'
+        product.isParent = product.class === 'parent'
+        product.isVariation = product.class === 'variation'
+    } else if (product.isModified('isStandalone') || product.isModified('isParent') || product.isModified('isVariation')) {
+        product.class = product.isVariation ? 'variation' : product.isParent ? 'parent' : 'standalone'
+    }
+    next()
 })
 
 export const Product: Model<IProduct> = model('Product', productSchema)

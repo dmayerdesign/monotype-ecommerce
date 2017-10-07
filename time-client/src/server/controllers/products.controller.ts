@@ -2,16 +2,16 @@ import * as express from 'express'
 import { Request, Response } from 'express'
 import { inject, injectable } from 'inversify'
 import {
-  controller,
-  httpDelete,
-  httpGet,
-  httpPost,
-  httpPut,
-  interfaces,
-  queryParam,
-  request,
-  requestParam,
-  response,
+    controller,
+    httpDelete,
+    httpGet,
+    httpPost,
+    httpPut,
+    interfaces,
+    queryParam,
+    request,
+    requestParam,
+    response,
 } from 'inversify-express-utils'
 
 import { appConfig } from '@time/app-config'

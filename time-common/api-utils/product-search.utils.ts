@@ -1,18 +1,17 @@
 import { injectable } from 'inversify'
-import { ProductSearch, MongoQueries } from './'
+import { MongoQueries, ProductSearch } from './'
 
 @injectable()
 export class ProductSearchUtils {
 
     public propertyFilter(filter: ProductSearch.Filter, query: MongoQueries.And): MongoQueries.And {
-        let newQuery = { ...query }
+        const newQuery = { ...query }
 
         if (filter.values && filter.values.length) {
-            let propertyVOs = []
-            filter.values.forEach(val => {
-                let propertyVO: any = {}
-                propertyVO[filter.key] = val
-                propertyVOs.push(propertyVO)
+            const propertyVOs = filter.values.map(val => {
+                return {
+                    [filter.key]: val
+                }
             })
             newQuery.$and.push({ $or: propertyVOs })
         }
@@ -30,7 +29,7 @@ export class ProductSearchUtils {
     }
 
     public attributeKeyValueFilter(filter: ProductSearch.Filter, query: MongoQueries.And): MongoQueries.And {
-        let newQuery = { ...query }
+        const newQuery = { ...query }
         let attributeVOs = []
 
         if (filter.values && filter.values.length) {
@@ -97,7 +96,7 @@ export class ProductSearchUtils {
     }
 
     public attributeValueFilter(filter: ProductSearch.Filter, query: MongoQueries.And): MongoQueries.And {
-        let newQuery = { ...query }
+        const newQuery = { ...query }
         let attributeValueIds = []
 
         if (filter.values && filter.values.length) {
@@ -123,23 +122,19 @@ export class ProductSearchUtils {
         return newQuery
     }
 
+    // Reminder: parents and variations must share the same taxonomy terms
     public taxonomyFilter(filter: ProductSearch.Filter, query: MongoQueries.And): MongoQueries.And {
-        let newQuery = { ...query }
+        const newQuery = { ...query }
 
         if (filter.values && filter.values.length) {
-            let taxonomyVOs = []
-            filter.values.forEach(val => {
-                const filterItem = {
-                    values: val,
-                }
-                taxonomyVOs.push(filterItem)
-            })
             newQuery.$and.push({
-                taxonomies: {
-                    $elemMatch: { key: filter.key, $or: taxonomyVOs },
-                },
+                $or: [
+                    { taxonomyTerms: filter.values },
+                    { taxonomyTermSlugs: filter.values },
+                ],
             })
         }
+
         return newQuery
     }
 }

@@ -17,6 +17,7 @@ import 'reflect-metadata'
 import { passportConfig } from './auth/passport'
 import { container } from './config/inversify.config'
 import { mongoConnection } from './db/mongo.connection'
+import { isProduction } from './utils/env'
 import { initStartupTasks } from './utils/startup'
 
 /** ANGULAR UNIVERSAL - imports */
@@ -41,7 +42,7 @@ function serverConfig(app) {
     app.use('/images', express.static('dist/public/assets/images'))
     app.use(bodyParser.json())
     app.use(bodyParser.urlencoded({ extended: true }))
-    app.use(morgan('dev'))
+    if (!isProduction()) app.use(morgan('dev'))
     app.use(helmet())
     app.disable('x-powered-by') // removes "x-powered-by: express" from the header to avoid specifically-targeted attacks
     app.use(validator())

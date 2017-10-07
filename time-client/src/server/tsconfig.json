@@ -2,5 +2,7 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "target": "es2016"
-  }
+  },
+  "outDir": "../../dist/server",
+  "include": "../server"
 }
