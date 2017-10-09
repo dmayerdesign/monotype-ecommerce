@@ -7,6 +7,8 @@ import {
     httpGet,
     httpPost,
     httpPut,
+    request,
+    response,
 } from 'inversify-express-utils'
 
 import { handleError } from '@time/common/api-utils'
@@ -23,28 +25,40 @@ export class UserController {
     ) { }
 
     @httpGet('/login')
-    public login(req: Request, res: Response): void {
+    public login(
+        @request() req: Request,
+        @response() res: Response,
+    ): void {
         this.userService.login(req.body)
             .then(({data, status}) => res.status(status).json(data))
             .catch(({error, status}) => res.status(status).json(error))
     }
 
     @httpPost('/register')
-    public createUser(req: Request, res: Response): void {
+    public createUser(
+        @request() req: Request,
+        @response() res: Response,
+    ): void {
         this.userService.register(req.body)
             .then(({data, status}) => res.status(status).json(data))
             .catch(({error, status}) => res.status(status).json(error))
     }
 
     @httpPut('/update', TYPES.isAuthenticated)
-    public updateUser(req: Request, res: Response): void {
+    public updateUser(
+        @request() req: Request,
+        @response() res: Response,
+    ): void {
         this.userService.updateUser(req.user._id, req.body)
             .then(({data, status}) => res.status(status).json(data))
             .catch(({error, status}) => res.status(status).json(error))
     }
 
     @httpDelete('/:id')
-    public deleteUser(req: Request, res: Response): void {
+    public deleteUser(
+        @request() req: Request,
+        @response() res: Response,
+    ): void {
         this.userService.deleteUser(req.params.id)
             .then(({data, status}) => res.status(status).json(data))
             .catch(({error, status}) => res.status(status).json(error))

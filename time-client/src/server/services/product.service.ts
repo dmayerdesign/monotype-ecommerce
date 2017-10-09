@@ -127,28 +127,22 @@ export class ProductService implements IFetchService<IProduct> {
      * @param {number} [page] The page number, which determines how many documents to skip
      * @param {express.Response} [res] The express Response; pass this in if you want the documents fetched as a stream and piped into the response
      */
-    public get(query: object, page: number = 1, res?: Response): Promise<ServiceResponse<IProduct[]>> {
+    public get(query: object, page: number = 1, res?: Response): Promise<ServiceResponse<IProduct[]>>|void {
         const skip = (page - 1) * CONSTANTS.PAGINATION.productsPerPage
         const limit = CONSTANTS.PAGINATION.productsPerPage
 
-        return new Promise<ServiceResponse<IProduct[]>>((resolve, reject) => {
-
-            // Stream the products
-
-            if (res) {
-                resolve()
-                this.dbClient.getFilteredCollection(Product, query, {limit, skip}, res)
-                    .catch(err => reject(new ServiceErrorResponse(err)))
-            }
-
-            // Retrieve the products normally, loading them into memory
-
-            else {
+        if (res) {
+            this.dbClient.getFilteredCollection(Product, query, {limit, skip}, res)
+                .catch(err => new ServiceErrorResponse(err))
+        }
+        else {
+            return new Promise<ServiceResponse<IProduct[]>>((resolve, reject) => {
+                // Retrieve the products normally, loading them into memory
                 this.dbClient.getFilteredCollection(Product, query, {limit, skip})
                     .then(products => resolve(new ServiceResponse(products)))
                     .catch(err => reject(new ServiceErrorResponse(err)))
-            }
-        })
+            })
+        }
     }
 
     public createOne(product: IProduct): Promise<ServiceResponse<IProduct>> {

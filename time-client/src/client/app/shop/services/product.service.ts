@@ -6,8 +6,7 @@ import { Subject } from 'rxjs/Subject'
 
 import { appConfig } from '@time/app-config'
 import { ProductSearch } from '@time/common/api-utils'
-import { IProduct } from '@time/common/models/interfaces'
-import { IPrice } from '@time/common/models/interfaces/price'
+import { IPrice, IProduct } from '@time/common/models/interfaces'
 import { SimpleError } from '@time/common/ng-modules/http'
 import { UserService, UtilService } from '../../shared/services'
 
