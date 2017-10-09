@@ -1,10 +1,12 @@
-import { Schema, Model, model } from 'mongoose'
+import { model, Schema } from 'mongoose'
+
+import { IAttribute } from '../interfaces/attribute'
 
 export const attributeSchema = new Schema({
-	name: String,
-	pluralName: String,
-	slug: String,
-	description: String,
+    name: String,
+    pluralName: String,
+    slug: String,
+    description: String,
 })
 
-export const Attribute = model('Attribute', attributeSchema)
+export const Attribute = model<IAttribute>('Attribute', attributeSchema)

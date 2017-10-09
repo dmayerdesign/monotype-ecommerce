@@ -40,6 +40,7 @@ import { TruncatePipe } from './pipes'
  */
 import {
     AuthGuardService,
+    CartService,
     GAnalyticsService,
     RouteStateService,
     SeoService,
@@ -87,13 +88,14 @@ export class SharedModule {
         return {
             ngModule: SharedModule,
             providers: [
-                GAnalyticsService,
                 AuthGuardService,
-                SeoService,
-                UtilService,
-                UserService,
-                UiService,
+                CartService,
+                GAnalyticsService,
                 RouteStateService,
+                SeoService,
+                UiService,
+                UserService,
+                UtilService,
             ],
         }
     }

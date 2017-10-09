@@ -46,4 +46,4 @@ export const postSchema = new Schema({
     }
 }, { timestamps: true })
 
-export const Post: Model<any> = model('Post', postSchema)
+export const Post = model<any>('Post', postSchema)

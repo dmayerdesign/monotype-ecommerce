@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose'
-import { model, Model, Schema } from 'mongoose'
+import { model, Schema } from 'mongoose'
 import authConfig from '../../config/auth.config'
 import { IUser } from '../interfaces'
 import { addressSchema } from './address'
@@ -43,4 +43,4 @@ export const userSchema: Schema = new Schema({
   }],
 }, { timestamps: true })
 
-export const User: Model<IUser> = model<IUser>('User', userSchema)
+export const User = model<IUser>('User', userSchema)

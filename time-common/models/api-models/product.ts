@@ -1,4 +1,4 @@
-import { model, Model, Schema } from 'mongoose'
+import { model, Schema } from 'mongoose'
 import { IProduct } from '../interfaces/product'
 
 export const productSchema = new Schema({
@@ -29,7 +29,7 @@ export const productSchema = new Schema({
         total: Number,
         currency: String,
     }],
-    onSale: Boolean,
+    isOnSale: Boolean,
     class: String,
     isStandalone: Boolean,
     isParent: Boolean, 				// Defines an abstract parent for a variable product
@@ -97,4 +97,4 @@ productSchema.pre('save', function(next) {
     next()
 })
 
-export const Product: Model<IProduct> = model('Product', productSchema)
+export const Product = model<IProduct>('Product', productSchema)

@@ -18,7 +18,7 @@ export interface IProduct extends Document {
     priceRange?: IPrice[]
     salePrice?: IPrice
     salePriceRange?: IPrice[]
-    onSale?: boolean
+    isOnSale?: boolean
     class: 'standalone' | 'parent' | 'variation'
     isStandalone?: boolean
     isParent?: boolean // Defines an abstract parent for a variable product
