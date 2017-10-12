@@ -1,26 +1,28 @@
 import * as bcrypt from 'bcrypt-nodejs'
-import { Request } from 'express'
+import { Request, Response } from 'express'
 import { injectable } from 'inversify'
 import * as jwt from 'jsonwebtoken'
 
-import { CONSTANTS, HttpStatus } from '@time/common/constants'
-import TYPES from '@time/common/constants/inversify/types'
+import { AuthConfig } from '@time/common/config/auth.config'
+import { Constants, HttpStatus } from '@time/common/constants'
+import Types from '@time/common/constants/inversify/types'
 import { ILogin, IUser, User } from '@time/common/models'
-import { ServiceErrorResponse, ServiceResponse } from "@time/common/models/helpers"
-import { IAuthResponse } from '@time/common/models/interfaces'
-import { jwtConfig } from "../auth/passport"
+import { ServiceErrorResponse, ServiceResponse } from '@time/common/models/helpers'
 
 @injectable()
 export class UserService {
 
-    public register(user: IUser): Promise<ServiceResponse<IAuthResponse>> {
-        return new Promise<ServiceResponse<IAuthResponse>>((resolve, reject) => {
+    private jwtSecret = process.env.JWT_SECRET
+
+    public register(user: IUser, res: Response): Promise<null> {
+        return new Promise<null>((resolve, reject) => {
             const plainTextPassword = user.password
             let salt, hash
+            delete user.password
 
             // Hash password
             try {
-                salt = bcrypt.genSaltSync(10)
+                salt = bcrypt.genSaltSync(12)
                 hash = bcrypt.hashSync(plainTextPassword, salt)
             }
             catch (error) {
@@ -42,38 +44,43 @@ export class UserService {
                         })
 
                         newUser.save().then((savedUser) => {
-                            const payload = {
-                                email: savedUser.email,
-                                firstName: savedUser.firstName,
-                                lastName: savedUser.lastName,
-                            }
-                            const authToken = jwt.sign(payload, jwtConfig.secretOrKey)
-
-                            resolve(new ServiceResponse({ authToken }))
+                            const payload = this.cleanUser(savedUser)
+                            const authToken = jwt.sign(payload, this.jwtSecret, AuthConfig.JwtOptions)
+                            res.cookie(Constants.Cookies.jwtToken, authToken, AuthConfig.CookieOptions).json(payload)
+                            resolve()
                         })
                         .catch((error) => reject(new ServiceErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest)))
                     }
                     else {
                         reject(new ServiceErrorResponse(
-                            new Error(CONSTANTS.ERRORS.userEmailExists),
-                            CONSTANTS.HTTP.SUCCESS_ok,
+                            new Error(Constants.Errors.userEmailExists),
+                            HttpStatus.CLIENT_ERROR_badRequest,
                         ))
                     }
                 }).catch((error) => reject(new ServiceErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest)))
         })
     }
 
-    public login(credentials: ILogin): Promise<ServiceResponse<IAuthResponse>> {
-        return new Promise<ServiceResponse<IAuthResponse>>((resolve, reject) => {
+    public login(credentials: ILogin, res: Response): Promise<null> {
+        return new Promise<null>((resolve, reject) => {
 
             /////////////////////////
             // FOR TESTING
             /////////////////////////
+            const fakeUser = {
+                email: "test@example.com",
+                firstName: "Test",
+                lastName: "User",
+            }
 
-            const authToken = jwt.sign({
-                email: "test@example.com"
-            }, jwtConfig.secretOrKey)
-            resolve(new ServiceResponse<IAuthResponse>({ authToken }))
+            try {
+                const authToken = jwt.sign(fakeUser, this.jwtSecret, AuthConfig.JwtOptions)
+                res.cookie(Constants.Cookies.jwtToken, authToken, AuthConfig.CookieOptions).json(fakeUser)
+                resolve()
+            }
+            catch (error) {
+                reject(new ServiceErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest))
+            }
 
             /*
             return User
@@ -84,10 +91,12 @@ export class UserService {
                     try {
                         const authenticated: boolean = bcrypt.compareSync(credentials.password, user.password)
                         if (authenticated) {
-                            const authToken = jwt.sign(this.cleanUser(user), jwtConfig.secretOrKey)
-                            resolve(new ServiceResponse({ authToken }))
+                            const payload = this.cleanUser(user)
+                            const authToken = jwt.sign(payload, this.jwtSecret, AuthConfig.JwtOptions)
+                            res.cookie(Constants.Cookies.jwtToken, authToken, AuthConfig.CookieOptions).json(payload)
+                            resolve()
                         } else {
-                            return reject(new ServiceErrorResponse(new Error(CONSTANTS.ERRORS.invalidPassword), 401))
+                            return reject(new ServiceErrorResponse(new Error(Constants.Errors.invalidPassword), 401))
                         }
                     }
                     catch (error) {
@@ -97,6 +106,16 @@ export class UserService {
                 .catch((error) => reject(new ServiceErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest)))
             */
         })
+    }
+
+    public logout(res: Response): void {
+        res.clearCookie(Constants.Cookies.jwtToken).json({})
+    }
+
+    public refreshSession(req: Request, res: Response): void {
+        const payload = this.cleanUser(req.user)
+        const authToken = jwt.sign(payload, this.jwtSecret, AuthConfig.JwtOptions)
+        res.cookie(Constants.Cookies.jwtToken, authToken, AuthConfig.CookieOptions).json(payload)
     }
 
     public updateUser(id: string, update: any): Promise<ServiceResponse<IUser>> {

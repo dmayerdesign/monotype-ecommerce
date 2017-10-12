@@ -3,8 +3,8 @@ import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
 
 import { ICart, ICartProduct, IProduct } from '@time/common/models/interfaces'
-import { ProductService } from '../../shop/services'
-import { OrganizationService } from '../services'
+import { ProductService } from '../../shop/services/product.service'
+import { OrganizationService } from './organization.service'
 import { UtilService } from './util.service'
 
 @Injectable()
@@ -33,8 +33,8 @@ export class CartService {
     }
 
     public init() {
-        this.cart = <ICart>this.util.getFromLocalStorage('shared.cart')
         this.cart$ = this.cartSubject.asObservable()
+        const cart = <ICart>this.util.getFromLocalStorage('shared.cart')
         this.cartSubject.next(this.cart)
     }
 

@@ -1,30 +1,30 @@
-import { inject, injectable } from 'inversify';
-import { Document, Error, Model, Types } from 'mongoose';
-import * as mongoose from 'mongoose';
-import * as JSONStream from 'JSONStream';
-import { Response } from 'express';
-import { CONSTANTS } from '../constants';
+import * as JSONStream from 'JSONStream'
+import { Response } from 'express'
+import { inject, injectable } from 'inversify'
+import { Document, Error, Model, Types } from 'mongoose'
+import * as mongoose from 'mongoose'
+import { Constants } from '../constants'
 
 @injectable()
 export class DbClient<T extends Document> {
     /**
      * Gets a filtered set of documents from a collection
-     * 
+     *
      * @param {mongoose.Model} model - Mongoose `Model` to query
      * @param {object} query - The database query
      * @param {boolean} res - Pass the express `Response` if the set of documents should be streamed rather than loaded into memory
      */
     public getFilteredCollection(model: Model<T>, query: Object, options?: { limit: number; skip: number }, res?: Response): Promise<T[]> {
         if (!options) {
-            options = { limit: 0, skip: 0 };
+            options = { limit: 0, skip: 0 }
         }
         if (options && !options.limit) {
-            options.limit = 0;
+            options.limit = 0
         }
         if (options && !options.skip) {
-            options.skip = 0;
+            options.skip = 0
         }
-        
+
         return new Promise<T[]>(async (resolve, reject) => {
             /**
              * Stream the data
@@ -36,11 +36,11 @@ export class DbClient<T extends Document> {
                         .limit(options.limit)
                         .cursor()
                         .pipe(JSONStream.stringify())
-                        .pipe(res);
-                    resolve();
+                        .pipe(res)
+                    resolve()
                 }
-                catch(streamError) {
-                    reject(streamError);
+                catch (streamError) {
+                    reject(streamError)
                 }
             }
             /**
@@ -51,14 +51,14 @@ export class DbClient<T extends Document> {
                     .skip(options.skip)
                     .limit(options.limit)
                     .then(documents => resolve(documents))
-                    .catch(fetchError => reject(fetchError));
+                    .catch(fetchError => reject(fetchError))
             }
-        });
+        })
     }
 
     /**
      * Updates a document
-     * 
+     *
      * @param {mongoose.Model} model - The Mongoose `Model` representing the collection containing the document
      * @param {ObjectId|string} id - The document's `<ObjectId>_id` field
      * @param {object} update - An object representing the fields to be updated
@@ -70,61 +70,61 @@ export class DbClient<T extends Document> {
             model.findById(id)
                 .then(document => {
                     try {
-                        updateDoc(document, update);
+                        updateDoc(document, update)
                     }
                     catch (validationError) {
-                        reject(validationError);
-                        return;
+                        reject(validationError)
+                        return
                     }
                     document.save()
                         .then(updatedDocument => resolve(updatedDocument))
-                        .catch((updateError: Error) => reject(updateError));
+                        .catch((updateError: Error) => reject(updateError))
                 })
-                .catch((retrievalError: Error) => reject(retrievalError));
-        });
+                .catch((retrievalError: Error) => reject(retrievalError))
+        })
 
         function updateDoc(doc: T, iterable: Object) {
             if (!iterable || !Object.keys(iterable) || !Object.keys(iterable).length) {
-                throw new Error(`${CONSTANTS.ERRORS.TAGS.schemaError} Invalid update`);
+                throw new Error(`${Constants.Errors.TAGS.schemaError} Invalid update`)
             }
 
             Object.keys(iterable).forEach(key => {
-                if (iterable[key] && iterable[key].constructor == Object) {
-                    updateDoc(doc[key], iterable[key]);
+                if (iterable[key] && iterable[key].constructor === Object) {
+                    updateDoc(doc[key], iterable[key])
                 }
                 else if (concatArrays && Array.isArray(iterable[key])) {
-                    doc[key] = doc[key].concat(iterable[key]);
+                    doc[key] = doc[key].concat(iterable[key])
                 }
                 else {
-                    doc[key] = iterable[key];
+                    doc[key] = iterable[key]
                 }
-            });
+            })
         }
     }
 
     /**
      * Returns a MongoDB "set" operator based on a GraphQL-style object
-     * 
+     *
      * @param {object} obj - An object representing the fields to be updated
      */
     public mongoSet(obj: Object): Object {
-        let operator = { $set: {} };
+        const operator = { $set: {} }
 
         function addToSetOperator(iterable: Object, prefix?: string) {
             Object.keys(iterable).forEach(key => {
-                let newKey: string, newPrefix: string;
-                if (iterable[key] && iterable[key].constructor == Object) {
-                    newPrefix = prefix ? prefix + "." + key : key;
-                    addToSetOperator(iterable[key], newPrefix);
+                let newKey: string, newPrefix: string
+                if (iterable[key] && iterable[key].constructor === Object) {
+                    newPrefix = prefix ? prefix + "." + key : key
+                    addToSetOperator(iterable[key], newPrefix)
                 }
                 else {
-                    newKey = prefix ? prefix + "." + key : key;
-                    operator.$set[newKey] = iterable[key];
+                    newKey = prefix ? prefix + "." + key : key
+                    operator.$set[newKey] = iterable[key]
                 }
-            });
+            })
         }
 
-        addToSetOperator(obj);
-        return operator;
+        addToSetOperator(obj)
+        return operator
     }
 }

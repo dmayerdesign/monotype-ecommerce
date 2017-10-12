@@ -8,7 +8,8 @@ import { appConfig } from '@time/app-config'
 import { ProductSearch } from '@time/common/api-utils'
 import { IPrice, IProduct } from '@time/common/models/interfaces'
 import { SimpleError } from '@time/common/ng-modules/http'
-import { UserService, UtilService } from '../../shared/services'
+import { UserService } from '../../shared/services/user.service'
+import { UtilService } from '../../shared/services/util.service'
 
 @Injectable()
 export class ProductService {
@@ -27,15 +28,12 @@ export class ProductService {
 
     public get(page?: number, query?: ProductSearch.Body): void {
         const params = new HttpParams()
-        const headers = new HttpHeaders({authorization: "bearer " + this.userService.token})
 
         if (page) params.set("page", page + "")
         if (query) params.set("page", JSON.stringify(query))
 
-        console.log({ params, headers })
-
         // this.http.get("https://jsonplaceholder.typicode.com/posts")
-        this.http.get(appConfig.client_url + "/api/products", { params, headers })
+        this.http.get(appConfig.client_url + "/api/products", { params })
             .subscribe(
                 (products: IProduct[]) => this.productsSubject.next(products),
                 (error: SimpleError) => this.productsErrorSubject.next(error),

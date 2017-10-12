@@ -4,7 +4,7 @@ import { interfaces, InversifyExpressServer, TYPE } from 'inversify-express-util
 import { makeLoggerMiddleware } from 'inversify-logger-middleware'
 
 import { DbClient, ProductSearchUtils } from '@time/common/api-utils'
-import { TAGS, TYPES } from '@time/common/constants/inversify'
+import { Tags, Types } from '@time/common/constants/inversify'
 import { AppController, ProductsController, UserController } from '../controllers'
 import { ProductService, UserService, WoocommerceMigrationService } from '../services'
 import { isDev } from '../utils/env'
@@ -23,19 +23,19 @@ if (isDev()) {
 }
 
 // Services
-container.bind<DbClient<any>>(TYPES.DbClient).to(DbClient)
-container.bind<ProductSearchUtils>(TYPES.ProductSearchUtils).to(ProductSearchUtils)
-container.bind<UserService>(TYPES.UserService).to(UserService)
-container.bind<ProductService>(TYPES.ProductService).to(ProductService)
-container.bind<WoocommerceMigrationService>(TYPES.WoocommerceMigrationService).to(WoocommerceMigrationService)
+container.bind<DbClient<any>>(Types.DbClient).to(DbClient)
+container.bind<ProductSearchUtils>(Types.ProductSearchUtils).to(ProductSearchUtils)
+container.bind<UserService>(Types.UserService).to(UserService)
+container.bind<ProductService>(Types.ProductService).to(ProductService)
+container.bind<WoocommerceMigrationService>(Types.WoocommerceMigrationService).to(WoocommerceMigrationService)
 
 // Middleware
-container.bind(TYPES.isAuthenticated).toConstantValue(Authenticate.isAuthenticated)
-container.bind(TYPES.isAuthorized).toConstantValue(Authenticate.isAuthorized)
+container.bind(Types.isAuthenticated).toConstantValue(Authenticate.isAuthenticated)
+container.bind(Types.isAuthorized).toConstantValue(Authenticate.isAuthorized)
 
 // Controllers
-container.bind<interfaces.Controller>(TYPE.Controller).to(UserController).whenTargetNamed(TAGS.UserController)
-container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsController).whenTargetNamed(TAGS.ProductsController)
-container.bind<interfaces.Controller>(TYPE.Controller).to(AppController).whenTargetNamed(TAGS.AppController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(UserController).whenTargetNamed(Tags.UserController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsController).whenTargetNamed(Tags.ProductsController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(AppController).whenTargetNamed(Tags.AppController)
 
 export { container }

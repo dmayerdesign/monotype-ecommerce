@@ -7,7 +7,7 @@
     {
       "name": "app",
       "root": "time-client/src/client",
-      "outDir": "./dist/public",
+      "outDir": "./time-client/dist/public",
       "assets": [
         "assets",
         "favicon.ico"
@@ -34,7 +34,7 @@
       "platform": "server",
       "name": "time-client-universal",
       "root": "time-client/src/client",
-      "outDir": "./dist/server-app",
+      "outDir": "./time-client/dist/server-app",
       "assets": [
         "assets",
         "favicon.ico"

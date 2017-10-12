@@ -16,7 +16,7 @@ import {
 import { Observable } from 'rxjs/Observable'
 
 import { appConfig } from '@time/app-config'
-import CONSTANTS, { TYPES } from '@time/common/constants'
+import { Types } from '@time/common/constants'
 import { IOrganization } from '@time/common/models/interfaces'
 import { ProductService } from '../services'
 import { WoocommerceMigrationService } from '../services'
@@ -43,7 +43,7 @@ export class OrganizationController implements interfaces.Controller {
         })
     }
 
-    @httpGet('/', TYPES.isAuthorized)
+    @httpGet('/', Types.isAuthorized)
     public getSettings(@response() res: Response) {
         return Observable.of({ secret: true })
     }

@@ -15,8 +15,7 @@ import {
 } from 'inversify-express-utils'
 
 import { appConfig } from '@time/app-config'
-import { handleError } from '@time/common/api-utils'
-import CONSTANTS, { TYPES } from '@time/common/constants'
+import { HttpStatus, Types } from '@time/common/constants'
 import { IProduct, IServiceResponse } from '@time/common/models/interfaces'
 import { ProductService } from '../services'
 import { WoocommerceMigrationService } from '../services'
@@ -26,11 +25,11 @@ import { WoocommerceMigrationService } from '../services'
 export class ProductsController implements interfaces.Controller {
 
     constructor(
-        @inject(TYPES.ProductService) private productService: ProductService,
-        @inject(TYPES.WoocommerceMigrationService) private wms: WoocommerceMigrationService,
+        @inject(Types.ProductService) private productService: ProductService,
+        @inject(Types.WoocommerceMigrationService) private wms: WoocommerceMigrationService,
     ) {}
 
-    @httpGet('/', TYPES.isAuthenticated)
+    @httpGet('/', Types.isAuthenticated)
     private get(
         @queryParam('query') query: string,
         @queryParam('page') page: number,
@@ -40,6 +39,7 @@ export class ProductsController implements interfaces.Controller {
         let parsedQuery: object
         if (test) {
             res.json([])
+            return
         }
         parsedQuery = query ? JSON.parse(query) : {}
         res.setHeader('content-type', 'application/json')
@@ -55,7 +55,7 @@ export class ProductsController implements interfaces.Controller {
                 SKU: "FFFFFFFF",
             })
             .then(data => res.json(data))
-            .catch(err => handleError(err, res))
+            .catch(err => res.status(500).json(err))
     }
 
     @httpDelete('/:id')
@@ -64,11 +64,11 @@ export class ProductsController implements interfaces.Controller {
         @response() res: Response,
     ): void {
         this.productService.deleteOne(id)
-            .then(() => res.sendStatus(CONSTANTS.HTTP.SUCCESS_noContent))
-            .catch((err) => handleError(err, res))
+            .then(({data, status}) => res.status(status).json(data))
+            .catch(({data, status}) => res.status(status).json(data))
     }
 
-    @httpGet('/migrate', TYPES.isAuthorized)
+    @httpGet('/migrate', Types.isAuthorized)
     private async migrate(
         @request() req: Request,
         @response() res: Response,

@@ -15,6 +15,7 @@ import 'rxjs/add/operator/catch'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/switchMap'
 
+import { HttpStatus } from '../../constants'
 import { IUser } from '../../models'
 import { SimpleError } from './http.models'
 import { TimeHttpService } from './http.service'
@@ -30,20 +31,24 @@ export class TimeHttpResponseInterceptor implements HttpInterceptor {
 
         return Observable.of(request)
             .switchMap((req) => next.handle(req))
-            .map((res: any) => {
-                // Only capture responses, ignore requests
-                if (res instanceof HttpResponse) {
-                    console.log("From interceptor:", res)
-                    if (res.body.authToken) {
-                        this.timeHttpService.auth$.next(res.body.authToken)
-                    }
-                }
+            // .map((res: any) => {
+            //     // Only capture responses, ignore requests
+            //     if (res instanceof HttpResponse) {
+            //         console.log("From interceptor:", res)
+            //         if (res.body.authToken) {
+            //             this.timeHttpService.auth$.next(res.body.authToken)
+            //         }
+            //     }
 
-                return res
-            })
-            .catch((response) => {
-                this.timeHttpService.error$.next(new SimpleError(response))
-                return Observable.throw(new SimpleError(response))
+            //     return res
+            // })
+            .catch((errorResponse) => {
+                const error = new SimpleError(errorResponse)
+                this.timeHttpService.error$.next(error)
+                if (error.status === HttpStatus.CLIENT_ERROR_unauthorized) {
+                    this.timeHttpService.sessionInvalid$.next(error)
+                }
+                return Observable.throw(error)
             })
     }
 }

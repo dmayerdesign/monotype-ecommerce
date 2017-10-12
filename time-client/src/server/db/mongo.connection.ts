@@ -1,6 +1,5 @@
-import mongoose = require('mongoose')
-
 import { isDev } from '../utils/env'
+const mongoose = require('mongoose')
 
 mongoose.Promise = global.Promise
 if (isDev()) mongoose.set('debug', true)

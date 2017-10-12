@@ -32,7 +32,3 @@ export interface ILogin {
   email: string
   password: string
 }
-
-export interface IAuthResponse {
-  authToken: string
-}

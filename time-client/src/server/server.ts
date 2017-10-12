@@ -2,6 +2,7 @@ require('dotenv').config()
 
 import * as bodyParser from 'body-parser'
 import * as compression from 'compression'
+import * as cookieParser from 'cookie-parser'
 import * as express from 'express'
 import * as session from 'express-session'
 import * as validator from 'express-validator'
@@ -36,6 +37,7 @@ function serverErrorConfig(app) {
 
 function serverConfig(app) {
     app.set('port', process.env.PORT)
+    app.use(cookieParser())
     app.use(express.static('dist/public'))
     app.use('/scripts', express.static('node_modules'))
     app.use('/assets', express.static('dist/public/assets'))
@@ -46,19 +48,7 @@ function serverConfig(app) {
     app.use(helmet())
     app.disable('x-powered-by') // removes "x-powered-by: express" from the header to avoid specifically-targeted attacks
     app.use(validator())
-
-    app.use(session({
-        resave: true,
-        saveUninitialized: true,
-        secret: process.env.SESSION_SECRET,
-        store: new MongoStore({
-            url: process.env.MONGOLAB_URI || process.env.MONGODB_URI,
-            // autoReconnect: true,
-            ttl: 14 * 24 * 60 * 60, // 2 weeks
-        }),
-    }))
     app.use(passport.initialize())
-    app.use(passport.session())
 
     passportConfig()
     initStartupTasks()

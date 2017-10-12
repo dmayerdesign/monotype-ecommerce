@@ -7,7 +7,7 @@ import { UiService, UserService } from '../../../shared/services'
 import { ProductService } from '../../services'
 
 @Component({
-  selector: 'app-shop',
+  selector: 'shop',
   templateUrl: './shop.component.html',
   styleUrls: ['./shop.component.scss'],
 })
@@ -27,7 +27,8 @@ export class ShopComponent implements OnInit, AfterViewInit {
   }
 
   public ngAfterViewInit() {
-    // this.userService.login({email: "sadfasf", password: "asdfasdfdsf"})
+    console.log("Do login")
+    this.userService.login({email: "sadfasf", password: "asdfasdfdsf"})
     this.products$ = this.productService.products$
     this.productService.products$.subscribe(
       products => {

@@ -2,7 +2,7 @@ import { injectable } from 'inversify'
 import { Error } from 'mongoose'
 
 import { DbClient } from '@time/common/api-utils'
-import { Currency, CONSTANTS } from '@time/common/constants'
+import { Currency } from '@time/common/constants'
 import { Product } from '@time/common/models/api-models'
 import { IProduct } from '@time/common/models/interfaces'
 import * as productsJSON from '@time/common/work-files/migration/hyzershop-products'

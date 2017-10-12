@@ -3,8 +3,8 @@ import { inject, injectable } from 'inversify'
 import { Error } from 'mongoose'
 
 import { DbClient, MongoQueries, ProductSearch, ProductSearchUtils } from '@time/common/api-utils'
-import { CONSTANTS } from '@time/common/constants'
-import { TYPES } from '@time/common/constants/inversify'
+import { Constants, HttpStatus } from '@time/common/constants'
+import { Types } from '@time/common/constants/inversify'
 import { Product } from '@time/common/models/api-models'
 import { ServiceErrorResponse, ServiceResponse } from '@time/common/models/helpers'
 import { IFetchService } from '@time/common/models/interfaces'
@@ -23,8 +23,8 @@ export class ProductService implements IFetchService<IProduct> {
      * @param {ProductSearchUtils} productSearchUtils A service containing helper methods for product search
      */
     constructor(
-        @inject(TYPES.DbClient) private dbClient: DbClient<IProduct>,
-        @inject(TYPES.ProductSearchUtils) private productSearchUtils: ProductSearchUtils,
+        @inject(Types.DbClient) private dbClient: DbClient<IProduct>,
+        @inject(Types.ProductSearchUtils) private productSearchUtils: ProductSearchUtils,
     ) {}
 
     /**
@@ -49,7 +49,7 @@ export class ProductService implements IFetchService<IProduct> {
      * @param {SearchBody} body The search options
      * @param {express.Response} [res] The express Response; pass this in if you want the documents fetched as a stream and piped into the response
      */
-    public search(body: ProductSearch.Body, res?: Response): Promise<ServiceResponse<IProduct[]>> {
+    public search(body: ProductSearch.Body, res?: Response): Promise<ServiceResponse<IProduct[]>>|void {
         const searchRegExp = new RegExp(body.search, 'gi')
         let searchNameAndDesc: any = []
         let allQuery: any
@@ -128,8 +128,8 @@ export class ProductService implements IFetchService<IProduct> {
      * @param {express.Response} [res] The express Response; pass this in if you want the documents fetched as a stream and piped into the response
      */
     public get(query: object, page: number = 1, res?: Response): Promise<ServiceResponse<IProduct[]>>|void {
-        const skip = (page - 1) * CONSTANTS.PAGINATION.productsPerPage
-        const limit = CONSTANTS.PAGINATION.productsPerPage
+        const skip = (page - 1) * Constants.Pagination.productsPerPage
+        const limit = Constants.Pagination.productsPerPage
 
         if (res) {
             this.dbClient.getFilteredCollection(Product, query, {limit, skip}, res)
@@ -185,12 +185,11 @@ export class ProductService implements IFetchService<IProduct> {
         return this.updateProduct("5988d5f44b224b068cda7d61", update)
     }
 
-    public deleteOne(id: string): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
-            Product.findByIdAndRemove(id, (error: Error) => {
-                if (error) reject(new ServiceErrorResponse(error))
-                else resolve()
-            })
+    public deleteOne(id: string): Promise<ServiceResponse<any>> {
+        return new Promise<ServiceResponse<any>>((resolve, reject) => {
+            Product.findByIdAndRemove(id)
+                .then(updatedProduct => resolve(new ServiceResponse({}, HttpStatus.SUCCESS_noContent)))
+                .catch(error => reject(new ServiceErrorResponse(error)))
         })
     }
 

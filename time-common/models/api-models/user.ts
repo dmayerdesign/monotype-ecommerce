@@ -1,6 +1,5 @@
 import * as mongoose from 'mongoose'
 import { model, Schema } from 'mongoose'
-import authConfig from '../../config/auth.config'
 import { IUser } from '../interfaces'
 import { addressSchema } from './address'
 

@@ -1,7 +1,7 @@
-export const TAGS = {
-    AppController: 'AppController',
-    UserController: 'UserController',
-    ProductsController: 'ProductsController',
+export class Tags {
+    public static AppController = 'AppController'
+    public static UserController = 'UserController'
+    public static ProductsController = 'ProductsController'
 }
 
-export default TAGS
+export default Tags

@@ -1,14 +1,14 @@
 import { Request, Response } from 'express'
-import CONSTANTS from '../constants'
+import { Constants } from '../constants'
 
 export function handleError(error: any, res?: Response, msg?: string, status?: number) {
-    let message: string = CONSTANTS.ERRORS.genericErrorMessage
+    let message: string = Constants.Errors.genericErrorMessage
 
     // If the error is an Error and its message is tagged as usable, use the message
     if (error instanceof Error) {
-        Object.keys(CONSTANTS.ERRORS.TAGS).forEach(tag => {
-            if (error.message.indexOf(CONSTANTS.ERRORS.TAGS[tag]) > -1) {
-                message = error.message.replace(CONSTANTS.ERRORS.TAGS[tag], "").trim()
+        Object.keys(Constants.Errors.TAGS).forEach(tag => {
+            if (error.message.indexOf(Constants.Errors.TAGS[tag]) > -1) {
+                message = error.message.replace(Constants.Errors.TAGS[tag], "").trim()
             }
         })
     }

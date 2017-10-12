@@ -11,9 +11,8 @@ import {
     response,
 } from 'inversify-express-utils'
 
-import { handleError } from '@time/common/api-utils'
-import CONSTANTS from '@time/common/constants'
-import TYPES from '@time/common/constants/inversify/types'
+import { Constants } from '@time/common/constants'
+import Types from '@time/common/constants/inversify/types'
 import { UserService } from '../services/user.service'
 
 @injectable()
@@ -21,17 +20,32 @@ import { UserService } from '../services/user.service'
 export class UserController {
 
     constructor(
-        @inject(TYPES.UserService) private userService: UserService,
+        @inject(Types.UserService) private userService: UserService,
     ) { }
 
-    @httpGet('/login')
+    // @httpPost('/login')
+    /* FOR TESTING */@httpGet('/login')
     public login(
         @request() req: Request,
         @response() res: Response,
     ): void {
-        this.userService.login(req.body)
-            .then(({data, status}) => res.status(status).json(data))
+        this.userService.login(req.body, res)
             .catch(({error, status}) => res.status(status).json(error))
+    }
+
+    @httpPost('/logout')
+    public logout(
+        @response() res: Response,
+    ): void {
+        this.userService.logout(res)
+    }
+
+    @httpGet('/session', Types.isAuthenticated)
+    public session(
+        @request() req: Request,
+        @response() res: Response,
+    ): void {
+        this.userService.refreshSession(req, res)
     }
 
     @httpPost('/register')
@@ -39,12 +53,11 @@ export class UserController {
         @request() req: Request,
         @response() res: Response,
     ): void {
-        this.userService.register(req.body)
-            .then(({data, status}) => res.status(status).json(data))
+        this.userService.register(req.body, res)
             .catch(({error, status}) => res.status(status).json(error))
     }
 
-    @httpPut('/update', TYPES.isAuthenticated)
+    @httpPut('/update', Types.isAuthenticated)
     public updateUser(
         @request() req: Request,
         @response() res: Response,
