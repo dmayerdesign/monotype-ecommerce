@@ -91,6 +91,8 @@
     "@types/morgan": "1.7.32",
     "@types/node": "6.0.60",
     "@types/passport-local-mongoose": "4.0.10",
+    "@types/stripe": "^3.0.0",
+    "@types/stripe-node": "^4.7.0",
     "angular2-template-loader": "^0.6.2",
     "autoprefixer": "6.5.3",
     "awesome-typescript-loader": "^3.2.2",

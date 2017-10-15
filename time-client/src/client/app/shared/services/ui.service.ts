@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core'
 import { Title } from '@angular/platform-browser'
 import { Subject } from 'rxjs/Subject'
 
+import { IModalData } from '@time/common/models'
 import { SimpleError, TimeHttpResponseInterceptor, TimeHttpService } from '@time/common/ng-modules/http'
 import { FlashMessageType, IFlash } from '../models/ui.models'
 
@@ -10,6 +11,7 @@ export class UiService {
     public viewReady$ = new Subject<boolean>()
     public flash$ = new Subject<IFlash>()
     public flashCancel$ = new Subject<any>()
+    public modal$ = new Subject<IModalData>()
 
     constructor(
         private titleService: Title,
@@ -47,5 +49,12 @@ export class UiService {
 	 */
     public flashError(error: SimpleError) {
         this.flash(error.message, 'error')
+    }
+
+    /**
+     * Display a modal
+     */
+    public showModal(data: IModalData) {
+        this.modal$.next(data)
     }
 }

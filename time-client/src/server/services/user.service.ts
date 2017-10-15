@@ -4,7 +4,7 @@ import { injectable } from 'inversify'
 import * as jwt from 'jsonwebtoken'
 
 import { AuthConfig } from '@time/common/config/auth.config'
-import { Constants, HttpStatus } from '@time/common/constants'
+import { Cookies, Copy, HttpStatus } from '@time/common/constants'
 import Types from '@time/common/constants/inversify/types'
 import { ILogin, IUser, User } from '@time/common/models'
 import { ServiceErrorResponse, ServiceResponse } from '@time/common/models/helpers'
@@ -46,14 +46,14 @@ export class UserService {
                         newUser.save().then((savedUser) => {
                             const payload = this.cleanUser(savedUser)
                             const authToken = jwt.sign(payload, this.jwtSecret, AuthConfig.JwtOptions)
-                            res.cookie(Constants.Cookies.jwtToken, authToken, AuthConfig.CookieOptions).json(payload)
+                            res.cookie(Cookies.jwt, authToken, AuthConfig.CookieOptions).json(payload)
                             resolve()
                         })
                         .catch((error) => reject(new ServiceErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest)))
                     }
                     else {
                         reject(new ServiceErrorResponse(
-                            new Error(Constants.Errors.userEmailExists),
+                            new Error(Copy.ErrorMessages.userEmailExists),
                             HttpStatus.CLIENT_ERROR_badRequest,
                         ))
                     }
@@ -75,7 +75,7 @@ export class UserService {
 
             try {
                 const authToken = jwt.sign(fakeUser, this.jwtSecret, AuthConfig.JwtOptions)
-                res.cookie(Constants.Cookies.jwtToken, authToken, AuthConfig.CookieOptions).json(fakeUser)
+                res.cookie(Cookies.jwt, authToken, AuthConfig.CookieOptions).json(fakeUser)
                 resolve()
             }
             catch (error) {
@@ -93,10 +93,10 @@ export class UserService {
                         if (authenticated) {
                             const payload = this.cleanUser(user)
                             const authToken = jwt.sign(payload, this.jwtSecret, AuthConfig.JwtOptions)
-                            res.cookie(Constants.Cookies.jwtToken, authToken, AuthConfig.CookieOptions).json(payload)
+                            res.cookie(Cookies.jwt, authToken, AuthConfig.CookieOptions).json(payload)
                             resolve()
                         } else {
-                            return reject(new ServiceErrorResponse(new Error(Constants.Errors.invalidPassword), 401))
+                            return reject(new ServiceErrorResponse(new Error(Copy.ErrorMessages.invalidPassword), 401))
                         }
                     }
                     catch (error) {
@@ -109,13 +109,13 @@ export class UserService {
     }
 
     public logout(res: Response): void {
-        res.clearCookie(Constants.Cookies.jwtToken).json({})
+        res.clearCookie(Cookies.jwt).json({})
     }
 
     public refreshSession(req: Request, res: Response): void {
         const payload = this.cleanUser(req.user)
         const authToken = jwt.sign(payload, this.jwtSecret, AuthConfig.JwtOptions)
-        res.cookie(Constants.Cookies.jwtToken, authToken, AuthConfig.CookieOptions).json(payload)
+        res.cookie(Cookies.jwt, authToken, AuthConfig.CookieOptions).json(payload)
     }
 
     public updateUser(id: string, update: any): Promise<ServiceResponse<IUser>> {

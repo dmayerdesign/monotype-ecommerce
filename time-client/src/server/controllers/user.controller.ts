@@ -11,7 +11,6 @@ import {
     response,
 } from 'inversify-express-utils'
 
-import { Constants } from '@time/common/constants'
 import Types from '@time/common/constants/inversify/types'
 import { UserService } from '../services/user.service'
 
@@ -24,7 +23,8 @@ export class UserController {
     ) { }
 
     // @httpPost('/login')
-    /* FOR TESTING */@httpGet('/login')
+    /* FOR TESTING */
+    @httpGet('/login')
     public login(
         @request() req: Request,
         @response() res: Response,

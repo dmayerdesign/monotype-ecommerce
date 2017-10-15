@@ -4,7 +4,7 @@ import * as jwt from 'jsonwebtoken'
 
 import { AuthConfig } from '@time/common/config/auth.config'
 import { HttpStatus } from '@time/common/constants'
-import { Constants } from '@time/common/constants'
+import { Cookies, Copy } from '@time/common/constants'
 import { IUser } from '@time/common/models'
 
 const jwtSecret = process.env.JWT_SECRET
@@ -16,7 +16,7 @@ export class Authenticate {
      * If the user is logged in, call `next()`. Else, send an error response
      */
     public static isAuthenticated(req: Request, res: Response, next: NextFunction): void {
-        const token = req.cookies[Constants.Cookies.jwtToken]
+        const token = req.cookies[Cookies.jwt]
         let payload: IUser = null
 
         if (!token) {
@@ -28,7 +28,7 @@ export class Authenticate {
             payload = jwt.verify(token, jwtSecret)
         }
         catch (error) {
-            res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new Error(Constants.Errors.genericErrorMessage))
+            res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new Error(Copy.ErrorMessages.generic))
             return
         }
 
@@ -43,7 +43,7 @@ export class Authenticate {
                 req.user = user
                 next()
             } else {
-                res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new Error(Constants.Errors.genericErrorMessage))
+                res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new Error(Copy.ErrorMessages.genericErrorMessage))
                 return
             }
         })

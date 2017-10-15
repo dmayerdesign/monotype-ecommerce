@@ -5,14 +5,10 @@ import { makeLoggerMiddleware } from 'inversify-logger-middleware'
 
 import { DbClient, ProductSearchUtils } from '@time/common/api-utils'
 import { Tags, Types } from '@time/common/constants/inversify'
-import { AppController, ProductsController, UserController } from '../controllers'
-import { ProductService, UserService, WoocommerceMigrationService } from '../services'
-import { isDev } from '../utils/env'
-
-/**
- * Middleware
- */
 import { Authenticate } from '../auth/authenticate'
+import { AppController, ProductsController, UserController } from '../controllers'
+import { EmailService, ProductService, StripeService, UserService, WoocommerceMigrationService } from '../services'
+import { isDev } from '../utils/env'
 
 // load everything needed to the Container
 const container = new Container()
@@ -24,9 +20,11 @@ if (isDev()) {
 
 // Services
 container.bind<DbClient<any>>(Types.DbClient).to(DbClient)
+container.bind<EmailService>(Types.EmailService).to(EmailService)
 container.bind<ProductSearchUtils>(Types.ProductSearchUtils).to(ProductSearchUtils)
 container.bind<UserService>(Types.UserService).to(UserService)
 container.bind<ProductService>(Types.ProductService).to(ProductService)
+container.bind<StripeService>(Types.StripeService).to(StripeService)
 container.bind<WoocommerceMigrationService>(Types.WoocommerceMigrationService).to(WoocommerceMigrationService)
 
 // Middleware

@@ -3,7 +3,7 @@ import { Response } from 'express'
 import { inject, injectable } from 'inversify'
 import { Document, Error, Model, Types } from 'mongoose'
 import * as mongoose from 'mongoose'
-import { Constants } from '../constants'
+import { Errors } from '../constants'
 
 @injectable()
 export class DbClient<T extends Document> {
@@ -85,7 +85,7 @@ export class DbClient<T extends Document> {
 
         function updateDoc(doc: T, iterable: Object) {
             if (!iterable || !Object.keys(iterable) || !Object.keys(iterable).length) {
-                throw new Error(`${Constants.Errors.TAGS.schemaError} Invalid update`)
+                throw new Error(`${Errors.TAGS.schemaError} Invalid update`)
             }
 
             Object.keys(iterable).forEach(key => {

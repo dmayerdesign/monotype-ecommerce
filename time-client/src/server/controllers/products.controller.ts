@@ -37,10 +37,6 @@ export class ProductsController implements interfaces.Controller {
     ): Promise<IServiceResponse<IProduct[]>>|void {
         const test = true
         let parsedQuery: object
-        if (test) {
-            res.json([])
-            return
-        }
         parsedQuery = query ? JSON.parse(query) : {}
         res.setHeader('content-type', 'application/json')
         return this.productService.get(parsedQuery, page, res)
@@ -52,7 +48,7 @@ export class ProductsController implements interfaces.Controller {
     ): void {
         this.productService.updateTestProduct({
                 isStandalone: true,
-                SKU: "FFFFFFFF",
+                SKU: "TEST_001",
             })
             .then(data => res.json(data))
             .catch(err => res.status(500).json(err))

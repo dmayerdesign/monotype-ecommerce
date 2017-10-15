@@ -10,7 +10,7 @@ import { UiService } from './ui.service'
 @Injectable()
 export class UtilService {
 
-    public userError$ = new Subject<any>()
+    public serverError$ = new Subject<any>()
 
     constructor(
         private ui: UiService,

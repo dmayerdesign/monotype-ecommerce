@@ -10,7 +10,6 @@ import { UtilService } from './util.service'
 
 @Injectable()
 export class UserService {
-    private jwtToken: string
     private _user: IUser
     public user$: Subject<IUser> = new Subject<IUser>()
     public notifications = { sessions: 0, conversations: 0 }

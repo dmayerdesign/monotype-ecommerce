@@ -1,10 +1,9 @@
-import { HTTP_INTERCEPTORS } from '@angular/common/http'
 import { NgModule } from '@angular/core'
 import { BrowserModule } from '@angular/platform-browser'
 import { RouterModule } from '@angular/router'
 
+import { TimeUiModule } from '@time/common/ng-modules/ui'
 import { AppComponent } from './app.component'
-import { SharedModule } from './shared/shared.module'
 import { ShopModule } from './shop/shop.module'
 import { SiteModule } from './site/site.module'
 
@@ -16,6 +15,7 @@ import { SiteModule } from './site/site.module'
         BrowserModule,
         // BrowserModule.withServerTransition({appId: 'time-client-universal'}),
         RouterModule.forRoot([]),
+        TimeUiModule,
         SiteModule,
         ShopModule,
     ],

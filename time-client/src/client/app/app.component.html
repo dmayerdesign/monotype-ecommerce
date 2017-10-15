@@ -1,7 +1,3 @@
-<!-- <h1>Products</h1>
-<div *ngFor="let product of products$ | async">
-  <pre><code>{{product | json}}</code></pre>
-</div> -->
-
 <h1>App</h1>
 <router-outlet></router-outlet>
+<time-modal [(show)]="modal.show" [data]="modal.data"></time-modal>

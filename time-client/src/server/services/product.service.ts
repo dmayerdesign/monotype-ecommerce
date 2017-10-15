@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify'
 import { Error } from 'mongoose'
 
 import { DbClient, MongoQueries, ProductSearch, ProductSearchUtils } from '@time/common/api-utils'
-import { Constants, HttpStatus } from '@time/common/constants'
+import { Crud, HttpStatus } from '@time/common/constants'
 import { Types } from '@time/common/constants/inversify'
 import { Product } from '@time/common/models/api-models'
 import { ServiceErrorResponse, ServiceResponse } from '@time/common/models/helpers'
@@ -128,8 +128,8 @@ export class ProductService implements IFetchService<IProduct> {
      * @param {express.Response} [res] The express Response; pass this in if you want the documents fetched as a stream and piped into the response
      */
     public get(query: object, page: number = 1, res?: Response): Promise<ServiceResponse<IProduct[]>>|void {
-        const skip = (page - 1) * Constants.Pagination.productsPerPage
-        const limit = Constants.Pagination.productsPerPage
+        const skip = (page - 1) * Crud.Pagination.productsPerPage
+        const limit = Crud.Pagination.productsPerPage
 
         if (res) {
             this.dbClient.getFilteredCollection(Product, query, {limit, skip}, res)

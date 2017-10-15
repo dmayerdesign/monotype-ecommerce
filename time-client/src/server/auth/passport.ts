@@ -4,7 +4,7 @@ import * as passport from 'passport'
 import * as FacebookStrategy from 'passport-facebook'
 import * as passportJWT from 'passport-jwt'
 
-import { Constants } from '@time/common/constants'
+import { Copy } from '@time/common/constants'
 import { User } from '@time/common/models'
 import { IUser } from '@time/common/models/interfaces'
 
@@ -55,7 +55,7 @@ export function passportConfig() {
                 return done(err)
             }
             if (localUser) {
-                return done(Constants.Errors.userEmailExists)
+                return done(Copy.ErrorMessages.userEmailExists)
             }
 
             User.findOne({ facebookId: profile.id }, (findUserError, user) => {

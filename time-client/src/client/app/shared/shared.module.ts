@@ -4,38 +4,26 @@ import { ModuleWithProviders, NgModule } from '@angular/core'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 
-/**
+/*
  * EXTERNAL MODULES
  */
 import { ClickOutsideModule } from 'ng-click-outside'
 import { ToastrModule } from 'ngx-toastr'
 
-/**
+/*
  * FEATURE MODULES
  */
 import { TimeFormsModule } from '@time/common/ng-modules/forms'
 import { TimeHttpModule, TimeHttpResponseInterceptor } from '@time/common/ng-modules/http'
+import { TimeUiModule } from '@time/common/ng-modules/ui'
 
-/**
+/*
  * COMPONENTS
  */
-import {
-    ModalComponent,
-    SiteLocatorComponent,
-    TooltipComponent,
-} from './components'
+import { LoginComponent } from './components/login/login.component'
+import { SiteLocatorComponent } from './components/site-locator/site-locator.component'
 
-/**
- * DIRECTIVES
- */
-import { FocusOnDirective } from './directives'
-
-/**
- * PIPES
- */
-import { TruncatePipe } from './pipes'
-
-/**
+/*
  * SERVICES
  */
 import {
@@ -63,24 +51,19 @@ import {
             maxOpened: 1,
             preventDuplicates: true,
         }),
-        TimeHttpModule.forRoot(),
         ClickOutsideModule,
+        TimeHttpModule.forRoot(),
+        TimeUiModule,
         TimeFormsModule,
     ],
     declarations: [
         SiteLocatorComponent,
-        ModalComponent,
-        FocusOnDirective,
-        TruncatePipe,
-        TooltipComponent,
+        LoginComponent,
     ],
     exports: [
         SiteLocatorComponent,
-        ModalComponent,
-        TooltipComponent,
-        FocusOnDirective,
         ClickOutsideModule,
-        TruncatePipe,
+        LoginComponent,
     ],
 })
 

@@ -1,4 +1,4 @@
-@import '../../../../styles/settings';
+@import 'settings';
 
 .tooltip {
 	position: relative;
@@ -21,7 +21,7 @@
 		display: block;
 		width: 2rem;
 		height: 0.7rem;
-		background: transparent url('../../../../assets/images/pointer-triangle-dark.png') no-repeat 50% top;
+		background: transparent url('assets/images/pointer-triangle-dark.png') no-repeat 50% top;
 		background-size: cover;
 		position: absolute;
 			top: -0.6rem;
