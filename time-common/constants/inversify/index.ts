@@ -1,2 +1,2 @@
-export * from './types';
-export * from './tags';
+export * from './types'
+export * from './tags'

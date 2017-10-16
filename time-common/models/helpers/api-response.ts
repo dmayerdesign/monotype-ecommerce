@@ -1,7 +1,7 @@
 import { HttpStatus } from '../../constants/http'
-import { IServiceResponse } from '../interfaces'
+import { IApiResponse } from '../interfaces'
 
-export class ServiceResponse<T> implements IServiceResponse<T> {
+export class ApiResponse<T> implements IApiResponse<T> {
     constructor(
         public data: T = null,
         public status: HttpStatus = 200,

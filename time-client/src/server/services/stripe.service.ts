@@ -4,10 +4,11 @@ import * as Stripe from 'stripe'
 import { appConfig } from '@time/app-config'
 import { EmailService } from '@time/common/api-services'
 import { Types } from '@time/common/constants/inversify'
-import { Organization, Product } from '@time/common/models/api-models'
-import { IProduct } from '@time/common/models/interfaces'
-// import { Order } from '@time/common/models/order'
-// import { User } from '@time/common/models/user'
+import { Order, Organization, Product, User } from '@time/common/models/api-models'
+import { StripeOrder } from '@time/common/models/helpers'
+import { IApiResponse, IDiscount, IOrder, IProduct } from '@time/common/models/interfaces'
+import { DiscountService } from './discount.service'
+import { ProductService } from './product.service'
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
@@ -20,48 +21,52 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 export class StripeService {
 
     constructor(
-        @inject(Types.EmailService) private email: EmailService
+        @inject(Types.EmailService) private email: EmailService,
+        @inject(Types.ProductService) private productService: ProductService,
+        @inject(Types.DiscountService) private discountService: DiscountService
     ) {}
 
-    private createOrder(order): Promise<{ order: IOrder, stripeOrder: StripeNode.orders.IOrder }> {
-        return new Promise<{ order: IOrder, stripeOrder: StripeNode.orders.IOrder }>((resolve, reject) => {
+    private createOrder(order: IOrder) {
+        return new Promise<{ order: IOrder; stripeOrder: StripeOrder }>(async (resolve, reject) => {
+            let orderItems: IProduct[]
+            let orderDiscounts: IDiscount[]
+
             if (!order.total
                 || !order.total.currency
                 || !order.customer.email) {
-                return done("Not a valid order")
+                reject(new Error("Not a valid order"))
             }
 
             order.total.amount = 0
-            order.products.forEach(orderProduct => {
-                order.total.amount += orderProduct.totalCost
-            })
 
-            const dbOrder = new Order(order)
-            const stripeOrder = {}
-
-            const setOrderProperty = (key, prop) => {
-                let props
-                if (prop.indexOf(".") > -1) {
-                    props = prop.split(".")
-                    if (props.length === 2)
-                        stripeOrder[key] = order[props[0]][props[1]]
-                    if (props.length === 1)
-                        stripeOrder[key] = order[props[0]]
-                    return
-                }
-                if (order[prop]) {
-                    stripeOrder[key] = order[prop]
-                }
+            try {
+                const orderItemsResponse = await <Promise<IApiResponse<IProduct[]>>>this.productService.get({ _id: { $in: order.items } }, { page: 1, limit: order.items.length })
+                orderItems = orderItemsResponse.data
+                orderItems.forEach(orderItem => {
+                    order.total.amount += this.productService.getPrice(orderItem).total
+                })
+            }
+            catch (getItemsError) {
+                reject(getItemsError)
             }
 
-            order.items = order.products.map(product => {
-                return {
-                    parent: product.SKU,
-                    quantity: product.quantity,
-                }
-            })
+            try {
+                const orderDiscountsResponse = await <Promise<IApiResponse<IDiscount[]>>>this.discountService.get({ _id: { $in: order.discounts } })
+                orderDiscounts = orderDiscountsResponse.data
+                orderDiscounts.forEach(orderDiscount => {
+                    order.total.amount -= orderDiscount.amount.total
+                })
+            }
+            catch (getDiscountsError) {
+                reject(getDiscountsError)
+            }
 
-            order.shipping = {
+            const dbOrder = new Order(order)
+
+            // Build the stripe order
+            const stripeOrder = new StripeOrder()
+
+            stripeOrder.shipping = {
                 name: order.customer.firstName + ' ' + order.customer.lastName,
                 address: {
                     line1: order.customer.shippingAddress.street1,
@@ -72,12 +77,15 @@ export class StripeService {
                     postal_code: order.customer.shippingAddress.zip,
                 },
             }
-
-            setOrderProperty('currency', 'total.currency')
-            setOrderProperty('customer', 'stripeCustomerId')
-            setOrderProperty('email', 'customer.email')
-            setOrderProperty('items', 'items')
-            setOrderProperty('shipping', 'shipping')
+            stripeOrder.currency = order.total.currency
+            stripeOrder.customer = order.stripeCustomerId
+            stripeOrder.email = order.customer.email
+            stripeOrder.items = orderItems.map(product => {
+                return <StripeNode.orders.IOrderItem>{
+                    parent: product.SKU,
+                    quantity: product.stockQuantity,
+                }
+            })
 
             console.log(`
     ----------------------------
@@ -85,19 +93,28 @@ export class StripeService {
     ----------------------------`)
             console.log(stripeOrder)
 
-            stripe.orders.create(stripeOrder, (err, newOrder) => {
-                if (err) return done(err)
-
-                dbOrder.stripeOrderId = newOrder.id
-                dbOrder.save((err, _order) => {
-                    done(err, _order, newOrder)
+            stripe.orders.create(<StripeNode.orders.IOrderCreationOptions>stripeOrder)
+                .then(newStripeOrder => {
+                    dbOrder.stripeOrderId = newStripeOrder.id
+                    dbOrder.save()
+                        .then(newOrder => {
+                            resolve({
+                                order: newOrder,
+                                stripeOrder: <StripeOrder>newStripeOrder
+                            })
+                        })
+                        .catch(orderCreationError => {
+                            reject(orderCreationError)
+                        })
                 })
-            })
+                .catch(stripeOrderCreationError => {
+                    reject(stripeOrderCreationError)
+                })
         })
     }
 
     private payOrder(order, done) {
-        const payment = {
+        const payment: StripeNode.orders.IOrderPayOptions = {
             metadata: {
                 orderID: order._id.toString(),
             },
@@ -134,154 +151,187 @@ export class StripeService {
         }
 
         function makePayment() {
-            stripe.orders.pay(order.stripeOrderId, payment, (err, stripeOrder) => {
-                if (err) return done(err)
+            stripe.orders.pay(order.stripeOrderId, payment)
+                .then(stripeOrder => {
+                    Order.findById(order._id)
+                        .then(dbOrder => {
+                            dbOrder.status = 'Paid'
+                            dbOrder.save((error, updatedOrder) => {
+                                done(error, updatedOrder, stripeOrder)
+                            })
+                        })
+                        .catch(error => done(error))
+                })
+                .catch(error => done(error))
+        }
+    }
 
-                Order.findById(order._id, (err, dbOrder) => {
-                    if (err) return done(err)
-                    dbOrder.status = 'Paid'
-                    dbOrder.save((error, updatedOrder) => {
-                        done(error, updatedOrder, stripeOrder)
+    private createProductsOrSKUs(which, products, order) {
+        return new Promise<{ products: Array<IProduct>; stripeProductsOrSKUs: Array<StripeNode.products.IProduct|StripeNode.skus.ISku> }>((resolve, reject) => {
+            const productsToAdd = []
+            let outOfStock = false
+
+            if (!products || !products.length) {
+                resolve({
+                    products: [],
+                    stripeProductsOrSKUs: [],
+                })
+                return
+            }
+
+            products.forEach(product => {
+                if (product.stockQuantity < 1 && product.stockQuantity !== -1) {
+                    outOfStock = true
+                }
+            })
+
+            if (outOfStock) {
+                reject(new Error("Oh no — one of your chosen items is out of stock!"))
+                return
+            }
+
+            if (products.every(product => product.enteredIntoStripe)) {
+                resolve({
+                    products,
+                    stripeProductsOrSKUs: [],
+                })
+                return
+            }
+
+            if (which === "products") {
+                console.log("Let's make some products")
+                console.log(products)
+                products.forEach(product => {
+                    const productId = product.isStandalone ? product.SKU + "_parent" : product.SKU
+                    if (!product.enteredIntoStripe && !product.isVariation) {
+                        productsToAdd.push({
+                            id: productId,
+                            name: product.name,
+                            attributes: ["_id"],
+                        })
+                    }
+                })
+            }
+            else if (which === "skus") {
+                console.log("Let's make some SKUs")
+                products.forEach(product => {
+                    console.log(product)
+                    const thePrice = this.determinePrice(product)
+                    const productToAdd: any = {
+                        id: product.SKU,
+                        price: thePrice * 100,
+                        currency: order.total.currency || "usd",
+                        inventory: {
+                            quantity: product.stockQuantity,
+                            type: "finite",
+                        },
+                        attributes: {
+                            "_id": product._id.toString(),
+                        },
+                    }
+                    if (!product.enteredIntoStripe && !product.isParent) {
+                        productToAdd.product = product.isStandalone ? product.SKU + "_parent" : product.parentSKU
+                        productsToAdd.push(productToAdd)
+                    }
+                })
+            }
+
+            console.log(productsToAdd)
+
+            this.createStripeProductsOrSKUs(which, productsToAdd)
+                .then(stripeProductsOrSKUs => {
+                    const query = { SKU: { $in: [] } }
+                    if (!stripeProductsOrSKUs) return resolve({
+                        products,
+                        stripeProductsOrSKUs: [],
+                    })
+
+                    products.forEach(product => {
+                        if (!product.enteredIntoStripe) {
+                            query.SKU.$in.push(product.SKU)
+                        }
+                    })
+
+                    Product
+                        .update(
+                            query,
+                            {
+                                $set: { enteredIntoStripe: true },
+                            },
+                            { multi: true })
+                        .then(updatedProducts => {
+                            resolve({
+                                products: updatedProducts,
+                                stripeProductsOrSKUs,
+                            })
+                        })
+                        .catch(updateProductsError => {
+                            reject(updateProductsError)
+                        })
+                })
+                .catch(() => {
+                    resolve({
+                        products,
+                        stripeProductsOrSKUs: [],
                     })
                 })
-            })
-        }
+        })
     }
 
-    private createProductsOrSKUs(which, products, order, done) {
-        const productsToAdd = []
-        let outOfStock = false
+    private createStripeProductsOrSKUs(which, products) {
+        return new Promise<Array<StripeNode.products.IProduct|StripeNode.skus.ISku>>((resolve, reject) => {
+            recursivelyCreateProductsOrSKUs(products)
 
-        if (!products || !products.length) {
-            done(null, [], [])
-            return
-        }
-
-        products.forEach(product => {
-            if (product.stockQuantity < 1 && product.stockQuantity !== -1) {
-                outOfStock = true
-            }
-        })
-
-        if (outOfStock) {
-            done("Oh no — one of your chosen items is out of stock!")
-            return
-        }
-
-        if (products.every(product => product.enteredIntoStripe)) {
-            done(null, products, [])
-            return
-        }
-
-        if (which === "products") {
-            console.log("Let's make some products")
-            console.log(products)
-            products.forEach(product => {
-                const productId = product.isStandalone ? product.SKU + "_parent" : product.SKU
-                if (!product.enteredIntoStripe && !product.isVariation) {
-                    productsToAdd.push({
-                        id: productId,
-                        name: product.name,
-                        attributes: ["_id"],
-                    })
+            function recursivelyCreateProductsOrSKUs(productArr) {
+                const stripeProducts = {
+                    products: [],
+                    skus: [],
                 }
-            })
-        }
-        else if (which === "skus") {
-            console.log("Let's make some SKUs")
-            products.forEach(product => {
-                console.log(product)
-                const thePrice = this.determinePrice(product)
-                const productToAdd: any = {
-                    id: product.SKU,
-                    price: thePrice * 100,
-                    currency: order.total.currency || "usd",
-                    inventory: {
-                        quantity: product.stockQuantity,
-                        type: "finite",
-                    },
-                    attributes: {
-                        "_id": product._id.toString(),
-                    },
-                }
-                if (!product.enteredIntoStripe && !product.isParent) {
-                    productToAdd.product = product.isStandalone ? product.SKU + "_parent" : product.parentSKU
-                    productsToAdd.push(productToAdd)
-                }
-            })
-        }
 
-        console.log(productsToAdd)
+                console.log(`*********** Creating a ${which.substring(0, which.length - 1)} ************`)
+                console.log(productArr)
+                console.log(productArr[0])
 
-        this.createStripeProductsOrSKUs(which, productsToAdd, (err, stripeProducts) => {
-            const query = { SKU: { $in: [] } }
-            if (err || !stripeProducts) return done(null, products, [])
+                stripe[which].create(productArr[0])
+                .then(product => {
+                    const logMsg = which === "skus" ? "SKU" : "product"
+                    console.log(`
+        -------------------------------------
+            Created the ${logMsg} in Stripe
+        -------------------------------------`)
+                    console.log(product.id)
 
-            products.forEach(product => {
-                if (!product.enteredIntoStripe) {
-                    query.SKU.$in.push(product.SKU)
-                }
-            })
+                    stripeProducts[which].push(product)
+                    productArr.shift()
 
-            Product.update(
-                query,
-                {
-                    $set: { enteredIntoStripe: true },
-                },
-                { multi: true },
-                (_err, updatedProducts) => {
-                    done(_err, updatedProducts, stripeProducts)
+                    if (productArr.length) {
+                        recursivelyCreateProductsOrSKUs(productArr)
+                    }
+                    else {
+                        resolve(stripeProducts[which])
+                    }
                 })
-        })
-    }
-
-    private createStripeProductsOrSKUs(which, productArr, cb) {
-        const stripeProducts = {
-            products: [],
-            skus: [],
-        }
-
-        console.log(`*********** Creating a ${which.substring(0, which.length - 1)} ************`)
-        console.log(productArr)
-        console.log(productArr[0])
-
-        stripe[which].create(productArr[0], (err, product) => {
-            if (err) {
-                if (err.message.indexOf("already exists") > -1) {
-                    return cb(null, stripeProducts[which])
-                }
-                return cb(err)
-            }
-            const logMsg = which === "skus" ? "SKU" : "product"
-            console.log(`
--------------------------------------
-    Created the ${logMsg} in Stripe
--------------------------------------`)
-            console.log(product.id)
-
-            stripeProducts[which].push(product)
-            productArr.shift()
-
-            if (productArr.length) {
-                this.createStripeProductsOrSKUs(which, productArr, cb)
-            }
-            else {
-                cb(null, stripeProducts[which])
+                .catch(error => {
+                    if (error.message.indexOf("already exists") > -1) {
+                        return resolve(stripeProducts[which])
+                    }
+                    reject(error)
+                })
             }
         })
     }
 
-    private updateProducts(products, order) {
+    private updateInventory(products, order) {
         products.forEach(product => {
             let qty = 0
             if (product.isParent) {
                 const variations = products.map(p => p.parentSKU === product.SKU)
                 const variationSKUs = variations.map(v => v.SKU)
-                const orderVariations = order.products.filter(op => variationSKUs.indexOf(op.SKU) > -1)
+                const orderVariations = order.items.filter(op => variationSKUs.indexOf(op.SKU) > -1)
                 orderVariations.forEach(ov => qty += ov.quantity)
             }
             else {
-                qty = order.products.find(op => op.SKU === product.SKU).quantity
+                qty = order.items.find(op => op.SKU === product.SKU).quantity
             }
             Product.update({SKU: product.SKU}, { $inc: { stockQuantity: -qty, totalSales: qty } }, console.log)
         })
@@ -305,74 +355,88 @@ export class StripeService {
      * @param {function} done A callback function taking three arguments: an error (null if the
      * order was successful), the updated database Order, and the returned Stripe Order object
      */
-    public async submitOrder(orderData, variationsAndStandalones, done): Promise<{ order: IOrder, stripeOrder: StripeNode.orders.IOrder }> {
-        const parentSKUs = []
-        const productSKUs = []
-        variationsAndStandalones.forEach(product => {
-            productSKUs.push(product.SKU)
-            if (product.isVariation && product.parentSKU) {
-                parentSKUs.push(product.parentSKU)
-                productSKUs.push(product.parentSKU)
+    public submitOrder(orderData, variationsAndStandalones, done) {
+        return new Promise<{ order: IOrder, stripeOrder: StripeOrder }>(async (resolve, reject) => {
+            const parentSKUs = []
+            const productSKUs = []
+            variationsAndStandalones.forEach(product => {
+                productSKUs.push(product.SKU)
+                if (product.isVariation && product.parentSKU) {
+                    parentSKUs.push(product.parentSKU)
+                    productSKUs.push(product.parentSKU)
+                }
+            })
+
+            try {
+                // Retrieve parent products and combine them with `variationsAndStandalones` into `products`
+                // Use the new `products` array to create the products and SKUs in Stripe, if they don't exist
+                const parents = await Product.find({ SKU: { $in: parentSKUs } })
+                const products = parents.concat(variationsAndStandalones)
+                const stripeProducts = await this.createProducts(products)
+                console.log("Created products")
+                const stripeSKUs = await this.createSKUs(products, orderData)
+                console.log("Created SKUs")
+
+                // Create the order in Stripe
+                const { order, stripeOrder } = await this.createOrder(orderData)
+
+                // Create the customer in Stripe
+                const stripeCustomer = await this.createCustomer(order)
+
+                // Update the order with the Stripe customer info
+                order.customer.stripeCustomerId = stripeCustomer.id
+
+                // Pay the order
+                const { paidOrder, paidStripeOrder } = await this.payOrder(order)
+
+                // Update the stock quantity and total sales of each variation and standalone
+
+
+
+
+                resolve({ order: paidOrder, stripeOrder: paidStripeOrder })
+
             }
-        })
+            catch (error) {
+                reject(error)
+            }
 
-        try {
-            // Retrieve parent products and combine them with `variationsAndStandalones` into `products`
-            // Use the new `products` array to create the products and SKUs in Stripe, if they don't exist
-            const parents = await Product.find({ SKU: { $in: parentSKUs } })
-            const products = parents.concat(variationsAndStandalones)
-            const stripeProducts = await this.createProducts(products)
-            console.log("Created products")
-            const stripeSKUs = await this.createSKUs(products, orderData)
-            console.log("Created SKUs")
-
-            // Create the order in Stripe
-            const { order, stripeOrder } = await this.createOrder(orderData)
-            // Create the customer in Stripe
-            const stripeCustomer = await this.createCustomer(order)
-            // Update the order with the Stripe customer info
-            order.stripeCustomer = stripeCustomer
-            order.customer.stripeCustomerId = stripeCustomer.id
-            // Pay the order
-            const { paidOrder, paidStripeOrder }
-
-        }
-
-        Product.find({ SKU: { $in: parentSKUs } }, (error, parents) => {
-            if (error) return done(error)
-            const products = parents.concat(variationsAndStandalones)
-            this.createProducts(products, ($error, stripeProducts) => {
-                console.log("createProducts")
-                if ($error) return done($error)
-                this.createSKUs(products, order, (_err, stripeSKUs) => {
-                    console.log("createSKUs")
-                    if (_err) return done(_err)
-                    this.createOrder(order, (err, _order, stripeOrder) => {
-                        console.log("createOrder")
-                        if (err) return done(err)
-                        this.createCustomer(_order, (_error, stripeCustomer, $order) => {
-                            console.log("createCustomer")
-                            if (_error) return done(_error)
-                            // ==========================================================
-                            $order.stripeCustomer = stripeCustomer
-                            this.payOrder($order, ($err, dbOrder, _stripeOrder) => {
-                                console.log("payOrder")
-                                if ($err) return done($err)
-                                this.updateProducts(products, dbOrder)
-                                Organization.findOne({}, (_error_, organization) => {
-                                    if (_error_) return done(_error_)
-                                    console.log("Sending receipt")
-                                    this.email.sendReceipt({
-                                        organization,
-                                        order: dbOrder,
-                                        fromEmail: appConfig.organization_email,
-                                        fromName: appConfig.organization_name,
-                                        toEmail: dbOrder.customer.email,
-                                        toName: dbOrder.customer.firstName + ' ' + dbOrder.customer.lastName,
-                                    }, (_$error, body) => {
-                                        console.log("<<<<<<<<<< RECEIPT >>>>>>>>>>")
-                                        console.log(_$error, body)
-                                        done(_$error, dbOrder, _stripeOrder)
+            Product.find({ SKU: { $in: parentSKUs } }, (error, parents) => {
+                if (error) return done(error)
+                const products = parents.concat(variationsAndStandalones)
+                this.createProducts(products, ($error, stripeProducts) => {
+                    console.log("createProducts")
+                    if ($error) return done($error)
+                    this.createSKUs(products, order, (_err, stripeSKUs) => {
+                        console.log("createSKUs")
+                        if (_err) return done(_err)
+                        this.createOrder(order, (err, _order, stripeOrder) => {
+                            console.log("createOrder")
+                            if (err) return done(err)
+                            this.createCustomer(_order, (_error, stripeCustomer, $order) => {
+                                console.log("createCustomer")
+                                if (_error) return done(_error)
+                                $order.stripeCustomer = stripeCustomer
+                                this.payOrder($order, ($err, dbOrder, _stripeOrder) => {
+                                    // ==========================================================
+                                    console.log("payOrder")
+                                    if ($err) return done($err)
+                                    this.updateInventory(products, dbOrder)
+                                    Organization.findOne({}, (_error_, organization) => {
+                                        if (_error_) return done(_error_)
+                                        console.log("Sending receipt")
+                                        this.email.sendReceipt({
+                                            organization,
+                                            order: dbOrder,
+                                            fromEmail: appConfig.organization_email,
+                                            fromName: appConfig.organization_name,
+                                            toEmail: dbOrder.customer.email,
+                                            toName: dbOrder.customer.firstName + ' ' + dbOrder.customer.lastName,
+                                        }, (_$error, body) => {
+                                            console.log("<<<<<<<<<< RECEIPT >>>>>>>>>>")
+                                            console.log(_$error, body)
+                                            done(_$error, dbOrder, _stripeOrder)
+                                        })
                                     })
                                 })
                             })
@@ -502,8 +566,8 @@ export class StripeService {
      * @param {function} done - A callback function taking two arguments: an error (null if the
      * creation was successful) and an array of the returned Stripe Product objects
      */
-    public createProducts(products, done) {
-        return this.createProductsOrSKUs("products", products, null, done)
+    public createProducts(products) {
+        return this.createProductsOrSKUs("products", products, null)
     }
 
     /**

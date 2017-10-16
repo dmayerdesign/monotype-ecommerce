@@ -6,9 +6,9 @@ import { DbClient, MongoQueries, ProductSearch, ProductSearchUtils } from '@time
 import { Crud, HttpStatus } from '@time/common/constants'
 import { Types } from '@time/common/constants/inversify'
 import { Product } from '@time/common/models/api-models'
-import { ServiceErrorResponse, ServiceResponse } from '@time/common/models/helpers'
+import { ApiResponse, ServiceErrorResponse } from '@time/common/models/helpers'
 import { IFetchService } from '@time/common/models/interfaces'
-import { IProduct } from '@time/common/models/interfaces'
+import { IPrice, IProduct } from '@time/common/models/interfaces'
 
 /**
  * Service for fetching documents from the `products` collection
@@ -33,11 +33,11 @@ export class ProductService implements IFetchService<IProduct> {
      * @param {string} id The `_id` of the product to be retrieved
      * @return {Promise<IProduct>}
      */
-    public getOne(id: string): Promise<ServiceResponse<IProduct>> {
-        return new Promise<ServiceResponse<IProduct>>((resolve, reject) => {
+    public getOne(id: string): Promise<ApiResponse<IProduct>> {
+        return new Promise<ApiResponse<IProduct>>((resolve, reject) => {
             Product.findById(id, (error: Error, product): void => {
                 if (error) reject(new ServiceErrorResponse(error))
-                else resolve(new ServiceResponse(product))
+                else resolve(new ApiResponse(product))
             })
         })
     }
@@ -49,7 +49,7 @@ export class ProductService implements IFetchService<IProduct> {
      * @param {SearchBody} body The search options
      * @param {express.Response} [res] The express Response; pass this in if you want the documents fetched as a stream and piped into the response
      */
-    public search(body: ProductSearch.Body, res?: Response): Promise<ServiceResponse<IProduct[]>>|void {
+    public search(body: ProductSearch.Body, res?: Response): Promise<ApiResponse<IProduct[]>>|void {
         const searchRegExp = new RegExp(body.search, 'gi')
         let searchNameAndDesc: any = []
         let allQuery: any
@@ -117,84 +117,94 @@ export class ProductService implements IFetchService<IProduct> {
             })
         }
 
-        return this.get(allQuery || searchQuery, body.page, res)
+        return this.get(allQuery || searchQuery, { page: body.page, limit: body.limit }, res)
     }
 
     /**
      * Retrieve a list of products
      *
      * @param {object} query The database query
-     * @param {number} [page] The page number, which determines how many documents to skip
+     * @param {object} [queryOptions] An object with `page` and `limit` properties
      * @param {express.Response} [res] The express Response; pass this in if you want the documents fetched as a stream and piped into the response
      */
-    public get(query: object, page: number = 1, res?: Response): Promise<ServiceResponse<IProduct[]>>|void {
-        const skip = (page - 1) * Crud.Pagination.productsPerPage
-        const limit = Crud.Pagination.productsPerPage
+    public get(query: object, queryOptions = { page: 1, limit: Crud.Pagination.productsPerPage }, res?: Response): Promise<ApiResponse<IProduct[]>>|void {
+        const limit = queryOptions.limit
+        const page = queryOptions.page
+        const skip = (page - 1) * limit
 
         if (res) {
             this.dbClient.getFilteredCollection(Product, query, {limit, skip}, res)
                 .catch(err => new ServiceErrorResponse(err))
         }
         else {
-            return new Promise<ServiceResponse<IProduct[]>>((resolve, reject) => {
+            return new Promise<ApiResponse<IProduct[]>>((resolve, reject) => {
                 // Retrieve the products normally, loading them into memory
                 this.dbClient.getFilteredCollection(Product, query, {limit, skip})
-                    .then(products => resolve(new ServiceResponse(products)))
+                    .then(products => resolve(new ApiResponse(products)))
                     .catch(err => reject(new ServiceErrorResponse(err)))
             })
         }
     }
 
-    public createOne(product: IProduct): Promise<ServiceResponse<IProduct>> {
-        return new Promise<ServiceResponse<IProduct>>((resolve, reject) => {
+    public createOne(product: IProduct): Promise<ApiResponse<IProduct>> {
+        return new Promise<ApiResponse<IProduct>>((resolve, reject) => {
             new Product(product).save((error: Error, newProduct): void => {
                 if (error) reject(new ServiceErrorResponse(error))
-                else resolve(new ServiceResponse(newProduct))
+                else resolve(new ApiResponse(newProduct))
             })
         })
     }
 
-    public create(products: IProduct[]): Promise<ServiceResponse<IProduct[]>> {
-        return new Promise<ServiceResponse<IProduct[]>>((resolve, reject) => {
+    public create(products: IProduct[]): Promise<ApiResponse<IProduct[]>> {
+        return new Promise<ApiResponse<IProduct[]>>((resolve, reject) => {
             Product.create(products, (error: Error, newProducts): void => {
                 if (error) reject(new ServiceErrorResponse(error))
-                else resolve(new ServiceResponse(newProducts))
+                else resolve(new ApiResponse(newProducts))
             })
         })
     }
 
-    public updateProductWithoutValidation(id: string, update: any): Promise<ServiceResponse<IProduct>> {
+    public updateProductWithoutValidation(id: string, update: any): Promise<ApiResponse<IProduct>> {
         const mongoUpdate = this.dbClient.mongoSet(update)
-        return new Promise<ServiceResponse<IProduct>>((resolve, reject) => {
+        return new Promise<ApiResponse<IProduct>>((resolve, reject) => {
             Product.findByIdAndUpdate(id, mongoUpdate, { new: true }, (error: Error, updatedProduct) => {
                 if (error) reject(new ServiceErrorResponse(error))
-                else resolve(new ServiceResponse(updatedProduct))
+                else resolve(new ApiResponse(updatedProduct))
             })
         })
     }
 
-    public updateProduct(id: string, update: any): Promise<ServiceResponse<IProduct>> {
-        return new Promise<ServiceResponse<IProduct>>((resolve, reject) => {
+    public updateProduct(id: string, update: any): Promise<ApiResponse<IProduct>> {
+        return new Promise<ApiResponse<IProduct>>((resolve, reject) => {
             this.dbClient.updateById(Product, id, update)
-                .then(updatedProduct => resolve(new ServiceResponse(updatedProduct)))
+                .then(updatedProduct => resolve(new ApiResponse(updatedProduct)))
                 .catch(validationError => reject(new ServiceErrorResponse(validationError)))
         })
     }
 
-    public updateTestProduct(update: any): Promise<ServiceResponse<IProduct>> {
-        return this.updateProduct("5988d5f44b224b068cda7d61", update)
+    public getPrice(product: IProduct): IPrice {
+        if (product.isOnSale) {
+            return product.salePrice
+        }
+        else {
+            return product.price
+        }
     }
 
-    public deleteOne(id: string): Promise<ServiceResponse<any>> {
-        return new Promise<ServiceResponse<any>>((resolve, reject) => {
+    public deleteOne(id: string): Promise<ApiResponse<any>> {
+        return new Promise<ApiResponse<any>>((resolve, reject) => {
             Product.findByIdAndRemove(id)
-                .then(updatedProduct => resolve(new ServiceResponse({}, HttpStatus.SUCCESS_noContent)))
-                .catch(error => reject(new ServiceErrorResponse(error)))
+            .then(updatedProduct => resolve(new ApiResponse({}, HttpStatus.SUCCESS_noContent)))
+            .catch(error => reject(new ServiceErrorResponse(error)))
         })
     }
 
-    public createTest(): Promise<ServiceResponse<IProduct>> {
-        return new Promise<ServiceResponse<IProduct>>((resolve, reject) => {
+    public updateTestProduct(update: any): Promise<ApiResponse<IProduct>> {
+        return this.updateProduct("5988d5f44b224b068cda7d61", update)
+    }
+
+    public createTest(): Promise<ApiResponse<IProduct>> {
+        return new Promise<ApiResponse<IProduct>>((resolve, reject) => {
             const theProduct = new Product({
                 name: "Test product",
                 slub: "test-product",
@@ -202,7 +212,7 @@ export class ProductService implements IFetchService<IProduct> {
             })
             theProduct.save((error: Error, product) => {
                 if (error) reject(new ServiceErrorResponse(error))
-                else resolve(new ServiceResponse(product))
+                else resolve(new ApiResponse(product))
             })
         })
     }

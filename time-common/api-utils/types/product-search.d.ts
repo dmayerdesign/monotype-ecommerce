@@ -10,5 +10,6 @@ export namespace ProductSearch {
         search?: string
         filters?: Array<Filter>
         page?: number
+        limit?: number
     }
 }

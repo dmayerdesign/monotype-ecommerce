@@ -1,6 +1,6 @@
 import { HttpStatus } from '../../constants/http'
 
-export interface IServiceResponse<T> {
-    data: T,
+export interface IApiResponse<T> {
+    data: T
     status: HttpStatus
 }

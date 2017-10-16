@@ -7,7 +7,7 @@ import { AuthConfig } from '@time/common/config/auth.config'
 import { Cookies, Copy, HttpStatus } from '@time/common/constants'
 import Types from '@time/common/constants/inversify/types'
 import { ILogin, IUser, User } from '@time/common/models'
-import { ServiceErrorResponse, ServiceResponse } from '@time/common/models/helpers'
+import { ApiResponse, ServiceErrorResponse } from '@time/common/models/helpers'
 
 @injectable()
 export class UserService {
@@ -118,20 +118,20 @@ export class UserService {
         res.cookie(Cookies.jwt, authToken, AuthConfig.CookieOptions).json(payload)
     }
 
-    public updateUser(id: string, update: any): Promise<ServiceResponse<IUser>> {
-        return new Promise<ServiceResponse<IUser>>((resolve, reject) => {
+    public updateUser(id: string, update: any): Promise<ApiResponse<IUser>> {
+        return new Promise<ApiResponse<IUser>>((resolve, reject) => {
             User.findByIdAndUpdate(id, update, { new: true }, (error, user) => {
                 if (error) reject(new ServiceErrorResponse(error))
-                else resolve(new ServiceResponse(user))
+                else resolve(new ApiResponse(user))
             })
         })
     }
 
-    public deleteUser(id: string): Promise<ServiceResponse<any>> {
+    public deleteUser(id: string): Promise<ApiResponse<any>> {
         return new Promise<any>((resolve, reject) => {
             User.findByIdAndRemove(id, (error) => {
                 if (error) reject(new ServiceErrorResponse(error))
-                else resolve(new ServiceResponse(null, HttpStatus.SUCCESS_noContent))
+                else resolve(new ApiResponse(null, HttpStatus.SUCCESS_noContent))
             })
         })
     }

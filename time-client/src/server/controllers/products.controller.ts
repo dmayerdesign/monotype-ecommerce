@@ -16,7 +16,7 @@ import {
 
 import { appConfig } from '@time/app-config'
 import { HttpStatus, Types } from '@time/common/constants'
-import { IProduct, IServiceResponse } from '@time/common/models/interfaces'
+import { IApiResponse, IProduct } from '@time/common/models/interfaces'
 import { ProductService } from '../services'
 import { WoocommerceMigrationService } from '../services'
 
@@ -33,13 +33,14 @@ export class ProductsController implements interfaces.Controller {
     private get(
         @queryParam('query') query: string,
         @queryParam('page') page: number,
+        @queryParam('limit') limit: number,
         @response() res: Response,
-    ): Promise<IServiceResponse<IProduct[]>>|void {
+    ): Promise<IApiResponse<IProduct[]>>|void {
         const test = true
         let parsedQuery: object
         parsedQuery = query ? JSON.parse(query) : {}
         res.setHeader('content-type', 'application/json')
-        return this.productService.get(parsedQuery, page, res)
+        return this.productService.get(parsedQuery, { page, limit }, res)
     }
 
     @httpGet('/update-test')
