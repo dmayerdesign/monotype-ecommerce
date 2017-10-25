@@ -65,7 +65,7 @@ export class ProductsController implements interfaces.Controller {
             .catch(({data, status}) => res.status(status).json(data))
     }
 
-    @httpGet('/migrate', Types.isAuthorized)
+    @httpGet('/migrate'/*, Types.isAuthorized*/)
     private async migrate(
         @request() req: Request,
         @response() res: Response,

@@ -3,3 +3,9 @@ export class Currency {
     public static CanadianDollar = "CAD"
     public static Euro = "EUR"
 }
+
+export enum CurrencyEnum {
+    USD = "USD",
+    CanadianDollar = "CAD",
+    Euro = "EUR",
+}

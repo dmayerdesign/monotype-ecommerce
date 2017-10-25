@@ -6,6 +6,7 @@ import { makeLoggerMiddleware } from 'inversify-logger-middleware'
 import { EmailService } from '@time/common/api-services'
 import { DbClient, ProductSearchUtils } from '@time/common/api-utils'
 import { Tags, Types } from '@time/common/constants/inversify'
+import { EmailFactory } from '@time/common/emails'
 import { Authenticate } from '../auth/authenticate'
 import { AppController, ProductsController, UserController } from '../controllers'
 import { DiscountService, ProductService, StripeService, UserService, WoocommerceMigrationService } from '../services'
@@ -22,6 +23,7 @@ if (isDev()) {
 // Services
 container.bind<DbClient<any>>(Types.DbClient).to(DbClient)
 container.bind<DiscountService>(Types.DiscountService).to(DiscountService)
+container.bind<EmailFactory>(Types.EmailFactory).to(EmailFactory)
 container.bind<EmailService>(Types.EmailService).to(EmailService)
 container.bind<ProductSearchUtils>(Types.ProductSearchUtils).to(ProductSearchUtils)
 container.bind<UserService>(Types.UserService).to(UserService)

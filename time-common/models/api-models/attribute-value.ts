@@ -1,11 +1,18 @@
-import { model, Schema } from 'mongoose'
-import { IAttributeValue } from '../interfaces'
+import * as findOrCreate from 'mongoose-findorcreate'
+import { plugin, prop, Ref, Typegoose } from 'typegoose'
 
-export const attributeValueSchema = new Schema({
-    attribute: Schema.Types.ObjectId,
-    name: String,
-    slug: String,
-    description: String,
-})
+import { Attribute } from './attribute'
 
-export const AttributeValue = model<IAttributeValue>('AttributeValue', attributeValueSchema)
+@plugin(findOrCreate)
+export class AttributeValue extends Typegoose {
+    public static readonly findOrCreate: (query: object) => Promise<{ doc: AttributeValue; created: boolean }>
+    public _id: string
+
+    @prop({ ref: Attribute }) public attribute: Ref<Attribute>
+    @prop() public name: string
+    @prop() public slug: string
+    @prop() public description: string
+    @prop() public value: any
+}
+
+export const AttributeValueModel = new AttributeValue().getModelForClass(AttributeValue)

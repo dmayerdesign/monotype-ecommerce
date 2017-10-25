@@ -2,241 +2,346 @@ import { injectable } from 'inversify'
 import { Error } from 'mongoose'
 
 import { DbClient } from '@time/common/api-utils'
-import { Currency } from '@time/common/constants'
-import { Product } from '@time/common/models/api-models'
-import { IProduct } from '@time/common/models/interfaces'
+import { CurrencyEnum } from '@time/common/constants'
+import {
+    Attribute,
+    AttributeModel,
+    AttributeValue,
+    AttributeValueModel,
+    Product,
+    ProductModel,
+    Taxonomy,
+    TaxonomyModel,
+    TaxonomyTerm,
+    TaxonomyTermModel
+} from '@time/common/models/api-models'
 import * as productsJSON from '@time/common/work-files/migration/hyzershop-products'
 
 @injectable()
 export class WoocommerceMigrationService {
 
+    /*
+     * TODO: Manually create Attributes and Attribute values, then assign them to products
+     */
+
     public createProductsFromExportedJSON(appConfig): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            const newProducts = [];
+            const newProducts = []
 
-            (<any>productsJSON).forEach(product => {
+            async function createProducts() {
+                let product: any
+                for (product of productsJSON) {
+                    const newProduct: Product = Object.assign({}, product)
 
-                const newProduct: IProduct = Object.assign({}, product)
-                const attributeValues = []
-                const taxonomyTermSlugs = []
+                    const variableAttributeIds: string[] = []
+                    const variableAttributeValueIds: string[] = []
+                    const attributeValueIds: string[] = []
+                    const taxonomyTermIds: string[] = []
 
-                Object.keys(product).forEach(key => {
-                    if (typeof newProduct[key] !== "undefined" && newProduct[key] !== undefined && newProduct[key] !== "") {
+                    const flightStats: {
+                        fade: number
+                        glide: number
+                        speed: number
+                        turn: number
+                    } = {
+                        fade: undefined,
+                        glide: undefined,
+                        speed: undefined,
+                        turn: undefined,
+                    }
 
-                        if (key.indexOf("attributes.") > -1) {
-                            const attributeValue = {
-                                attribute: key.replace("attributes.", ""),
-                                value: product[key],
+                    for (const key of Object.keys(product)) {
+                        if (typeof newProduct[key] !== "undefined" && newProduct[key] !== undefined && newProduct[key] !== "") {
+
+                            if (key.indexOf("attributes.") > -1) {
+                                const theKey = key.replace("attributes.", "")
+                                if (product.class === "Variable" && product[key] && product[key].indexOf("|") > -1) {
+                                    const value = product[key]
+                                    const variableAttributeValueSlugs = product[key].split("|").map(val => val.replace(/\s/g, "-").toLowerCase())
+                                    const variableAttributeSlug = theKey
+                                    try {
+                                        const variableAttributeResponse = await AttributeModel.findOrCreate({
+                                            slug: variableAttributeSlug
+                                        })
+                                        const variableAttribute = variableAttributeResponse.doc
+                                        for (const variableAttributeValueSlug of variableAttributeValueSlugs) {
+                                            try {
+                                                const variableAttributeValueResponse = await AttributeValueModel.findOrCreate({
+                                                    attribute: variableAttribute._id,
+                                                    slug: variableAttributeValueSlug,
+                                                    value,
+                                                })
+                                                const variableAttributeValue = variableAttributeValueResponse.doc
+                                                variableAttributeValueIds.push(variableAttributeValue._id)
+                                            }
+                                            catch (error) {
+                                                reject(error)
+                                            }
+                                        }
+                                    }
+                                    catch (error) {
+                                        reject(error)
+                                        return
+                                    }
+                                }
+                                else {
+                                    const value = product[key]
+                                    const attributeValueSlug = theKey + "-" + product[key].replace(/\s/g, "-").toLowerCase()
+                                    const attributeSlug = theKey
+                                    try {
+                                        const attributeResponse = await AttributeModel.findOrCreate({
+                                            slug: attributeSlug
+                                        })
+                                        const attribute = attributeResponse.doc
+                                        const attributeValueResponse = await AttributeValueModel.findOrCreate({
+                                            attribute: attribute._id,
+                                            slug: attributeValueSlug,
+                                            value,
+                                        })
+                                        const attributeValue = attributeValueResponse.doc
+                                        attributeValueIds.push(attributeValue._id)
+                                        delete newProduct[key]
+                                    }
+                                    catch (error) {
+                                        reject(error)
+                                        return
+                                    }
+                                }
+
+                                if (theKey === "fade" || theKey === "glide" || theKey === "turn" || theKey === "speed") {
+                                    flightStats[theKey] = product[key]
+
+                                    const stability = function(stabilityStats): 'overstable'|'stable'|'understable' {
+                                        if ( stabilityStats.fade + stabilityStats.turn >= 3 ) {
+                                            return "overstable"
+                                        }
+                                        else if ( stabilityStats.fade + stabilityStats.turn < 3 && stabilityStats.fade + stabilityStats.turn >= 0 ) {
+                                            return "stable"
+                                        }
+                                        else if ( stabilityStats.fade + stabilityStats.turn < 0 ) {
+                                            return "understable"
+                                        }
+                                    }
+
+                                    if (Object.keys(flightStats).every(statKey => flightStats[statKey] !== undefined)) {
+                                        try {
+                                            const stabilityValue = stability(flightStats)
+                                            const attributeSlug = 'stability'
+                                            const taxonomySlug = 'stability'
+                                            const attributeValueSlug = attributeSlug + "-" + stabilityValue
+                                            const taxonomyTermSlug = taxonomySlug + "-" + stabilityValue
+
+                                            const attributeResponse = await AttributeModel.findOrCreate({
+                                                slug: attributeSlug,
+                                            })
+                                            const attribute = attributeResponse.doc
+                                            const attributeValueResponse = await AttributeValueModel.findOrCreate({
+                                                attribute: attribute._id,
+                                                slug: attributeValueSlug,
+                                                value: stabilityValue,
+                                            })
+                                            const attributeValue = attributeValueResponse.doc
+                                            attributeValueIds.push(attributeValue._id)
+
+                                            const taxonomyResponse = await TaxonomyModel.findOrCreate({
+                                                slug: taxonomySlug,
+                                            })
+                                            const taxonomy = taxonomyResponse.doc
+                                            const taxonomyTermResponse = await TaxonomyTermModel.findOrCreate({
+                                                taxonomy: taxonomy._id,
+                                                slug: taxonomyTermSlug,
+                                            })
+                                            const taxonomyTerm = taxonomyTermResponse.doc
+                                            taxonomyTermIds.push(taxonomyTerm._id)
+                                        }
+                                        catch (error) {
+                                            reject(error)
+                                            return
+                                        }
+                                    }
+                                }
                             }
-                            attributeValues.push(attributeValue)
-                            delete newProduct[key]
-                        }
-                        if (key.indexOf("taxonomies.") > -1) {
-                            const terms = product[key].split("|")
-                            terms.forEach(term => {
-                                taxonomyTermSlugs.push(
-                                    key.replace("taxonomies.", "") + "-" + term
-                                )
-                            })
-                            delete newProduct[key]
-                        }
-                        if (key === "netWeight") {
-                            newProduct[key] = (<any>newProduct[key]).replace(/g/g, "")
-                            if ( (<any>newProduct[key]).indexOf("|") > -1 ) {
-                                delete newProduct[key]
+                            if (key.indexOf("taxonomies.") > -1) {
+                                const taxonomySlug = key.replace("taxonomies.", "")
+                                const taxonomyTermSlug = key.replace("taxonomies.", "") + "-" + product[key].replace(/\s/g, "-").toLowerCase()
+                                try {
+                                    const taxonomyResponse = await TaxonomyModel.findOrCreate({ slug: taxonomySlug })
+                                    const taxonomy = taxonomyResponse.doc
+                                    const taxonomyTermResponse = await TaxonomyTermModel.findOrCreate({
+                                        taxonomy: taxonomy._id,
+                                        slug: taxonomyTermSlug
+                                    })
+                                    const taxonomyTerm = taxonomyTermResponse.doc
+                                    taxonomyTermIds.push(taxonomyTerm._id)
+                                    delete newProduct[key]
+                                }
+                                catch (error) {
+                                    reject(error)
+                                    return
+                                }
                             }
-                        }
-                        if (key === "price") {
-                            if ( newProduct[key].toString().indexOf("-") > -1 ) {
-                                const priceRangeTotals = (<any>newProduct[key]).split("-")
-                                newProduct.priceRange = [
-                                    {
-                                        total: 0,
-                                        currency: Currency.USD,
-                                    },
-                                    {
-                                        total: 0,
-                                        currency: Currency.USD,
-                                    },
-                                ]
-                                newProduct.priceRange[0].total = +newProduct.priceRange[0].total
-                                newProduct.priceRange[1].total = +newProduct.priceRange[1].total
-                                delete newProduct[key]
+                            if (key === "netWeight") {
+                                newProduct[key] = (<any>newProduct[key]).replace(/g/g, "")
+                                if ( (<any>newProduct[key]).indexOf("|") > -1 ) {
+                                    delete newProduct[key]
+                                }
                             }
-                            else {
-                                newProduct[key] = {
-                                    total: +newProduct[key],
-                                    currency: Currency.USD
+                            if (key === "price") {
+                                if ( newProduct[key].toString().indexOf("-") > -1 ) {
+                                    const priceRangeTotals = (<any>newProduct[key]).split("-")
+                                    newProduct.priceRange = [
+                                        {
+                                            total: 0,
+                                            currency: CurrencyEnum.USD,
+                                        },
+                                        {
+                                            total: 0,
+                                            currency: CurrencyEnum.USD,
+                                        },
+                                    ]
+                                    newProduct.priceRange[0].total = +newProduct.priceRange[0].total
+                                    newProduct.priceRange[1].total = +newProduct.priceRange[1].total
+                                    delete newProduct[key]
+                                }
+                                else {
+                                    newProduct[key] = {
+                                        total: +newProduct[key],
+                                        currency: CurrencyEnum.USD
+                                    }
+                                }
+                            }
+                            if (key === "salePrice") {
+                                if ( newProduct[key].toString().indexOf("-") > -1 ) {
+                                    const salePriceRangeTotals = (<any>newProduct[key]).split("-")
+                                    newProduct.salePriceRange = [
+                                        {
+                                            total: 0,
+                                            currency: CurrencyEnum.USD,
+                                        },
+                                        {
+                                            total: 0,
+                                            currency: CurrencyEnum.USD,
+                                        },
+                                    ]
+                                    newProduct.salePriceRange[0].total = +newProduct.salePriceRange[0].total
+                                    newProduct.salePriceRange[1].total = +newProduct.salePriceRange[1].total
+                                    delete newProduct[key]
+                                }
+                                else {
+                                    newProduct[key] = {
+                                        total: +newProduct[key],
+                                        currency: CurrencyEnum.USD
+                                    }
+                                }
+                            }
+
+                            if (key === "class") {
+                                if ((<string>newProduct.class) === "Variable") {
+                                    newProduct.isParent = true
+                                    newProduct.class = "parent"
+                                }
+                                if ((<string>newProduct.class) === "Variation") {
+                                    newProduct.isVariation = true
+                                    newProduct.class = "variation"
+                                }
+                                if ((<string>newProduct.class) === "Simple Product") {
+                                    newProduct.isStandalone = true
+                                    newProduct.class = "standalone"
+                                }
+                            }
+
+                            if (key === "description") {
+                                if (newProduct.description) {
+                                    newProduct.description = newProduct.description.replace(/http:\/\/stage\.hyzershop\.com\/product/g, '/shop/product')
+                                    newProduct.description = newProduct.description.replace(/Š—È/g, '\'')
+                                    newProduct.description = newProduct.description.replace('<div class="longdescription">', '\n')
+                                    newProduct.description = newProduct.description.replace('</div>', '')
                                 }
                             }
                         }
-                        if (key === "salePrice") {
-                            if ( newProduct[key].toString().indexOf("-") > -1 ) {
-                                const salePriceRangeTotals = (<any>newProduct[key]).split("-")
-                                newProduct.salePriceRange = [
-                                    {
-                                        total: 0,
-                                        currency: Currency.USD,
-                                    },
-                                    {
-                                        total: 0,
-                                        currency: Currency.USD,
-                                    },
-                                ]
-                                newProduct.salePriceRange[0].total = +newProduct.salePriceRange[0].total
-                                newProduct.salePriceRange[1].total = +newProduct.salePriceRange[1].total
-                                delete newProduct[key]
-                            }
-                            else {
-                                newProduct[key] = {
-                                    total: +newProduct[key],
-                                    currency: Currency.USD
+                        else {
+                            delete newProduct[key]
+                        }
+                    }
+
+                    newProduct.variableAttributes = variableAttributeIds
+                    newProduct.variableAttributeValues = variableAttributeValueIds
+                    newProduct.attributeValues = attributeValueIds
+                    newProduct.taxonomyTerms = taxonomyTermIds
+
+                    delete (<any>newProduct).featuredImage
+
+                    /**
+                     * Add images
+                     */
+                    if (!newProduct.isParent) {
+                        let isDisc: boolean
+                        let attributeValues: AttributeValue[]
+                        let imageBaseUrl = `${appConfig.cloudfront_url}/product-images/`
+                        newProduct.taxonomyTermSlugs.forEach(term => {
+                            if (term.indexOf("brand") === 0) {
+                                if (term.indexOf("MVP") > -1) {
+                                    imageBaseUrl += "mvp-"
                                 }
-                            }
-                        }
-
-                        if (key === "class") {
-                            if ((<string>newProduct.class) === "Variable") {
-                                newProduct.isParent = true
-                                newProduct.class = "parent"
-                            }
-                            if ((<string>newProduct.class) === "Variation") {
-                                newProduct.isVariation = true
-                                newProduct.class = "variation"
-                            }
-                            if ((<string>newProduct.class) === "Simple Product") {
-                                newProduct.isStandalone = true
-                                newProduct.class = "standalone"
-                            }
-                        }
-
-                        if (key === "description") {
-                            if (newProduct.description) {
-                                newProduct.description = newProduct.description.replace(/http:\/\/stage\.hyzershop\.com\/product/g, '/shop/product')
-                                newProduct.description = newProduct.description.replace(/Š—È/g, '\'')
-                                newProduct.description = newProduct.description.replace('<div class="longdescription">', '\n')
-                                newProduct.description = newProduct.description.replace('</div>', '')
-                            }
-                        }
-                    }
-                    else {
-                        delete newProduct[key]
-                    }
-                })
-
-                newProduct.attributeValues = attributeValues
-                newProduct.taxonomyTermSlugs = taxonomyTermSlugs
-
-
-                /**
-                 * Flight stats
-                 */
-                const stats: {
-                    fade?: number;
-                    glide?: number;
-                    speed?: number;
-                    turn?: number;
-                } = {}
-
-                newProduct.attributeValues.forEach(attribute => {
-                    if (attribute.attribute === 'fade') {
-                        stats.fade = +attribute.value
-                    }
-                    if (attribute.attribute === 'glide') {
-                        stats.glide = +attribute.value
-                    }
-                    if (attribute.attribute === 'speed') {
-                        stats.speed = +attribute.value
-                    }
-                    if (attribute.attribute === 'turn') {
-                        stats.turn = +attribute.value
-                    }
-                })
-
-                const stability = function(stats) {
-                    if ( stats.fade + stats.turn >= 3 ) {
-                        return "overstable"
-                    }
-                    else if ( stats.fade + stats.turn < 3 && stats.fade + stats.turn >= 0 ) {
-                        return "stable"
-                    }
-                    else if ( stats.fade + stats.turn < 0 ) {
-                        return "understable"
-                    }
-                }
-
-                if (stability(stats)) {
-                    newProduct.taxonomyTermSlugs.push(
-                        "stability-" + stability(stats)
-                    )
-
-                    newProduct.attributeValues.push({
-                        attribute: "stability",
-                        value: stability(stats),
-                    })
-                }
-
-                delete (<any>newProduct).stability
-                delete (<any>newProduct).featuredImage
-
-                /**
-                 * Add images
-                 */
-                if (!newProduct.isParent) {
-                    let isDisc
-                    let imageBaseUrl = `${appConfig.cloudfront_url}/product-images/`
-                    newProduct.taxonomyTermSlugs.forEach(term => {
-                        if (term.indexOf("brand") === 0) {
-                            if (term.indexOf("MVP") > -1) {
-                                imageBaseUrl += "mvp-"
-                            }
-                            if (term.indexOf("Axiom") > -1) {
-                                imageBaseUrl += "axiom-"
-                            }
-                            if (term.indexOf("Discraft") > -1) {
-                                imageBaseUrl += "discraft-"
-                            }
-                        }
-                    })
-
-                    isDisc = newProduct.attributeValues.some(attr => attr.attribute === "productType" && attr.value === "disc")
-
-                    if (newProduct.parentSKU && newProduct.isVariation) imageBaseUrl += `${newProduct.parentSKU.toLowerCase()}-`
-                    else if (newProduct.SKU) imageBaseUrl += `${newProduct.SKU.toLowerCase()}-`
-
-                    if (isDisc) {
-                        newProduct.attributeValues.forEach(attr => {
-                            if (attr.attribute === "plastic") {
-                                imageBaseUrl += `${attr.value.toLowerCase()}-`
+                                if (term.indexOf("Axiom") > -1) {
+                                    imageBaseUrl += "axiom-"
+                                }
+                                if (term.indexOf("Discraft") > -1) {
+                                    imageBaseUrl += "discraft-"
+                                }
                             }
                         })
-                        imageBaseUrl += newProduct.netWeight.toString().replace(".", "")
+
+                        try {
+                            attributeValues = await AttributeValueModel.find({ _id: { $in: newProduct.attributeValues } })
+                            isDisc = attributeValues.some(attrValue => attrValue.slug === "product-type-disc")
+                        }
+                        catch (err) {
+                            reject(err)
+                            return
+                        }
+
+                        if (newProduct.parentSKU && newProduct.isVariation) imageBaseUrl += `${newProduct.parentSKU.toLowerCase()}-`
+                        else if (newProduct.SKU) imageBaseUrl += `${newProduct.SKU.toLowerCase()}-`
+
+                        if (isDisc) {
+                            for (const attributeValueId of newProduct.attributeValues) {
+                                const attributeValue = attributeValues.find(val => val._id === attributeValueId)
+                                if (attributeValue.slug.indexOf("plastic") > -1) {
+                                    imageBaseUrl += `${attributeValue.value.toLowerCase()}-`
+                                }
+                            }
+                            imageBaseUrl += newProduct.netWeight.toString().replace(".", "")
+                        } else {
+                            for (const attributeValueId of newProduct.attributeValues) {
+                                const attributeValue = attributeValues.find(val => val._id === attributeValueId)
+                                if (attributeValue.slug.indexOf("color") > -1) {
+                                    imageBaseUrl += `${attributeValue.value.toLowerCase()}-`
+                                }
+                            }
+                        }
+
+                        newProduct.featuredImages = []
+                        newProduct.largeImages = []
+                        newProduct.images = []
+                        newProduct.thumbnails = []
+
+                        newProduct.featuredImages.push(imageBaseUrl + "-medium.png")
+                        newProduct.largeImages.push(imageBaseUrl + "-large.png")
+                        newProduct.thumbnails.push(imageBaseUrl + "-thumbnail.png")
                     } else {
-                        newProduct.attributeValues.forEach(attr => {
-                            if (attr.attribute === "color") {
-                                imageBaseUrl += `${attr.value.toLowerCase()}-`
-                            }
-                        })
+                        newProduct.featuredImages = []
+                        newProduct.largeImages = []
+                        newProduct.images = []
+                        newProduct.thumbnails = []
                     }
+                    delete (<any>newProduct).thumbnail
 
-                    newProduct.featuredImages = []
-                    newProduct.largeImages = []
-                    newProduct.images = []
-                    newProduct.thumbnails = []
-
-                    newProduct.featuredImages.push(imageBaseUrl + "-medium.png")
-                    newProduct.largeImages.push(imageBaseUrl + "-large.png")
-                    newProduct.thumbnails.push(imageBaseUrl + "-thumbnail.png")
-                } else {
-                    newProduct.featuredImages = []
-                    newProduct.largeImages = []
-                    newProduct.images = []
-                    newProduct.thumbnails = []
+                    newProducts.push(newProduct)
                 }
-                delete (<any>newProduct).thumbnail
+            }
 
-                newProducts.push(newProduct)
-            })
+            createProducts()
 
             newProducts.forEach((product, index, products) => {
                 let variations = []
@@ -254,7 +359,7 @@ export class WoocommerceMigrationService {
             /*************
              * The switch
              ******* -> */
-            Product.create(newProducts)
+            ProductModel.create(newProducts)
                 .then(products => resolve(products))
                 .catch(err => reject(err))
             /**/

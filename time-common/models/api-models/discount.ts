@@ -1,23 +1,20 @@
-import { model, Schema } from 'mongoose'
+import { arrayProp, prop, Ref, Typegoose } from 'typegoose'
+import { Price } from './price'
+import { Product } from './product'
+import { TaxonomyTerm } from './taxonomy-term'
 
-import { IDiscount } from '../interfaces/discount'
+class DiscountExceptions {
+    @arrayProp({ itemsRef: Product }) public products: Ref<Product>[]
+    @arrayProp({ itemsRef: TaxonomyTerm }) public terms: Ref<TaxonomyTerm>[]
+}
 
-export const discountSchema = new Schema({
-    code: String,
-    amount: {
-        total: Number,
-        currency: String,
-    },
-    percentage: Number, // `20` for a 20% discount
-    freeShipping: Boolean,
-    includes: {
-        products: [Schema.Types.ObjectId],
-        terms: [Schema.Types.ObjectId],
-    },
-    excludes: {
-        products: [Schema.Types.ObjectId],
-        terms: [Schema.Types.ObjectId],
-    },
-})
+export class Discount extends Typegoose {
+    @prop() public code: string
+    @prop() public amount: Price
+    @prop() public percentage: number // `20` for a 20% discount
+    @prop() public freeShipping: boolean
+    @prop() public includes: DiscountExceptions
+    @prop() public excludes: DiscountExceptions
+}
 
-export const Discount = model<IDiscount>('Discount', discountSchema)
+export const DiscountModel = Discount

@@ -5,25 +5,25 @@ import { Error } from 'mongoose'
 import { DbClient, MongoQueries, ProductSearch, ProductSearchUtils } from '@time/common/api-utils'
 import { Crud, HttpStatus } from '@time/common/constants'
 import { Types } from '@time/common/constants/inversify'
-import { Product } from '@time/common/models/api-models'
-import { ApiResponse, ServiceErrorResponse } from '@time/common/models/helpers'
+import { Product, ProductModel } from '@time/common/models/api-models'
+import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
 import { IFetchService } from '@time/common/models/interfaces'
-import { IPrice, IProduct } from '@time/common/models/interfaces'
+import { IPrice } from '@time/common/models/interfaces'
 
 /**
  * Service for fetching documents from the `products` collection
  */
 @injectable()
-export class ProductService implements IFetchService<IProduct> {
+export class ProductService implements IFetchService<Product> {
 
     /**
      * Instantiate the service
      *
-     * @param {DbClient<IProduct>} dbClient A service containing helper methods for database operations
+     * @param {DbClient<Product>} dbClient A service containing helper methods for database operations
      * @param {ProductSearchUtils} productSearchUtils A service containing helper methods for product search
      */
     constructor(
-        @inject(Types.DbClient) private dbClient: DbClient<IProduct>,
+        @inject(Types.DbClient) private dbClient: DbClient<Product>,
         @inject(Types.ProductSearchUtils) private productSearchUtils: ProductSearchUtils,
     ) {}
 
@@ -31,12 +31,12 @@ export class ProductService implements IFetchService<IProduct> {
      * Get a single product
      *
      * @param {string} id The `_id` of the product to be retrieved
-     * @return {Promise<IProduct>}
+     * @return {Promise<Product>}
      */
-    public getOne(id: string): Promise<ApiResponse<IProduct>> {
-        return new Promise<ApiResponse<IProduct>>((resolve, reject) => {
-            Product.findById(id, (error: Error, product): void => {
-                if (error) reject(new ServiceErrorResponse(error))
+    public getOne(id: string): Promise<ApiResponse<Product>> {
+        return new Promise<ApiResponse<Product>>((resolve, reject) => {
+            ProductModel.findById(id, (error: Error, product): void => {
+                if (error) reject(new ApiErrorResponse(error))
                 else resolve(new ApiResponse(product))
             })
         })
@@ -49,7 +49,7 @@ export class ProductService implements IFetchService<IProduct> {
      * @param {SearchBody} body The search options
      * @param {express.Response} [res] The express Response; pass this in if you want the documents fetched as a stream and piped into the response
      */
-    public search(body: ProductSearch.Body, res?: Response): Promise<ApiResponse<IProduct[]>>|void {
+    public search(body: ProductSearch.Body, res?: Response): Promise<ApiResponse<Product[]>>|void {
         const searchRegExp = new RegExp(body.search, 'gi')
         let searchNameAndDesc: any = []
         let allQuery: any
@@ -127,62 +127,62 @@ export class ProductService implements IFetchService<IProduct> {
      * @param {object} [queryOptions] An object with `page` and `limit` properties
      * @param {express.Response} [res] The express Response; pass this in if you want the documents fetched as a stream and piped into the response
      */
-    public get(query: object, queryOptions = { page: 1, limit: Crud.Pagination.productsPerPage }, res?: Response): Promise<ApiResponse<IProduct[]>>|void {
+    public get(query: object, queryOptions = { page: 1, limit: Crud.Pagination.productsPerPage }, res?: Response): Promise<ApiResponse<Product[]>>|void {
         const limit = queryOptions.limit
         const page = queryOptions.page
         const skip = (page - 1) * limit
 
         if (res) {
-            this.dbClient.getFilteredCollection(Product, query, {limit, skip}, res)
-                .catch(err => new ServiceErrorResponse(err))
+            this.dbClient.getFilteredCollection(ProductModel, query, {limit, skip}, res)
+                .catch(err => new ApiErrorResponse(err))
         }
         else {
-            return new Promise<ApiResponse<IProduct[]>>((resolve, reject) => {
+            return new Promise<ApiResponse<Product[]>>((resolve, reject) => {
                 // Retrieve the products normally, loading them into memory
-                this.dbClient.getFilteredCollection(Product, query, {limit, skip})
+                this.dbClient.getFilteredCollection(ProductModel, query, {limit, skip})
                     .then(products => resolve(new ApiResponse(products)))
-                    .catch(err => reject(new ServiceErrorResponse(err)))
+                    .catch(err => reject(new ApiErrorResponse(err)))
             })
         }
     }
 
-    public createOne(product: IProduct): Promise<ApiResponse<IProduct>> {
-        return new Promise<ApiResponse<IProduct>>((resolve, reject) => {
-            new Product(product).save((error: Error, newProduct): void => {
-                if (error) reject(new ServiceErrorResponse(error))
+    public createOne(product: Product): Promise<ApiResponse<Product>> {
+        return new Promise<ApiResponse<Product>>((resolve, reject) => {
+            new ProductModel(product).save((error: Error, newProduct): void => {
+                if (error) reject(new ApiErrorResponse(error))
                 else resolve(new ApiResponse(newProduct))
             })
         })
     }
 
-    public create(products: IProduct[]): Promise<ApiResponse<IProduct[]>> {
-        return new Promise<ApiResponse<IProduct[]>>((resolve, reject) => {
-            Product.create(products, (error: Error, newProducts): void => {
-                if (error) reject(new ServiceErrorResponse(error))
+    public create(products: Product[]): Promise<ApiResponse<Product[]>> {
+        return new Promise<ApiResponse<Product[]>>((resolve, reject) => {
+            ProductModel.create(products, (error: Error, newProducts): void => {
+                if (error) reject(new ApiErrorResponse(error))
                 else resolve(new ApiResponse(newProducts))
             })
         })
     }
 
-    public updateProductWithoutValidation(id: string, update: any): Promise<ApiResponse<IProduct>> {
+    public updateProductWithoutValidation(id: string, update: any): Promise<ApiResponse<Product>> {
         const mongoUpdate = this.dbClient.mongoSet(update)
-        return new Promise<ApiResponse<IProduct>>((resolve, reject) => {
-            Product.findByIdAndUpdate(id, mongoUpdate, { new: true }, (error: Error, updatedProduct) => {
-                if (error) reject(new ServiceErrorResponse(error))
+        return new Promise<ApiResponse<Product>>((resolve, reject) => {
+            ProductModel.findByIdAndUpdate(id, mongoUpdate, { new: true }, (error: Error, updatedProduct) => {
+                if (error) reject(new ApiErrorResponse(error))
                 else resolve(new ApiResponse(updatedProduct))
             })
         })
     }
 
-    public updateProduct(id: string, update: any): Promise<ApiResponse<IProduct>> {
-        return new Promise<ApiResponse<IProduct>>((resolve, reject) => {
-            this.dbClient.updateById(Product, id, update)
+    public updateProduct(id: string, update: any): Promise<ApiResponse<Product>> {
+        return new Promise<ApiResponse<Product>>((resolve, reject) => {
+            this.dbClient.updateById(ProductModel, id, update)
                 .then(updatedProduct => resolve(new ApiResponse(updatedProduct)))
-                .catch(validationError => reject(new ServiceErrorResponse(validationError)))
+                .catch(validationError => reject(new ApiErrorResponse(validationError)))
         })
     }
 
-    public getPrice(product: IProduct): IPrice {
+    public getPrice(product: Product): IPrice {
         if (product.isOnSale) {
             return product.salePrice
         }
@@ -193,25 +193,25 @@ export class ProductService implements IFetchService<IProduct> {
 
     public deleteOne(id: string): Promise<ApiResponse<any>> {
         return new Promise<ApiResponse<any>>((resolve, reject) => {
-            Product.findByIdAndRemove(id)
-            .then(updatedProduct => resolve(new ApiResponse({}, HttpStatus.SUCCESS_noContent)))
-            .catch(error => reject(new ServiceErrorResponse(error)))
+            ProductModel.findByIdAndRemove(id)
+                .then(updatedProduct => resolve(new ApiResponse({}, HttpStatus.SUCCESS_noContent)))
+                .catch(error => reject(new ApiErrorResponse(error)))
         })
     }
 
-    public updateTestProduct(update: any): Promise<ApiResponse<IProduct>> {
+    public updateTestProduct(update: any): Promise<ApiResponse<Product>> {
         return this.updateProduct("5988d5f44b224b068cda7d61", update)
     }
 
-    public createTest(): Promise<ApiResponse<IProduct>> {
-        return new Promise<ApiResponse<IProduct>>((resolve, reject) => {
-            const theProduct = new Product({
+    public createTest(): Promise<ApiResponse<Product>> {
+        return new Promise<ApiResponse<Product>>((resolve, reject) => {
+            const theProduct = new ProductModel({
                 name: "Test product",
                 slub: "test-product",
                 SKU: "TEST_1",
             })
             theProduct.save((error: Error, product) => {
-                if (error) reject(new ServiceErrorResponse(error))
+                if (error) reject(new ApiErrorResponse(error))
                 else resolve(new ApiResponse(product))
             })
         })

@@ -5,8 +5,7 @@ import * as FacebookStrategy from 'passport-facebook'
 import * as passportJWT from 'passport-jwt'
 
 import { Copy } from '@time/common/constants'
-import { User } from '@time/common/models'
-import { IUser } from '@time/common/models/interfaces'
+import { User, UserModel } from '@time/common/models'
 
 const ExtractJwt = passportJWT.ExtractJwt
 const JwtStrategy = passportJWT.Strategy
@@ -50,7 +49,7 @@ export function passportConfig() {
     * Configures facebook strategy
     */
     passport.use(new FacebookStrategy(facebookStrategyConfig, (accessToken, refreshToken, profile, done) => {
-        User.findOne({ email: profile.emails[0].value }, (err, localUser) => {
+        UserModel.findOne({ email: profile.emails[0].value }, (err, localUser) => {
             if (err) {
                 return done(err)
             }
@@ -58,11 +57,11 @@ export function passportConfig() {
                 return done(Copy.ErrorMessages.userEmailExists)
             }
 
-            User.findOne({ facebookId: profile.id }, (findUserError, user) => {
+            UserModel.findOne({ facebookId: profile.id }, (findUserError, user) => {
                 if (findUserError) return done(findUserError)
                 if (user) return done(null, user)
 
-                const newUser = new User(buildUserFromFacebookProfile(profile))
+                const newUser = new UserModel(buildUserFromFacebookProfile(profile))
                 newUser.save((newUserError, savedUser) => {
                     if (newUserError) return done(newUserError)
                     return done(null, savedUser)

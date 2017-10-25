@@ -1,100 +1,100 @@
-import { model, Schema } from 'mongoose'
-import { IProduct } from '../interfaces/product'
+import { Document } from 'mongoose'
+import * as mongooseDelete from 'mongoose-delete'
+import { arrayProp, plugin, pre, prop, Ref, Typegoose } from 'typegoose'
 
-export const productSchema = new Schema({
-	/* Aesthetic */
-    name: String,
-    slug: {type: String, trim: true, lowercase: true},
-    description: String,
-    featuredImages: [String],
-    images: [String],
-    largeImages: [String],
-    thumbnails: [String],
+import { ProductClass, ProductClassEnum } from '../types/product-class'
+import { Attribute } from './attribute'
+import { AttributeValue } from './attribute-value'
+import { Dimensions } from './dimensions'
+import { Price } from './price'
+import { TaxonomyTerm } from './taxonomy-term'
+import { Units } from './units'
 
-	/* Technical */
-    SKU: {type: String, unique: true},
-    price: {
-        total: Number,
-        currency: String,
-    },
-    priceRange: [{
-        total: Number,
-        currency: String,
-    }],
-    salePrice: {
-        total: Number,
-        currency: String,
-    },
-    salePriceRange: [{
-        total: Number,
-        currency: String,
-    }],
-    isOnSale: Boolean,
-    class: String,
-    isStandalone: Boolean,
-    isParent: Boolean, 				// Defines an abstract parent for a variable product
-    variationSKUs: [String], 		// Array of product SKUs
-    isVariation: Boolean, 			// Defines a product variation with a parent product
-    isDefaultVariation: Boolean, 	// Defines the default product variation
-    parentSKU: String, 				// The SKU of the parent product
-
-	/* Attributes */
-	/* own attributes */
-    attributeValues: [{
-        attributeId: Schema.Types.ObjectId,
-        attribute: String, // Attribute.slug
-        valueId: Schema.Types.ObjectId,
-        value: Schema.Types.Mixed,
-    }],
-	/* variation attributes */
-    variableAttributes: [Schema.Types.ObjectId], // Attribute IDs
-    variableAttributeValues: [{
-        attributeId: Schema.Types.ObjectId,
-        attribute: String,
-        valueId: Schema.Types.ObjectId,
-        value: Schema.Types.Mixed,
-    }],
-
-	/* Taxonomy */
-    taxonomyTerms: [Schema.Types.ObjectId],
-    taxonomyTermSlugs: [String],
-
-	/* Shipping */
-    units: { 						// Only if not using global defaults
-        weight: String,
-        length: String,
-    },
-    dimensions: {
-        length: Number,
-        width: Number,
-        height: Number,
-    },
-    shippingWeight: Number,
-    netWeight: Number,
-
-	/* Additional tax */
-    additionalTax: Number,
-
-	/* Sales */
-    stockQuantity: Number,
-    totalSales: Number,
-    isEnteredIntoStripe: Boolean,
-
-}, { timestamps: true })
-
-productSchema.pre('save', function(next) {
-    const product = <IProduct>this
+@plugin(mongooseDelete)
+@pre<Product>('save', function(next) {
+    const product = this
     if (!product.slug && product.isNew) {
-        product.slug = product.name.toLowerCase().replace(/[^a-zA-Z0-9]/g, "-")
+        product.slug = product.name.trim().toLowerCase().replace(/[^a-z0-9]/g, "-")
+    }
+    if (product.slug && (product.isNew || product.isModified('slug'))) {
+        product.slug = product.slug.trim().toLowerCase().replace(/[^a-z0-9]/g, "-")
     }
     if (product.isNew || product.isModified('class')) {
         product.isStandalone = product.class === 'standalone'
         product.isParent = product.class === 'parent'
         product.isVariation = product.class === 'variation'
-    } else if (product.isModified('isStandalone') || product.isModified('isParent') || product.isModified('isVariation')) {
+    } else if (
+        product.isModified('isStandalone') ||
+        product.isModified('isParent') ||
+        product.isModified('isVariation')
+    ) {
         product.class = product.isVariation ? 'variation' : product.isParent ? 'parent' : 'standalone'
     }
     next()
 })
+export class Product extends Typegoose {
+	/* Aesthetic */
+    @prop() public name: string
+    @prop() public slug: string
+    @prop() public description: string
+    @arrayProp({ items: String }) public featuredImages: string[]
+    @arrayProp({ items: String }) public images: string[]
+    @arrayProp({ items: String }) public largeImages: string[]
+    @arrayProp({ items: String }) public thumbnails: string[]
 
-export const Product = model<IProduct>('Product', productSchema)
+	/* Technical */
+    @prop({ unique: true }) public SKU: string
+    @prop() public price: Price
+    @arrayProp({
+        items: {
+            total: Number,
+            currency: String,
+        }
+    }) public priceRange: Price[]
+
+    @prop() public salePrice: Price
+    @arrayProp({
+        items: {
+            total: Number,
+            currency: String,
+        }
+    }) public salePriceRange: Price[]
+    @prop() public isOnSale: boolean
+    @prop({ enum: ProductClassEnum }) public class: ProductClass
+    @prop() public isStandalone: boolean
+    @prop() public isParent: boolean 				                // Defines an abstract parent for a variable product
+    @arrayProp({ items: String }) public variationSKUs: string[] 	// Array of product SKUs
+    @arrayProp({ itemsRef: Product }) public variations: Ref<Product>[]
+    @prop() public isVariation: boolean 			                // Defines a product variation with a parent product
+    @prop() public isDefaultVariation: boolean 	                    // Defines the default product variation
+    @prop() public parentSKU: string				                // The SKU of the parent product
+    @prop({ ref: Product }) public parent: Ref<Product>
+
+	/* Attributes */
+	/* own attributes */
+    @arrayProp({ itemsRef: AttributeValue }) public attributeValues: Ref<AttributeValue>[]
+    @arrayProp({ items: String }) public attributeValueSlugs: string[]
+	/* variation attributes */
+    @arrayProp({ itemsRef: Attribute }) public variableAttributes: Ref<Attribute>[] // Attribute IDs
+    @arrayProp({ itemsRef: AttributeValue }) public variableAttributeValues: Ref<AttributeValue>[]
+
+	/* Taxonomy */
+    @arrayProp({ itemsRef: TaxonomyTerm }) public taxonomyTerms: Ref<TaxonomyTerm>[]
+    @arrayProp({ items: String }) public taxonomyTermSlugs: string[]
+
+	/* Shipping */
+    @prop() public units: Units
+    @prop() public dimensions: Dimensions
+    @prop() public shippingWeight: number
+    @prop() public netWeight: number
+
+	/* Additional tax */
+    @prop() public additionalTax: number
+
+	/* Sales */
+    @prop() public stockQuantity: number
+    @prop() public totalSales: number
+    @prop() public isEnteredIntoStripe: boolean
+}
+
+export const ProductModel = new Product().getModelForClass(Product, { schemaOptions: { timestamps: true } })

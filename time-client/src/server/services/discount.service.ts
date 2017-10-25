@@ -4,7 +4,7 @@ import { Error } from 'mongoose'
 import { DbClient } from '@time/common/api-utils'
 import { Types } from '@time/common/constants/inversify'
 import { Discount } from '@time/common/models/api-models'
-import { ApiResponse, ServiceErrorResponse } from '@time/common/models/helpers'
+import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
 import { IFetchService } from '@time/common/models/interfaces'
 import { IDiscount, IPrice } from '@time/common/models/interfaces'
 
@@ -33,7 +33,7 @@ export class DiscountService implements IFetchService<IDiscount> {
     public getOne(id: string): Promise<ApiResponse<IDiscount>> {
         return new Promise<ApiResponse<IDiscount>>((resolve, reject) => {
             Discount.findById(id, (error: Error, discount): void => {
-                if (error) reject(new ServiceErrorResponse(error))
+                if (error) reject(new ApiErrorResponse(error))
                 else resolve(new ApiResponse(discount))
             })
         })
@@ -50,7 +50,7 @@ export class DiscountService implements IFetchService<IDiscount> {
             // Retrieve the discounts normally, loading them into memory
             this.dbClient.getFilteredCollection(Discount, query)
                 .then(discounts => resolve(new ApiResponse(discounts)))
-                .catch(err => reject(new ServiceErrorResponse(err)))
+                .catch(err => reject(new ApiErrorResponse(err)))
         })
     }
 }

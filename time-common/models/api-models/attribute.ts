@@ -1,12 +1,15 @@
-import { model, Schema } from 'mongoose'
+import * as findOrCreate from 'mongoose-findorcreate'
+import { plugin, prop, Typegoose } from 'typegoose'
 
-import { IAttribute } from '../interfaces/attribute'
+@plugin(findOrCreate)
+export class Attribute extends Typegoose {
+    public static readonly findOrCreate: (query: object) => Promise<{ doc: Attribute; created: boolean }>
+    public _id: string
 
-export const attributeSchema = new Schema({
-    name: String,
-    pluralName: String,
-    slug: String,
-    description: String,
-})
+    @prop() public name: string
+    @prop() public pluralName: string
+    @prop() public slug: string
+    @prop() public description: string
+}
 
-export const Attribute = model<IAttribute>('Attribute', attributeSchema)
+export const AttributeModel = new Attribute().getModelForClass(Attribute)

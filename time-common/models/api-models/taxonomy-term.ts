@@ -1,20 +1,23 @@
-import { model, Schema } from 'mongoose'
-import { ITaxonomyTerm } from '../interfaces'
+import * as findOrCreate from 'mongoose-findorcreate'
+import { arrayProp, plugin, prop, Ref, Typegoose } from 'typegoose'
 
-export const taxonomyTermSchema = new Schema({
-    taxonomy: Schema.Types.ObjectId,
-    name: String,
-    pluralName: String,
-    slug: String,
-    description: String,
-    children: [Schema.Types.ObjectId],
-    parent: Schema.Types.ObjectId,
-    ancestors: [Schema.Types.ObjectId],
+import { Taxonomy } from './taxonomy'
+import { TaxonomyTermSettings } from './taxonomy-term-settings'
 
-    settings: {
-        attributeValues: [Schema.Types.ObjectId],
-        variableAttributes: [Schema.Types.ObjectId],
-    },
-})
+@plugin(findOrCreate)
+export class TaxonomyTerm extends Typegoose {
+    public static readonly findOrCreate: (query: object) => Promise<{ doc: TaxonomyTerm; created: boolean }>
+    public _id: string
 
-export const TaxonomyTerm = model<ITaxonomyTerm>('TaxonomyTerm', taxonomyTermSchema)
+    @prop({ ref: Taxonomy }) public taxonomy: Ref<Taxonomy>
+    @prop() public name: string
+    @prop() public pluralName: string
+    @prop() public slug: string
+    @prop() public description: string
+    @prop({ ref: TaxonomyTerm }) public parent: Ref<TaxonomyTerm>
+    @arrayProp({ itemsRef: TaxonomyTerm }) public children: Ref<TaxonomyTerm>[]
+
+    @prop() public settings: TaxonomyTermSettings
+}
+
+export const TaxonomyTermModel = new TaxonomyTerm().getModelForClass(TaxonomyTerm)

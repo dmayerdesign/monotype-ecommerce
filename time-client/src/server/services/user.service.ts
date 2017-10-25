@@ -7,7 +7,7 @@ import { AuthConfig } from '@time/common/config/auth.config'
 import { Cookies, Copy, HttpStatus } from '@time/common/constants'
 import Types from '@time/common/constants/inversify/types'
 import { ILogin, IUser, User } from '@time/common/models'
-import { ApiResponse, ServiceErrorResponse } from '@time/common/models/helpers'
+import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
 
 @injectable()
 export class UserService {
@@ -26,7 +26,7 @@ export class UserService {
                 hash = bcrypt.hashSync(plainTextPassword, salt)
             }
             catch (error) {
-                reject(new ServiceErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest))
+                reject(new ApiErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest))
             }
 
             // Check for existing user
@@ -49,15 +49,15 @@ export class UserService {
                             res.cookie(Cookies.jwt, authToken, AuthConfig.CookieOptions).json(payload)
                             resolve()
                         })
-                        .catch((error) => reject(new ServiceErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest)))
+                        .catch((error) => reject(new ApiErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest)))
                     }
                     else {
-                        reject(new ServiceErrorResponse(
+                        reject(new ApiErrorResponse(
                             new Error(Copy.ErrorMessages.userEmailExists),
                             HttpStatus.CLIENT_ERROR_badRequest,
                         ))
                     }
-                }).catch((error) => reject(new ServiceErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest)))
+                }).catch((error) => reject(new ApiErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest)))
         })
     }
 
@@ -79,7 +79,7 @@ export class UserService {
                 resolve()
             }
             catch (error) {
-                reject(new ServiceErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest))
+                reject(new ApiErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest))
             }
 
             /*
@@ -121,7 +121,7 @@ export class UserService {
     public updateUser(id: string, update: any): Promise<ApiResponse<IUser>> {
         return new Promise<ApiResponse<IUser>>((resolve, reject) => {
             User.findByIdAndUpdate(id, update, { new: true }, (error, user) => {
-                if (error) reject(new ServiceErrorResponse(error))
+                if (error) reject(new ApiErrorResponse(error))
                 else resolve(new ApiResponse(user))
             })
         })
@@ -130,7 +130,7 @@ export class UserService {
     public deleteUser(id: string): Promise<ApiResponse<any>> {
         return new Promise<any>((resolve, reject) => {
             User.findByIdAndRemove(id, (error) => {
-                if (error) reject(new ServiceErrorResponse(error))
+                if (error) reject(new ApiErrorResponse(error))
                 else resolve(new ApiResponse(null, HttpStatus.SUCCESS_noContent))
             })
         })

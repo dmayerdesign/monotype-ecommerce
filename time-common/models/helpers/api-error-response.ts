@@ -1,6 +1,6 @@
 import { HttpStatus } from '../../constants/http'
 
-export class ServiceErrorResponse {
+export class ApiErrorResponse {
     constructor(
         public error: Error,
         public status: HttpStatus = 500,

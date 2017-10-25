@@ -1,12 +1,15 @@
-import { model, Schema } from 'mongoose'
+import * as findOrCreate from 'mongoose-findorcreate'
+import { plugin, prop, Typegoose } from 'typegoose'
 
-import { ITaxonomy } from '../interfaces/taxonomy'
+@plugin(findOrCreate)
+export class Taxonomy extends Typegoose {
+    public static readonly findOrCreate: (query: object) => Promise<{ doc: Taxonomy; created: boolean }>
+    public _id: string
 
-export const taxonomySchema = new Schema({
-    name: String,
-    pluralName: String,
-    slug: String,
-    description: String,
-})
+    @prop() public name: string
+    @prop() public pluralName: string
+    @prop() public slug: string
+    @prop() public description: string
+}
 
-export const Taxonomy = model<ITaxonomy>('Taxonomy', taxonomySchema)
+export const TaxonomyModel = new Taxonomy().getModelForClass(Taxonomy)

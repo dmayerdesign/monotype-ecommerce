@@ -1,45 +1,36 @@
-import * as mongoose from 'mongoose'
-import { model, Schema } from 'mongoose'
-import { IUser } from '../interfaces'
-import { addressSchema } from './address'
+import { arrayProp, prop, Ref, Typegoose } from 'typegoose'
 
-export const userSchema: Schema = new Schema({
-  email: { type: String, required: true },
-  emailIsVerified: Boolean,
-  emailVerificationToken: String,
-  emailTokenExpires: Number,
-  username: { type: String, unique: true },
-  passwordResetToken: String,
-  passwordResetExpires: Date,
-  adminKey: String,
+import { Address } from './address'
+import { Cart } from './cart'
+import { Image } from './image'
+import { Order } from './order'
 
-  name: String,
-  lastName: String,
-  firstName: String,
-  avatar: {
-    large: String,
-    thumbnail: String,
-  },
-  // address: addressSchema,
-  phoneNumber: String,
+export class User extends Typegoose {
+    @prop({ required: true }) public email: string
+    @prop() public emailIsVerified?: boolean
+    @prop() public emailVerificationToken?: string
+    @prop() public emailTokenExpires?: number
+    @prop() public password?: string
+    @prop() public passwordResetToken?: string
+    @prop() public passwordResetExpires?: string
+    @prop() public adminKey?: string
 
-  profile: {
-    age: Number,
-    gender: String,
-    bio: String,
-  },
-  facebookId: String,
-  googleId: String,
+    @prop() public name: string
+    @prop() public lastName: string
+    @prop() public firstName: string
+    @prop() public avatar: Image
+    @prop() public address: Address
+    @prop() public phoneNumber: string
 
-  orders: [String],
-  stripeCustomerId: String,
+    @prop() public facebookId: string
+    @prop() public googleId: string
 
-  cart: [{
-    SKU: String,
-    quantity: Number,
-    unitCost: Number,
-    totalCost: Number,
-  }],
-}, { timestamps: true })
+    @arrayProp({ itemsRef: Order }) public orders: Ref<Order>[]
+    @prop() public stripeCustomerId: string
 
-export const User = model<IUser>('User', userSchema)
+    @prop() public cart: Cart
+
+    @prop() public customFields: {}
+}
+
+export const UserModel = new User().getModelForClass(User, { schemaOptions: { timestamps: true } })

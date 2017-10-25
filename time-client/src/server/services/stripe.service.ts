@@ -1,12 +1,13 @@
 import { inject, injectable } from 'inversify'
 import * as Stripe from 'stripe'
+import { OrderModel, OrganizationModel, ProductModel, UserModel } from '../../../../time-common/models/api-models'
 
 import { appConfig } from '@time/app-config'
 import { EmailService } from '@time/common/api-services'
 import { Types } from '@time/common/constants/inversify'
 import { Order, Organization, Product, User } from '@time/common/models/api-models'
 import { StripeOrder } from '@time/common/models/helpers'
-import { IApiResponse, IDiscount, IOrder, IProduct } from '@time/common/models/interfaces'
+import { IApiResponse, IDiscount } from '@time/common/models/interfaces'
 import { DiscountService } from './discount.service'
 import { ProductService } from './product.service'
 
@@ -26,9 +27,9 @@ export class StripeService {
         @inject(Types.DiscountService) private discountService: DiscountService
     ) {}
 
-    private createOrder(order: IOrder) {
-        return new Promise<{ order: IOrder; stripeOrder: StripeOrder }>(async (resolve, reject) => {
-            let orderItems: IProduct[]
+    private createOrder(order: Order) {
+        return new Promise<{ order: Order; stripeOrder: StripeOrder }>(async (resolve, reject) => {
+            let orderItems: Product[]
             let orderDiscounts: IDiscount[]
 
             if (!order.total
@@ -37,13 +38,13 @@ export class StripeService {
                 reject(new Error("Not a valid order"))
             }
 
-            order.total.amount = 0
+            order.total.total = 0
 
             try {
-                const orderItemsResponse = await <Promise<IApiResponse<IProduct[]>>>this.productService.get({ _id: { $in: order.items } }, { page: 1, limit: order.items.length })
+                const orderItemsResponse = await <Promise<IApiResponse<Product[]>>>this.productService.get({ _id: { $in: order.items } }, { page: 1, limit: order.items.length })
                 orderItems = orderItemsResponse.data
                 orderItems.forEach(orderItem => {
-                    order.total.amount += this.productService.getPrice(orderItem).total
+                    order.total.total += this.productService.getPrice(orderItem).total
                 })
             }
             catch (getItemsError) {
@@ -54,14 +55,14 @@ export class StripeService {
                 const orderDiscountsResponse = await <Promise<IApiResponse<IDiscount[]>>>this.discountService.get({ _id: { $in: order.discounts } })
                 orderDiscounts = orderDiscountsResponse.data
                 orderDiscounts.forEach(orderDiscount => {
-                    order.total.amount -= orderDiscount.amount.total
+                    order.total.total -= orderDiscount.amount.total
                 })
             }
             catch (getDiscountsError) {
                 reject(getDiscountsError)
             }
 
-            const dbOrder = new Order(order)
+            const dbOrder = new OrderModel(order)
 
             // Build the stripe order
             const stripeOrder = new StripeOrder()
@@ -78,7 +79,7 @@ export class StripeService {
                 },
             }
             stripeOrder.currency = order.total.currency
-            stripeOrder.customer = order.stripeCustomerId
+            stripeOrder.customer = order.customer.stripeCustomerId
             stripeOrder.email = order.customer.email
             stripeOrder.items = orderItems.map(product => {
                 return <StripeNode.orders.IOrderItem>{
@@ -88,86 +89,88 @@ export class StripeService {
             })
 
             console.log(`
-    ----------------------------
-            The Stripe order
-    ----------------------------`)
+--------------------------------
+        The Stripe order
+--------------------------------`)
             console.log(stripeOrder)
 
-            stripe.orders.create(<StripeNode.orders.IOrderCreationOptions>stripeOrder)
-                .then(newStripeOrder => {
-                    dbOrder.stripeOrderId = newStripeOrder.id
-                    dbOrder.save()
-                        .then(newOrder => {
-                            resolve({
-                                order: newOrder,
-                                stripeOrder: <StripeOrder>newStripeOrder
-                            })
-                        })
-                        .catch(orderCreationError => {
-                            reject(orderCreationError)
-                        })
+            try {
+                const newStripeOrder = await stripe.orders.create(<StripeNode.orders.IOrderCreationOptions>stripeOrder)
+                dbOrder.stripeOrderId = newStripeOrder.id
+                const newOrder = await dbOrder.save()
+                resolve({
+                    order: newOrder,
+                    stripeOrder: <StripeOrder>newStripeOrder
                 })
-                .catch(stripeOrderCreationError => {
-                    reject(stripeOrderCreationError)
-                })
+            }
+            catch (error) {
+                reject(error)
+            }
         })
     }
 
-    private payOrder(order, done) {
-        const payment: StripeNode.orders.IOrderPayOptions = {
-            metadata: {
-                orderID: order._id.toString(),
-            },
-        }
-        console.log("******** order.stripeToken ********")
-        console.log(order.stripeToken)
+    private payOrder(order: Order) {
+        return new Promise<{paidOrder: Order, paidStripeOrder: StripeOrder}>(async (resolve, reject) => {
+            const payment: StripeNode.orders.IOrderPayOptions = {
+                metadata: {
+                    orderID: order._id.toString(),
+                },
+            }
+            console.log("******** order.stripeToken ********")
+            console.log(order.stripeToken)
 
-        if (order.customer.stripeCustomerId && !order.stripeToken && !order.stripeCard) {
-            payment.customer = order.customer.stripeCustomerId
-        }
-        else if ((order.stripeToken || order.stripeCard) && order.customer.email) {
-            payment.source = order.stripeToken || order.stripeCard.id
-            payment.email = order.customer.email
-        }
-        else {
-            return done("Missing one of: Stripe Customer ID, Stripe Token ID, or email")
-        }
+            if (order.customer.stripeCustomerId && !order.stripeToken && !order.stripeCardId) {
+                payment.customer = order.customer.stripeCustomerId
+            }
+            else if ((order.stripeToken || order.stripeCardId) && order.customer.email) {
+                payment.source = order.stripeToken || order.stripeCardId
+                payment.email = order.customer.email
+            }
+            else {
+                return reject(new Error("Missing one of: Stripe Customer ID, Stripe Token ID, or email"))
+            }
 
-        if (order.savePaymentInfo && order.stripeToken && order.customer.stripeCustomerId) {
-            delete payment.source
-            delete payment.email
-            payment.customer = order.customer.stripeCustomerId
+            if (order.savePaymentInfo && order.stripeToken && order.customer.stripeCustomerId) {
+                delete payment.source
+                delete payment.email
+                payment.customer = order.customer.stripeCustomerId
 
-            console.log("******** Saving new card ********")
-            stripe.customers.createSource(order.customer.stripeCustomerId, { source: order.stripeToken }, (err, card) => {
-                if (err || !card) return done("Couldn't save your payment info. Please try again.")
-                stripe.customers.update(order.customer.stripeCustomerId, { default_source: card.id }, (_err, customer) => {
-                    if (err) return done(err)
+                try {
+                    console.log("******** Saving new card ********")
+                    const card = await stripe.customers.createSource(order.customer.stripeCustomerId, { source: order.stripeToken })
+                    if (!card) return reject(new Error("Couldn't save your payment info. Please try again."))
+                    const customer = await stripe.customers.update(order.customer.stripeCustomerId, {
+                        default_source: card.id
+                    })
                     makePayment()
-                })
-            })
-        } else {
-            makePayment()
-        }
+                }
+                catch (error) {
+                    reject(error)
+                }
+            } else {
+                makePayment()
+            }
 
-        function makePayment() {
-            stripe.orders.pay(order.stripeOrderId, payment)
-                .then(stripeOrder => {
-                    Order.findById(order._id)
-                        .then(dbOrder => {
-                            dbOrder.status = 'Paid'
-                            dbOrder.save((error, updatedOrder) => {
-                                done(error, updatedOrder, stripeOrder)
-                            })
-                        })
-                        .catch(error => done(error))
-                })
-                .catch(error => done(error))
-        }
+            async function makePayment() {
+                try {
+                    const paidStripeOrder = await <Promise<StripeOrder>>stripe.orders.pay(order.stripeOrderId, payment)
+                    let paidOrder = await OrderModel.findById(order._id)
+                    paidOrder.status = 'Paid'
+                    paidOrder = await paidOrder.save()
+                    resolve({
+                        paidOrder,
+                        paidStripeOrder,
+                    })
+                }
+                catch (error) {
+                    reject(error)
+                }
+            }
+        })
     }
 
-    private createProductsOrSKUs(which, products, order) {
-        return new Promise<{ products: Array<IProduct>; stripeProductsOrSKUs: Array<StripeNode.products.IProduct|StripeNode.skus.ISku> }>((resolve, reject) => {
+    private createProductsOrSKUs<T>(which: 'products'|'skus', products, order) {
+        return new Promise<{ products: Array<Product>; stripeProductsOrSKUs: Array<T> }>((resolve, reject) => {
             const productsToAdd = []
             let outOfStock = false
 
@@ -238,7 +241,7 @@ export class StripeService {
 
             console.log(productsToAdd)
 
-            this.createStripeProductsOrSKUs(which, productsToAdd)
+            this.createStripeProductsOrSKUs<T>(which, productsToAdd)
                 .then(stripeProductsOrSKUs => {
                     const query = { SKU: { $in: [] } }
                     if (!stripeProductsOrSKUs) return resolve({
@@ -252,7 +255,7 @@ export class StripeService {
                         }
                     })
 
-                    Product
+                    ProductModel
                         .update(
                             query,
                             {
@@ -278,11 +281,11 @@ export class StripeService {
         })
     }
 
-    private createStripeProductsOrSKUs(which, products) {
-        return new Promise<Array<StripeNode.products.IProduct|StripeNode.skus.ISku>>((resolve, reject) => {
+    private createStripeProductsOrSKUs<T>(which: 'products'|'skus', products) {
+        return new Promise<Array<T>>((resolve, reject) => {
             recursivelyCreateProductsOrSKUs(products)
 
-            function recursivelyCreateProductsOrSKUs(productArr) {
+            async function recursivelyCreateProductsOrSKUs(productArr) {
                 const stripeProducts = {
                     products: [],
                     skus: [],
@@ -292,13 +295,21 @@ export class StripeService {
                 console.log(productArr)
                 console.log(productArr[0])
 
-                stripe[which].create(productArr[0])
-                .then(product => {
+                let product: StripeNode.products.IProduct | StripeNode.skus.ISku
+
+                try {
+                    if (which === "products") {
+                        product = await stripe.products.create(productArr[0])
+                    }
+                    else {
+                        product = await stripe.skus.create(productArr[0])
+                    }
+
                     const logMsg = which === "skus" ? "SKU" : "product"
                     console.log(`
-        -------------------------------------
-            Created the ${logMsg} in Stripe
-        -------------------------------------`)
+---------------------------------------
+    Created the ${logMsg} in Stripe
+---------------------------------------`)
                     console.log(product.id)
 
                     stripeProducts[which].push(product)
@@ -310,13 +321,13 @@ export class StripeService {
                     else {
                         resolve(stripeProducts[which])
                     }
-                })
-                .catch(error => {
+                }
+                catch (error) {
                     if (error.message.indexOf("already exists") > -1) {
                         return resolve(stripeProducts[which])
                     }
                     reject(error)
-                })
+                }
             }
         })
     }
@@ -333,7 +344,7 @@ export class StripeService {
             else {
                 qty = order.items.find(op => op.SKU === product.SKU).quantity
             }
-            Product.update({SKU: product.SKU}, { $inc: { stockQuantity: -qty, totalSales: qty } }, console.log)
+            ProductModel.update({SKU: product.SKU}, { $inc: { stockQuantity: -qty, totalSales: qty } }, console.log)
         })
     }
 
@@ -356,7 +367,7 @@ export class StripeService {
      * order was successful), the updated database Order, and the returned Stripe Order object
      */
     public submitOrder(orderData, variationsAndStandalones, done) {
-        return new Promise<{ order: IOrder, stripeOrder: StripeOrder }>(async (resolve, reject) => {
+        return new Promise<{ order: Order, stripeOrder: StripeOrder }>(async (resolve, reject) => {
             const parentSKUs = []
             const productSKUs = []
             variationsAndStandalones.forEach(product => {
@@ -370,7 +381,7 @@ export class StripeService {
             try {
                 // Retrieve parent products and combine them with `variationsAndStandalones` into `products`
                 // Use the new `products` array to create the products and SKUs in Stripe, if they don't exist
-                const parents = await Product.find({ SKU: { $in: parentSKUs } })
+                const parents = await ProductModel.find({ SKU: { $in: parentSKUs } })
                 const products = parents.concat(variationsAndStandalones)
                 const stripeProducts = await this.createProducts(products)
                 console.log("Created products")
@@ -390,9 +401,18 @@ export class StripeService {
                 const { paidOrder, paidStripeOrder } = await this.payOrder(order)
 
                 // Update the stock quantity and total sales of each variation and standalone
+                this.updateInventory(products, paidOrder)
 
+                const organization = await OrganizationModel.findOne({})
 
-
+                const emailBody = await this.email.sendReceipt({
+                    organization,
+                    order: paidOrder,
+                    fromEmail: appConfig.organization_email,
+                    fromName: appConfig.organization_name,
+                    toEmail: paidOrder.customer.email,
+                    toName: paidOrder.customer.firstName + ' ' + paidOrder.customer.lastName,
+                })
 
                 resolve({ order: paidOrder, stripeOrder: paidStripeOrder })
 
@@ -400,50 +420,6 @@ export class StripeService {
             catch (error) {
                 reject(error)
             }
-
-            Product.find({ SKU: { $in: parentSKUs } }, (error, parents) => {
-                if (error) return done(error)
-                const products = parents.concat(variationsAndStandalones)
-                this.createProducts(products, ($error, stripeProducts) => {
-                    console.log("createProducts")
-                    if ($error) return done($error)
-                    this.createSKUs(products, order, (_err, stripeSKUs) => {
-                        console.log("createSKUs")
-                        if (_err) return done(_err)
-                        this.createOrder(order, (err, _order, stripeOrder) => {
-                            console.log("createOrder")
-                            if (err) return done(err)
-                            this.createCustomer(_order, (_error, stripeCustomer, $order) => {
-                                console.log("createCustomer")
-                                if (_error) return done(_error)
-                                $order.stripeCustomer = stripeCustomer
-                                this.payOrder($order, ($err, dbOrder, _stripeOrder) => {
-                                    // ==========================================================
-                                    console.log("payOrder")
-                                    if ($err) return done($err)
-                                    this.updateInventory(products, dbOrder)
-                                    Organization.findOne({}, (_error_, organization) => {
-                                        if (_error_) return done(_error_)
-                                        console.log("Sending receipt")
-                                        this.email.sendReceipt({
-                                            organization,
-                                            order: dbOrder,
-                                            fromEmail: appConfig.organization_email,
-                                            fromName: appConfig.organization_name,
-                                            toEmail: dbOrder.customer.email,
-                                            toName: dbOrder.customer.firstName + ' ' + dbOrder.customer.lastName,
-                                        }, (_$error, body) => {
-                                            console.log("<<<<<<<<<< RECEIPT >>>>>>>>>>")
-                                            console.log(_$error, body)
-                                            done(_$error, dbOrder, _stripeOrder)
-                                        })
-                                    })
-                                })
-                            })
-                        })
-                    })
-                })
-            })
         })
     }
 
@@ -451,64 +427,66 @@ export class StripeService {
      * If the customer checked "save payment info," create a Stripe Customer
      *
      * @param {Order} order - The order from which the customer's information is being collected
-     * @param {function} done - A callback function taking three arguments: an error (null if the
-     * creation was successful), the returned Stripe Customer object, and the updated order
      */
-    public createCustomer(order, done) {
-        if (order.customer.userId && order.savePaymentInfo && order.stripeTokenObject && order.stripeTokenObject.card) {
-            User.findById(order.customer.userId, (err, user) => {
-                if (err) return done(err)
-                if (!user) return done(null, null, order)
+    public createCustomer(order) {
+        return new Promise<StripeNode.customers.ICustomer>((resolve, reject) => {
+            if (order.customer.userId && order.savePaymentInfo && order.stripeTokenObject && order.stripeTokenObject.card) {
+                UserModel.findById(order.customer.userId, (err, user) => {
+                    if (err) return reject(err)
+                    if (!user) return resolve(null)
 
-                console.log('************  The Customer  *************')
-                console.log(order.customer)
+                    console.log('************  The Customer  *************')
+                    console.log(order.customer)
 
-                // this.addCard(order.stripeToken, customer.id, (_err, card) => {
-                // 	if (_err) return done(_err);
-                // 	order.stripeTokenObject.card.id = card.id;
+                    // this.addCard(order.stripeToken, customer.id, (_err, card) => {
+                    // 	if (_err) return done(_err);
+                    // 	order.stripeTokenObject.card.id = card.id;
 
-                if (order.customer.stripeCustomerId) {
-                    stripe.customers.retrieve(
-                        order.customer.stripeCustomerId,
-                        (customerErr, customer) => {
-                            if (customerErr) return done(customerErr)
-                            if (customer) {
-                                console.log(customer)
-                                done(null, customer, order)
-                            } else {
-                                createCustomer()
+                    if (order.customer.stripeCustomerId) {
+                        stripe.customers.retrieve(
+                            order.customer.stripeCustomerId,
+                            (customerErr, customer) => {
+                                if (customerErr) return reject(customerErr)
+                                if (customer) {
+                                    console.log(customer)
+                                    resolve(customer)
+                                } else {
+                                    createCustomer()
+                                }
                             }
+                        )
+                    } else {
+                        createCustomer()
+                    }
+
+                    async function createCustomer() {
+                        try {
+                            const customer = await stripe.customers.create({
+                                source: order.stripeToken,
+                                email: order.customer.email,
+                            })
+                            if (!customer) return reject(new Error("Couldn't create the customer in Stripe"))
+
+                            console.log("New customer")
+                            console.log(customer)
+
+                            user.stripeCustomerId = customer.id
+                            await user.save()
+                            resolve(customer)
                         }
-                    )
-                } else {
-                    createCustomer()
-                }
-
-                function createCustomer() {
-                    stripe.customers.create({
-                        source: order.stripeToken,
-                        email: order.customer.email,
-                    }, (error, customer) => {
-                        if (error) return done(error)
-                        if (!customer) return done("Couldn't create the customer in Stripe")
-
-                        console.log("New customer")
-                        console.log(customer)
-
-                        user.stripeCustomerId = customer.id
-                        user.save(_error => {
-                            done(_error, customer, order)
-                        })
-                    })
-                }
+                        catch (error) {
+                            reject(error)
+                        }
+                    }
 
 
-                // });
+                    // });
 
-            })
-        } else {
-            done(null, null, order)
-        }
+                })
+            } else {
+                reject(new Error("The order did not contain sufficient data to create a customer in Stripe."))
+            }
+        })
     }
 
     /**
@@ -567,7 +545,7 @@ export class StripeService {
      * creation was successful) and an array of the returned Stripe Product objects
      */
     public createProducts(products) {
-        return this.createProductsOrSKUs("products", products, null)
+        return this.createProductsOrSKUs<StripeNode.products.IProduct>("products", products, null)
     }
 
     /**
@@ -578,8 +556,8 @@ export class StripeService {
      * @param {function} done - A callback function taking two arguments: an error (null if the
      * creation was successful) and an array of the returned Stripe SKU objects
      */
-    public createSKUs(products, order, done) {
-        return this.createProductsOrSKUs("skus", products, order, done)
+    public createSKUs(products, order) {
+        return this.createProductsOrSKUs<StripeNode.skus.ISku>("skus", products, order)
     }
 
     /**

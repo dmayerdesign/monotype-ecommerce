@@ -1,5 +1,7 @@
 import { model, Document } from 'mongoose'
+
 import { IAddress } from './address'
+import { ICart } from './cart'
 
 export interface IUser extends Document {
   email: string
@@ -11,21 +13,30 @@ export interface IUser extends Document {
   passwordResetExpires?: string
   adminKey?: string
 
-  lastName?: string
-  firstName?: string
-  avatar?: {
+  name: string
+  lastName: string
+  firstName: string
+  avatar: {
     large: string
     thumbnail: string
-  }
-  address?: IAddress
-  phoneNumber?: string
+  },
+  // address: addressSchema,
+  phoneNumber: string
 
-  profile?: {
-    age?: number
-    gender?: string
-    bio?: string
-  }
-  facebookId?: string
+  profile: {
+    age: number
+    gender: string
+    bio: string
+  },
+  facebookId: string
+  googleId: string
+
+  orders: string[]
+  stripeCustomerId: string
+
+  cart: ICart
+
+  customFields: {}
 }
 
 export interface ILogin {

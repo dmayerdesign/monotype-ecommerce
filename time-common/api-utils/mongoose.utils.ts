@@ -3,10 +3,11 @@ import { Response } from 'express'
 import { inject, injectable } from 'inversify'
 import { Document, Error, Model, Types } from 'mongoose'
 import * as mongoose from 'mongoose'
+import { Typegoose } from 'typegoose'
 import { Errors } from '../constants'
 
 @injectable()
-export class DbClient<T extends Document> {
+export class DbClient<T extends Document|Typegoose> {
     /**
      * Gets a filtered set of documents from a collection
      *
@@ -14,7 +15,7 @@ export class DbClient<T extends Document> {
      * @param {object} query - The database query
      * @param {boolean} res - Pass the express `Response` if the set of documents should be streamed rather than loaded into memory
      */
-    public getFilteredCollection(model: Model<T>, query: Object, options?: { limit: number; skip: number }, res?: Response): Promise<T[]> {
+    public getFilteredCollection(model: Model<T & Document>, query: Object, options?: { limit: number; skip: number }, res?: Response): Promise<T[]> {
         if (!options) {
             options = { limit: 0, skip: 0 }
         }
@@ -64,7 +65,7 @@ export class DbClient<T extends Document> {
      * @param {object} update - An object representing the fields to be updated
      * @param {boolean} concatArrays - Set to `true` if fields containing arrays should be treated as additions to the existing array. Defaults to `false`, meaning that arrays are replaced in the same way as other fields
      */
-    public updateById(model: Model<T>, id: string|Types.ObjectId, update: Object, concatArrays: boolean = false): Promise<T> {
+    public updateById(model: Model<T & Document>, id: string|Types.ObjectId, update: Object, concatArrays: boolean = false): Promise<T> {
 
         return new Promise<T>((resolve, reject) => {
             model.findById(id)

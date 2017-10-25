@@ -1,11 +1,12 @@
-import { model, Schema } from 'mongoose'
-import { IOrganization } from '../interfaces/organization'
+import { prop, Typegoose } from 'typegoose'
 
-export const organizationSchema = new Schema({
-    name: String,
-    retailSettings: {
-        salesTaxPercentage: Number,
-    },
-}, { timestamps: true })
+export class OrganizationRetailSettings {
+    @prop() public salesTaxPercentage: number
+}
 
-export const Organization = model<IOrganization>('Organization', organizationSchema)
+export class Organization extends Typegoose {
+    @prop() public name: string
+    @prop() public retailSettings: OrganizationRetailSettings
+}
+
+export const OrganizationModel = new Organization().getModelForClass(Organization, { schemaOptions: { timestamps: true } })
