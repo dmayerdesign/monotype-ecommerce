@@ -14,7 +14,7 @@ import { ToastrModule } from 'ngx-toastr'
  * FEATURE MODULES
  */
 import { TimeFormsModule } from '@time/common/ng-modules/forms'
-import { TimeHttpModule, TimeHttpResponseInterceptor } from '@time/common/ng-modules/http'
+import { TimeHttpModule } from '@time/common/ng-modules/http'
 import { TimeUiModule } from '@time/common/ng-modules/ui'
 
 /*

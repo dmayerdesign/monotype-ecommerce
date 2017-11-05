@@ -1,21 +1,22 @@
-import { arrayProp, prop, Ref, Typegoose } from 'typegoose'
+import { Schema } from 'mongoose'
+import { arrayProp, prop, Ref } from 'typegoose'
 
-import { OrderStatus, OrderStatusEnum } from '../types'
+import { Rate } from '../types/easypost/rate'
+import { OrderStatus, OrderStatusEnum } from '../types/order-status'
 import { Discount } from './discount'
 import { OrderCustomer } from './order-customer'
 import { Price } from './price'
 import { Product } from './product'
+import { timestamped, TimeModel } from './time-model'
 
-export class Order extends Typegoose {
-    public _id: string
+export class Order extends TimeModel {
     @arrayProp({ itemsRef: Product }) public items: Ref<Product>[]
     @arrayProp({ itemsRef: Discount }) public discounts: Ref<Discount>[]
     @prop() public total: Price
     @prop() public taxPercent: number
     @prop() public shippingCost: number
-    // @arrayProp({ items: String }) public shippingRates: string[]
-    // @prop() public selectedShippingRate: any
-    // https://www.easypost.com/docs/api/node.html#rates
+    @arrayProp({ items: Schema.Types.Mixed }) public shippingRates: Rate[]
+    @prop() public selectedShippingRateId: any
     @prop() public shippingInsuranceAmt: number
     @prop() public carrier: string
     @prop() public trackingCode: string
@@ -33,4 +34,4 @@ export class Order extends Typegoose {
     @prop() public customer: OrderCustomer
 }
 
-export const OrderModel = new Order().getModelForClass(Order, { schemaOptions: { timestamps: true } })
+export const OrderModel = new Order().getModelForClass(Order, timestamped)

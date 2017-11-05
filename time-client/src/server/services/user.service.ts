@@ -6,7 +6,7 @@ import * as jwt from 'jsonwebtoken'
 import { AuthConfig } from '@time/common/config/auth.config'
 import { Cookies, Copy, HttpStatus } from '@time/common/constants'
 import Types from '@time/common/constants/inversify/types'
-import { ILogin, IUser, User } from '@time/common/models'
+import { ILogin, IUser, User, UserModel } from '@time/common/models'
 import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
 
 @injectable()
@@ -30,13 +30,13 @@ export class UserService {
             }
 
             // Check for existing user
-            User
+            UserModel
                 .findOne({
                     email: user.email
                 })
                 .then(existingUser => {
                     if (!existingUser) {
-                        const newUser = new User({
+                        const newUser = new UserModel({
                             firstName: user.firstName,
                             lastName: user.lastName,
                             email: user.email,
@@ -118,9 +118,9 @@ export class UserService {
         res.cookie(Cookies.jwt, authToken, AuthConfig.CookieOptions).json(payload)
     }
 
-    public updateUser(id: string, update: any): Promise<ApiResponse<IUser>> {
-        return new Promise<ApiResponse<IUser>>((resolve, reject) => {
-            User.findByIdAndUpdate(id, update, { new: true }, (error, user) => {
+    public updateUser(id: string, update: any): Promise<ApiResponse<User>> {
+        return new Promise<ApiResponse<User>>((resolve, reject) => {
+            UserModel.findByIdAndUpdate(id, update, { new: true }, (error, user) => {
                 if (error) reject(new ApiErrorResponse(error))
                 else resolve(new ApiResponse(user))
             })
@@ -129,14 +129,14 @@ export class UserService {
 
     public deleteUser(id: string): Promise<ApiResponse<any>> {
         return new Promise<any>((resolve, reject) => {
-            User.findByIdAndRemove(id, (error) => {
+            UserModel.findByIdAndRemove(id, (error) => {
                 if (error) reject(new ApiErrorResponse(error))
                 else resolve(new ApiResponse(null, HttpStatus.SUCCESS_noContent))
             })
         })
     }
 
-    private cleanUser(user: IUser): IUser {
+    private cleanUser(user: User): User {
         const cleanUser = Object.assign({}, user)
         delete cleanUser.adminKey
         delete cleanUser.password

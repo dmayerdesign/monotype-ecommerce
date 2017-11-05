@@ -3,7 +3,7 @@ import { Title } from '@angular/platform-browser'
 import { Subject } from 'rxjs/Subject'
 
 import { IModalData } from '@time/common/models'
-import { SimpleError, TimeHttpResponseInterceptor, TimeHttpService } from '@time/common/ng-modules/http'
+import { SimpleError, TimeHttpService } from '@time/common/ng-modules/http'
 import { FlashMessageType, IFlash } from '../models/ui.models'
 
 @Injectable()

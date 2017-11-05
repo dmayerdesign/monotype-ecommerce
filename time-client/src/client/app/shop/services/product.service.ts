@@ -33,7 +33,7 @@ export class ProductService {
         if (query) params.set("page", JSON.stringify(query))
 
         // this.http.get("https://jsonplaceholder.typicode.com/posts")
-        this.http.get(appConfig.client_url + "/api/products", { params })
+        this.http.get("/api/products", { params })
             .subscribe(
                 (products: IProduct[]) => this.productsSubject.next(products),
                 (error: SimpleError) => this.productsErrorSubject.next(error),
@@ -45,7 +45,7 @@ export class ProductService {
     }
 
     public getOne(slug: string): Observable<IProduct> {
-        return this.http.get<IProduct>(appConfig.client_url + "/api/product/" + slug)
+        return this.http.get<IProduct>("/api/product/" + slug)
     }
 
     public getPrice(product: IProduct): IPrice {

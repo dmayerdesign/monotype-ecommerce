@@ -6,6 +6,8 @@ import {
     Router,
     RouterStateSnapshot,
 } from '@angular/router'
+
+import { AppRoutes } from '../../../../../constants/app-routes'
 import { RouteStateService } from './route-state.service'
 import { UiService } from './ui.service'
 import { UserService } from './user.service'
@@ -24,9 +26,8 @@ export class AuthGuardService implements CanActivate, CanActivateChild {
             return true
         }
         else {
-            const redirectTo = this.routeState.previousUrl || '/'
+            const redirectTo = this.routeState.previousUrl || AppRoutes.Login
             this.router.navigate([redirectTo])
-            // this.router.navigate(['/home/login'], { queryParams: { target: state.url }})
             return false
         }
     }

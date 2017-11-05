@@ -1,6 +1,7 @@
 import { HTTP_INTERCEPTORS } from '@angular/common/http'
 import { HttpClientModule } from '@angular/common/http'
 import { ModuleWithProviders, NgModule } from '@angular/core'
+import { TimeHttpRequestInterceptor } from './http-request.interceptor'
 import { TimeHttpResponseInterceptor } from './http-response.interceptor'
 import { TimeHttpService } from './http.service'
 
@@ -15,6 +16,11 @@ export class TimeHttpModule {
             ngModule: TimeHttpModule,
             providers: [
                 TimeHttpService,
+                {
+                    provide: HTTP_INTERCEPTORS,
+                    useClass: TimeHttpRequestInterceptor,
+                    multi: true,
+                },
                 {
                     provide: HTTP_INTERCEPTORS,
                     useClass: TimeHttpResponseInterceptor,

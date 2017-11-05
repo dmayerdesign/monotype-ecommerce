@@ -26,7 +26,7 @@ export class OrganizationService {
     }
 
     public get(): void {
-        this.http.get(appConfig.client_url + "/api/organization")
+        this.http.get("/api/organization")
             .subscribe(
                 (organization: IOrganization) => {
                     this.organization = organization

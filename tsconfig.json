@@ -15,7 +15,9 @@
       "es2016"
     ],
     "types": [ "node" ],
-    "typeRoots": [ "./node_modules/@types" ],
+    "typeRoots": [
+      "./node_modules/@types" 
+    ],
     "noImplicitAny": false,
     "sourceMap": false,
     "emitDecoratorMetadata": true,
@@ -26,6 +28,9 @@
   },
   "outDir": "tsc/",
   "compileOnSave": false,
+  "files": [
+    "./time-common/models/types/easypost/index.d.ts"
+  ],
   "exclude": [
     "node_modules",
     "dist/"

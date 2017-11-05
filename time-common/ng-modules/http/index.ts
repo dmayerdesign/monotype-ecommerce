@@ -1,4 +1,5 @@
 export * from './time-http.module'
 export * from './http.service'
 export * from './http.models'
+export * from './http-request.interceptor'
 export * from './http-response.interceptor'

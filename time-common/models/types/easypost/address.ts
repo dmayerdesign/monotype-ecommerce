@@ -1,7 +1,7 @@
 import { Verifications } from './address-verification'
 import { Resource } from './resource'
 
-export class Address extends Resource {
+export class Address extends Resource<'Address'> {
     public mode: string
     public street1: string
     public street2: string

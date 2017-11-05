@@ -2,13 +2,9 @@ import { NextFunction, Request, Response } from 'express'
 import { injectable } from 'inversify'
 import * as passport from 'passport'
 import * as FacebookStrategy from 'passport-facebook'
-import * as passportJWT from 'passport-jwt'
 
 import { Copy } from '@time/common/constants'
 import { User, UserModel } from '@time/common/models'
-
-const ExtractJwt = passportJWT.ExtractJwt
-const JwtStrategy = passportJWT.Strategy
 
 const facebookStrategyConfig = {
   clientID: process.env.FACEBOOK_APP_ID,
@@ -17,33 +13,10 @@ const facebookStrategyConfig = {
   profileFields: ['id', 'emails', 'name', 'displayName', 'gender', 'picture.type(large)']
 }
 
-// export const jwtConfig = {
-//     jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('bearer'),
-//     secretOrKey: process.env.JWT_SECRET,
-// }
-
 /**
  * Runs the passport configuration for user authentication via email + password and Facebook
  */
 export function passportConfig() {
-
-    // passport.use(new JwtStrategy(jwtConfig, (payload, next) => {
-
-    //     // FOR TESTING
-    //     console.log("Payload:", payload)
-    //     if (payload.email) {
-    //         next(null, payload)
-    //     }
-    //     /*
-    //     User.findById(payload._id).then((user) => {
-    //         if (user) {
-    //             next(null, user)
-    //         } else {
-    //             next(user.errors, null)
-    //         }
-    //     })
-    //     */
-    // }))
 
    /**
     * Configures facebook strategy

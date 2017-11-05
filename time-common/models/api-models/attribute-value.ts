@@ -1,13 +1,11 @@
 import * as findOrCreate from 'mongoose-findorcreate'
-import { plugin, prop, Ref, Typegoose } from 'typegoose'
+import { plugin, prop, Ref } from 'typegoose'
 
 import { Attribute } from './attribute'
+import { TimeModel } from './time-model'
 
 @plugin(findOrCreate)
-export class AttributeValue extends Typegoose {
-    public static readonly findOrCreate: (query: object) => Promise<{ doc: AttributeValue; created: boolean }>
-    public _id: string
-
+export class AttributeValue extends TimeModel {
     @prop({ ref: Attribute }) public attribute: Ref<Attribute>
     @prop() public name: string
     @prop() public slug: string

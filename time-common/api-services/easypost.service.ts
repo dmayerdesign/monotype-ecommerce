@@ -75,7 +75,7 @@ export class EasypostService {
                 OrderModel.findById(orderId, (err, order) => {
                     if (err) return done(err)
                     order.status = 'Shipped'
-                    order.selectedShippingRate = _shipment.selected_rate
+                    order.selectedShippingRateId = _shipment.selected_rate.id
                     order.carrier = _shipment.selected_rate ? _shipment.selected_rate.carrier : null
                     order.trackingCode = _shipment.tracking_code
                     order.postageLabel = _shipment.postage_label

@@ -14,8 +14,7 @@ import { TimestampedResource } from './resource'
  * @class Shipment
  * @extends {Resource}
  */
-export class Shipment extends TimestampedResource {
-    public readonly object = "Shipment"
+export class Shipment extends TimestampedResource<'Shipment'> {
     public reference?: string
     public readonly mode?: 'test' | 'production'
     public to_address: Address
@@ -42,4 +41,21 @@ export class Shipment extends TimestampedResource {
     public batch_id?: string
     public batch_status?: string
     public batch_message?: string
+
+    constructor(s?: {
+        reference?: string
+        to_address?: Address
+        from_address?: Address
+        parcel?: any /* Parcel */
+        carrier_accounts?: string[]
+    }) {
+        super()
+        if (s) {
+            this.reference = s.reference
+            this.to_address = s.to_address
+            this.from_address = s.from_address
+            this.parcel = s.parcel
+            this.carrier_accounts = s.carrier_accounts
+        }
+    }
 }

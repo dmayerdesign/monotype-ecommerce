@@ -8,7 +8,6 @@ import {
 } from '@angular/common/http'
 import { Injectable } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
-import { Subject } from 'rxjs/Subject'
 import 'rxjs/add/observable/of'
 import 'rxjs/add/observable/throw'
 import 'rxjs/add/operator/catch'
@@ -31,17 +30,6 @@ export class TimeHttpResponseInterceptor implements HttpInterceptor {
 
         return Observable.of(request)
             .switchMap((req) => next.handle(req))
-            // .map((res: any) => {
-            //     // Only capture responses, ignore requests
-            //     if (res instanceof HttpResponse) {
-            //         console.log("From interceptor:", res)
-            //         if (res.body.authToken) {
-            //             this.timeHttpService.auth$.next(res.body.authToken)
-            //         }
-            //     }
-
-            //     return res
-            // })
             .catch((errorResponse) => {
                 const error = new SimpleError(errorResponse)
                 this.timeHttpService.error$.next(error)

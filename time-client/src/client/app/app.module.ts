@@ -13,6 +13,7 @@ import { SiteModule } from './site/site.module'
     ],
     imports: [
         BrowserModule,
+        // ANGULAR UNIVERSAL
         // BrowserModule.withServerTransition({appId: 'time-client-universal'}),
         RouterModule.forRoot([]),
         TimeUiModule,
