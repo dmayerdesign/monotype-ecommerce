@@ -1,7 +1,7 @@
 import { Schema } from 'mongoose'
+import Easypost from 'node-easypost'
 import { arrayProp, prop, Ref } from 'typegoose'
 
-import { Rate } from '../types/easypost/rate'
 import { OrderStatus, OrderStatusEnum } from '../types/order-status'
 import { Discount } from './discount'
 import { OrderCustomer } from './order-customer'
@@ -15,7 +15,7 @@ export class Order extends TimeModel {
     @prop() public total: Price
     @prop() public taxPercent: number
     @prop() public shippingCost: number
-    @arrayProp({ items: Schema.Types.Mixed }) public shippingRates: Rate[]
+    @arrayProp({ items: Schema.Types.Mixed }) public shippingRates: Easypost.Rate[]
     @prop() public selectedShippingRateId: any
     @prop() public shippingInsuranceAmt: number
     @prop() public carrier: string
@@ -35,3 +35,8 @@ export class Order extends TimeModel {
 }
 
 export const OrderModel = new Order().getModelForClass(Order, timestamped)
+
+export class CreateOrderError extends Error { }
+export class FindOrderError extends Error { }
+export class UpdateOrderError extends Error { }
+export class DeleteOrderError extends Error { }

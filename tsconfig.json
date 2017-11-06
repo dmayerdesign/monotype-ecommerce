@@ -16,7 +16,8 @@
     ],
     "types": [ "node" ],
     "typeRoots": [
-      "./node_modules/@types" 
+      "./node_modules/@types",
+      "./time-common/types/node-easypost"
     ],
     "noImplicitAny": false,
     "sourceMap": false,
@@ -24,13 +25,11 @@
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "noUnusedLocals": false,
-    "allowJs": true
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true
   },
   "outDir": "tsc/",
   "compileOnSave": false,
-  "files": [
-    "./time-common/models/types/easypost/index.d.ts"
-  ],
   "exclude": [
     "node_modules",
     "dist/"

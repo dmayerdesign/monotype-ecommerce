@@ -1,8 +1,10 @@
-import * as Easypost from 'node-easypost'
-import * as easypost from '../models/types/easypost'
+import Easypost from 'node-easypost'
+import { InstanceType } from 'typegoose'
 
-import { Order, OrderModel } from '../models/api-models/order'
-const api = new Easypost(process.env.EASYPOST_API_KEY)
+import { Address } from '../models/api-models/address'
+import { FindOrderError, Order, OrderModel, UpdateOrderError } from '../models/api-models/order'
+
+const easypost = new Easypost(process.env.EASYPOST_API_KEY)
 
 export class EasypostService {
     constructor() {}
@@ -22,40 +24,71 @@ export class EasypostService {
 	 * @param {function} done - (error, Order, easypost_shipment)
 	 */
     public createShipment(options, orderId) {
-        return new Promise<{ order: Order, shipment: easypost.Shipment }>((resolve, reject) => {
+        return new Promise<{ order: Order, shipment: Easypost.Shipment }>(async (resolve, reject) => {
             console.log("Easypost shipment options:")
             console.log(options)
 
             /* Either objects or ids can be passed in. If the object does
             * not have an id, it will be created. */
 
-            const to_address = new api.Address(options.to_address)
-            const from_address = new api.Address(options.from_address)
-            const parcel = new api.Parcel(options.parcel)
-            const customs_info = new api.CustomsInfo(options.customs_info)
+            const to_address = new easypost.Address(options.to_address)
+            const from_address = new easypost.Address(options.from_address)
+            const parcel = new easypost.Parcel(options.parcel)
+            const customs_info = new easypost.CustomsInfo(options.customs_info)
 
-            const shipment = new api.Shipment({
+            const shipment = new easypost.Shipment({
                 to_address,
                 from_address,
                 parcel,
                 customs_info,
             })
 
-            shipment.save()
-                .then((_shipment: easypost.Shipment) => {
-                    if (!_shipment) return reject(new Error("Couldn't create the shipment"))
-                    OrderModel.findById(orderId, (err, order) => {
-                        if (err) return reject(err)
-                        console.log("<<<<<<<<  RATES  >>>>>>>>")
-                        console.log(_shipment.rates)
-                        order.shipmentId = _shipment.id
-                        order.shippingRates = _shipment.rates
-                        order.markModified('shippingRates')
-                        order.save((_err, _order) => {
-                            resolve({ order: _order, shipment: _shipment })
-                        })
-                    })
-                })
+            let easypostShipment: Easypost.Shipment
+            let order: InstanceType<Order>
+            let orderWithShipmentData: InstanceType<Order>
+
+            // Get the Easypost shipment
+
+            try {
+                easypostShipment = await shipment.save()
+                if (!easypostShipment) {
+                    return reject(new Error("Couldn't create the shipment."))
+                }
+            }
+            catch (error) {
+                reject(error)
+                return
+            }
+
+            // Get the order from the database
+
+            try {
+                order = await OrderModel.findById(orderId)
+                if (!easypostShipment) {
+                    reject(new FindOrderError("Couldn't find the order on which to update shipment details."))
+                    return
+                }
+            }
+            catch (error) {
+                reject(error)
+                return
+            }
+
+            // Update the order with shipment data
+
+            order.shipmentId = easypostShipment.id
+            order.shippingRates = easypostShipment.rates
+            order.markModified('shippingRates')
+
+            try {
+                orderWithShipmentData = await order.save<InstanceType<Order>>()
+            }
+            catch (error) {
+                reject(error)
+                return
+            }
+
+            resolve({ order: orderWithShipmentData, shipment: easypostShipment })
         })
     }
 
@@ -64,47 +97,117 @@ export class EasypostService {
 	 *
 	 * @param {string} orderId
 	 * @param {string} rateId
-	 * @param {string} shipmentId (Order.shipmentId)
-	 * @param {number} insurance - Amount the shipment will be insured for
-	 * @param {function} done - (error, Order, easypost.Shipment)
+	 * @param {string} shipmentId Order.shipmentId
+	 * @param {number} insurance Amount the shipment will be insured for
 	 */
-    buyShipment({orderId, rateId, shipmentId, insurance, estDeliveryDays}, done) {
-        api.Shipment.retrieve(shipmentId).then(s => {
-            s.buy(rateId || s.lowestRate(), insurance).then(_shipment => {
-                  if (!_shipment) return done("Couldn't purchase the shipment")
-                OrderModel.findById(orderId, (err, order) => {
-                    if (err) return done(err)
-                    order.status = 'Shipped'
-                    order.selectedShippingRateId = _shipment.selected_rate.id
-                    order.carrier = _shipment.selected_rate ? _shipment.selected_rate.carrier : null
-                    order.trackingCode = _shipment.tracking_code
-                    order.postageLabel = _shipment.postage_label
-                    order.estDeliveryDays = estDeliveryDays
-                    order.save((_err, _order) => {
-                        done(_err, _order, _shipment)
-                    })
-                })
-            }).catch(done)
-        }).catch(done)
+    public buyShipment({ orderId, rateId, shipmentId, insurance, estDeliveryDays }: {
+        orderId: string
+        rateId: string
+        shipmentId: string
+        insurance: number
+        estDeliveryDays: number
+    }) {
+        return new Promise<{ order: Order, shipment: Easypost.Shipment }>(async (resolve, reject) => {
+            let shipment: Easypost.Shipment
+            let purchasedShipment: Easypost.Shipment
+            let order: Order
+            let orderWithShipmentData: Order
+
+            // Retrieve the shipment from Easypost
+
+            try {
+                shipment = await easypost.Shipment.retrieve(shipmentId)
+            }
+            catch (error) {
+                reject(error)
+                return
+            }
+
+            // Buy the shipment from Easypost
+
+            try {
+                purchasedShipment = await shipment.buy(rateId || shipment.lowestRate(), insurance)
+                if (!purchasedShipment) {
+                    reject(new Error("Couldn't purchase the shipment."))
+                    return
+                }
+            }
+            catch (error) {
+                reject(error)
+                return
+            }
+
+            // Retrieve the order
+
+            try {
+                order = await OrderModel.findById(orderId)
+
+                if (!order) {
+                    reject(new FindOrderError("Couldn't find the order to update with shipment data."))
+                    return
+                }
+            }
+            catch (error) {
+                reject(error)
+                return
+            }
+
+            // Update the order with the shipment data
+
+            order.status = "Shipped"
+            order.selectedShippingRateId = purchasedShipment.selected_rate.id
+            order.carrier = purchasedShipment.selected_rate ? purchasedShipment.selected_rate.carrier : null
+            order.trackingCode = purchasedShipment.tracking_code
+            order.postageLabel = purchasedShipment.postage_label
+            order.estDeliveryDays = estDeliveryDays
+
+            try {
+                orderWithShipmentData = await order.save<Order>()
+            }
+            catch (error) {
+                reject(error)
+                return
+            }
+
+            resolve({
+                order: orderWithShipmentData,
+                shipment: purchasedShipment
+            })
+        })
     }
 
 	/**
 	 * Verify a customer's shipping address before they place an order
 	 *
-	 * @param {Address} address - The customer's shipping address from the order
-	 * @param {function} done - (err, address)
+	 * @param {Address} address The customer's shipping address from the order
 	 */
-    verifyAddress(address, done) {
-        if (!address) return done("No shipping address was provided")
-        const addrToVerify = new api.Address(address)
+    public verifyAddress(address: Address) {
+        return new Promise<Easypost.Address>(async (resolve, reject) => {
+            if (!address) {
+                return reject(new UpdateOrderError("No shipping address was provided."))
+            }
 
-        addrToVerify.save().then((addr) => {
-            if (addr.verifications.delivery.success) {
-                done(null, addr)
+            // Verify the address
+
+            const addressToVerify = new easypost.Address(address)
+            let verifiedAddress: Easypost.Address
+
+            try {
+                verifiedAddress = await addressToVerify.save()
+            }
+            catch (error) {
+                reject(error)
+                return
+            }
+
+            // Check if the verification was successful
+
+            if (verifiedAddress.verifications.delivery.success) {
+                resolve(verifiedAddress)
             }
             else {
-                done("The shipping address provided is undeliverable or invalid.")
+                reject(new Error("The shipping address provided is undeliverable or invalid."))
             }
-        }).catch(done)
+        })
     }
 }

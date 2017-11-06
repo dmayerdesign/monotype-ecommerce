@@ -6,6 +6,8 @@ export class TimeModel extends Typegoose {
     public _id?: string
     public createdAt?: Date
     public updatedAt?: Date
+
+    public readonly save: <T>() => Promise<T>
 }
 
 export const timestamped = {
