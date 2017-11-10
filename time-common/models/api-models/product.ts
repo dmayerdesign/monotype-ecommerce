@@ -60,7 +60,7 @@ export class Product extends Typegoose {
         }
     }) public salePriceRange: Price[]
     @prop() public isOnSale: boolean
-    @prop({ enum: ProductClassEnum }) public class: ProductClass
+    @prop({ enum: Object.keys(ProductClassEnum) }) public class: ProductClass
     @prop() public isStandalone: boolean
     @prop() public isParent: boolean 				                // Defines an abstract parent for a variable product
     @arrayProp({ items: String }) public variationSKUs: string[] 	// Array of product SKUs

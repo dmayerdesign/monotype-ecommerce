@@ -5,7 +5,7 @@ import { ReplaySubject } from 'rxjs/ReplaySubject'
 import { Subject } from 'rxjs/Subject'
 
 import { appConfig } from '@time/app-config'
-import { ProductSearch } from '@time/common/api-utils'
+import { ProductSearch } from '@time/common/api-utils/types/product-search'
 import { IPrice, IProduct } from '@time/common/models/interfaces'
 import { SimpleError } from '@time/common/ng-modules/http'
 import { UserService } from '../../shared/services/user.service'

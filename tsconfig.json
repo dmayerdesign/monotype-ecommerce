@@ -2,10 +2,11 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@angular/*": ["./node_modules/@angular/*"],
+      "@angular/*": [ "./node_modules/@angular/*" ],
       "@time/common/*": [ "./time-common/*" ],
       "@time/app-config": [ "./app-config.ts" ],
-      "stripe": ["./node_modules/@types/stripe-node"]
+      "@time/environment": [ "./time-client/src/client/environments/environment" ],
+      "stripe": [ "./node_modules/@types/stripe-node" ]
     },
     "module": "commonjs",
     "target": "es5",
@@ -25,10 +26,10 @@
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "noUnusedLocals": false,
-    "allowJs": true,
+    "allowJs": false,
     "allowSyntheticDefaultImports": true
   },
-  "outDir": "tsc/",
+  "outDir": "dist/",
   "compileOnSave": false,
   "exclude": [
     "node_modules",

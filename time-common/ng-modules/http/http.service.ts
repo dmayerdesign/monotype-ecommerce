@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
 
-import { IUser } from '../../models'
+import { IUser } from '../../models/interfaces'
 import { SimpleError } from './http.models'
 
 @Injectable()

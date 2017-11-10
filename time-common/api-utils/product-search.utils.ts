@@ -1,5 +1,6 @@
 import { injectable } from 'inversify'
-import { MongoQueries, ProductSearch } from './'
+import { MongoQueries } from './types/mongo-operations'
+import { ProductSearch } from './types/product-search'
 
 @injectable()
 export class ProductSearchUtils {

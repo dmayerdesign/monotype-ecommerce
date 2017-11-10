@@ -1,4 +1,4 @@
-import { Currency } from '../../constants'
+import { CurrencyEnum } from '../../constants'
 import { IOrder, IOrderCustomer, IPrice } from '../interfaces'
 import { OrderStatus } from '../types/order-status'
 
@@ -7,7 +7,7 @@ export class OrderBuilder { // implements IOrder {
     // public products: string[]
     // public total: IPrice = {
     //     total: 0,
-    //     currency: Currency.USD,
+    //     currency: CurrencyEnum.USD,
     // }
     // public customer: IOrderCustomer
     // public status: OrderStatus

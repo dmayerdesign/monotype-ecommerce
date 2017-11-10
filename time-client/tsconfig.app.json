@@ -1,16 +1,21 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "module": "es2015",
     "baseUrl": ".",
     "paths": {
-      "@angular/*": ["../node_modules/@angular/*"],
-      "@time/common/*": [ "../time-common/*" ],
-      "@time/app-config": [ "../app-config.ts" ]
-    }
+      "@angular/*": [ "../node_modules/@angular/*" ],
+      "@time/common/*": [ "./src/client/app/common/*" ],
+      "@time/app-config": [ "../app-config.ts" ],
+      "@time/environment": [ "./src/client/environments/environment" ],
+      "stripe": [ "../node_modules/@types/stripe-node" ]
+    },
+    "module": "es2015"
   },
+  "files": [
+    "src/client/main.ts"
+  ],
   "exclude": [
-    "test.ts",
-    "**/*.spec.ts"
+    "node_modules",
+    "dist/"
   ]
 }

@@ -25,7 +25,7 @@ export class Order extends TimeModel {
     @prop() public paymentMethod: string
     @prop() public savePaymentInfo: boolean
     @prop() public shipmentId: string
-    @prop({ enum: OrderStatusEnum }) public status: OrderStatus
+    @prop({ enum: Object.keys(OrderStatusEnum) }) public status: OrderStatus
     @prop() public stripeCardId: string
     @prop() public stripeOrderId: string
     @prop() public stripeSource: string

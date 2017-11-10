@@ -1,11 +1,11 @@
 export type OrderStatus = 'Pending' | 'Paid' | 'Shipped' | 'Received' | 'Cancelled' | 'Refunded' | 'Returned'
 
-export enum OrderStatusEnum {
-    Pending = 'Pending',
-    Paid = 'Paid',
-    Shipped = 'Shipped',
-    Received = 'Received',
-    Cancelled = 'Cancelled',
-    Refunded = 'Refunded',
-    Returned = 'Returned',
+export class OrderStatusEnum {
+    public static readonly Pending = 'Pending'
+    public static readonly Paid = 'Paid'
+    public static readonly Shipped = 'Shipped'
+    public static readonly Received = 'Received'
+    public static readonly Cancelled = 'Cancelled'
+    public static readonly Refunded = 'Refunded'
+    public static readonly Returned = 'Returned'
 }

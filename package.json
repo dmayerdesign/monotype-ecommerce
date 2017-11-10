@@ -7,13 +7,13 @@
   },
   "scripts": {
     "dev": "concurrently \"npm run dev:app\" \"npm run dev:server\"",
-    "dev:app": "concurrently \"ng build --watch --app time-client-universal\" \"ng build --watch\" ",
+    "dev:app": "node ./time-client/build-scripts/client-pre-build && concurrently \"ng build --watch --app time-client-universal\" \"ng build --watch\" ",
     "dev:server": "npm run build:server && concurrently \"npm run watch:server\" \"cd time-client; nodemon dist/server.js\"",
     "build:prod": "rimraf ./time-client/dist; mkdir -p time-client/dist/public; npm run build:prod-app && npm run build:server",
     "build:staging": "rimraf ./time-client/dist; mkdir -p time-client/dist/public; npm run build:staging-app && npm run build:server",
-    "build:app": "ng build; ng build --app time-client-universal",
-    "build:prod-app": "npm i; ng build --prod --no-aot --environment=prod && ng build --app time-client-universal --prod --no-aot --environment=prod",
-    "build:staging-app": "npm i; ng build --prod --no-aot --environment=staging && ng build --app time-client-universal --prod --no-aot --environment=staging",
+    "build:app": "node ./time-client/build-scripts/client-pre-build && ng build; ng build --app time-client-universal",
+    "build:prod-app": "npm i; node ./time-client/build-scripts/client-pre-build && ng build --prod --no-aot --environment=prod && ng build --app time-client-universal --prod --no-aot --environment=prod",
+    "build:staging-app": "npm i; node ./time-client/build-scripts/client-pre-build && ng build --prod --no-aot --environment=staging && ng build --app time-client-universal --prod --no-aot --environment=staging",
     "build:server": "webpack --config time-client/config/webpack.server-config.js",
     "test:app": "ng test",
     "lint:app": "ng lint",
@@ -66,7 +66,7 @@
   },
   "devDependencies": {
     "@angular/animations": "4.4.3",
-    "@angular/cli": "^1.4.4",
+    "@angular/cli": "^1.5.0",
     "@angular/common": "4.4.3",
     "@angular/compiler": "4.4.3",
     "@angular/compiler-cli": "4.4.3",
@@ -139,7 +139,7 @@
     "ts-node": "3.2.0",
     "tslint": "5.3.2",
     "typegoose": "^3.5.1",
-    "typescript": "^2.5.3",
+    "typescript": "^2.3.4",
     "url-loader": "0.5.7",
     "webpack-dev-server": "2.5.1"
   }

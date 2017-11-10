@@ -15,7 +15,7 @@ import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/switchMap'
 
 import { HttpStatus } from '../../constants'
-import { IUser } from '../../models'
+import { IUser } from '../../models/interfaces'
 import { SimpleError } from './http.models'
 import { TimeHttpService } from './http.service'
 

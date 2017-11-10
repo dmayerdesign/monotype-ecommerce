@@ -1,99 +1,100 @@
 {
-  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
-  "project": {
-    "name": "time-client"
-  },
-  "apps": [
-    {
-      "name": "app",
-      "root": "time-client/src/client",
-      "outDir": "./time-client/dist/public",
-      "assets": [
-        "assets",
-        "favicon.ico"
-      ],
-      "index": "index.html",
-      "main": "main.ts",
-      "polyfills": "polyfills.ts",
-      "test": "test.ts",
-      "tsconfig": "../../tsconfig.app.json",
-      "testTsconfig": "../../tsconfig.spec.json",
-      "prefix": "time",
-      "styles": [
-        "styles.scss"
-      ],
-      "stylePreprocessorOptions": {
-        "includePaths": [
-          "styles"
-        ]
+    "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+    "project": {
+      "name": "time-client"
+    },
+    "apps": [
+      {
+        "name": "time-client",
+        "root": "time-client/src/client",
+        "outDir": "./time-client/dist/public",
+        "assets": [
+          "assets",
+          "favicon.ico"
+        ],
+        "index": "index.html",
+        "main": "main.ts",
+        "polyfills": "polyfills.ts",
+        "test": "test.ts",
+        "tsconfig": "../../tsconfig.app.json",
+        "testTsconfig": "../../tsconfig.spec.json",
+        "prefix": "time",
+        "styles": [
+          "styles.scss"
+        ],
+        "stylePreprocessorOptions": {
+          "includePaths": [
+            "styles"
+          ]
+        },
+        "scripts": [],
+        "environmentSource": "environments/environment.ts",
+        "environments": {
+          "dev": "environments/environment.ts",
+          "staging": "environments/environment.staging.ts",
+          "prod": "environments/environment.prod.ts"
+        }
       },
-      "scripts": [],
-      "environmentSource": "environments/environment.ts",
-      "environments": {
-        "dev": "environments/environment.ts",
-        "staging": "environments/environment.staging.ts",
-        "prod": "environments/environment.prod.ts"
+      {
+        "platform": "server",
+        "name": "time-client-universal",
+        "root": "time-client/src/client",
+        "outDir": "./time-client/dist/server-app",
+        "assets": [
+          "assets",
+          "favicon.ico"
+        ],
+        "index": "index.html",
+        "main": "main.server.ts",
+        "test": "test.ts",
+        "tsconfig": "../../tsconfig.server.json",
+        "testTsconfig": "../../tsconfig.spec.json",
+        "prefix": "time",
+        "styles": [
+          "styles.scss"
+        ],
+        "stylePreprocessorOptions": {
+          "includePaths": [
+            "styles"
+          ]
+        },
+        "scripts": [],
+        "environmentSource": "environments/environment.ts",
+        "environments": {
+          "dev": "environments/environment.ts",
+          "staging": "environments/environment.staging.ts",
+          "prod": "environments/environment.prod.ts"
+        }
+      }
+    ],
+    "e2e": {
+      "protractor": {
+        "config": "./protractor.conf.js"
       }
     },
-    {
-      "platform": "server",
-      "name": "time-client-universal",
-      "root": "time-client/src/client",
-      "outDir": "./time-client/dist/server-app",
-      "assets": [
-        "assets",
-        "favicon.ico"
-      ],
-      "index": "index.html",
-      "main": "main.server.ts",
-      "test": "test.ts",
-      "tsconfig": "../../tsconfig.server.json",
-      "testTsconfig": "../../tsconfig.spec.json",
-      "prefix": "time",
-      "styles": [
-        "styles.scss"
-      ],
-      "stylePreprocessorOptions": {
-        "includePaths": [
-          "styles"
-        ]
+    "lint": [
+      {
+        "project": "time-client/src/client/tsconfig.app.json",
+        "exclude": "**/node_modules/**"
       },
-      "scripts": [],
-      "environmentSource": "environments/environment.ts",
-      "environments": {
-        "dev": "environments/environment.ts",
-        "staging": "environments/environment.staging.ts",
-        "prod": "environments/environment.prod.ts"
+      {
+        "project": "time-client/src/client/tsconfig.spec.json",
+        "exclude": "**/node_modules/**"
+      },
+      {
+        "project": "time-client/e2e/tsconfig.e2e.json",
+        "exclude": "**/node_modules/**"
       }
-    }
-  ],
-  "e2e": {
-    "protractor": {
-      "config": "./protractor.conf.js"
-    }
-  },
-  "lint": [
-    {
-      "project": "src/client/tsconfig.app.json",
-      "exclude": "**/node_modules/**"
+    ],
+    "test": {
+      "karma": {
+        "config": "./karma.conf.js"
+      }
     },
-    {
-      "project": "src/client/tsconfig.spec.json",
-      "exclude": "**/node_modules/**"
-    },
-    {
-      "project": "e2e/tsconfig.e2e.json",
-      "exclude": "**/node_modules/**"
-    }
-  ],
-  "test": {
-    "karma": {
-      "config": "./karma.conf.js"
-    }
-  },
-  "defaults": {
-    "styleExt": "scss",
-    "component": {
+    "defaults": {
+      "styleExt": "scss",
+      "component": {
+      }
     }
   }
-}
+  

@@ -1,10 +1,10 @@
 import { inject, injectable } from 'inversify'
 import * as Stripe from 'stripe'
-import { OrderModel, OrganizationModel, ProductModel, UserModel } from '../../../../time-common/models/api-models'
 
 import { appConfig } from '@time/app-config'
 import { EmailService } from '@time/common/api-services'
 import { Types } from '@time/common/constants/inversify'
+import { OrderModel, OrganizationModel, ProductModel, UserModel } from '@time/common/models/api-models'
 import { Order, Organization, Product, User } from '@time/common/models/api-models'
 import { StripeOrder } from '@time/common/models/helpers'
 import { IApiResponse, IDiscount } from '@time/common/models/interfaces'

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core'
 import { Title } from '@angular/platform-browser'
 import { Subject } from 'rxjs/Subject'
 
-import { IModalData } from '@time/common/models'
+import { IModalData } from '@time/common/models/interfaces'
 import { SimpleError, TimeHttpService } from '@time/common/ng-modules/http'
 import { FlashMessageType, IFlash } from '../models/ui.models'
 
