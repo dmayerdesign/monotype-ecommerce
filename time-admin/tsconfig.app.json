@@ -1,0 +1,21 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@angular/*": [ "../node_modules/@angular/*" ],
+      "@time/common/*": [ "./src/app/common/*" ],
+      "@time/app-config": [ "../app-config.ts" ],
+      "@time/environment": [ "./src/environments/environment" ],
+      "stripe": [ "../node_modules/@types/stripe-node" ]
+    },
+    "module": "es2015"
+  },
+  "files": [
+    "src/main.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist/"
+  ]
+}
