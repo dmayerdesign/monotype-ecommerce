@@ -5,7 +5,7 @@
       "@angular/*": [ "./node_modules/@angular/*" ],
       "@time/common/*": [ "./time-common/*" ],
       "@time/app-config": [ "./app-config.ts" ],
-      "@time/environment": [ "./time-client/src/client/environments/environment" ],
+      "@time/environment": [ "./time-client/src/environments/environment" ],
       "stripe": [ "./node_modules/@types/stripe-node" ]
     },
     "module": "commonjs",

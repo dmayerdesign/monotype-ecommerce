@@ -1,19 +1,17 @@
 const webpack = require('webpack');
 const path = require('path');
 const fs = require('fs');
-const nodeModules = {};
 require('dotenv').config();
 const version = require('../../package.json').version;
 
 module.exports = {
     name: 'server',
     target: 'node',
-    entry: path.resolve(__dirname, '../src/server/server.ts'),
+    entry: path.resolve(__dirname, '../server.ts'),
     output: {
-        path: path.resolve(__dirname, '../dist/'),
+        path: path.resolve(__dirname, '../../dist/'),
         filename: 'server.js',
     },
-    externals: nodeModules,
     resolve: {
       extensions: ['.ts', '.js', '.json', '.pug', '.html'],
       alias: {

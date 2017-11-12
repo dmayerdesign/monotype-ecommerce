@@ -1,11 +1,10 @@
 import * as findOrCreate from 'mongoose-findorcreate'
 import { plugin, prop, Typegoose } from 'typegoose'
 
-@plugin(findOrCreate)
-export class Taxonomy extends Typegoose {
-    public static readonly findOrCreate: (query: object) => Promise<{ doc: Taxonomy; created: boolean }>
-    public _id: string
+import { TimeModel } from './time-model'
 
+@plugin(findOrCreate)
+export class Taxonomy extends TimeModel {
     @prop() public name: string
     @prop() public pluralName: string
     @prop() public slug: string

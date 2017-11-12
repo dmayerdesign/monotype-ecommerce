@@ -42,5 +42,7 @@ Thumbs.db
 Icon
 
 # build files
-time-client/src/client/app/common
-time-client/src/client/app/app-config.ts
+time-client/src/common
+time-client/src/app-config.ts
+time-admin/src/common
+time-admin/src/app-config.ts

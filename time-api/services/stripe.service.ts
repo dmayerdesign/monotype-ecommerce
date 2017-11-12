@@ -2,13 +2,15 @@ import { inject, injectable } from 'inversify'
 import * as Stripe from 'stripe'
 
 import { appConfig } from '@time/app-config'
-import { EmailService } from '@time/common/api-services'
 import { Types } from '@time/common/constants/inversify'
-import { OrderModel, OrganizationModel, ProductModel, UserModel } from '@time/common/models/api-models'
-import { Order, Organization, Product, User } from '@time/common/models/api-models'
+import { Order, OrderModel } from '@time/common/models/api-models/order'
+import { Organization, OrganizationModel } from '@time/common/models/api-models/organization'
+import { Product, ProductModel } from '@time/common/models/api-models/product'
+import { User, UserModel } from '@time/common/models/api-models/user'
 import { StripeOrder } from '@time/common/models/helpers'
 import { IApiResponse, IDiscount } from '@time/common/models/interfaces'
 import { DiscountService } from './discount.service'
+import { EmailService } from './email.service'
 import { ProductService } from './product.service'
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)

@@ -4,15 +4,15 @@
     "baseUrl": ".",
     "paths": {
       "@angular/*": [ "../node_modules/@angular/*" ],
-      "@time/common/*": [ "./src/client/app/common/*" ],
+      "@time/common/*": [ "./src/common/*" ],
       "@time/app-config": [ "../app-config.ts" ],
-      "@time/environment": [ "./src/client/environments/environment" ],
+      "@time/environment": [ "./src/environments/environment" ],
       "stripe": [ "../node_modules/@types/stripe-node" ]
     },
     "module": "es2015"
   },
   "files": [
-    "src/client/main.ts"
+    "src/main.ts"
   ],
   "exclude": [
     "node_modules",

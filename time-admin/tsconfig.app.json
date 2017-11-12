@@ -4,7 +4,7 @@
     "baseUrl": ".",
     "paths": {
       "@angular/*": [ "../node_modules/@angular/*" ],
-      "@time/common/*": [ "./src/app/common/*" ],
+      "@time/common/*": [ "./src/common/*" ],
       "@time/app-config": [ "../app-config.ts" ],
       "@time/environment": [ "./src/environments/environment" ],
       "stripe": [ "../node_modules/@types/stripe-node" ]

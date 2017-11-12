@@ -3,18 +3,13 @@ import { Error } from 'mongoose'
 
 import { DbClient } from '@time/common/api-utils'
 import { CurrencyEnum } from '@time/common/constants'
-import {
-    Attribute,
-    AttributeModel,
-    AttributeValue,
-    AttributeValueModel,
-    Product,
-    ProductModel,
-    Taxonomy,
-    TaxonomyModel,
-    TaxonomyTerm,
-    TaxonomyTermModel
-} from '@time/common/models/api-models'
+
+import { Attribute, AttributeModel } from '@time/common/models/api-models/attribute'
+import { AttributeValue, AttributeValueModel } from '@time/common/models/api-models/attribute-value'
+import { Product, ProductModel } from '@time/common/models/api-models/product'
+import { Taxonomy, TaxonomyModel } from '@time/common/models/api-models/taxonomy'
+import { TaxonomyTerm, TaxonomyTermModel } from '@time/common/models/api-models/taxonomy-term'
+
 import * as productsJSON from '@time/common/work-files/migration/hyzershop-products'
 
 @injectable()

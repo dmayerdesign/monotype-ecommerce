@@ -6,8 +6,8 @@
     "apps": [
       {
         "name": "time-client",
-        "root": "time-client/src/client",
-        "outDir": "./time-client/dist/public",
+        "root": "time-client/src",
+        "outDir": "./dist/public",
         "assets": [
           "assets",
           "favicon.ico"
@@ -38,8 +38,8 @@
       {
         "name": "time-client-universal",
         "platform": "server",
-        "root": "time-client/src/client",
-        "outDir": "./time-client/dist/server-app",
+        "root": "time-client/src",
+        "outDir": "./dist/server-app",
         "assets": [
           "assets",
           "favicon.ico"
@@ -68,8 +68,8 @@
       },
       {
         "name": "time-admin",
-        "root": "time-admin/src/client",
-        "outDir": "./time-admin/dist/public",
+        "root": "time-admin/src",
+        "outDir": "./time-admin/dist",
         "assets": [
           "assets",
           "favicon.ico"
@@ -78,8 +78,8 @@
         "main": "main.ts",
         "polyfills": "polyfills.ts",
         "test": "test.ts",
-        "tsconfig": "../../tsconfig.app.json",
-        "testTsconfig": "../../tsconfig.spec.json",
+        "tsconfig": "../tsconfig.app.json",
+        "testTsconfig": "../tsconfig.spec.json",
         "prefix": "time",
         "styles": [
           "styles.scss"
@@ -100,16 +100,16 @@
     ],
     "e2e": {
       "protractor": {
-        "config": "./protractor.conf.js"
+        "config": "./time-client/protractor.conf.js"
       }
     },
     "lint": [
       {
-        "project": "time-client/src/client/tsconfig.app.json",
+        "project": "time-client/src/tsconfig.app.json",
         "exclude": "**/node_modules/**"
       },
       {
-        "project": "time-client/src/client/tsconfig.spec.json",
+        "project": "time-client/src/tsconfig.spec.json",
         "exclude": "**/node_modules/**"
       },
       {
@@ -119,7 +119,7 @@
     ],
     "test": {
       "karma": {
-        "config": "./karma.conf.js"
+        "config": "./time-client/karma.conf.js"
       }
     },
     "defaults": {

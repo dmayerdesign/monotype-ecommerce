@@ -3,7 +3,7 @@ import { Error } from 'mongoose'
 
 import { DbClient } from '@time/common/api-utils'
 import { Types } from '@time/common/constants/inversify'
-import { Discount } from '@time/common/models/api-models'
+import { Discount } from '@time/common/models/api-models/discount'
 import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
 import { IFetchService } from '@time/common/models/interfaces'
 import { IDiscount, IPrice } from '@time/common/models/interfaces'

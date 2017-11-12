@@ -1,2 +1,1 @@
-export * from './email.factory';
-export * from './email-verification';
+export * from './email.factory'

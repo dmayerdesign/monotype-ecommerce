@@ -1,4 +1,3 @@
-import { Document } from 'mongoose'
 import * as mongooseDelete from 'mongoose-delete'
 import { arrayProp, plugin, pre, prop, Ref, Typegoose } from 'typegoose'
 
@@ -8,6 +7,7 @@ import { AttributeValue } from './attribute-value'
 import { Dimensions } from './dimensions'
 import { Price } from './price'
 import { TaxonomyTerm } from './taxonomy-term'
+import { TimeModel } from './time-model'
 import { Units } from './units'
 
 @plugin(mongooseDelete)
@@ -32,7 +32,7 @@ import { Units } from './units'
     }
     next()
 })
-export class Product extends Typegoose {
+export class Product extends TimeModel {
 	/* Aesthetic */
     @prop() public name: string
     @prop() public slug: string
