@@ -1,11 +1,12 @@
 import { injectable } from 'inversify'
+
+import { IGetProductsFilter } from '@time/common/models/api-requests/get-products.request'
 import { MongoQueries } from './types/mongo-operations'
-import { ProductSearch } from './types/product-search'
 
 @injectable()
 export class ProductSearchUtils {
 
-    public propertyFilter(filter: ProductSearch.Filter, query: MongoQueries.And): MongoQueries.And {
+    public propertyFilter(filter: IGetProductsFilter, query: MongoQueries.And): MongoQueries.And {
         const newQuery = { ...query }
 
         if (filter.values && filter.values.length) {
@@ -29,7 +30,7 @@ export class ProductSearchUtils {
         return newQuery
     }
 
-    public attributeKeyValueFilter(filter: ProductSearch.Filter, query: MongoQueries.And): MongoQueries.And {
+    public attributeKeyValueFilter(filter: IGetProductsFilter, query: MongoQueries.And): MongoQueries.And {
         const newQuery = { ...query }
         let attributeVOs = []
 
@@ -96,7 +97,7 @@ export class ProductSearchUtils {
         return newQuery
     }
 
-    public attributeValueFilter(filter: ProductSearch.Filter, query: MongoQueries.And): MongoQueries.And {
+    public attributeValueFilter(filter: IGetProductsFilter, query: MongoQueries.And): MongoQueries.And {
         const newQuery = { ...query }
         let attributeValueIds = []
 
@@ -124,7 +125,7 @@ export class ProductSearchUtils {
     }
 
     // Reminder: parents and variations must share the same taxonomy terms
-    public taxonomyFilter(filter: ProductSearch.Filter, query: MongoQueries.And): MongoQueries.And {
+    public taxonomyFilter(filter: IGetProductsFilter, query: MongoQueries.And): MongoQueries.And {
         const newQuery = { ...query }
 
         if (filter.values && filter.values.length) {

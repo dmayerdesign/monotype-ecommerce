@@ -38,8 +38,3 @@ export interface IUser extends Document {
 
   customFields: {}
 }
-
-export interface ILogin {
-  email: string
-  password: string
-}

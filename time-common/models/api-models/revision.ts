@@ -1,10 +1,11 @@
-import { model, Schema } from 'mongoose'
+import { prop, Typegoose } from 'typegoose'
 
-export const revisionSchema = new Schema({
-    id: Schema.Types.ObjectId,
-    field: String,
-    value: {},
-    meta: {},
-}, { timestamps: true })
+export class Revision extends Typegoose {
+    @prop() public id: string
+    @prop() public field: string
+    @prop() public value: any
+    @prop() public meta: any
+}
 
-export const Revision = model<any>('Revision', revisionSchema)
+export const RevisionModel = new Revision().getModelForClass(Revision, { schemaOptions: { timestamps: true } })
+

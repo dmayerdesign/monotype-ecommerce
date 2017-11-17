@@ -19,12 +19,12 @@ import { passportConfig } from './auth/passport'
 import { container } from './config/inversify.config'
 import { mongoConnection } from './db/mongo.connection'
 import { isProduction } from './utils/env'
-import { initStartupTasks } from './utils/startup'
+import { onStart } from './utils/startup'
 
 /** ANGULAR UNIVERSAL - imports */
 import * as ngUniversal from '@nguniversal/express-engine'
 import 'zone.js/dist/zone-node'
-import { AppServerModule } from '../client/app/app.server.module'
+import { AppServerModule } from '../time-client/src/app/app.server.module'
 
 const MongoStore = require('connect-mongo')(session)
 
@@ -49,11 +49,10 @@ function serverConfig(app) {
     app.disable('x-powered-by') // removes "x-powered-by: express" from the header to avoid specifically-targeted attacks
     app.use(validator())
     app.use(passport.initialize())
-
-    passportConfig()
-    initStartupTasks()
-
     app.get('/ping', (req, res) => res.sendStatus(204))
+    passportConfig()
+
+    onStart()
 
     /** ANGULAR UNIVERSAL - bootstrap */
     // app.engine('html', ngUniversal.ngExpressEngine({

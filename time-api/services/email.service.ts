@@ -1,8 +1,21 @@
 import { inject, injectable } from 'inversify'
 const mailgun = require('mailgun-js')({ apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN })
 
+import { AppConfig } from '@time/app-config'
 import { Types } from '@time/common/constants/inversify'
+import { IEmailOptions } from '@time/common/models/interfaces/email'
 import { OrderService } from './order.service'
+
+const receipt = require('./templates/receipt')
+const shippingNotification = require('./templates/shippingNotification')
+const emailVerification = require('./templates/emailVerification')
+
+const styleOptions = {
+    mastheadBgColor: "#00b0ff",
+    accentColor: "#ff3c7c",
+    fontFamily: "Montserrat",
+    innerBgColor: "#fdfdfd",
+}
 
 /**
  * Send emails with Mailgun
@@ -11,6 +24,13 @@ export class EmailService {
     constructor(
         @inject(Types.OrderService) private orderService: OrderService
     ) {}
+
+    private setStyleOptions(options) {
+        Object.keys(styleOptions).forEach(key => {
+            options[key] = styleOptions[key]
+        })
+        return options
+    }
 
     /**
      * Send an email
@@ -49,10 +69,9 @@ export class EmailService {
     public sendReceipt(options) {
         options.subject = options.subject || `Your receipt | ${options.store.name}`
         options.preheader = options.preheader || `View your receipt from your recent order`
+        options = this.setStyleOptions(options)
 
-        console.log(options)
-
-        options.html = this.emailFactory.createReceipt(options)
+        options.html = receipt(options)
         return this.sendEmail(options)
     }
 
@@ -66,8 +85,9 @@ export class EmailService {
         options.subject = options.subject || `Your ${options.store.name} order has been shipped`
         options.preheader = options.preheader || `It's on the way! View the shipping details from your recent order`
         options.estArrivalDate = this.orderService.calculateEstArrival(options.order.estDeliveryDays)
+        options = this.setStyleOptions(options)
 
-        options.html = this.emailFactory.createShippingNotification(options)
+        options.html = shippingNotification(options)
         return this.sendEmail(options)
     }
 
@@ -81,8 +101,9 @@ export class EmailService {
     public sendEmailVerification(options) {
         options.subject = options.subject || `Verify your new ${options.store.name} account`
         options.preheader = options.preheader || `One click, and your account will be verified`
+        options = this.setStyleOptions(options)
 
-        options.html = this.emailFactory.createEmailVerification(options)
+        options.html = emailVerification(options)
         return this.sendEmail(options)
     }
 
@@ -93,8 +114,13 @@ export class EmailService {
      */
     public reportError(error: Error) {
         const options: IEmailOptions = {
-
+            toEmail: AppConfig.developer_email,
+            fromName: AppConfig.brand_name,
+            fromEmail: AppConfig.organization_email,
+            subject: `New error from ${AppConfig.brand_name}: ${error.message}`,
+            text: error.message + '\n\n' + JSON.stringify(error),
         }
+        return this.sendEmail(options)
     }
 
 }

@@ -2,13 +2,14 @@ import { Response } from 'express'
 import { inject, injectable } from 'inversify'
 import { Error } from 'mongoose'
 
-import { DbClient, MongoQueries, ProductSearch, ProductSearchUtils } from '@time/common/api-utils'
 import { Crud, HttpStatus } from '@time/common/constants'
 import { Types } from '@time/common/constants/inversify'
+import { Price } from '@time/common/models/api-models/price'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
+import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
 import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
-import { IFetchService } from '@time/common/models/interfaces'
-import { IPrice } from '@time/common/models/interfaces'
+import { IDbQueryOptions, IFetchService } from '@time/common/models/interfaces'
+import { DbClient, MongoQueries, ProductSearchUtils } from '../utils'
 
 /**
  * Service for fetching documents from the `products` collection
@@ -30,15 +31,54 @@ export class ProductService implements IFetchService<Product> {
     /**
      * Get a single product
      *
+     * @param {string} slug The `slug` of the product to be retrieved
+     * @return {Promise<Product>}
+     */
+    public getOne(slug: string): Promise<ApiResponse<Product>> {
+        return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
+            try {
+                const product = await ProductModel.findOne({ slug })
+                resolve(new ApiResponse(product))
+            }
+            catch (error) {
+                reject(new ApiErrorResponse(error))
+            }
+        })
+    }
+
+    /**
+     * Get a single product by ID
+     *
      * @param {string} id The `_id` of the product to be retrieved
      * @return {Promise<Product>}
      */
-    public getOne(id: string): Promise<ApiResponse<Product>> {
-        return new Promise<ApiResponse<Product>>((resolve, reject) => {
-            ProductModel.findById(id, (error: Error, product): void => {
-                if (error) reject(new ApiErrorResponse(error))
-                else resolve(new ApiResponse(product))
-            })
+    public getById(id: string) {
+        return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
+            try {
+                const product = await ProductModel.findById(id)
+                resolve(new ApiResponse(product))
+            }
+            catch (error) {
+                reject(new ApiErrorResponse(error))
+            }
+        })
+    }
+
+    /**
+     * Get a list of products with an array of `_id`s
+     *
+     * @param {string} id The `_id` of the product to be retrieved
+     * @return {Promise<Product>}
+     */
+    public getSome(ids: string[]) {
+        return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
+            try {
+                const products = await ProductModel.find({ _id: { $in: ids } })
+                resolve(new ApiResponse(products))
+            }
+            catch (error) {
+                reject(new ApiErrorResponse(error))
+            }
         })
     }
 
@@ -46,14 +86,20 @@ export class ProductService implements IFetchService<Product> {
      * Get an unfiltered list of parent & standalone products,
      * or use a search/filter query
      *
-     * @param {SearchBody} body The search options
+     * @param {GetProductsRequest} body The search options
      * @param {express.Response} [res] The express Response; pass this in if you want the documents fetched as a stream and piped into the response
      */
-    public search(body: ProductSearch.Body, res?: Response): Promise<ApiResponse<Product[]>>|void {
-        const searchRegExp = new RegExp(body.search, 'gi')
-        let searchNameAndDesc: any = []
+    public get(body: GetProductsRequest, res?: Response): Promise<ApiResponse<Product[]>>|void {
+        const searchRegExp = body.search ? new RegExp(body.search, 'gi') : undefined
+        const limit = body.page ? Crud.Pagination.productsPerPage : 0
+        const page = body.page
+        const skip = (page > 0) ? ((page - 1) * limit) : 0
+        let searchNameAndDesc: {
+            [key: string]: { $regex: RegExp }
+        }[] = []
         let allQuery: any
         let searchQuery: MongoQueries.And
+        let query: any
 
         // If it's a search or filter, create a basic `$and` query for parent and standalone products
 
@@ -73,7 +119,7 @@ export class ProductService implements IFetchService<Product> {
 
         // If there's a search, create a regex for name and description
 
-        if (body.search) {
+        if (searchRegExp) {
             searchNameAndDesc = [
                 { name: { $regex: searchRegExp } },
                 { description: { $regex: searchRegExp } },
@@ -117,72 +163,76 @@ export class ProductService implements IFetchService<Product> {
             })
         }
 
-        return this.get(allQuery || searchQuery, { page: body.page, limit: body.limit }, res)
-    }
-
-    /**
-     * Retrieve a list of products
-     *
-     * @param {object} query The database query
-     * @param {object} [queryOptions] An object with `page` and `limit` properties
-     * @param {express.Response} [res] The express Response; pass this in if you want the documents fetched as a stream and piped into the response
-     */
-    public get(query: object, queryOptions = { page: 1, limit: Crud.Pagination.productsPerPage }, res?: Response): Promise<ApiResponse<Product[]>>|void {
-        const limit = queryOptions.limit
-        const page = queryOptions.page
-        const skip = (page - 1) * limit
+        query = allQuery || searchQuery
 
         if (res) {
             this.dbClient.getFilteredCollection(ProductModel, query, {limit, skip}, res)
                 .catch(err => new ApiErrorResponse(err))
         }
         else {
-            return new Promise<ApiResponse<Product[]>>((resolve, reject) => {
+            return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
                 // Retrieve the products normally, loading them into memory
-                this.dbClient.getFilteredCollection(ProductModel, query, {limit, skip})
-                    .then(products => resolve(new ApiResponse(products)))
-                    .catch(err => reject(new ApiErrorResponse(err)))
+                try {
+                    const products = await this.dbClient.getFilteredCollection(ProductModel, query, {limit, skip})
+                    resolve(new ApiResponse(products))
+                }
+                catch (error) {
+                    reject(new ApiErrorResponse(error))
+                }
             })
         }
     }
 
     public createOne(product: Product): Promise<ApiResponse<Product>> {
-        return new Promise<ApiResponse<Product>>((resolve, reject) => {
-            new ProductModel(product).save((error: Error, newProduct): void => {
-                if (error) reject(new ApiErrorResponse(error))
-                else resolve(new ApiResponse(newProduct))
-            })
+        return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
+            try {
+                const newProduct = await new ProductModel(product).save()
+                resolve(new ApiResponse(newProduct))
+            }
+            catch (error) {
+                reject(new ApiErrorResponse(error))
+            }
         })
     }
 
     public create(products: Product[]): Promise<ApiResponse<Product[]>> {
-        return new Promise<ApiResponse<Product[]>>((resolve, reject) => {
-            ProductModel.create(products, (error: Error, newProducts): void => {
-                if (error) reject(new ApiErrorResponse(error))
-                else resolve(new ApiResponse(newProducts))
-            })
+        return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
+            try {
+                const newProducts = await ProductModel.create(products)
+                resolve(new ApiResponse(newProducts))
+            }
+            catch (error) {
+                reject(new ApiErrorResponse(error))
+            }
         })
     }
 
     public updateProductWithoutValidation(id: string, update: any): Promise<ApiResponse<Product>> {
         const mongoUpdate = this.dbClient.mongoSet(update)
-        return new Promise<ApiResponse<Product>>((resolve, reject) => {
-            ProductModel.findByIdAndUpdate(id, mongoUpdate, { new: true }, (error: Error, updatedProduct) => {
-                if (error) reject(new ApiErrorResponse(error))
-                else resolve(new ApiResponse(updatedProduct))
-            })
+        return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
+            try {
+                const updatedProduct = await ProductModel.findByIdAndUpdate(id, mongoUpdate, { new: true })
+                resolve(new ApiResponse(updatedProduct))
+            }
+            catch (error) {
+                reject(new ApiErrorResponse(error))
+            }
         })
     }
 
     public updateProduct(id: string, update: any): Promise<ApiResponse<Product>> {
-        return new Promise<ApiResponse<Product>>((resolve, reject) => {
-            this.dbClient.updateById(ProductModel, id, update)
-                .then(updatedProduct => resolve(new ApiResponse(updatedProduct)))
-                .catch(validationError => reject(new ApiErrorResponse(validationError)))
+        return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
+            try {
+                const updatedProduct = await this.dbClient.updateById(ProductModel, id, update)
+                resolve(new ApiResponse(updatedProduct))
+            }
+            catch (validationError) {
+                reject(new ApiErrorResponse(validationError))
+            }
         })
     }
 
-    public getPrice(product: Product): IPrice {
+    public getPrice(product: Product): Price {
         if (product.isOnSale) {
             return product.salePrice
         }
@@ -192,10 +242,14 @@ export class ProductService implements IFetchService<Product> {
     }
 
     public deleteOne(id: string): Promise<ApiResponse<any>> {
-        return new Promise<ApiResponse<any>>((resolve, reject) => {
-            ProductModel.findByIdAndRemove(id)
-                .then(updatedProduct => resolve(new ApiResponse({}, HttpStatus.SUCCESS_noContent)))
-                .catch(error => reject(new ApiErrorResponse(error)))
+        return new Promise<ApiResponse<any>>(async (resolve, reject) => {
+            try {
+                await ProductModel.findByIdAndRemove(id)
+                resolve(new ApiResponse({}, HttpStatus.SUCCESS_noContent))
+            }
+            catch (error) {
+                reject(new ApiErrorResponse(error))
+            }
         })
     }
 
@@ -204,16 +258,19 @@ export class ProductService implements IFetchService<Product> {
     }
 
     public createTest(): Promise<ApiResponse<Product>> {
-        return new Promise<ApiResponse<Product>>((resolve, reject) => {
+        return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
             const theProduct = new ProductModel({
                 name: "Test product",
-                slub: "test-product",
+                slug: "test-product",
                 SKU: "TEST_1",
             })
-            theProduct.save((error: Error, product) => {
-                if (error) reject(new ApiErrorResponse(error))
-                else resolve(new ApiResponse(product))
-            })
+            try {
+                const product = await theProduct.save()
+                resolve(new ApiResponse(product))
+            }
+            catch (error) {
+                reject(new ApiErrorResponse(error))
+            }
         })
     }
 }

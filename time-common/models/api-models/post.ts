@@ -1,49 +1,47 @@
-import { model, Model, Schema } from 'mongoose'
+import { arrayProp, prop, Ref, Typegoose } from 'typegoose'
 
-export const linkEmbedSchema = new Schema({
-    url: String,
-    type: String,
-    thumbnail_url: String,
-    title: String,
-    description: String,
-    provider_url: String,
-})
+import { User } from './user'
 
-export const postSchema = new Schema({
-    author: {
-        userId: String,
-        firstName: String,
-        lastName: String,
-    },
-    type: {type: String, default: 'normal'},
-    content: String,
-    eventDate: Date,
-    eventLocation: String,
-    tags: [String],
-    usersMentioned: [String],
-    images: [String],
-	// linkEmbed: linkEmbedSchema,
-    comments: [
-        {
-            author: {
-                userId: String,
-                firstName: String,
-                lastName: String,
-            },
-            content: String,
-            usersMentioned: [String],
-            images: [String],
-            linkEmbed: linkEmbedSchema,
-            reactions: {
-                up: [String],
-                down: [String],
-            },
-        },
-    ],
-    reactions: {
-        up: [String],
-        down: [String],
-    }
-}, { timestamps: true })
+export class LinkEmbed {
+    @prop() public url: string
+    @prop() public type: string
+    @prop() public thumbnail_url: string
+    @prop() public title: string
+    @prop() public description: string
+    @prop() public provider_url: string
+}
 
-export const Post = model<any>('Post', postSchema)
+export class Author {
+    @prop() public userId: string
+    @prop() public firstName: string
+    @prop() public lastName: string
+}
+
+export class Reactions {
+    @arrayProp({ itemsRef: User }) public up: Ref<User>[]
+    @arrayProp({ itemsRef: User }) public down: Ref<User>[]
+}
+
+export class Comment {
+    @prop() public author: Author
+    @prop() public content: string
+    @arrayProp({ items: String }) public images: string[]
+    @prop() public linkEmbed: LinkEmbed
+    @prop() public reactions: Reactions
+}
+
+export class Post extends Typegoose {
+    @prop() public author: Author
+    @prop({ default: 'normal' }) public type: string
+    @prop() public content: Author
+    @prop() public eventDate: Date
+    @prop() public eventLocation: string
+    @arrayProp({ items: String }) public tags: string[]
+    @arrayProp({ items: String }) public images: string[]
+    @prop() public linkEmbed: LinkEmbed
+    @arrayProp({ items: Comment }) public comments: Comment[]
+    @prop() public reactions: Reactions
+}
+
+export const PostModel = new Post().getModelForClass(Post, { schemaOptions: { timestamps: true } })
+

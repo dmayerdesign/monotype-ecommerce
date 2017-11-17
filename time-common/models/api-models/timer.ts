@@ -8,7 +8,7 @@ export class Timer extends TimeModel {
     @prop() public method: string
     @prop() public startedAt: number
     @prop() public duration: number
-    @prop() public data: string
+    @prop() public data: any
 }
 
 export const TimerModel = new Timer().getModelForClass(Timer, { schemaOptions: { timestamps: true } })

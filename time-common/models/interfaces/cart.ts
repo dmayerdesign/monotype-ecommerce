@@ -1,12 +1,12 @@
 import { Document } from 'mongoose'
 
+import { Product } from '../api-models/product'
 import { ICartProduct } from './cart-product'
 import { IDiscount } from './discount'
-import { IProduct } from './product'
 
 export interface ICart {
     count: number
-    items: IProduct[]
+    items: Product[]
     displayItems?: ICartProduct[],
     subTotal: number
     total: number

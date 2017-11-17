@@ -1,8 +1,8 @@
 import Easypost from 'node-easypost'
 import { InstanceType } from 'typegoose'
 
-import { Address } from '../models/api-models/address'
-import { FindOrderError, Order, OrderModel, UpdateOrderError } from '../models/api-models/order'
+import { Address } from '@time/common/models/api-models/address'
+import { FindOrderError, Order, OrderModel, UpdateOrderError } from '@time/common/models/api-models/order'
 
 const easypost = new Easypost(process.env.EASYPOST_API_KEY)
 
@@ -81,7 +81,7 @@ export class EasypostService {
             order.markModified('shippingRates')
 
             try {
-                orderWithShipmentData = await order.save<InstanceType<Order>>()
+                orderWithShipmentData = await order.save()
             }
             catch (error) {
                 reject(error)
@@ -162,7 +162,7 @@ export class EasypostService {
             order.estDeliveryDays = estDeliveryDays
 
             try {
-                orderWithShipmentData = await order.save<Order>()
+                orderWithShipmentData = await order.save()
             }
             catch (error) {
                 reject(error)

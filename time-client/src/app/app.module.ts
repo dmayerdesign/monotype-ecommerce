@@ -16,7 +16,6 @@ import { SiteModule } from './site/site.module'
         // ANGULAR UNIVERSAL
         // BrowserModule.withServerTransition({appId: 'time-client-universal'}),
         RouterModule.forRoot([]),
-        TimeUiModule,
         SiteModule,
         ShopModule,
     ],

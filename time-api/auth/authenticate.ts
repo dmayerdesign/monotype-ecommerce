@@ -5,7 +5,7 @@ import * as jwt from 'jsonwebtoken'
 import { AuthConfig } from '@time/common/config/auth.config'
 import { HttpStatus } from '@time/common/constants'
 import { Cookies, Copy } from '@time/common/constants'
-import { IUser } from '@time/common/models'
+import { User } from '@time/common/models/api-models/user'
 
 const jwtSecret = process.env.JWT_SECRET
 
@@ -17,7 +17,7 @@ export class Authenticate {
      */
     public static isAuthenticated(req: Request, res: Response, next: NextFunction): void {
         const token = req.cookies[Cookies.jwt]
-        let payload: IUser = null
+        let payload: User = null
 
         if (!token) {
             res.status(HttpStatus.CLIENT_ERROR_unauthorized).json({})
@@ -57,7 +57,7 @@ export class Authenticate {
         return (req: Request, res: Response, next: NextFunction): void => {
             this.isAuthenticated(req, res, () => {
 
-            // if ((<IUser>req.user).role === role) {
+            // if ((<User>req.user).role === role) {
                 return next()
             // }
             // else {

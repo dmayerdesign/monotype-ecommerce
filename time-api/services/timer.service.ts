@@ -1,50 +1,65 @@
-import { injectable } from "inversify"
+import { inject, injectable } from 'inversify'
+import * as rp from 'request-promise'
+import { InstanceType } from 'typegoose'
+
+import { Types } from '@time/common/constants/inversify'
+import { Timer, TimerModel } from '@time/common/models/api-models/timer'
 
 @injectable()
 export class TimerService {
-	/**
-	 * Restore timers, then remove them
-	 */
-    public async restart() {
+    constructor(@inject(Types.ErrorService) private errorService) {
+        this.onInit()
+    }
+
+    public onInit() {
+        this.restartAll()
+    }
+
+    public async restartAll() {
+        let timers: InstanceType<Timer>[]
+        const requests = []
+        let requestPromises: Promise<any>[] = []
+
+        // Find all existing timers.
+
         try {
-            const timers = await TimerModel.find({})
+            timers = await TimerModel.find({})
         }
+        catch (error) {
+            this.errorService.handleError(error)
+        }
+
+        // Delete all existing timers.
 
         try {
             await TimerModel.remove({})
         }
         catch (error) {
-
+            this.errorService.handleError(error)
         }
 
-            Timer.find({}, (err, timers) => {
-                if (err) return console.log(err)
-                if (!timers) return
+        // Create new API requests based on the old timers.
 
-				// Delete timers, keeping the old timers in the variable `timers`
-                Timer.remove({}, error => {
-                    if (error) console.error(error)
+        timers.forEach(timer => {
+            const data = timer.data
+            const timeout = timer.duration - (Date.now() - timer.startedAt)
 
-                    timers.forEach(timer => {
-                        const data = timer.data
-                        const timeout = timer.duration - (Date.now() - timer.startedAt)
-                        data.timeout = timeout
+            // If the timer is old, don't restore it.
+            if (timeout < 0) return
 
-						// If the timer is old, don't restore it
-                        if (data.timeout < 1) return
+            requests.push({
+                method: timer.method,
+                uri: timer.url,
+                json: true,
+                body: data,
+            })
+        })
 
-                        if (timer.endpoint.charAt(0) !== "/") {
-                            timer.endpoint = "/" + timer.endpoint
-                        }
+        requestPromises = requests.map(request => rp(request))
 
-                        rp({
-                            method: timer.method,
-                            uri: process.env.CLIENT_URL + timer.endpoint,
-                            json: true,
-                            body: data,
-                        })
-                    })
-                })
+        Promise.all(requestPromises)
+            .catch((error) => {
+                this.errorService.handleError(error)
             })
     }
 }

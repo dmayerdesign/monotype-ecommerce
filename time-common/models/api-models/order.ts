@@ -1,6 +1,6 @@
 import { Schema } from 'mongoose'
 import Easypost from 'node-easypost'
-import { arrayProp, prop, Ref } from 'typegoose'
+import { arrayProp, prop, InstanceType, Ref } from 'typegoose'
 
 import { OrderStatus, OrderStatusEnum } from '../types/order-status'
 import { Discount } from './discount'
@@ -9,7 +9,7 @@ import { Price } from './price'
 import { Product } from './product'
 import { timestamped, TimeModel } from './time-model'
 
-export class Order extends TimeModel {
+export class Order extends TimeModel<Order> {
     @arrayProp({ itemsRef: Product }) public items: Ref<Product>[]
     @arrayProp({ itemsRef: Discount }) public discounts: Ref<Discount>[]
     @prop() public total: Price

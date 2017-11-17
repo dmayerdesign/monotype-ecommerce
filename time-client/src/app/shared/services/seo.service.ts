@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@angular/core'
 import { DOCUMENT, Title } from '@angular/platform-browser'
-import { appConfig } from '@time/app-config'
+import { AppConfig } from '@time/app-config'
 
 @Injectable()
 export class SeoService {
@@ -23,7 +23,7 @@ export class SeoService {
     }
 
     public setTitle(newTitle: string): void {
-        this.titleService.setTitle(newTitle + ' | ' + appConfig.brand_name)
+        this.titleService.setTitle(newTitle + ' | ' + AppConfig.brand_name)
     }
 
     public getMetaDescription(): string {

@@ -28,6 +28,7 @@ export class ShopComponent implements OnInit, AfterViewInit {
     }
 
     public ngAfterViewInit() {
+        /*
         console.log("Do login")
         this.userService.login({email: "sadfasf", password: "asdfasdfdsf"})
         this.products$ = this.productService.products$
@@ -37,6 +38,7 @@ export class ShopComponent implements OnInit, AfterViewInit {
             },
         )
         this.productService.productsError$.subscribe(err => console.log("Error in shop component", err))
+        */
     }
 
     public doAModalThing() {

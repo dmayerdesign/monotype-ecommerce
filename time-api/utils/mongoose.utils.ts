@@ -4,7 +4,8 @@ import { inject, injectable } from 'inversify'
 import { Document, Error, Model, Types } from 'mongoose'
 import * as mongoose from 'mongoose'
 import { Typegoose } from 'typegoose'
-import { Errors } from '../constants'
+
+import { SchemaError } from '@time/common/models/types/errors'
 
 @injectable()
 export class DbClient<T extends Document|Typegoose> {
@@ -86,7 +87,7 @@ export class DbClient<T extends Document|Typegoose> {
 
         function updateDoc(doc: T, iterable: Object) {
             if (!iterable || !Object.keys(iterable) || !Object.keys(iterable).length) {
-                throw new Error(`${Errors.TAGS.schemaError} Invalid update`)
+                throw new SchemaError('Invalid update')
             }
 
             Object.keys(iterable).forEach(key => {

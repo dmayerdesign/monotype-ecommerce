@@ -1,56 +1,94 @@
 import { HttpClient } from '@angular/common/http'
 import { Injectable } from '@angular/core'
+import { ActivatedRoute, Router } from '@angular/router'
 import { Observable } from 'rxjs/Observable'
+import { ReplaySubject } from 'rxjs/ReplaySubject'
 import { Subject } from 'rxjs/Subject'
 
 import { HttpStatus } from '@time/common/constants'
-import { IUser } from '@time/common/models/interfaces'
+import { User } from '@time/common/models/api-models/user'
+import { ILogin } from '@time/common/models/interfaces/login'
+import { IUserRegistration } from '@time/common/models/interfaces/user-registration'
 import { TimeHttpService } from '@time/common/ng-modules/http'
 import { UtilService } from './util.service'
 
 @Injectable()
 export class UserService {
-    private _user: IUser
-    public user$: Subject<IUser> = new Subject<IUser>()
-    public notifications = { sessions: 0, conversations: 0 }
-    public notifications$: Subject<{sessions: number; conversations: number}> = new Subject()
+    private _user: User
+    public userSubject = new ReplaySubject<User>(1)
+    public user$: Observable<User>
 
     constructor (
         private http: HttpClient,
         private timeHttpService: TimeHttpService,
         private util: UtilService,
+        private route: ActivatedRoute,
+        private router: Router,
     ) {
+        this.user$ = this.userSubject.asObservable()
+        this.user$.subscribe(user => {
+            this._user = user
+        })
         this.timeHttpService.sessionInvalid$.subscribe(err => {
             if (this.user) {
-                this.doLogout()
+                this.clearSession()
             }
         })
+        this.getUser()
     }
 
-    public get user(): IUser {
+    public get user(): User {
         return this._user
     }
 
-    private doLogout(): void {
-        console.log("Doing logout")
+    public signup(userInfo: IUserRegistration): void {
+        this.http.post('/api/user/register', userInfo)
+            .subscribe((user: User) => {
+                this.doLogin(user)
+            })
     }
 
-    public signup(user): Observable<any> {
-        return this.http.post('/api/user/register', user)
-    }
-
-    public login(credentials: {email: string; password: string}): void {
+    public login(credentials: ILogin): void {
         // FOR TESTING
-        console.log("Do login")
-        this.http.get('/api/user/login').subscribe(data => console.log(data))
+        this.http.get('/api/user/login').subscribe((userData: User) => {
+            this.doLogin(userData)
+        })
         // this.http.post('/api/user/login', credentials)
     }
 
-    public logout(): Observable<any> {
-        return this.http.post('/api/user/logout', {})
+    public getUser(): void {
+        this.http.get('/api/user/get-user').subscribe((userData: User) => {
+            this.doLogin(userData)
+        })
     }
 
-    public verifyEmail(token: string): Observable<IUser> {
-        return this.http.get<IUser>(`/api/verify-email/${token}`)
+    private doLogin(user: User): void {
+        this.userSubject.next(user)
+    }
+
+    public logout(): void {
+        this.http.post('/api/user/logout', {})
+            .subscribe(successResponse => {
+                this.clearSession()
+                // If the route is protected, navigate away
+                if (this.route.routeConfig.canActivate
+                    || (this.route.firstChild
+                        && (this.route.firstChild.routeConfig.canActivate
+                            || this.route.firstChild.routeConfig.canActivateChild))
+                    || (this.route.firstChild.children[0]
+                        && (this.route.firstChild.children[0].routeConfig.canActivate
+                            || this.route.firstChild.children[0].routeConfig.canActivateChild))
+                ) {
+                    this.router.navigateByUrl('/shop')
+                }
+            })
+    }
+
+    private clearSession(): void {
+        this.userSubject.next(null)
+    }
+
+    public verifyEmail(token: string): Observable<User> {
+        return this.http.get<User>(`/api/verify-email/${token}`)
     }
 }

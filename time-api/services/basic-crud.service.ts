@@ -1,66 +1,111 @@
-import { inject, injectable } from 'inversify';
-import { Model, Document, Error } from 'mongoose';
+import { inject, injectable } from 'inversify'
+import { Document, Error, Model } from 'mongoose'
+import { ModelType } from 'typegoose'
+
+import { ErrorMessage } from '@time/common/constants/error-message'
+import { HttpStatus } from '@time/common/constants/http'
+import { TimeModel } from '@time/common/models/api-models/time-model'
+import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
 
 @injectable()
 export class BasicCrudService<T extends Document> {
 
-    private model: Model<T>;
+    private model: ModelType<T>
 
-    constructor(model: Model<T>) {
-        this.model = model;
+    constructor(model: ModelType<T>) {
+        this.model = model
     }
 
-    public get(query: any): Promise<T[]> {
-        return new Promise<T[]>((resolve, reject) => {
-            Model.find(query, (error: Error, data: T[]): void => {
-                if (error) reject(error);
-                else resolve(data);
-            });
-        });
+    public get(query: any) {
+        return new Promise<ApiResponse<T[]>>((resolve, reject) => {
+            this.model.find(query, (error: Error, data: T[]): void => {
+                if (error) {
+                    reject(new ApiErrorResponse(error))
+                }
+                else if (!data || !data.length) {
+                    reject(new ApiErrorResponse(new Error(ErrorMessage.DocumentsNotFound), HttpStatus.CLIENT_ERROR_notFound))
+                }
+                else {
+                    resolve(new ApiResponse(data))
+                }
+            })
+        })
     }
 
-    public getOne(id: string): Promise<T> {
-        return new Promise<T>((resolve, reject) => {
-            Model.findById(id, (error: Error, data: T): void => {
-                if (error) reject(error);
-                else resolve(data);
-            });
-        });
+    public getOne(id: string) {
+        return new Promise<ApiResponse<T>>((resolve, reject) => {
+            this.model.findById(id, (error: Error, data: T): void => {
+                if (error) {
+                    reject(new ApiErrorResponse(error))
+                }
+                else if (!data) {
+                    reject(new ApiErrorResponse(new Error(ErrorMessage.DocumentNotFound), HttpStatus.CLIENT_ERROR_notFound))
+                }
+                else {
+                    resolve(new ApiResponse(data))
+                }
+            })
+        })
     }
 
-    public createOne(doc: T): Promise<T> {
-        return new Promise<T>((resolve, reject) => {
-            new Model(doc).save((error: Error, newDoc: T): void => {
-                if (error) reject(error);
-                else resolve(newDoc);
-            });
-        });
+    public createOne(doc: T) {
+        return new Promise<ApiResponse<T>>((resolve, reject) => {
+            new this.model(doc).save((error: Error, newDoc: T): void => {
+                if (error) {
+                    reject(new ApiErrorResponse(error))
+                }
+                else if (!newDoc) {
+                    reject(new ApiErrorResponse(new Error(ErrorMessage.DocumentNotCreated), HttpStatus.CLIENT_ERROR_notFound))
+                }
+                else {
+                    resolve(new ApiResponse(newDoc))
+                }
+            })
+        })
     }
 
-    public create(docs: T[]): Promise<T[]> {
-        return new Promise<T[]>((resolve, reject) => {
-            Model.create(docs, (error: Error, newDocs: T[]): void => {
-                if (error) reject(error);
-                else resolve(newDocs);
-            });
-        });
+    public create(docs: T[]) {
+        return new Promise<ApiResponse<T[]>>((resolve, reject) => {
+            this.model.create(docs, (error: Error, newDocs: T[]): void => {
+                if (error) {
+                    reject(new ApiErrorResponse(error))
+                }
+                else if (!newDocs || !newDocs.length) {
+                    reject(new ApiErrorResponse(new Error(ErrorMessage.DocumentsNotCreated), HttpStatus.CLIENT_ERROR_notFound))
+                }
+                else {
+                    resolve(new ApiResponse(newDocs))
+                }
+            })
+        })
     }
 
-    public updateOne(id: string, doc: T): Promise<T> {
-        return new Promise<T>((resolve, reject) => {
-            Model.findByIdAndUpdate(id, doc, { new: true }, (error: Error, newDoc: T) => {
-                if (error) reject(error);
-                else resolve(newDoc);
-            });
-        });
+    public updateOne(id: string, doc: T) {
+        return new Promise<ApiResponse<T>>((resolve, reject) => {
+            this.model.findByIdAndUpdate(id, doc, { new: true }, (error: Error, newDoc: T) => {
+                if (error) {
+                    reject(new ApiErrorResponse(error))
+                }
+                else if (!newDoc) {
+                    reject(new ApiErrorResponse(new Error(ErrorMessage.DocumentsNotUpdated), HttpStatus.CLIENT_ERROR_notFound))
+                }
+                else {
+                    resolve(new ApiResponse(newDoc))
+                }
+            })
+        })
     }
 
-    public deleteOne(id: string): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
-            Model.findByIdAndRemove(id, (error: Error) => {
-                if (error) reject(error);
-                else resolve();
-            });
-        });
+    public deleteOne(id: string) {
+        return new Promise<ApiResponse<void>>((resolve, reject) => {
+            this.model.findByIdAndRemove(id, (error: Error) => {
+                if (error) {
+                    reject(new ApiErrorResponse(error))
+                }
+                else {
+                    resolve(new ApiResponse())
+                }
+            })
+        })
     }
 }

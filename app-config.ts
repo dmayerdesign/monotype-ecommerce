@@ -1,7 +1,7 @@
 require('dotenv').config()
-import { appConfig as devConfig } from '@time/common/config/app-config.dev'
-import { appConfig as prodConfig } from '@time/common/config/app-config.prod'
-import { appConfig as stagingConfig } from '@time/common/config/app-config.staging'
+import { AppConfig as DevConfig } from '@time/common/config/app-config.dev'
+import { AppConfig as ProdConfig } from '@time/common/config/app-config.prod'
+import { AppConfig as StagingConfig } from '@time/common/config/app-config.staging'
 import { environment as env } from '@time/environment'
 
 export interface IEnvironment {
@@ -11,27 +11,29 @@ export interface IEnvironment {
 }
 
 declare const process: any
-let appConfig
+
+let AppConfig = class AppConfig extends ProdConfig { }
+
 if (process.env && process.env.ENVIRONMENT) {
     if (process.env.ENVIRONMENT === "production") {
-        appConfig = prodConfig
+        AppConfig = ProdConfig
     }
     else if (process.env.ENVIRONMENT === "staging") {
-        appConfig = stagingConfig
+        AppConfig = StagingConfig
     }
     else if (process.env.ENVIRONMENT === "development") {
-        appConfig = devConfig
+        AppConfig = DevConfig
     }
 }
 else if (env) {
     if ((<IEnvironment>env).production) {
-        appConfig = prodConfig
+        AppConfig = ProdConfig
     }
     else if ((<IEnvironment>env).staging) {
-        appConfig = stagingConfig
+        AppConfig = StagingConfig
     }
     else if ((<IEnvironment>env).development) {
-        appConfig = devConfig
+        AppConfig = DevConfig
     }
 }
-export { appConfig }
+export { AppConfig }

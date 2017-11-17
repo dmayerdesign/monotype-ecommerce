@@ -4,51 +4,57 @@ import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
 import { Subject } from 'rxjs/Subject'
 
-import { appConfig } from '@time/app-config'
-import { ProductSearch } from '@time/common/api-utils/types/product-search'
-import { IPrice, IProduct } from '@time/common/models/interfaces'
+import { Endpoints } from '@time/common/constants/endpoints'
+import { Price } from '@time/common/models/api-models/price'
+import { Product } from '@time/common/models/api-models/product'
+import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
 import { SimpleError } from '@time/common/ng-modules/http'
+import { RestService } from '@time/common/ng-modules/http/http.models'
 import { UserService } from '../../shared/services/user.service'
 import { UtilService } from '../../shared/services/util.service'
 
 @Injectable()
-export class ProductService {
-    public products$: Observable<IProduct[]>
-    public productsError$: Observable<SimpleError>
-    private productsSubject = new ReplaySubject<IProduct[]>()
-    private productsErrorSubject = new Subject<SimpleError>()
-
+export class ProductService extends RestService<Product> {
     constructor (
         private http: HttpClient,
         private userService: UserService,
     ) {
-        this.products$ = this.productsSubject.asObservable()
-        this.productsError$ = this.productsErrorSubject.asObservable()
+        super()
     }
 
-    public get(page?: number, query?: ProductSearch.Body): void {
+    public get(query?: GetProductsRequest): void {
         const params = new HttpParams()
 
-        if (page) params.set("page", page + "")
-        if (query) params.set("page", JSON.stringify(query))
+        if (query) params.set("query", JSON.stringify(query))
 
         // this.http.get("https://jsonplaceholder.typicode.com/posts")
-        this.http.get("/api/products", { params })
+        this.http.get<Product[]>(Endpoints.Products, { params })
             .subscribe(
-                (products: IProduct[]) => this.productsSubject.next(products),
-                (error: SimpleError) => this.productsErrorSubject.next(error),
+                (products) => this.getSubject.next(products),
+                (error: SimpleError) => this.getErrorSubject.next(error),
             )
     }
 
-    public displayOne(slug: string): Observable<IProduct> {
-        return this.products$.map(p => p.find(product => product.slug === slug))
+    public getSome(ids: string[]): Observable<Product[]> {
+        const query = new GetProductsRequest()
+        const params = new HttpParams()
+        query.ids = ids
+        return this.http.get<Product[]>(Endpoints.Products, { params })
     }
 
-    public getOne(slug: string): Observable<IProduct> {
-        return this.http.get<IProduct>("/api/product/" + slug)
+    public displayOne(slug: string): void {
+        this.getOneSubject.next(this.data.find(product => product.slug === slug))
     }
 
-    public getPrice(product: IProduct): IPrice {
+    public getOne(slug: string) {
+        this.http.get<Product>(`${Endpoints.Products}/${slug}`)
+            .subscribe(
+                (product) => this.getOneSubject.next(product),
+                (error: SimpleError) => this.getOneErrorSubject.next(error),
+            )
+    }
+
+    public getPrice(product: Product): Price {
         if (product.isOnSale) {
             return product.salePrice
         }

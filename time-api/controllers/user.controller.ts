@@ -8,10 +8,11 @@ import {
     httpPost,
     httpPut,
     request,
+    requestParam,
     response,
 } from 'inversify-express-utils'
 
-import Types from '@time/common/constants/inversify/types'
+import { Types } from '@time/common/constants/inversify/types'
 import { UserService } from '../services/user.service'
 
 @injectable()
@@ -33,6 +34,16 @@ export class UserController {
             .catch(({error, status}) => res.status(status).json(error))
     }
 
+    @httpPost('/verify-email/:token')
+    public verifyEmail(
+        @requestParam('token') token: string,
+        @response() res: Response,
+    ): void {
+        this.userService.verifyEmail(token)
+            .then(({data, status}) => res.status(status).json(data))
+            .catch(({error, status}) => res.status(status).json(error))
+    }
+
     @httpPost('/logout')
     public logout(
         @response() res: Response,
@@ -40,8 +51,8 @@ export class UserController {
         this.userService.logout(res)
     }
 
-    @httpGet('/session', Types.isAuthenticated)
-    public session(
+    @httpGet('/get-user', Types.isAuthenticated)
+    public getUser(
         @request() req: Request,
         @response() res: Response,
     ): void {
@@ -67,7 +78,7 @@ export class UserController {
             .catch(({error, status}) => res.status(status).json(error))
     }
 
-    @httpDelete('/:id')
+    @httpDelete('/:id', Types.isAuthorized)
     public deleteUser(
         @request() req: Request,
         @response() res: Response,

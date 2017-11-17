@@ -1,14 +1,16 @@
 import { inject, injectable } from 'inversify'
 import * as Stripe from 'stripe'
 
-import { appConfig } from '@time/app-config'
+import { AppConfig } from '@time/app-config'
 import { Types } from '@time/common/constants/inversify'
+import { Discount } from '@time/common/models/api-models/discount'
 import { Order, OrderModel } from '@time/common/models/api-models/order'
 import { Organization, OrganizationModel } from '@time/common/models/api-models/organization'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
 import { User, UserModel } from '@time/common/models/api-models/user'
+import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
 import { StripeOrder } from '@time/common/models/helpers'
-import { IApiResponse, IDiscount } from '@time/common/models/interfaces'
+import { ApiResponse } from '@time/common/models/helpers/api-response'
 import { DiscountService } from './discount.service'
 import { EmailService } from './email.service'
 import { ProductService } from './product.service'
@@ -32,7 +34,7 @@ export class StripeService {
     private createOrder(order: Order) {
         return new Promise<{ order: Order; stripeOrder: StripeOrder }>(async (resolve, reject) => {
             let orderItems: Product[]
-            let orderDiscounts: IDiscount[]
+            let orderDiscounts: Discount[]
 
             if (!order.total
                 || !order.total.currency
@@ -43,7 +45,9 @@ export class StripeService {
             order.total.total = 0
 
             try {
-                const orderItemsResponse = await <Promise<IApiResponse<Product[]>>>this.productService.get({ _id: { $in: order.items } }, { page: 1, limit: order.items.length })
+                const orderItemsRequest = new GetProductsRequest()
+                orderItemsRequest.ids = <string[]>order.items
+                const orderItemsResponse = await <Promise<ApiResponse<Product[]>>>this.productService.get(orderItemsRequest)
                 orderItems = orderItemsResponse.data
                 orderItems.forEach(orderItem => {
                     order.total.total += this.productService.getPrice(orderItem).total
@@ -54,7 +58,7 @@ export class StripeService {
             }
 
             try {
-                const orderDiscountsResponse = await <Promise<IApiResponse<IDiscount[]>>>this.discountService.get({ _id: { $in: order.discounts } })
+                const orderDiscountsResponse = await <Promise<ApiResponse<Discount[]>>>this.discountService.get({ _id: { $in: order.discounts } })
                 orderDiscounts = orderDiscountsResponse.data
                 orderDiscounts.forEach(orderDiscount => {
                     order.total.total -= orderDiscount.amount.total
@@ -80,7 +84,7 @@ export class StripeService {
                     postal_code: order.customer.shippingAddress.zip,
                 },
             }
-            stripeOrder.currency = order.total.currency
+            stripeOrder.currency = <string>order.total.currency
             stripeOrder.customer = order.customer.stripeCustomerId
             stripeOrder.email = order.customer.email
             stripeOrder.items = orderItems.map(product => {
@@ -115,7 +119,7 @@ export class StripeService {
         return new Promise<{paidOrder: Order, paidStripeOrder: StripeOrder}>(async (resolve, reject) => {
             const payment: StripeNode.orders.IOrderPayOptions = {
                 metadata: {
-                    orderID: order._id.toString(),
+                    orderID: order._id,
                 },
             }
             console.log("******** order.stripeToken ********")
@@ -231,7 +235,7 @@ export class StripeService {
                             type: "finite",
                         },
                         attributes: {
-                            "_id": product._id.toString(),
+                            "_id": product._id,
                         },
                     }
                     if (!product.enteredIntoStripe && !product.isParent) {
@@ -410,8 +414,8 @@ export class StripeService {
                 const emailBody = await this.email.sendReceipt({
                     organization,
                     order: paidOrder,
-                    fromEmail: appConfig.organization_email,
-                    fromName: appConfig.organization_name,
+                    fromEmail: AppConfig.organization_email,
+                    fromName: AppConfig.brand_name,
                     toEmail: paidOrder.customer.email,
                     toName: paidOrder.customer.firstName + ' ' + paidOrder.customer.lastName,
                 })

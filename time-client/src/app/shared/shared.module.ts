@@ -61,6 +61,7 @@ import {
         LoginComponent,
     ],
     exports: [
+        CommonModule,
         SiteLocatorComponent,
         ClickOutsideModule,
         LoginComponent,

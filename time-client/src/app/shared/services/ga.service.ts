@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core'
 import { NavigationEnd } from '@angular/router'
-import { appConfig } from '@time/app-config'
+import { AppConfig } from '@time/app-config'
 
 declare const ga: Function
 
@@ -10,7 +10,7 @@ export class GAnalyticsService {
     constructor() {}
 
     public getTracking(): string {
-        return appConfig.google_analytics_tracking_code
+        return AppConfig.google_analytics_tracking_code
     }
 
     public send(event, location, currentRoute): void {

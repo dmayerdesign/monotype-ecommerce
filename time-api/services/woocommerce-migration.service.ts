@@ -1,7 +1,7 @@
 import { injectable } from 'inversify'
 import { Error } from 'mongoose'
+import { InstanceType } from 'typegoose'
 
-import { DbClient } from '@time/common/api-utils'
 import { CurrencyEnum } from '@time/common/constants'
 
 import { Attribute, AttributeModel } from '@time/common/models/api-models/attribute'
@@ -9,15 +9,11 @@ import { AttributeValue, AttributeValueModel } from '@time/common/models/api-mod
 import { Product, ProductModel } from '@time/common/models/api-models/product'
 import { Taxonomy, TaxonomyModel } from '@time/common/models/api-models/taxonomy'
 import { TaxonomyTerm, TaxonomyTermModel } from '@time/common/models/api-models/taxonomy-term'
-
 import * as productsJSON from '@time/common/work-files/migration/hyzershop-products'
+import { DbClient } from '../utils'
 
 @injectable()
 export class WoocommerceMigrationService {
-
-    /*
-     * TODO: Manually create Attributes and Attribute values, then assign them to products
-     */
 
     public createProductsFromExportedJSON(appConfig): Promise<any> {
         return new Promise<any>((resolve, reject) => {
@@ -55,13 +51,13 @@ export class WoocommerceMigrationService {
                                     const variableAttributeValueSlugs = product[key].split("|").map(val => val.replace(/\s/g, "-").toLowerCase())
                                     const variableAttributeSlug = theKey
                                     try {
-                                        const variableAttributeResponse = await AttributeModel.findOrCreate({
+                                        const variableAttributeResponse = await AttributeModel.findOrCreate<Attribute>({
                                             slug: variableAttributeSlug
                                         })
                                         const variableAttribute = variableAttributeResponse.doc
                                         for (const variableAttributeValueSlug of variableAttributeValueSlugs) {
                                             try {
-                                                const variableAttributeValueResponse = await AttributeValueModel.findOrCreate({
+                                                const variableAttributeValueResponse = await AttributeValueModel.findOrCreate<AttributeValue>({
                                                     attribute: variableAttribute._id,
                                                     slug: variableAttributeValueSlug,
                                                     value,
@@ -84,11 +80,11 @@ export class WoocommerceMigrationService {
                                     const attributeValueSlug = theKey + "-" + product[key].replace(/\s/g, "-").toLowerCase()
                                     const attributeSlug = theKey
                                     try {
-                                        const attributeResponse = await AttributeModel.findOrCreate({
+                                        const attributeResponse = await AttributeModel.findOrCreate<Attribute>({
                                             slug: attributeSlug
                                         })
                                         const attribute = attributeResponse.doc
-                                        const attributeValueResponse = await AttributeValueModel.findOrCreate({
+                                        const attributeValueResponse = await AttributeValueModel.findOrCreate<AttributeValue>({
                                             attribute: attribute._id,
                                             slug: attributeValueSlug,
                                             value,
@@ -126,11 +122,11 @@ export class WoocommerceMigrationService {
                                             const attributeValueSlug = attributeSlug + "-" + stabilityValue
                                             const taxonomyTermSlug = taxonomySlug + "-" + stabilityValue
 
-                                            const attributeResponse = await AttributeModel.findOrCreate({
+                                            const attributeResponse = await AttributeModel.findOrCreate<Attribute>({
                                                 slug: attributeSlug,
                                             })
                                             const attribute = attributeResponse.doc
-                                            const attributeValueResponse = await AttributeValueModel.findOrCreate({
+                                            const attributeValueResponse = await AttributeValueModel.findOrCreate<AttributeValue>({
                                                 attribute: attribute._id,
                                                 slug: attributeValueSlug,
                                                 value: stabilityValue,
@@ -138,11 +134,11 @@ export class WoocommerceMigrationService {
                                             const attributeValue = attributeValueResponse.doc
                                             attributeValueIds.push(attributeValue._id)
 
-                                            const taxonomyResponse = await TaxonomyModel.findOrCreate({
+                                            const taxonomyResponse = await TaxonomyModel.findOrCreate<Taxonomy>({
                                                 slug: taxonomySlug,
                                             })
                                             const taxonomy = taxonomyResponse.doc
-                                            const taxonomyTermResponse = await TaxonomyTermModel.findOrCreate({
+                                            const taxonomyTermResponse = await TaxonomyTermModel.findOrCreate<TaxonomyTerm>({
                                                 taxonomy: taxonomy._id,
                                                 slug: taxonomyTermSlug,
                                             })
@@ -160,9 +156,9 @@ export class WoocommerceMigrationService {
                                 const taxonomySlug = key.replace("taxonomies.", "")
                                 const taxonomyTermSlug = key.replace("taxonomies.", "") + "-" + product[key].replace(/\s/g, "-").toLowerCase()
                                 try {
-                                    const taxonomyResponse = await TaxonomyModel.findOrCreate({ slug: taxonomySlug })
+                                    const taxonomyResponse = await TaxonomyModel.findOrCreate<Taxonomy>({ slug: taxonomySlug })
                                     const taxonomy = taxonomyResponse.doc
-                                    const taxonomyTermResponse = await TaxonomyTermModel.findOrCreate({
+                                    const taxonomyTermResponse = await TaxonomyTermModel.findOrCreate<TaxonomyTerm>({
                                         taxonomy: taxonomy._id,
                                         slug: taxonomyTermSlug
                                     })

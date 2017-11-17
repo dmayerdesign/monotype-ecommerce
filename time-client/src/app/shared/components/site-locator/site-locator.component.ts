@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core'
 import { Subscription } from 'rxjs/Subscription'
 
-import { appConfig } from '@time/app-config'
+import { AppConfig } from '@time/app-config'
 import { UtilService } from '../../services'
 
 declare const google: any
@@ -30,12 +30,15 @@ export class SiteLocatorComponent implements OnInit {
     ) {}
 
     public ngOnInit() {
+        if (typeof window === 'undefined') {
+            return
+        }
         window.initGoogleMapsSiteLocator = () => {
             let map
             /*****************************
              * Get these from the database
              ****************************/
-            const markers = appConfig.locator_map_markers
+            const markers = (<any>AppConfig).locator_map_markers
             let bounds = new google.maps.LatLngBounds()
 
             // Display multiple markers on a map
@@ -146,7 +149,7 @@ export class SiteLocatorComponent implements OnInit {
 
         const theScript = document.createElement("script")
         theScript.id = "mapsApiScript"
-        theScript.src = `https://maps.googleapis.com/maps/api/js?key=${appConfig.google_maps_api_key}&libraries=places&callback=initGoogleMapsSiteLocator`
+        theScript.src = `https://maps.googleapis.com/maps/api/js?key=${(<any>AppConfig).google_maps_api_key}&libraries=places&callback=initGoogleMapsSiteLocator`
         document.body.appendChild(theScript)
 
     }

@@ -13,9 +13,7 @@ import {
     requestParam,
     response,
 } from 'inversify-express-utils'
-import { Observable } from 'rxjs/Observable'
 
-import { appConfig } from '@time/app-config'
 import { Types } from '@time/common/constants'
 import { IOrganization } from '@time/common/models/interfaces'
 import { ProductService } from '../services'
@@ -41,10 +39,5 @@ export class OrganizationController implements interfaces.Controller {
         return new Promise<IOrganization>(resolve => {
             resolve(testOrg)
         })
-    }
-
-    @httpGet('/', Types.isAuthorized)
-    public getSettings(@response() res: Response) {
-        return Observable.of({ secret: true })
     }
 }

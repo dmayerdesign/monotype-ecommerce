@@ -14,14 +14,15 @@ import {
     response,
 } from 'inversify-express-utils'
 
-import { appConfig } from '@time/app-config'
-import { HttpStatus, Types } from '@time/common/constants'
-import { IApiResponse, IProduct } from '@time/common/models/interfaces'
-import { ProductService } from '../services'
-import { WoocommerceMigrationService } from '../services'
+import { AppConfig } from '@time/app-config'
+import { Endpoints, HttpStatus, Types } from '@time/common/constants'
+import { Product } from '@time/common/models/api-models/product'
+import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
+import { ApiResponse } from '@time/common/models/helpers/api-response'
+import { ProductService, WoocommerceMigrationService } from '../services'
 
 @injectable()
-@controller('/api/products')
+@controller(Endpoints.Products)
 export class ProductsController implements interfaces.Controller {
 
     constructor(
@@ -29,22 +30,36 @@ export class ProductsController implements interfaces.Controller {
         @inject(Types.WoocommerceMigrationService) private wms: WoocommerceMigrationService,
     ) {}
 
-    @httpGet('/', Types.isAuthenticated)
-    private get(
+    @httpGet('/')
+    public get(
         @queryParam('query') query: string,
-        @queryParam('page') page: number,
-        @queryParam('limit') limit: number,
         @response() res: Response,
-    ): Promise<IApiResponse<IProduct[]>>|void {
-        const test = true
-        let parsedQuery: object
-        parsedQuery = query ? JSON.parse(query) : {}
-        res.setHeader('content-type', 'application/json')
-        return this.productService.get(parsedQuery, { page, limit }, res)
+    ) {
+        const parsedQuery = query ? <GetProductsRequest>JSON.parse(query) : {}
+
+        if (parsedQuery.ids) {
+            this.productService.getSome(parsedQuery.ids)
+                .then(({data, status}) => res.status(status).json(data))
+                .catch(({data, status}) => res.status(status).json(data))
+        }
+        else {
+            res.setHeader('content-type', 'application/json')
+            return this.productService.get(parsedQuery, res)
+        }
+    }
+
+    @httpGet('/:slug')
+    public getOne(
+        @requestParam('slug') slug: string,
+        @response() res: Response,
+    ): void {
+        this.productService.getOne(slug)
+            .then(({data, status}) => res.status(status).json(data))
+            .catch(({data, status}) => res.status(status).json(data))
     }
 
     @httpGet('/update-test')
-    private updateTest(
+    public updateTest(
         @response() res: Response,
     ): void {
         this.productService.updateTestProduct({
@@ -56,7 +71,7 @@ export class ProductsController implements interfaces.Controller {
     }
 
     @httpDelete('/:id')
-    private delete(
+    public delete(
         @requestParam("id") id: string,
         @response() res: Response,
     ): void {
@@ -66,10 +81,10 @@ export class ProductsController implements interfaces.Controller {
     }
 
     @httpGet('/migrate'/*, Types.isAuthorized*/)
-    private async migrate(
+    public async migrate(
         @request() req: Request,
         @response() res: Response,
-    ): Promise<IProduct> {
-        return this.wms.createProductsFromExportedJSON(appConfig)
+    ): Promise<Product> {
+        return this.wms.createProductsFromExportedJSON(AppConfig)
     }
 }
