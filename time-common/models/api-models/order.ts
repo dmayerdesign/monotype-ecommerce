@@ -9,7 +9,7 @@ import { Price } from './price'
 import { Product } from './product'
 import { timestamped, TimeModel } from './time-model'
 
-export class Order extends TimeModel {
+export class Order extends TimeModel<Order> {
     @arrayProp({ itemsRef: Product }) public items: Ref<Product>[]
     @arrayProp({ itemsRef: Discount }) public discounts: Ref<Discount>[]
     @prop() public total: Price
@@ -25,7 +25,7 @@ export class Order extends TimeModel {
     @prop() public paymentMethod: string
     @prop() public savePaymentInfo: boolean
     @prop() public shipmentId: string
-    @prop({ enum: OrderStatusEnum }) public status: OrderStatus
+    @prop({ enum: Object.keys(OrderStatusEnum) }) public status: OrderStatus
     @prop() public stripeCardId: string
     @prop() public stripeOrderId: string
     @prop() public stripeSource: string

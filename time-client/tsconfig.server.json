@@ -1,5 +1,5 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "./tsconfig.app.json",
   "compilerOptions": {
     "module": "commonjs"
   },
@@ -8,6 +8,6 @@
     "**/*.spec.ts"
   ],
   "angularCompilerOptions": {
-    "entryModule": "src/client/app/app.server.module#AppServerModule"
+    "entryModule": "src/app/app.server.module#AppServerModule"
   }
 }

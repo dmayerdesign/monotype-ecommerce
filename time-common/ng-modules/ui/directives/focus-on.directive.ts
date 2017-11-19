@@ -1,5 +1,4 @@
-import { AfterContentInit, Directive, ElementRef, Input, OnInit, Renderer } from '@angular/core'
-import { Event as RouterEvent, NavigationEnd, Router } from '@angular/router'
+import { Directive, ElementRef, Input, OnInit, Renderer } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
 
 @Directive({
@@ -11,7 +10,6 @@ export class FocusOnDirective implements OnInit {
     constructor(
         private el: ElementRef,
         private renderer: Renderer,
-        private router: Router,
     ) {}
 
     public ngOnInit() {

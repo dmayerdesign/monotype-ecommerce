@@ -8,7 +8,10 @@ import { TimeHttpService } from './http.service'
 @NgModule({
     imports: [
         HttpClientModule,
-    ]
+    ],
+    exports: [
+        HttpClientModule,
+    ],
 })
 export class TimeHttpModule {
     public static forRoot(): ModuleWithProviders {

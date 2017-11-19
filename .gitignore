@@ -40,3 +40,9 @@ e2e/*.map
 .DS_Store
 Thumbs.db
 Icon
+
+# build files
+time-client/src/common
+time-client/src/app-config.ts
+time-admin/src/common
+time-admin/src/app-config.ts

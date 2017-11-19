@@ -1,6 +1,5 @@
-import { model, Document } from 'mongoose'
+import { Document } from 'mongoose'
 
-import { IAddress } from './address'
 import { ICart } from './cart'
 
 export interface IUser extends Document {
@@ -37,9 +36,4 @@ export interface IUser extends Document {
   cart: ICart
 
   customFields: {}
-}
-
-export interface ILogin {
-  email: string
-  password: string
 }

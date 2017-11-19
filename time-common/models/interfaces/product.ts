@@ -1,5 +1,4 @@
 import { Document, Types } from 'mongoose'
-import { Currency } from '../../constants/currency'
 import { IPrice } from './price'
 
 export interface IProduct extends Document {

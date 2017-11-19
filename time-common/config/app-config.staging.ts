@@ -1,8 +1,6 @@
-import { appConfig as devConfig } from './app-config.dev'
+import { AppConfig as DevConfig } from './app-config.dev'
 
-const stagingConfig = {
-	client_url: "http://localhost:3000",
-	paypal_env: 'sandbox',
+export class AppConfig extends DevConfig {
+    public static client_url = "http://localhost:3000"
+    public static paypal_env: 'sandbox' | 'production' = 'sandbox'
 }
-
-export const appConfig = Object.assign({}, devConfig, stagingConfig)

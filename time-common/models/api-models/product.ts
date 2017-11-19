@@ -1,6 +1,5 @@
-import { Document } from 'mongoose'
 import * as mongooseDelete from 'mongoose-delete'
-import { arrayProp, plugin, pre, prop, Ref, Typegoose } from 'typegoose'
+import { arrayProp, plugin, pre, prop, Ref } from 'typegoose'
 
 import { ProductClass, ProductClassEnum } from '../types/product-class'
 import { Attribute } from './attribute'
@@ -8,6 +7,7 @@ import { AttributeValue } from './attribute-value'
 import { Dimensions } from './dimensions'
 import { Price } from './price'
 import { TaxonomyTerm } from './taxonomy-term'
+import { TimeModel } from './time-model'
 import { Units } from './units'
 
 @plugin(mongooseDelete)
@@ -32,7 +32,7 @@ import { Units } from './units'
     }
     next()
 })
-export class Product extends Typegoose {
+export class Product extends TimeModel {
 	/* Aesthetic */
     @prop() public name: string
     @prop() public slug: string
@@ -60,7 +60,7 @@ export class Product extends Typegoose {
         }
     }) public salePriceRange: Price[]
     @prop() public isOnSale: boolean
-    @prop({ enum: ProductClassEnum }) public class: ProductClass
+    @prop({ enum: Object.keys(ProductClassEnum) }) public class: ProductClass
     @prop() public isStandalone: boolean
     @prop() public isParent: boolean 				                // Defines an abstract parent for a variable product
     @arrayProp({ items: String }) public variationSKUs: string[] 	// Array of product SKUs

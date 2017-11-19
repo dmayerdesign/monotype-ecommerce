@@ -1,8 +1,8 @@
-import { IPrice } from './price'
-import { IProduct } from './product'
+import { Price } from '../api-models/price'
+import { Product } from '../api-models/product'
 
 export interface ICartProduct {
     quantity: number
-    product: IProduct
-    subTotal: IPrice
+    product: Product
+    subTotal: Price
 }

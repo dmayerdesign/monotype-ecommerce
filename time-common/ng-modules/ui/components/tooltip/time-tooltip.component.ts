@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core'
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core'
 
 @Component({
     selector: 'time-tooltip',
@@ -9,6 +9,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core'
 		[ngStyle]="{'opacity': fadeIn ? 1 : 0}">
 	<ng-content></ng-content>
 </div>`,
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimeTooltipComponent {
     public isShowing: boolean
