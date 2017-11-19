@@ -1,6 +1,6 @@
 import { Schema } from 'mongoose'
 import Easypost from 'node-easypost'
-import { arrayProp, prop, InstanceType, Ref } from 'typegoose'
+import { arrayProp, prop, Ref } from 'typegoose'
 
 import { OrderStatus, OrderStatusEnum } from '../types/order-status'
 import { Discount } from './discount'

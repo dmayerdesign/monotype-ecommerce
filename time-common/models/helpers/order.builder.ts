@@ -1,5 +1,4 @@
-import { CurrencyEnum } from '../../constants'
-import { IOrder, IOrderCustomer, IPrice } from '../interfaces'
+import { IOrder, IOrderCustomer } from '../interfaces'
 import { OrderStatus, OrderStatusEnum } from '../types/order-status'
 
 export class OrderBuilder implements IOrder {

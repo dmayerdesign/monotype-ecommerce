@@ -4,7 +4,6 @@ import {
     Component,
     EventEmitter,
     Input,
-    OnInit,
     Output,
 } from '@angular/core'
 
@@ -13,25 +12,26 @@ import { IModalData } from '../../../../models/interfaces/ui/modal-data'
 @Component({
     selector: 'time-modal',
     template: `
-<div *ngIf="data" class="modal-container" [hidden]="!isShowing" [ngClass]="{'showing': isShowing}">
-	<div class="modal-darken" [ngStyle]="{'opacity': fadeIn ? 1 : 0}" (click)="show = false"></div>
-	<div *ngIf="data" class="modal-inner-wrapper">
-		<div class="modal-inner" [ngStyle]="{'opacity': fadeIn ? 1 : 0}">
-			<div class="modal-title-bar">
-				<h2>{{ data.title }}</h2>
-				<button class="blank-btn modal-close-btn" (click)="show = false"><img alt="close modal" src="static/images/x-dark.svg"></button>
-			</div>
-            <div class="modal-content" *ngIf="data.body">
-                <ng-container *compile="data.body; context: data.context"></ng-container>
+        <div *ngIf="data" class="modal-container" [hidden]="!isShowing" [ngClass]="{'showing': isShowing}">
+            <div class="modal-darken" [ngStyle]="{'opacity': fadeIn ? 1 : 0}" (click)="show = false"></div>
+            <div *ngIf="data" class="modal-inner-wrapper">
+                <div class="modal-inner" [ngStyle]="{'opacity': fadeIn ? 1 : 0}">
+                    <div class="modal-title-bar">
+                        <h2>{{ data.title }}</h2>
+                        <button class="blank-btn modal-close-btn" (click)="show = false"><img alt="close modal" src="static/images/x-dark.svg"></button>
+                    </div>
+                    <div class="modal-content" *ngIf="data.body">
+                        <ng-container *compile="data.body; context: data.context"></ng-container>
+                    </div>
+                    <div class="modal-actions">
+                        <button (click)="cancel()" class="btn-cancel modal-cancel">{{ data.cancelText || defaultCancelText }}</button>
+                        <button *ngIf="data.okText" (click)="data.okClick()" class="btn-action modal-ok">{{ data.okText }}</button>
+                    </div>
+                </div>
             </div>
-            <div class="modal-actions">
-                <button (click)="cancel()" class="btn-cancel modal-cancel">{{ data.cancelText || defaultCancelText }}</button>
-                <button *ngIf="data.okText" (click)="data.okClick()" class="btn-action modal-ok">{{ data.okText }}</button>
-            </div>
-		</div>
-	</div>
-</div>
-`,
+        </div>
+    `,
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimeModalComponent {
     @Input() public data: IModalData

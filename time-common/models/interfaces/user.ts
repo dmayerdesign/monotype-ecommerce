@@ -1,6 +1,5 @@
-import { model, Document } from 'mongoose'
+import { Document } from 'mongoose'
 
-import { IAddress } from './address'
 import { ICart } from './cart'
 
 export interface IUser extends Document {

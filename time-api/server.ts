@@ -1,18 +1,13 @@
 require('dotenv').config()
 
 import * as bodyParser from 'body-parser'
-import * as compression from 'compression'
 import * as cookieParser from 'cookie-parser'
 import * as express from 'express'
-import * as session from 'express-session'
 import * as validator from 'express-validator'
-import * as fs from 'fs'
-import * as glob from 'glob'
 import * as helmet from 'helmet'
 import { InversifyExpressServer } from 'inversify-express-utils'
 import * as morgan from 'morgan'
 import * as passport from 'passport'
-import * as path from 'path'
 import 'reflect-metadata'
 
 import { passportConfig } from './auth/passport'
@@ -22,11 +17,9 @@ import { isProduction } from './utils/env'
 import { onStart } from './utils/startup'
 
 /** ANGULAR UNIVERSAL - imports */
-import * as ngUniversal from '@nguniversal/express-engine'
-import 'zone.js/dist/zone-node'
-import { AppServerModule } from '../time-client/src/app/app.server.module'
-
-const MongoStore = require('connect-mongo')(session)
+// import * as ngUniversal from '@nguniversal/express-engine'
+// import 'zone.js/dist/zone-node'
+// import { AppServerModule } from '../time-client/src/app/app.server.module'
 
 function serverErrorConfig(app) {
     app.use((err, req, res, next) => {
@@ -54,7 +47,7 @@ function serverConfig(app) {
 
     onStart()
 
-    /** ANGULAR UNIVERSAL - bootstrap */
+    // ANGULAR UNIVERSAL - bootstrap
     // app.engine('html', ngUniversal.ngExpressEngine({
     //     bootstrap: AppServerModule,
     // }))

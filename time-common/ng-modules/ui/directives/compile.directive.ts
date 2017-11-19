@@ -9,7 +9,6 @@ import {
     Input,
     ModuleWithComponentFactories,
     NgModule,
-    OnChanges,
     Type,
     ViewContainerRef,
 } from '@angular/core'

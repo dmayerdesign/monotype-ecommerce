@@ -102,7 +102,7 @@ export class BasicCrudService<T extends Document> {
                     reject(new ApiErrorResponse(error))
                 }
                 else {
-                    resolve(new ApiResponse())
+                    resolve(new ApiResponse<void>())
                 }
             })
         })

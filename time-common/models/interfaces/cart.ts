@@ -2,7 +2,6 @@ import { Document } from 'mongoose'
 
 import { Product } from '../api-models/product'
 import { ICartProduct } from './cart-product'
-import { IDiscount } from './discount'
 
 export interface ICart {
     count: number

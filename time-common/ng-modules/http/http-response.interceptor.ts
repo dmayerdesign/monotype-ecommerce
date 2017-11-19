@@ -1,10 +1,8 @@
 import {
-    HttpErrorResponse,
     HttpEvent,
     HttpHandler,
     HttpInterceptor,
     HttpRequest,
-    HttpResponse,
 } from '@angular/common/http'
 import { Injectable } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
@@ -15,7 +13,6 @@ import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/switchMap'
 
 import { HttpStatus } from '../../constants'
-import { IUser } from '../../models/interfaces'
 import { SimpleError } from './http.models'
 import { TimeHttpService } from './http.service'
 

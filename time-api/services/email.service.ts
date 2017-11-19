@@ -6,9 +6,9 @@ import { Types } from '@time/common/constants/inversify'
 import { IEmailOptions } from '@time/common/models/interfaces/email'
 import { OrderService } from './order.service'
 
-const receipt = require('./templates/receipt')
-const shippingNotification = require('./templates/shippingNotification')
-const emailVerification = require('./templates/emailVerification')
+const receipt = require('@time/common/emails/templates/receipt')
+const shippingNotification = require('@time/common/emails/templates/shippingNotification')
+const emailVerification = require('@time/common/emails/templates/emailVerification')
 
 const styleOptions = {
     mastheadBgColor: "#00b0ff",

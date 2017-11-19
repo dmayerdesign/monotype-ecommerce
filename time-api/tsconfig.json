@@ -8,8 +8,12 @@
       "@time/common/*": [ "../time-common/*" ],
       "@time/app-config": [ "../app-config.ts" ],
       "@time/environment": [ "../time-client/src/environments/environment" ],
+      "mongoose": [ "../node_modules/@types/mongoose" ],
       "stripe": [ "../node_modules/@types/stripe-node" ]
     }
   },
-  "outDir": "../dist/server"
+  "outDir": "../dist/server",
+  "files": [
+    "./server.ts"
+  ]
 }

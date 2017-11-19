@@ -6,7 +6,7 @@ import { IOrderCustomer } from './order-customer'
 
 export interface IOrder {
     items: string[]
-    discounts: string[]
+    discounts: string[]|IDiscount[]
     total: {
         amount: number
         currency: string

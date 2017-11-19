@@ -1,4 +1,4 @@
-import { plugin, prop } from 'typegoose'
+import { prop } from 'typegoose'
 
 import { TimeModel } from './time-model'
 

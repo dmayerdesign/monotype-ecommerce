@@ -1,5 +1,5 @@
 import * as findOrCreate from 'mongoose-findorcreate'
-import { plugin, prop, Typegoose } from 'typegoose'
+import { plugin, prop } from 'typegoose'
 
 import { TimeModel } from './time-model'
 

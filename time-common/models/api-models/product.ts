@@ -1,5 +1,5 @@
 import * as mongooseDelete from 'mongoose-delete'
-import { arrayProp, plugin, pre, prop, Ref, Typegoose } from 'typegoose'
+import { arrayProp, plugin, pre, prop, Ref } from 'typegoose'
 
 import { ProductClass, ProductClassEnum } from '../types/product-class'
 import { Attribute } from './attribute'

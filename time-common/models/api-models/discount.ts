@@ -1,4 +1,4 @@
-import { arrayProp, prop, Ref, Typegoose } from 'typegoose'
+import { arrayProp, prop, Ref } from 'typegoose'
 import { Price } from './price'
 import { Product } from './product'
 import { TaxonomyTerm } from './taxonomy-term'

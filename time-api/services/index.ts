@@ -1,4 +1,5 @@
 export * from './discount.service'
+export * from './email.service'
 export * from './product.service'
 export * from './stripe/stripe-customer.service'
 export * from './stripe/stripe-order.service'
