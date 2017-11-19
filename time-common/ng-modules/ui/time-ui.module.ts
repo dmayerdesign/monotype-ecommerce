@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common'
-import { ModuleWithProviders, NgModule } from '@angular/core'
+import { NgModule } from '@angular/core'
+import { ClickOutsideModule } from 'ng-click-outside'
 
 import { TimeModalComponent } from './components/modal/time-modal.component'
 import { TimeTooltipComponent } from './components/tooltip/time-tooltip.component'
@@ -12,6 +13,7 @@ import { TruncatePipe } from './pipes/truncate.pipe'
 @NgModule({
     imports: [
         CommonModule,
+        ClickOutsideModule,
     ],
     declarations: [
         TimeModalComponent,
@@ -21,6 +23,8 @@ import { TruncatePipe } from './pipes/truncate.pipe'
         TruncatePipe,
     ],
     exports: [
+        CommonModule,
+        ClickOutsideModule,
         TimeModalComponent,
         TimeTooltipComponent,
         CompileDirective,

@@ -1,4 +1,3 @@
-import { TimerModel } from '@time/common/models/api-models/timer'
 import * as rp from 'request-promise'
 
 export function onStart() {

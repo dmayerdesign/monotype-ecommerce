@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from 'express'
 import { injectable } from 'inversify'
 import * as jwt from 'jsonwebtoken'
 
-import { AuthConfig } from '@time/common/config/auth.config'
 import { HttpStatus } from '@time/common/constants'
 import { Cookies, Copy } from '@time/common/constants'
 import { User } from '@time/common/models/api-models/user'

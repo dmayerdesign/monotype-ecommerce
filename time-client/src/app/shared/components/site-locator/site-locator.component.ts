@@ -1,11 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core'
-import { Subscription } from 'rxjs/Subscription'
 
 import { AppConfig } from '@time/app-config'
-import { UtilService } from '../../services'
 
 declare const google: any
-declare const navigator: any
 declare let window: any
 
 @Component({
@@ -25,9 +22,7 @@ export class SiteLocatorComponent implements OnInit {
         filterValue: '',
     }
 
-    constructor(
-        private util: UtilService,
-    ) {}
+    constructor() {}
 
     public ngOnInit() {
         if (typeof window === 'undefined') {

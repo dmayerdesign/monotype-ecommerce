@@ -3,7 +3,6 @@ import { ToastrService } from 'ngx-toastr'
 
 import { Copy } from '@time/common/constants'
 import { IFlash } from './shared/models/ui.models'
-import { RouteStateService } from './shared/services/route-state.service'
 import { UiService } from './shared/services/ui.service'
 import { UtilService } from './shared/services/util.service'
 
@@ -23,7 +22,6 @@ export class AppComponent implements OnInit {
         private ui: UiService,
         private util: UtilService,
         private toastr: ToastrService,
-        private routeState: RouteStateService,
     ) {}
 
     public ngOnInit() {

@@ -1,10 +1,8 @@
-import { NextFunction, Request, Response } from 'express'
-import { injectable } from 'inversify'
 import * as passport from 'passport'
 import * as FacebookStrategy from 'passport-facebook'
 
 import { Copy } from '@time/common/constants'
-import { User, UserModel } from '@time/common/models/api-models/user'
+import { UserModel } from '@time/common/models/api-models/user'
 
 const facebookStrategyConfig = {
   clientID: process.env.FACEBOOK_APP_ID,

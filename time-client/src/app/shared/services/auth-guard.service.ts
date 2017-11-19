@@ -9,7 +9,6 @@ import {
 
 import { AppRoutes } from '../../../../constants/app-routes'
 import { RouteStateService } from './route-state.service'
-import { UiService } from './ui.service'
 import { UserService } from './user.service'
 
 @Injectable()

@@ -1,8 +1,6 @@
-import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http'
-import { EventEmitter, Inject, Injectable } from '@angular/core'
+import { HttpClient, HttpParams } from '@angular/common/http'
+import { Injectable } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
-import { ReplaySubject } from 'rxjs/ReplaySubject'
-import { Subject } from 'rxjs/Subject'
 
 import { Endpoints } from '@time/common/constants/endpoints'
 import { Price } from '@time/common/models/api-models/price'
@@ -10,14 +8,11 @@ import { Product } from '@time/common/models/api-models/product'
 import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
 import { SimpleError } from '@time/common/ng-modules/http'
 import { RestService } from '@time/common/ng-modules/http/http.models'
-import { UserService } from '../../shared/services/user.service'
-import { UtilService } from '../../shared/services/util.service'
 
 @Injectable()
 export class ProductService extends RestService<Product> {
     constructor (
         private http: HttpClient,
-        private userService: UserService,
     ) {
         super()
     }

@@ -20,6 +20,7 @@ const styleOptions = {
 /**
  * Send emails with Mailgun
  */
+@injectable()
 export class EmailService {
     constructor(
         @inject(Types.OrderService) private orderService: OrderService

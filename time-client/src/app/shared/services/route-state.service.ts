@@ -1,13 +1,9 @@
 import { Injectable } from '@angular/core'
-import { ActivatedRoute, Event, NavigationEnd, NavigationStart, Router } from '@angular/router'
+import { ActivatedRoute, NavigationStart, Router } from '@angular/router'
 import { Observable } from 'rxjs/Observable'
-import { Subject } from 'rxjs/Subject'
 import 'rxjs/add/observable/of'
 import 'rxjs/add/operator/filter'
 import 'rxjs/add/operator/switchMap'
-
-import { UiService } from './ui.service'
-import { UserService } from './user.service'
 
 @Injectable()
 export class RouteStateService {

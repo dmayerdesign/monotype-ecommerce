@@ -3,14 +3,11 @@ import { Injectable } from '@angular/core'
 import { ActivatedRoute, Router } from '@angular/router'
 import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
-import { Subject } from 'rxjs/Subject'
 
-import { HttpStatus } from '@time/common/constants'
 import { User } from '@time/common/models/api-models/user'
 import { ILogin } from '@time/common/models/interfaces/login'
 import { IUserRegistration } from '@time/common/models/interfaces/user-registration'
 import { TimeHttpService } from '@time/common/ng-modules/http'
-import { UtilService } from './util.service'
 
 @Injectable()
 export class UserService {
@@ -21,7 +18,6 @@ export class UserService {
     constructor (
         private http: HttpClient,
         private timeHttpService: TimeHttpService,
-        private util: UtilService,
         private route: ActivatedRoute,
         private router: Router,
     ) {

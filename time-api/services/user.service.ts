@@ -1,11 +1,10 @@
 import * as bcrypt from 'bcrypt-nodejs'
-import { NextFunction, Request, Response } from 'express'
+import { Request, Response } from 'express'
 import { injectable } from 'inversify'
 import * as jwt from 'jsonwebtoken'
 
 import { AuthConfig } from '@time/common/config/auth.config'
 import { Cookies, Copy, HttpStatus } from '@time/common/constants'
-import { Types } from '@time/common/constants/inversify/types'
 import { User, UserModel } from '@time/common/models/api-models/user'
 import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
 import { ILogin } from '@time/common/models/interfaces/login'

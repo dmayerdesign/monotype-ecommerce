@@ -1,12 +1,9 @@
-import * as express from 'express'
 import { Request, Response } from 'express'
 import { inject, injectable } from 'inversify'
 import {
     controller,
     httpDelete,
     httpGet,
-    httpPost,
-    httpPut,
     interfaces,
     queryParam,
     request,
@@ -15,10 +12,9 @@ import {
 } from 'inversify-express-utils'
 
 import { AppConfig } from '@time/app-config'
-import { Endpoints, HttpStatus, Types } from '@time/common/constants'
+import { Endpoints, Types } from '@time/common/constants'
 import { Product } from '@time/common/models/api-models/product'
 import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
-import { ApiResponse } from '@time/common/models/helpers/api-response'
 import { ProductService, WoocommerceMigrationService } from '../services'
 
 @injectable()

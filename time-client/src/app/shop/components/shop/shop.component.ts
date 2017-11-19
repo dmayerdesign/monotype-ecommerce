@@ -4,7 +4,7 @@ import { Observable } from 'rxjs/Observable'
 
 import { IProduct } from '@time/common/models/interfaces'
 import { SimpleError } from '@time/common/ng-modules/http'
-import { UiService, UserService } from '../../../shared/services'
+import { UiService, /*UserService*/ } from '../../../shared/services'
 import { ProductService } from '../../services'
 
 @Component({
@@ -19,7 +19,7 @@ export class ShopComponent implements OnInit, AfterViewInit {
 
     constructor(
         private productService: ProductService,
-        private userService: UserService,
+        // private userService: UserService,
         private ui: UiService,
     ) { }
 

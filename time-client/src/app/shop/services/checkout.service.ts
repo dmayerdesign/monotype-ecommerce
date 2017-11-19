@@ -4,7 +4,6 @@ import { Observable } from 'rxjs/Observable'
 
 import { AppConfig } from '@time/app-config'
 import { Order } from '@time/common/models/api-models/order'
-import { UtilService } from '../../shared/services/util.service'
 
 @Injectable()
 export class CheckoutService {

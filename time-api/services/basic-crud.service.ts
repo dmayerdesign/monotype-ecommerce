@@ -1,10 +1,9 @@
-import { inject, injectable } from 'inversify'
-import { Document, Error, Model } from 'mongoose'
+import { injectable } from 'inversify'
+import { Document, Error } from 'mongoose'
 import { ModelType } from 'typegoose'
 
 import { ErrorMessage } from '@time/common/constants/error-message'
 import { HttpStatus } from '@time/common/constants/http'
-import { TimeModel } from '@time/common/models/api-models/time-model'
 import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
 
 @injectable()

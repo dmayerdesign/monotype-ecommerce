@@ -2,18 +2,12 @@ require('dotenv').config()
 import * as AWS from 'aws-sdk'
 import * as fs from 'fs-extra'
 import * as multer from 'multer'
-import * as multerS3 from 'multer-s3'
 import * as path from 'path'
 import sharp from 'sharp'
 
 import { AppConfig } from '@time/app-config'
-import { Types } from '@time/common/constants/inversify'
-import { Attribute } from '@time/common/models/api-models/attribute'
-import { OrganizationModel } from '@time/common/models/api-models/organization'
 import { ProductModel } from '@time/common/models/api-models/product'
-import { Product } from '@time/common/models/api-models/product'
 import { RevisionModel } from '@time/common/models/api-models/revision'
-import { Revision } from '@time/common/models/api-models/revision'
 
 /**
  * AWS S3 uploads

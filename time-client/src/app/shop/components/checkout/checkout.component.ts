@@ -1,15 +1,12 @@
 import { Component, OnInit } from '@angular/core'
-import { ActivatedRoute } from '@angular/router'
-import { Subscription } from 'rxjs/Subscription'
 
 import { Cart } from '@time/common/models/api-models/cart'
 import { Organization } from '@time/common/models/api-models/organization'
 import { Product } from '@time/common/models/api-models/product'
 import { User } from '@time/common/models/api-models/user'
 import { OrderBuilder } from '@time/common/models/helpers/order.builder'
-import { CartService, OrganizationService, UserService, UtilService } from '../../../shared/services'
+import { CartService, OrganizationService, UtilService } from '../../../shared/services'
 import { CheckoutService } from '../../services/checkout.service'
-import { ProductService } from '../../services/product.service'
 
 declare const stripe
 
@@ -44,26 +41,23 @@ declare const stripe
 export class CheckoutComponent implements OnInit {
 
     private user: User
-    private stripeCustomer: any
+    // private stripeCustomer: any
     private order: OrderBuilder
     private organization: Organization
-    private displayOrder: Product[]
+    // private displayOrder: Product[]
     private cart: Cart
     private elements: any
     private card: any
-    private savedCard: any
+    // private savedCard: any
     private cards: any[]
-    private processingOrder: boolean
-    private orderSucceeded: boolean
-    private orderFailed: boolean
+    // private processingOrder: boolean
+    // private orderSucceeded: boolean
+    // private orderFailed: boolean
 
     constructor(
         private util: UtilService,
-        private route: ActivatedRoute,
-        private userService: UserService,
         private cartService: CartService,
         private checkoutService: CheckoutService,
-        private productService: ProductService,
         private organizationService: OrganizationService,
     ) {}
 

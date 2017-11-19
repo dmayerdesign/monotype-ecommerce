@@ -1,8 +1,7 @@
 import * as JSONStream from 'JSONStream'
 import { Response } from 'express'
-import { inject, injectable } from 'inversify'
+import { injectable } from 'inversify'
 import { Document, Error, Model, Types } from 'mongoose'
-import * as mongoose from 'mongoose'
 import { Typegoose } from 'typegoose'
 
 import { SchemaError } from '@time/common/models/types/errors'

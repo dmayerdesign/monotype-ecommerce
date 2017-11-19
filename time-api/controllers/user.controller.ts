@@ -1,6 +1,5 @@
-import * as express from 'express'
 import { Request, Response } from 'express'
-import { inject, injectable, Container } from 'inversify'
+import { inject, injectable } from 'inversify'
 import {
     controller,
     httpDelete,

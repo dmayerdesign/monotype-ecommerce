@@ -5,6 +5,7 @@ import { ReplaySubject } from 'rxjs/ReplaySubject'
 import { LocalStorageKeys } from '@time/common/constants/local-storage-keys'
 import { Cart } from '@time/common/models/api-models/cart'
 import { Product } from '@time/common/models/api-models/product'
+import { ICartProduct } from '@time/common/models/interfaces/cart-product'
 import { ProductService } from '../../shop/services/product.service'
 import { OrganizationService } from './organization.service'
 import { UserService } from './user.service'
@@ -21,8 +22,8 @@ export class CartService {
         total: 0,
         discounts: [],
     }
-    private cart = { ...this.initialState }
-    private cartSubject = new ReplaySubject<Cart>()
+    private cart: Cart
+    private cartSubject = new ReplaySubject<Cart>(1)
     public cart$: Observable<Cart>
 
     constructor(
@@ -31,12 +32,13 @@ export class CartService {
         private orgService: OrganizationService,
         private userService: UserService,
     ) {
+        this.cart = { ...this.initialState }
         this.orgService.organization$.subscribe(org => {
             this.init()
         })
     }
 
-    public init() {
+    public init(): void {
         this.cart$ = this.cartSubject.asObservable()
         const cart = <Cart>this.util.getFromLocalStorage(LocalStorageKeys.Cart)
         if (cart) {
@@ -66,12 +68,14 @@ export class CartService {
         this.productService.getOne(slug)
     }
 
-    private populateAndStream(newCart: Cart, refreshProducts = true) {
+    private populateAndStream(newCart: Cart, refreshProducts = true): void {
+        newCart.subTotal = this.getSubTotal(<Product[]>newCart.items)
         newCart.total = this.getTotal(<Product[]>newCart.items)
         if (refreshProducts) {
             this.productService.getSome(newCart.items.map((item: Product) => item._id))
                 .subscribe(products => {
                     newCart.items = products
+                    newCart.displayItems = this.getDisplayItems(products)
                     this.cart = newCart
                     this.cartSubject.next(this.cart)
                 })
@@ -82,7 +86,7 @@ export class CartService {
         }
     }
 
-    public remove(slug: string) {
+    public remove(slug: string): void {
         const newCart = { ...this.cart }
         this.previousState = { ...this.cart }
         newCart.items.splice(newCart.items.findIndex((i: Product) => i.slug === slug), 1)
@@ -101,8 +105,36 @@ export class CartService {
     }
 
     private getTotal(items: Product[]): number {
-        return this.getSubTotal(items) * this.orgService.organization.retailSettings.salesTaxPercentage
+        return this.getSubTotal(items) * this.orgService.organization.retailSettings.salesTaxPercentage / 100
     }
 
+    private getDisplayItems(items: Product[]): ICartProduct[] {
+        const displayItems: ICartProduct[] = []
 
+        items.forEach(item => {
+            const duplicateItemIndex = displayItems.findIndex(displayItem => displayItem.product._id === item._id)
+
+            if (duplicateItemIndex > -1) {
+                const duplicateItem = displayItems.find(displayItem => displayItem.product._id === item._id)
+
+                displayItems[duplicateItemIndex] = {
+                    ...duplicateItem,
+                    quantity: duplicateItem.quantity + 1,
+                    subTotal: {
+                        total: duplicateItem.subTotal.total + this.productService.getPrice(item).total,
+                        currency: duplicateItem.subTotal.currency,
+                    },
+                }
+            }
+            else {
+                displayItems.push({
+                    quantity: 1,
+                    product: item,
+                    subTotal: this.productService.getPrice(item),
+                })
+            }
+        })
+
+        return displayItems
+    }
 }

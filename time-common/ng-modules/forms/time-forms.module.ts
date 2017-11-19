@@ -16,6 +16,8 @@ import { TimeInputComponent } from './input/input.component'
     TimeInputComponent,
   ],
   exports: [
+    FormsModule,
+    ReactiveFormsModule,
     TimeFormControlComponent,
     TimeInputComponent,
   ],

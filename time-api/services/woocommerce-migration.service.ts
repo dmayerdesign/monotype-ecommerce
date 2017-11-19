@@ -1,6 +1,4 @@
 import { injectable } from 'inversify'
-import { Error } from 'mongoose'
-import { InstanceType } from 'typegoose'
 
 import { CurrencyEnum } from '@time/common/constants'
 
@@ -10,7 +8,6 @@ import { Product, ProductModel } from '@time/common/models/api-models/product'
 import { Taxonomy, TaxonomyModel } from '@time/common/models/api-models/taxonomy'
 import { TaxonomyTerm, TaxonomyTermModel } from '@time/common/models/api-models/taxonomy-term'
 import * as productsJSON from '@time/common/work-files/migration/hyzershop-products'
-import { DbClient } from '../utils'
 
 @injectable()
 export class WoocommerceMigrationService {
@@ -190,8 +187,8 @@ export class WoocommerceMigrationService {
                                             currency: CurrencyEnum.USD,
                                         },
                                     ]
-                                    newProduct.priceRange[0].total = +newProduct.priceRange[0].total
-                                    newProduct.priceRange[1].total = +newProduct.priceRange[1].total
+                                    newProduct.priceRange[0].total = parseInt(priceRangeTotals[0].total, 10)
+                                    newProduct.priceRange[1].total = parseInt(priceRangeTotals[1].total, 10)
                                     delete newProduct[key]
                                 }
                                 else {
@@ -214,8 +211,8 @@ export class WoocommerceMigrationService {
                                             currency: CurrencyEnum.USD,
                                         },
                                     ]
-                                    newProduct.salePriceRange[0].total = +newProduct.salePriceRange[0].total
-                                    newProduct.salePriceRange[1].total = +newProduct.salePriceRange[1].total
+                                    newProduct.salePriceRange[0].total = parseInt(salePriceRangeTotals[0].total, 10)
+                                    newProduct.salePriceRange[1].total = parseInt(salePriceRangeTotals[1].total, 10)
                                     delete newProduct[key]
                                 }
                                 else {

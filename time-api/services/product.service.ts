@@ -1,14 +1,14 @@
 import { Response } from 'express'
 import { inject, injectable } from 'inversify'
-import { Error } from 'mongoose'
+import { InstanceType } from 'typegoose'
 
-import { Crud, HttpStatus } from '@time/common/constants'
+import { Crud, CurrencyEnum, HttpStatus } from '@time/common/constants'
 import { Types } from '@time/common/constants/inversify'
 import { Price } from '@time/common/models/api-models/price'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
 import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
 import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
-import { IDbQueryOptions, IFetchService } from '@time/common/models/interfaces'
+import { IFetchService } from '@time/common/models/interfaces'
 import { DbClient, MongoQueries, ProductSearchUtils } from '../utils'
 
 /**
@@ -272,5 +272,18 @@ export class ProductService implements IFetchService<Product> {
                 reject(new ApiErrorResponse(error))
             }
         })
+    }
+
+    public determinePrice(product: InstanceType<Product>) {
+        if (product.isOnSale && product.salePrice) {
+            return product.salePrice
+        }
+        else if (product.price) {
+            return product.price
+        }
+        return {
+            total: 0,
+            currency: CurrencyEnum.USD,
+        }
     }
 }

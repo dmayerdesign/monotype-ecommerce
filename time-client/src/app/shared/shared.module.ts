@@ -1,13 +1,9 @@
-import { CommonModule } from '@angular/common'
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http'
 import { ModuleWithProviders, NgModule } from '@angular/core'
-import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 
 /*
  * EXTERNAL MODULES
  */
-import { ClickOutsideModule } from 'ng-click-outside'
 import { ToastrModule } from 'ngx-toastr'
 
 /*
@@ -40,10 +36,6 @@ import {
 
 @NgModule({
     imports: [
-        CommonModule,
-        HttpClientModule,
-        FormsModule,
-        ReactiveFormsModule,
         BrowserAnimationsModule,
         ToastrModule.forRoot({
             timeOut: 6000,
@@ -51,7 +43,6 @@ import {
             maxOpened: 1,
             preventDuplicates: true,
         }),
-        ClickOutsideModule,
         TimeHttpModule.forRoot(),
         TimeUiModule,
         TimeFormsModule,
@@ -61,9 +52,10 @@ import {
         LoginComponent,
     ],
     exports: [
-        CommonModule,
+        TimeFormsModule,
+        TimeHttpModule,
+        TimeUiModule,
         SiteLocatorComponent,
-        ClickOutsideModule,
         LoginComponent,
     ],
 })
