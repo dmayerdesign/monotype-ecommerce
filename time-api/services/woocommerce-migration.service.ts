@@ -294,9 +294,9 @@ export class WoocommerceMigrationService {
 
                         if (isDisc) {
                             for (const attributeValueId of newProduct.attributeValues) {
-                                const attributeValue = attributeValues.find(val => val._id === attributeValueId)
+                                const attributeValue = new AttributeValueModel(attributeValues.find(val => val._id === attributeValueId))
                                 if (attributeValue.slug.indexOf("plastic") > -1) {
-                                    imageBaseUrl += `${attributeValue.value.toLowerCase()}-`
+                                    imageBaseUrl += `${attributeValue.getValue().toLowerCase()}-`
                                 }
                             }
                             imageBaseUrl += newProduct.netWeight.toString().replace(".", "")
@@ -304,7 +304,7 @@ export class WoocommerceMigrationService {
                             for (const attributeValueId of newProduct.attributeValues) {
                                 const attributeValue = attributeValues.find(val => val._id === attributeValueId)
                                 if (attributeValue.slug.indexOf("color") > -1) {
-                                    imageBaseUrl += `${attributeValue.value.toLowerCase()}-`
+                                    imageBaseUrl += `${attributeValue.getValue().toLowerCase()}-`
                                 }
                             }
                         }

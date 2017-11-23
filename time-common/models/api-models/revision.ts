@@ -1,11 +1,13 @@
-import { prop, Typegoose } from 'typegoose'
+import { prop } from 'typegoose'
 
-export class Revision extends Typegoose {
+import { timestamped, BaseApiModel } from './base-api-model'
+import { MixedTypeValue } from './mixed-type-value'
+
+export class Revision extends BaseApiModel<Revision> {
     @prop() public id: string
     @prop() public field: string
-    @prop() public value: any
-    @prop() public meta: any
+    @prop() public value: MixedTypeValue
 }
 
-export const RevisionModel = new Revision().getModelForClass(Revision, { schemaOptions: { timestamps: true } })
+export const RevisionModel = new Revision().getModelForClass(Revision, timestamped)
 

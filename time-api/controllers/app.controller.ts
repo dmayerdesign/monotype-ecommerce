@@ -11,10 +11,9 @@ export class AppController {
     @request() req: Request,
     @response() res: Response,
   ): any {
-    res.sendFile('index.html', { root: 'dist/public' })
-
+    // res.sendFile('index.html', { root: 'dist/public' })
     // ANGULAR UNIVERSAL
-    // res.render('index', { req, res })
+    res.render('index', { req, res })
   }
 
 }

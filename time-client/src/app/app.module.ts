@@ -11,9 +11,9 @@ import { SiteModule } from './site/site.module'
         AppComponent,
     ],
     imports: [
-        BrowserModule,
+        // BrowserModule,
         // ANGULAR UNIVERSAL
-        // BrowserModule.withServerTransition({appId: 'time-client-universal'}),
+        BrowserModule.withServerTransition({appId: 'time-client-universal'}),
         RouterModule.forRoot([]),
         SiteModule,
         ShopModule,

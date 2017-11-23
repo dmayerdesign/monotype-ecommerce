@@ -4,10 +4,10 @@ import { arrayProp, plugin, pre, prop, Ref } from 'typegoose'
 import { ProductClass, ProductClassEnum } from '../types/product-class'
 import { Attribute } from './attribute'
 import { AttributeValue } from './attribute-value'
+import { timestamped, BaseApiModel } from './base-api-model'
 import { Dimensions } from './dimensions'
 import { Price } from './price'
 import { TaxonomyTerm } from './taxonomy-term'
-import { TimeModel } from './time-model'
 import { Units } from './units'
 
 @plugin(mongooseDelete)
@@ -32,7 +32,7 @@ import { Units } from './units'
     }
     next()
 })
-export class Product extends TimeModel {
+export class Product extends BaseApiModel<Product> {
 	/* Aesthetic */
     @prop() public name: string
     @prop() public slug: string
@@ -45,20 +45,10 @@ export class Product extends TimeModel {
 	/* Technical */
     @prop({ unique: true }) public SKU: string
     @prop() public price: Price
-    @arrayProp({
-        items: {
-            total: Number,
-            currency: String,
-        }
-    }) public priceRange: Price[]
+    @arrayProp({ items: Price }) public priceRange: Price[]
 
     @prop() public salePrice: Price
-    @arrayProp({
-        items: {
-            total: Number,
-            currency: String,
-        }
-    }) public salePriceRange: Price[]
+    @arrayProp({ items: Price }) public salePriceRange: Price[]
     @prop() public isOnSale: boolean
     @prop({ enum: Object.keys(ProductClassEnum) }) public class: ProductClass
     @prop() public isStandalone: boolean
@@ -97,4 +87,4 @@ export class Product extends TimeModel {
     @prop() public isEnteredIntoStripe: boolean
 }
 
-export const ProductModel = new Product().getModelForClass(Product, { schemaOptions: { timestamps: true } })
+export const ProductModel = new Product().getModelForClass(Product, timestamped)

@@ -1,11 +1,12 @@
-import { arrayProp, prop, Ref, Typegoose } from 'typegoose'
+import { arrayProp, prop, Ref } from 'typegoose'
 
 import { Address } from './address'
+import { timestamped, BaseApiModel } from './base-api-model'
 import { Cart } from './cart'
 import { Image } from './image'
 import { Order } from './order'
 
-export class User extends Typegoose {
+export class User extends BaseApiModel<User> {
     @prop({ required: true }) public email: string
     @prop() public emailIsVerified?: boolean
     @prop() public emailVerificationToken?: string
@@ -29,8 +30,6 @@ export class User extends Typegoose {
     @prop() public stripeCustomerId: string
 
     @prop() public cart: Cart
-
-    @prop() public customFields: {}
 }
 
-export const UserModel = new User().getModelForClass(User, { schemaOptions: { timestamps: true } })
+export const UserModel = new User().getModelForClass(User, timestamped)

@@ -17,9 +17,9 @@ import { isProduction } from './utils/env'
 import { onStart } from './utils/startup'
 
 /** ANGULAR UNIVERSAL - imports */
-// import * as ngUniversal from '@nguniversal/express-engine'
-// import 'zone.js/dist/zone-node'
-// import { AppServerModule } from '../time-client/src/app/app.server.module'
+import * as ngUniversal from '@nguniversal/express-engine'
+import 'zone.js/dist/zone-node'
+import { AppServerModule } from '../time-client/src/app/app.server.module'
 
 function serverErrorConfig(app) {
     app.use((err, req, res, next) => {
@@ -48,11 +48,11 @@ function serverConfig(app) {
     onStart()
 
     // ANGULAR UNIVERSAL - bootstrap
-    // app.engine('html', ngUniversal.ngExpressEngine({
-    //     bootstrap: AppServerModule,
-    // }))
-    // app.set('view engine', 'html')
-    // app.set('views', 'dist/public')
+    app.engine('html', ngUniversal.ngExpressEngine({
+        bootstrap: AppServerModule,
+    }))
+    app.set('view engine', 'html')
+    app.set('views', 'dist/public')
 }
 
 /**

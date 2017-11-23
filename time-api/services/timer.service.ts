@@ -41,7 +41,7 @@ export class TimerService {
         // Create new API requests based on the old timers.
 
         timers.forEach(timer => {
-            const data = timer.data
+            const data = timer.jsonData ? JSON.parse(timer.jsonData) : null
             const timeout = timer.duration - (Date.now() - timer.startedAt)
 
             // If the timer is old, don't restore it.
