@@ -30,7 +30,6 @@ export class RouteStateService {
                 } else {
                     this.previousUrl = "/"
                 }
-                console.log("Previous URL", this.previousUrl)
             })
     }
 

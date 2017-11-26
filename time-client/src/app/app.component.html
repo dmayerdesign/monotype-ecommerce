@@ -1,3 +1,4 @@
 <h1>App</h1>
 <router-outlet></router-outlet>
-<time-modal [(show)]="modal.show" [data]="modal.data"></time-modal>
+<time-modal *ngIf="modalData$" [data$]="modalData$"></time-modal>
+<time-toast [toast$]="toast$"></time-toast>

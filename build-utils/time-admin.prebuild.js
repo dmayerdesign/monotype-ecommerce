@@ -6,9 +6,12 @@ const commonDest = path.resolve(__dirname, '../time-admin/src/common')
 const appConfigSrc = path.resolve(__dirname, '../app-config.ts')
 const appConfigDest = path.resolve(__dirname, '../time-admin/src/app-config.ts')
 
+console.log('Copying common files...')
+
 try {
     fs.copySync(commonSrc, commonDest)
     fs.copySync(appConfigSrc, appConfigDest)
+    console.log('Copied common files!')
     process.exit()
 }
 catch (error) {

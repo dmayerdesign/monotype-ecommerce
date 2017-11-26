@@ -1,8 +1,11 @@
 import { Component, OnInit } from '@angular/core'
-import { ToastrService } from 'ngx-toastr'
+import { Observable } from 'rxjs/Observable'
+import { Subject } from 'rxjs/Subject'
 
 import { Copy } from '@time/common/constants'
-import { IFlash } from './shared/models/ui.models'
+import { ToastType } from '@time/common/models/enums/toast-type'
+import { IModalData } from '@time/common/models/interfaces/ui/modal-data'
+import { IToast } from '@time/common/models/interfaces/ui/toast'
 import { UiService } from './shared/services/ui.service'
 import { UtilService } from './shared/services/util.service'
 
@@ -12,33 +15,22 @@ import { UtilService } from './shared/services/util.service'
     styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
-    public title = 'app'
-    public modal = {
-        show: false,
-        data: null,
-    }
+    public toastSubject = new Subject<IToast>()
+    public toast$: Observable<IToast>
+    public modalDataSubject = new Subject<IModalData>()
+    public modalData$: Observable<IModalData>
 
     constructor(
         private ui: UiService,
         private util: UtilService,
-        private toastr: ToastrService,
-    ) {}
+    ) { }
 
     public ngOnInit() {
-        this.ui.flash$.subscribe(flash => this.showToast(flash))
-        this.util.serverError$.subscribe(err => {
-            this.ui.flash(Copy.ErrorMessages.generic, "error")
-        })
-        this.ui.modal$.subscribe(modalData => {
-            this.modal.data = modalData
-            this.modal.show = true
-        })
-    }
+        this.toast$ = this.toastSubject.asObservable()
+        this.modalData$ = this.modalDataSubject.asObservable()
 
-    public showToast(flash: IFlash) {
-        // If running on the server, don't attempt DOM manipulation
-        if (!document) return
-        // Need to wrap in a `setTimeout` to avoid `ExpressionChangedAfterItHasBeenCheckedError`
-        setTimeout(() => this.toastr[flash.type](flash.message))
+        this.ui.flash$.subscribe(flash => this.toastSubject.next(flash))
+
+        this.ui.modal$.subscribe(modalData => this.modalDataSubject.next(modalData))
     }
 }

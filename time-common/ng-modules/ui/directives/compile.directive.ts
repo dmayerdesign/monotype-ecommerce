@@ -31,7 +31,7 @@ export class CompileDirective implements AfterViewInit {
                 this.updateProperties()
                 return
             }
-            throw Error('You forgot to provide template')
+            throw Error('You forgot to provide a template')
         }
 
         this.vcRef.clear()
@@ -40,15 +40,15 @@ export class CompileDirective implements AfterViewInit {
         const component = this.createDynamicComponent(this.compile)
         const module = this.createDynamicModule(component)
         this.compiler.compileModuleAndAllComponentsAsync(module)
-        .then((moduleWithFactories: ModuleWithComponentFactories<any>) => {
-            const compFactory = moduleWithFactories.componentFactories.find(x => x.componentType === component)
+            .then((moduleWithFactories: ModuleWithComponentFactories<any>) => {
+                const compFactory = moduleWithFactories.componentFactories.find(x => x.componentType === component)
 
-            this.componentRef = this.vcRef.createComponent(compFactory)
-            this.updateProperties()
-        })
-        .catch(error => {
-            console.log(error)
-        })
+                this.componentRef = this.vcRef.createComponent(compFactory)
+                this.updateProperties()
+            })
+            .catch(error => {
+                console.error(error)
+            })
     }
 
     public updateProperties() {

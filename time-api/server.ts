@@ -9,6 +9,7 @@ import { InversifyExpressServer } from 'inversify-express-utils'
 import * as morgan from 'morgan'
 import * as passport from 'passport'
 import 'reflect-metadata'
+import * as xhr from 'xmlhttprequest'
 
 import { passportConfig } from './auth/passport'
 import { container } from './config/inversify.config'
@@ -16,7 +17,8 @@ import { mongoConnection } from './db/mongo.connection'
 import { isProduction } from './utils/env'
 import { onStart } from './utils/startup'
 
-/** ANGULAR UNIVERSAL - imports */
+/** ANGULAR UNIVERSAL */
+global['XMLHttpRequest'] = xhr.XMLHttpRequest
 import * as ngUniversal from '@nguniversal/express-engine'
 import 'zone.js/dist/zone-node'
 import { AppServerModule } from '../time-client/src/app/app.server.module'
@@ -29,6 +31,13 @@ function serverErrorConfig(app) {
 }
 
 function serverConfig(app) {
+    // ANGULAR UNIVERSAL - bootstrap
+    app.engine('html', ngUniversal.ngExpressEngine({
+        bootstrap: AppServerModule,
+    }))
+    app.set('view engine', 'html')
+    app.set('views', 'dist/public')
+
     app.set('port', process.env.PORT)
     app.use(cookieParser())
     app.use(express.static('dist/public'))
@@ -46,13 +55,6 @@ function serverConfig(app) {
     passportConfig()
 
     onStart()
-
-    // ANGULAR UNIVERSAL - bootstrap
-    app.engine('html', ngUniversal.ngExpressEngine({
-        bootstrap: AppServerModule,
-    }))
-    app.set('view engine', 'html')
-    app.set('views', 'dist/public')
 }
 
 /**

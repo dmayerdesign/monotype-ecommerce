@@ -5,4 +5,6 @@ export class ErrorMessage {
     public static readonly DocumentNotCreated: string = 'The document could not be created.'
     public static readonly DocumentsNotUpdated: string = 'The document(s) could not be updated.'
     public static readonly DocumentNotUpdated: string = 'The document could not be updated.'
+    public static readonly ServerError: string = 'Oops — something went wrong. Try refreshing the page.'
+    public static readonly UserNotAuthenticated: string = 'You\'re not logged in.'
 }

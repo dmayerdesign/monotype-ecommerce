@@ -5,18 +5,30 @@ require('dotenv').config()
 const packageJson = require('../../package.json')
 const version = packageJson.version
 
+// Exclude all packages from the build, since your node server
+// has access to node_modules directly
 const externals = {}
 fs.readdirSync(path.resolve(__dirname, '../../node_modules'))
 	.filter(x => ['.bin'].indexOf(x) === -1)
 	.forEach(mod => {
-		externals[mod] = `commonjs ${mod}`
+		// Don't forget scoped packages
+		if (mod.indexOf('@') === 0) {
+			fs.readdirSync(path.resolve(__dirname, '../../node_modules/' + mod))
+				.filter(x => ['.bin'].indexOf(x) === -1)
+				.forEach(subMod => {
+					externals[mod + '/' + subMod] = `commonjs ${mod + '/' + subMod}`
+				})
+		}
+		else {
+			externals[mod] = `commonjs ${mod}`
+		}
 	})
 
 module.exports = {
 	name: 'server',
 	target: 'node',
-	entry: path.resolve(__dirname, '../server.ts'),
 	externals,
+	entry: path.resolve(__dirname, '../server.ts'),
 	output: {
 			path: path.resolve(__dirname, '../../dist/'),
 			filename: 'server.js',

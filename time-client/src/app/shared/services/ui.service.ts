@@ -2,23 +2,25 @@ import { Injectable } from '@angular/core'
 import { Title } from '@angular/platform-browser'
 import { Subject } from 'rxjs/Subject'
 
+import { ErrorMessage } from '@time/common/constants/error-message'
+import { ToastType } from '@time/common/models/enums/toast-type'
 import { IModalData } from '@time/common/models/interfaces'
+import { IToast } from '@time/common/models/interfaces/ui/toast'
 import { SimpleError, TimeHttpService } from '@time/common/ng-modules/http'
-import { FlashMessageType, IFlash } from '../models/ui.models'
 
 @Injectable()
 export class UiService {
     public viewReady$ = new Subject<boolean>()
-    public flash$ = new Subject<IFlash>()
-    public flashCancel$ = new Subject<any>()
+    public flash$ = new Subject<IToast>()
     public modal$ = new Subject<IModalData>()
 
     constructor(
         private titleService: Title,
         private timeHttpService: TimeHttpService,
     ) {
-        this.timeHttpService.error$.subscribe(err => {
-            console.log("ERROR!!@#!@!@#!@#", err)
+        this.timeHttpService.error$.subscribe(error => {
+            console.log("ERROR!!!@!@#!@#")
+            this.flashError(error)
         })
     }
 
@@ -32,23 +34,21 @@ export class UiService {
 	 * @param msg
 	 * @param {string} [t = success|error|info|warning]
 	 */
-    public flash(message: string, type: FlashMessageType = 'info', timeout: number = 5000) {
-        const data: IFlash = {
+    public flash(message: string, type: ToastType = ToastType.Info, timeout: number = 5500) {
+        const data: IToast = {
             type,
             message,
             timeout,
         }
         this.flash$.next(data)
-        setTimeout(() => {
-            this.flashCancel$.next()
-        }, timeout)
     }
 
 	/**
 	 * Display an error as a flash message
 	 */
     public flashError(error: SimpleError) {
-        this.flash(error.message, 'error')
+        console.error(error)
+        this.flash(ErrorMessage.ServerError, ToastType.Error)
     }
 
     /**

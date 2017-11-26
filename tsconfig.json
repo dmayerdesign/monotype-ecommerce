@@ -3,6 +3,7 @@
     "baseUrl": ".",
     "paths": {
       "@angular/*": [ "./node_modules/@angular/*" ],
+      "rxjs/*": [ "./node_modules/rxjs/*" ],
       "@time/common/*": [ "./time-common/*" ],
       "@time/app-config": [ "./app-config.ts" ],
       "@time/environment": [ "./time-client/src/environments/environment.ts" ],
@@ -26,7 +27,6 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "moduleResolution": "node",
-    "noUnusedLocals": true,
     "allowJs": false,
     "allowSyntheticDefaultImports": true
   },

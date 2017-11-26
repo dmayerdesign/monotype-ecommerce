@@ -14,7 +14,7 @@ export class TimeHttpRequestInterceptor implements HttpInterceptor {
 
     public intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
         let newRequest = request
-        if (request.url.indexOf("/api") === 0) {
+        if (request.url.indexOf('/api') === 0) {
             newRequest = request.clone({ url: AppConfig.client_url + request.url })
         }
         return next.handle(newRequest)

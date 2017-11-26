@@ -4,7 +4,9 @@ import * as jwt from 'jsonwebtoken'
 
 import { HttpStatus } from '@time/common/constants'
 import { Cookies, Copy } from '@time/common/constants'
+import { ErrorMessage } from '@time/common/constants/error-message'
 import { User } from '@time/common/models/api-models/user'
+import { ApiErrorResponse } from '@time/common/models/helpers/api-error-response'
 
 const jwtSecret = process.env.JWT_SECRET
 
@@ -19,7 +21,7 @@ export class Authenticate {
         let payload: User = null
 
         if (!token) {
-            res.status(HttpStatus.CLIENT_ERROR_unauthorized).json({})
+            res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new ApiErrorResponse(new Error(ErrorMessage.UserNotAuthenticated)))
             return
         }
 
@@ -27,7 +29,7 @@ export class Authenticate {
             payload = jwt.verify(token, jwtSecret)
         }
         catch (error) {
-            res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new Error(Copy.ErrorMessages.generic))
+            res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new ApiErrorResponse(new Error(Copy.ErrorMessages.generic)))
             return
         }
 

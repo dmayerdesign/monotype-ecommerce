@@ -37,29 +37,33 @@ export class UserService {
         return this._user
     }
 
+    private clearSession(): void {
+        this.userSubject.next(null)
+    }
+
+    private refreshSession(user: User): void {
+        this.userSubject.next(user)
+    }
+
     public signup(userInfo: IUserRegistration): void {
         this.http.post('/api/user/register', userInfo)
             .subscribe((user: User) => {
-                this.doLogin(user)
+                this.refreshSession(user)
             })
     }
 
     public login(credentials: ILogin): void {
         // FOR TESTING
         this.http.get('/api/user/login').subscribe((userData: User) => {
-            this.doLogin(userData)
+            this.refreshSession(userData)
         })
         // this.http.post('/api/user/login', credentials)
     }
 
     public getUser(): void {
         this.http.get('/api/user/get-user').subscribe((userData: User) => {
-            this.doLogin(userData)
+            this.refreshSession(userData)
         })
-    }
-
-    private doLogin(user: User): void {
-        this.userSubject.next(user)
     }
 
     public logout(): void {
@@ -78,10 +82,6 @@ export class UserService {
                     this.router.navigateByUrl('/shop')
                 }
             })
-    }
-
-    private clearSession(): void {
-        this.userSubject.next(null)
     }
 
     public verifyEmail(token: string): Observable<User> {

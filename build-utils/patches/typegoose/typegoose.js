@@ -106,4 +106,3 @@ class Typegoose {
     }
 }
 exports.Typegoose = Typegoose;
-//# sourceMappingURL=typegoose.js.map

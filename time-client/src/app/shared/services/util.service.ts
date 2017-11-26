@@ -1,21 +1,44 @@
 import { Injectable } from '@angular/core'
+import { Title } from '@angular/platform-browser'
+import { Observable } from 'rxjs/Observable'
+import { ReplaySubject } from 'rxjs/ReplaySubject'
 import { Subject } from 'rxjs/Subject'
 import 'rxjs/add/observable/throw'
 import 'rxjs/add/operator/catch'
+import 'rxjs/add/operator/delay'
 import 'rxjs/add/operator/map'
-import { SeoService } from './seo.service'
+
+import { AppConfig } from '@time/app-config'
 
 @Injectable()
 export class UtilService {
 
-    public serverError$ = new Subject<any>()
-
     constructor(
-        private seo: SeoService,
+        private titleService: Title,
     ) {}
 
     public setTitle(title: string): void {
-        this.seo.setTitle(title)
+        this.titleService.setTitle(title + ' | ' + AppConfig.brand_name)
+    }
+
+    public getTitle(): string {
+        return this.titleService.getTitle()
+    }
+
+    public timeout(timeout: number): Observable<any> {
+        const subject = new ReplaySubject(1)
+        const observable = subject.asObservable().delay(timeout)
+        subject.next(0)
+        return observable
+    }
+
+    public isServerApp(): boolean {
+        if (typeof window === 'undefined') {
+            return true
+        }
+        else {
+            return false
+        }
     }
 
     public getFromLocalStorage(key: string): object|string|undefined {

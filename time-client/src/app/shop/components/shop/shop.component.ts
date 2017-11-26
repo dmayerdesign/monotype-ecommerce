@@ -63,4 +63,8 @@ export class ShopComponent implements OnInit, AfterViewInit {
         })
     }
 
+    public doAToastThing() {
+        this.ui.flash('Hello!')
+    }
+
 }

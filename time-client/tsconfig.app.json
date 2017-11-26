@@ -1,16 +1,17 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
+    "module": "es2015",
     "baseUrl": ".",
     "paths": {
       "@angular/*": [ "../node_modules/@angular/*" ],
+      "rxjs/*": [ "../node_modules/rxjs/*" ],
       "@time/common/*": [ "./src/common/*" ],
       "@time/app-config": [ "../app-config.ts" ],
       "@time/environment": [ "./src/environments/environment" ],
       "mongoose": [ "../node_modules/@types/mongoose" ],
       "stripe": [ "../node_modules/@types/stripe-node" ]
-    },
-    "module": "es2015"
+    }
   },
   "files": [
     "src/main.ts"
