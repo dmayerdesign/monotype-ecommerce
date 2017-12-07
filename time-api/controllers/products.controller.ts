@@ -15,7 +15,9 @@ import { AppConfig } from '@time/app-config'
 import { Endpoints, Types } from '@time/common/constants'
 import { Product } from '@time/common/models/api-models/product'
 import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
+import { ApiResponse } from '@time/common/models/helpers'
 import { ProductService, WoocommerceMigrationService } from '../services'
+
 
 @injectable()
 @controller(Endpoints.Products)

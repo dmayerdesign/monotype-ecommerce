@@ -1,4 +1,4 @@
-import { prop } from 'typegoose'
+import { prop } from '../../utils/goosetype'
 import { Address } from './address'
 
 export class OrderCustomer {

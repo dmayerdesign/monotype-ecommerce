@@ -69,7 +69,6 @@
     "node-easypost": "^3.0.0-rc.21",
     "passport": "0.3.2",
     "passport-facebook": "2.1.1",
-    "passport-local-mongoose": "^4.2.1",
     "path": "0.12.7",
     "pug": "2.0.0-rc.2",
     "reflect-metadata": "0.1.10",

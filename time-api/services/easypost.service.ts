@@ -1,5 +1,4 @@
 import Easypost from 'node-easypost'
-import { InstanceType } from 'typegoose'
 
 import { Address } from '@time/common/models/api-models/address'
 import { FindOrderError, Order, OrderModel, UpdateOrderError } from '@time/common/models/api-models/order'

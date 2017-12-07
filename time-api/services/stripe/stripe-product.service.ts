@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify'
 import * as Stripe from 'stripe'
-import { InstanceType } from 'typegoose'
 
 import { CurrencyEnum } from '@time/common/constants/currency'
 import { Types } from '@time/common/constants/inversify'
+import { InstanceType } from '@time/common/models/api-models/base-api-model'
 import { Order } from '@time/common/models/api-models/order'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
 import {

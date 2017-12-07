@@ -1,7 +1,5 @@
-import { arrayProp, prop, Ref } from 'typegoose'
-
+import { arrayProp, prop, Model, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
 import { OrderStatus, OrderStatusEnum } from '../types/order-status'
-import { timestamped, BaseApiModel } from './base-api-model'
 import { Discount } from './discount'
 import { EasypostRate } from './easypost-rate'
 import { OrderCustomer } from './order-customer'
@@ -9,7 +7,7 @@ import { Price } from './price'
 import { Product } from './product'
 import { StripeCardToken } from './stripe-card-token'
 
-export class Order extends BaseApiModel<Order> {
+export class Order extends Model<Order> {
     @arrayProp({ itemsRef: Product }) public items: Ref<Product>[]
     @arrayProp({ itemsRef: Discount }) public discounts: Ref<Discount>[]
     @prop() public total: Price
@@ -34,7 +32,7 @@ export class Order extends BaseApiModel<Order> {
     @prop() public customer: OrderCustomer
 }
 
-export const OrderModel = new Order().getModelForClass(Order, timestamped)
+export const OrderModel = new Order().getModel(MongooseSchemaOptions.Timestamped)
 
 export class CreateOrderError extends Error { }
 export class FindOrderError extends Error { }

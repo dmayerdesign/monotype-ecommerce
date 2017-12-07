@@ -1,11 +1,9 @@
-import { prop } from 'typegoose'
+import { prop, Model, MongooseSchemaOptions } from '../../utils/goosetype'
 
-import { timestamped, BaseApiModel } from './base-api-model'
-
-export class Revision extends BaseApiModel<Revision> {
+export class Revision extends Model<Revision> {
     @prop() public id: string
     @prop() public field: string
     @prop() public value: any
 }
 
-export const RevisionModel = new Revision().getModelForClass(Revision, timestamped)
+export const RevisionModel = new Revision().getModel(MongooseSchemaOptions.Timestamped)

@@ -1,16 +1,15 @@
 import * as findOrCreate from 'mongoose-findorcreate'
-import { plugin, prop } from 'typegoose'
-import { BaseApiModel } from './base-api-model'
+import { plugin, prop, Model } from '../../utils/goosetype'
 
 @plugin(findOrCreate)
-export class Attribute extends BaseApiModel<Attribute> {
+export class Attribute extends Model<Attribute> {
     @prop() public name: string
     @prop() public pluralName: string
     @prop() public slug: string
     @prop() public description: string
 }
 
-export const AttributeModel = new Attribute().getModelForClass(Attribute)
+export const AttributeModel = new Attribute().getModel()
 
 export class CreateAttributeError extends Error { }
 export class FindAttributeError extends Error { }

@@ -3,8 +3,10 @@ import { interfaces, TYPE } from 'inversify-express-utils'
 import { makeLoggerMiddleware } from 'inversify-logger-middleware'
 
 import { Tags, Types } from '@time/common/constants/inversify'
+import { ModelBuilder } from '@time/common/utils/goosetype'
 import { Authenticate } from '../auth/authenticate'
 import { AppController, ProductsController, UserController } from '../controllers'
+import { DbClient } from '../data-access/db-client'
 import { DiscountService } from '../services/discount.service'
 import { EmailService } from '../services/email.service'
 import { ErrorService } from '../services/error.service'
@@ -16,7 +18,7 @@ import { StripeProductService } from '../services/stripe/stripe-product.service'
 import { TimerService } from '../services/timer.service'
 import { UserService } from '../services/user.service'
 import { WoocommerceMigrationService } from '../services/woocommerce-migration.service'
-import { isDev, DbClient, ProductSearchUtils } from '../utils'
+import { isDev, ProductSearchUtils } from '../utils'
 
 // load everything needed to the Container
 const container = new Container()
@@ -25,6 +27,9 @@ if (isDev()) {
   const logger = makeLoggerMiddleware()
   container.applyMiddleware(logger)
 }
+
+// Mongoose
+container.bind<ModelBuilder>(Types.ModelBuilder).to(ModelBuilder).inSingletonScope()
 
 // Services
 container.bind<DbClient<any>>(Types.DbClient).to(DbClient)

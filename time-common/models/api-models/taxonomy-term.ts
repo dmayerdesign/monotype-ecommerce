@@ -1,17 +1,11 @@
 import * as findOrCreate from 'mongoose-findorcreate'
-import { arrayProp, plugin, prop, InstanceType, Ref, Typegoose } from 'typegoose'
 
+import { arrayProp, plugin, prop, Model, Ref } from '../../utils/goosetype'
 import { Taxonomy } from './taxonomy'
 import { TaxonomyTermSettings } from './taxonomy-term-settings'
 
 @plugin(findOrCreate)
-export class TaxonomyTerm extends Typegoose {
-    public static readonly findOrCreate: <T>(query: object) => Promise<{ doc: InstanceType<T>; created: boolean }>
-    public _id?: string
-    public createdAt?: Date
-    public updatedAt?: Date
-    public readonly save: () => Promise<InstanceType<TaxonomyTerm>>
-
+export class TaxonomyTerm extends Model<TaxonomyTerm> {
     @prop({ ref: Taxonomy }) public taxonomy: Ref<Taxonomy>
     @prop() public name: string
     @prop() public pluralName: string
@@ -23,4 +17,4 @@ export class TaxonomyTerm extends Typegoose {
     @prop() public settings: TaxonomyTermSettings
 }
 
-export const TaxonomyTermModel = new TaxonomyTerm().getModelForClass(TaxonomyTerm)
+export const TaxonomyTermModel = new TaxonomyTerm().getModel()

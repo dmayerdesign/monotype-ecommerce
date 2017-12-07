@@ -1,7 +1,7 @@
 import { injectable } from 'inversify'
 import * as Stripe from 'stripe'
-import { InstanceType } from 'typegoose'
 
+import { InstanceType } from '@time/common/models/api-models/base-api-model'
 import { Order } from '@time/common/models/api-models/order'
 import { User, UserModel } from '@time/common/models/api-models/user'
 import { ApiErrorResponse } from '@time/common/models/helpers/api-error-response'

@@ -1,16 +1,15 @@
-import { prop } from 'typegoose'
-import { timestamped, BaseApiModel } from './base-api-model'
+import { prop, Model, MongooseSchemaOptions } from '../../utils/goosetype'
 
 export class OrganizationRetailSettings {
     @prop() public salesTaxPercentage: number
 }
 
-export class Organization extends BaseApiModel<Organization> {
+export class Organization extends Model<Organization> {
     @prop() public name: string
     @prop() public retailSettings: OrganizationRetailSettings
 }
 
-export const OrganizationModel = new Organization().getModelForClass(Organization, timestamped)
+export const OrganizationModel = new Organization().getModel(MongooseSchemaOptions.Timestamped)
 
 export class CreateOrganizationError extends Error { }
 export class FindOrganizationError extends Error { }

@@ -1,5 +1,4 @@
-import { arrayProp, prop, Ref } from 'typegoose'
-import { BaseApiModel } from './base-api-model'
+import { arrayProp, prop, Model, Ref } from '../../utils/goosetype'
 import { Price } from './price'
 import { Product } from './product'
 import { TaxonomyTerm } from './taxonomy-term'
@@ -9,7 +8,7 @@ class DiscountExceptions {
     @arrayProp({ itemsRef: TaxonomyTerm }) public taxonomyTerms: Ref<TaxonomyTerm>[]
 }
 
-export class Discount extends BaseApiModel<Discount> {
+export class Discount extends Model<Discount> {
     @prop() public code: string
     @prop() public amount: Price
     @prop() public percentage: number // `20` for a 20% discount
@@ -18,7 +17,7 @@ export class Discount extends BaseApiModel<Discount> {
     @prop() public excludes: DiscountExceptions
 }
 
-export const DiscountModel = new Discount().getModelForClass(Discount)
+export const DiscountModel = new Discount().getModel()
 
 export class CreateDiscountError extends Error { }
 export class FindDiscountError extends Error { }

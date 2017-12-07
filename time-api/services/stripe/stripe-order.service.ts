@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify'
 import 'stripe'
-import { InstanceType } from 'typegoose'
 
 import { AppConfig } from '@time/app-config'
 import { Types } from '@time/common/constants/inversify'
+import { InstanceType } from '@time/common/models/api-models/base-api-model'
 import { Order } from '@time/common/models/api-models/order'
 import { OrganizationModel } from '@time/common/models/api-models/organization'
 import { Product, ProductModel } from '@time/common/models/api-models/product'

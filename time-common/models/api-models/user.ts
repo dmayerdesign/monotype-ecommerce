@@ -1,12 +1,10 @@
-import { arrayProp, prop, Ref } from 'typegoose'
-
+import { arrayProp, prop, Model, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
 import { Address } from './address'
-import { timestamped, BaseApiModel } from './base-api-model'
 import { Cart } from './cart'
 import { Image } from './image'
 import { Order } from './order'
 
-export class User extends BaseApiModel<User> {
+export class User extends Model<User> {
     @prop({ required: true }) public email: string
     @prop() public emailIsVerified?: boolean
     @prop() public emailVerificationToken?: string
@@ -32,4 +30,4 @@ export class User extends BaseApiModel<User> {
     @prop() public cart: Cart
 }
 
-export const UserModel = new User().getModelForClass(User, timestamped)
+export const UserModel = new User().getModel(MongooseSchemaOptions.Timestamped)

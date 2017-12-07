@@ -1,4 +1,4 @@
-import { prop } from 'typegoose'
+import { prop } from '../../utils/goosetype'
 
 import { StripeCardHash } from './stripe-card-hash'
 

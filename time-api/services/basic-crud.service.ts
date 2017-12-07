@@ -1,6 +1,5 @@
 import { injectable } from 'inversify'
 import { Document, Error } from 'mongoose'
-import { ModelType } from 'typegoose'
 
 import { ErrorMessage } from '@time/common/constants/error-message'
 import { HttpStatus } from '@time/common/constants/http'

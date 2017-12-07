@@ -1,4 +1,4 @@
-import { arrayProp, Ref } from 'typegoose'
+import { arrayProp, Ref } from '../../utils/goosetype'
 
 import { Attribute } from './attribute'
 

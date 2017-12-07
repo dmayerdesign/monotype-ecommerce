@@ -1,6 +1,4 @@
-import { arrayProp, prop, Ref, Typegoose } from 'typegoose'
-
-import { BaseApiModel, timestamped } from './base-api-model';
+import { arrayProp, prop, Model, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
 import { User } from './user'
 
 export class LinkEmbed {
@@ -23,7 +21,7 @@ export class Reactions {
     @arrayProp({ itemsRef: User }) public down: Ref<User>[]
 }
 
-export class Comment extends BaseApiModel<Comment> {
+export class Comment extends Model<Comment> {
     @prop() public author: Author
     @prop() public content: string
     @arrayProp({ items: String }) public images: string[]
@@ -31,7 +29,7 @@ export class Comment extends BaseApiModel<Comment> {
     @prop() public reactions: Reactions
 }
 
-export class Post extends BaseApiModel<Post> {
+export class Post extends Model<Post> {
     @prop() public author: Author
     @prop({ default: 'normal' }) public type: string
     @prop() public content: Author
@@ -44,8 +42,8 @@ export class Post extends BaseApiModel<Post> {
     @prop() public reactions: Reactions
 }
 
-export const PostModel = new Post().getModelForClass(Post, timestamped)
-export const CommentModel = new Comment().getModelForClass(Comment, timestamped)
+export const PostModel = new Post().getModel(MongooseSchemaOptions.Timestamped)
+export const CommentModel = new Comment().getModel(MongooseSchemaOptions.Timestamped)
 
 export class CreateCommentError extends Error { }
 export class FindCommentError extends Error { }

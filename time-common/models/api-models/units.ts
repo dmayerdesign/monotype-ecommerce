@@ -1,4 +1,4 @@
-import { prop } from 'typegoose'
+import { prop } from '../../utils/goosetype'
 
 import { LengthUnit, LengthUnitEnum, WeightUnit, WeightUnitEnum } from '../types'
 

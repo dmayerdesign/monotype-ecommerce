@@ -5,7 +5,7 @@ import { Types } from '@time/common/constants/inversify'
 import { Discount, DiscountModel } from '@time/common/models/api-models/discount'
 import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
 import { IFetchService } from '@time/common/models/interfaces/fetch-service'
-import { DbClient } from '../utils'
+import { DbClient } from '../data-access/db-client'
 
 /**
  * Service for fetching documents from the `discounts` collection

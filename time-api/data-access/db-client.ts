@@ -1,13 +1,18 @@
+import { prop, BaseApiModel, InstanceType } from '@time/common/models/api-models/base-api-model'
 import * as JSONStream from 'JSONStream'
 import { Response } from 'express'
 import { injectable } from 'inversify'
+import * as mongoose from 'mongoose'
 import { Document, Error, Model, Types } from 'mongoose'
-import { Typegoose } from 'typegoose'
 
+import { ApiResponse } from '@time/common/models/helpers'
 import { SchemaError } from '@time/common/models/types/errors'
 
+import { ProductModel } from '@time/common/models/api-models/product'
+
 @injectable()
-export class DbClient<T extends Document|Typegoose> {
+export class DbClient<T extends Document|BaseApiModel<any>> {
+
     /**
      * Gets a filtered set of documents from a collection
      *
@@ -16,6 +21,9 @@ export class DbClient<T extends Document|Typegoose> {
      * @param {boolean} res - Pass the express `Response` if the set of documents should be streamed rather than loaded into memory
      */
     public getFilteredCollection(model: Model<T & Document>, query: Object, options?: { limit: number; skip: number }, res?: Response): Promise<T[]> {
+
+        console.log('---- GET FILTERED COLLECTION ----')
+
         if (!options) {
             options = { limit: 0, skip: 0 }
         }
@@ -27,10 +35,11 @@ export class DbClient<T extends Document|Typegoose> {
         }
 
         return new Promise<T[]>(async (resolve, reject) => {
-            /**
-             * Stream the data
-             */
+
+            // Stream the data
+
             if (res) {
+                console.log('Try the thing')
                 try {
                     await model.find(query)
                         .skip(options.skip)
@@ -38,21 +47,26 @@ export class DbClient<T extends Document|Typegoose> {
                         .cursor()
                         .pipe(JSONStream.stringify())
                         .pipe(res)
+
                     resolve()
                 }
                 catch (streamError) {
                     reject(streamError)
                 }
             }
-            /**
-             * Fetch the data normally
-             */
+
+            // Fetch the data normally
+
             else {
-                model.find(query)
-                    .skip(options.skip)
-                    .limit(options.limit)
-                    .then(documents => resolve(documents))
-                    .catch(fetchError => reject(fetchError))
+                try {
+                    const documents = await model.find(query)
+                        .skip(options.skip)
+                        .limit(options.limit)
+                    resolve(documents)
+                }
+                catch (fetchError) {
+                    reject(fetchError)
+                }
             }
         })
     }

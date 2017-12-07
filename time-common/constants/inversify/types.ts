@@ -4,6 +4,7 @@ export class Types {
     public static DiscountService = Symbol('DiscountService')
     public static EmailService = Symbol('EmailService')
     public static ErrorService = Symbol('ErrorService')
+    public static ModelBuilder = Symbol('ModelBuilder')
     public static OrderService = Symbol('OrderService')
     public static ProductSearchUtils = Symbol('ProductSearchUtils')
     public static ProductService = Symbol('ProductService')

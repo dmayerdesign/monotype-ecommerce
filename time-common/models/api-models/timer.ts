@@ -1,14 +1,6 @@
-import { prop, InstanceType } from 'typegoose'
+import { prop, Model, MongooseSchemaOptions } from '../../utils/goosetype'
 
-import { timestamped, BaseApiModel } from './base-api-model'
-
-export class Timer extends BaseApiModel<Timer> {
-    public static readonly findOrCreate: <T>(query: object) => Promise<{ doc: InstanceType<T>; created: boolean }>
-    public _id?: string
-    public createdAt?: Date
-    public updatedAt?: Date
-    public readonly save: () => Promise<InstanceType<Timer>>
-
+export class Timer extends Model<Timer> {
     @prop() public name: string
     @prop() public url: string
     @prop() public method: string
@@ -17,4 +9,4 @@ export class Timer extends BaseApiModel<Timer> {
     @prop() public jsonData: string
 }
 
-export const TimerModel = new Timer().getModelForClass(Timer, timestamped)
+export const TimerModel = new Timer().getModel(MongooseSchemaOptions.Timestamped)

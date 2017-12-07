@@ -1,6 +1,5 @@
 import { Response } from 'express'
 import { inject, injectable } from 'inversify'
-import { InstanceType } from 'typegoose'
 
 import { Crud, CurrencyEnum, HttpStatus } from '@time/common/constants'
 import { Types } from '@time/common/constants/inversify'
@@ -9,7 +8,8 @@ import { Product, ProductModel } from '@time/common/models/api-models/product'
 import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
 import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
 import { IFetchService } from '@time/common/models/interfaces'
-import { DbClient, MongoQueries, ProductSearchUtils } from '../utils'
+import { DbClient } from '../data-access/db-client'
+import { MongoQueries, ProductSearchUtils } from '../utils'
 
 /**
  * Service for fetching documents from the `products` collection
@@ -153,7 +153,6 @@ export class ProductService implements IFetchService<Product> {
                 if (isAttrFilter && !filter.key) {
                     searchQuery = this.productSearchUtils.attributeValueFilter(filter, searchQuery)
                 }
-
 
                 // Taxonomy Filter - performs an `$elemMatch` on `Product.taxonomies`
 

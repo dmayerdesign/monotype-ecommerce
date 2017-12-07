@@ -13,11 +13,11 @@ import * as xhr from 'xmlhttprequest'
 
 import { passportConfig } from './auth/passport'
 import { container } from './config/inversify.config'
-import { mongoConnection } from './db/mongo.connection'
+import { connect } from './data-access/mongo-connection'
 import { isProduction } from './utils/env'
 import { onStart } from './utils/startup'
 
-/** ANGULAR UNIVERSAL */
+// ANGULAR UNIVERSAL
 global['XMLHttpRequest'] = xhr.XMLHttpRequest
 import * as ngUniversal from '@nguniversal/express-engine'
 import 'zone.js/dist/zone-node'
@@ -52,21 +52,19 @@ function serverConfig(app) {
     app.use(validator())
     app.use(passport.initialize())
     app.get('/ping', (req, res) => res.sendStatus(204))
-    passportConfig()
 
+    passportConfig()
     onStart()
 }
 
-/**
- * Connect to the database and start the server
- */
+// Connect to the database and start the server
 const server = new InversifyExpressServer(container)
-mongoConnection.connect(() => {
+connect().then(() => {
     server
         .setConfig(serverConfig)
         .setErrorConfig(serverErrorConfig)
         .build()
-        .listen(process.env.PORT, () => console.log(`Server started on port ${process.env.PORT} :)`))
+        .listen(process.env.PORT, () => console.log(`Server started on port ${process.env.PORT} :D`))
 })
 
 exports = module.exports = server

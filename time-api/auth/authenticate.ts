@@ -13,15 +13,17 @@ const jwtSecret = process.env.JWT_SECRET
 @injectable()
 export class Authenticate {
 
-    /*
-     * If the user is logged in, call `next()`. Else, send an error response
-     */
+    // If the user is logged in, call `next()`. Else, send an error response
+
     public static isAuthenticated(req: Request, res: Response, next: NextFunction): void {
         const token = req.cookies[Cookies.jwt]
         let payload: User = null
 
+        console.log('Cookies:', req.cookies)
+        console.log('Token:', token)
+
         if (!token) {
-            res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new ApiErrorResponse(new Error(ErrorMessage.UserNotAuthenticated)))
+            res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new ApiErrorResponse(new Error(ErrorMessage.UserNotAuthenticated), HttpStatus.CLIENT_ERROR_unauthorized))
             return
         }
 
@@ -29,13 +31,14 @@ export class Authenticate {
             payload = jwt.verify(token, jwtSecret)
         }
         catch (error) {
-            res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new ApiErrorResponse(new Error(Copy.ErrorMessages.generic)))
+            res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new ApiErrorResponse(new Error(Copy.ErrorMessages.generic), HttpStatus.CLIENT_ERROR_unauthorized))
             return
         }
 
-        console.log("Payload:", payload)
+        console.log('Payload:', payload)
         if (payload.email) {
             req.user = payload
+            console.log('===> is authenticated?', req.user)
             next()
         }
         /*
@@ -51,9 +54,8 @@ export class Authenticate {
         */
     }
 
-    /*
-     * If the user has the specified role, call `next()`. Else, send an error response
-     */
+    // If the user has the specified role, call `next()`. Else, send an error response
+
     public static isAuthorized(role: number) {
         return (req: Request, res: Response, next: NextFunction): void => {
             this.isAuthenticated(req, res, () => {

@@ -115,8 +115,12 @@ export class UserService {
 
     public refreshSession(req: Request, res: Response): void {
         const payload = this.cleanUser(req.user)
+
+        delete (payload as any).exp
+
         const authToken = jwt.sign(payload, this.jwtSecret, AuthConfig.JwtOptions)
         res.cookie(Cookies.jwt, authToken, AuthConfig.CookieOptions)
+        res.json(payload)
     }
 
     public updateUser(id: string, update: any): Promise<ApiResponse<User>> {

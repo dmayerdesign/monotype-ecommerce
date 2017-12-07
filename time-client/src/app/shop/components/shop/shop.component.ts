@@ -2,9 +2,9 @@ import { AfterViewInit, Component, OnInit } from '@angular/core'
 import { FormControl, FormGroup } from '@angular/forms'
 import { Observable } from 'rxjs/Observable'
 
-import { IProduct } from '@time/common/models/interfaces'
+import { Product } from '@time/common/models/api-models/product'
 import { SimpleError } from '@time/common/ng-modules/http'
-import { UiService, /*UserService*/ } from '../../../shared/services'
+import { UiService, UserService } from '../../../shared/services'
 import { ProductService } from '../../services'
 
 @Component({
@@ -13,13 +13,13 @@ import { ProductService } from '../../services'
     styleUrls: ['./shop.component.scss'],
 })
 export class ShopComponent implements OnInit, AfterViewInit {
-    public products$: Observable<IProduct[]>
-    public products: IProduct[]
+    public products$: Observable<Product[]>
+    public products: Product[]
     public productsError: SimpleError
 
     constructor(
         private productService: ProductService,
-        // private userService: UserService,
+        private userService: UserService,
         private ui: UiService,
     ) { }
 
@@ -28,17 +28,16 @@ export class ShopComponent implements OnInit, AfterViewInit {
     }
 
     public ngAfterViewInit() {
-        /*
+
         console.log("Do login")
-        this.userService.login({email: "sadfasf", password: "asdfasdfdsf"})
-        this.products$ = this.productService.products$
-        this.productService.products$.subscribe(
+        // this.userService.login({email: "sadfasf", password: "asdfasdfdsf"})
+        this.products$ = this.productService.get$
+        this.productService.get$.subscribe(
             products => {
                 this.products = products
             },
         )
-        this.productService.productsError$.subscribe(err => console.log("Error in shop component", err))
-        */
+        this.productService.getError$.subscribe(err => console.log("Error in shop component", err))
     }
 
     public doAModalThing() {

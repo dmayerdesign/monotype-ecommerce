@@ -1,17 +1,15 @@
 import * as mongooseDelete from 'mongoose-delete'
-import { arrayProp, plugin, pre, prop, Ref } from 'typegoose'
+import { arrayProp, plugin, pre, prop, Model, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
 
 import { ProductClass, ProductClassEnum } from '../types/product-class'
 import { Attribute } from './attribute'
 import { AttributeValue } from './attribute-value'
-import { timestamped, BaseApiModel } from './base-api-model'
 import { Dimensions } from './dimensions'
 import { Price } from './price'
 import { TaxonomyTerm } from './taxonomy-term'
 import { Units } from './units'
 
-@plugin(mongooseDelete)
-@pre<Product>('save', function(next) {
+@pre('save', false, function(next) {
     const product = this
     if (!product.slug && product.isNew) {
         product.slug = product.name.trim().toLowerCase().replace(/[^a-z0-9]/g, "-")
@@ -32,7 +30,8 @@ import { Units } from './units'
     }
     next()
 })
-export class Product extends BaseApiModel<Product> {
+@plugin(mongooseDelete)
+export class Product extends Model<Product> {
 	/* Aesthetic */
     @prop() public name: string
     @prop() public slug: string
@@ -87,4 +86,4 @@ export class Product extends BaseApiModel<Product> {
     @prop() public isEnteredIntoStripe: boolean
 }
 
-export const ProductModel = new Product().getModelForClass(Product, timestamped)
+export const ProductModel = new Product().getModel()

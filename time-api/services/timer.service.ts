@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify'
 import * as rp from 'request-promise'
-import { InstanceType } from 'typegoose'
 
 import { Types } from '@time/common/constants/inversify'
+import { InstanceType } from '@time/common/models/api-models/base-api-model'
 import { Timer, TimerModel } from '@time/common/models/api-models/timer'
 
 @injectable()
