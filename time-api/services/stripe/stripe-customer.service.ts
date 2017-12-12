@@ -1,7 +1,7 @@
 import { injectable } from 'inversify'
+import * as mongoose from 'mongoose'
 import * as Stripe from 'stripe'
 
-import { InstanceType } from '@time/common/models/api-models/base-api-model'
 import { Order } from '@time/common/models/api-models/order'
 import { User, UserModel } from '@time/common/models/api-models/user'
 import { ApiErrorResponse } from '@time/common/models/helpers/api-error-response'
@@ -27,9 +27,9 @@ export class StripeCustomerService {
     public createCustomer(order: Order) {
         return new Promise<StripeNode.customers.ICustomer>(async (resolve, reject) => {
             if (order.customer.userId && order.savePaymentInfo && order.stripeTokenObject && order.stripeTokenObject.card) {
-                let user: InstanceType<User>
+                let user: User & mongoose.Document
                 try {
-                    user = await UserModel.findById(order.customer.userId)
+                    user = await UserModel.findById(order.customer.userId) as User & mongoose.Document
                 }
                 catch (findUserError) {
                     reject(findUserError)

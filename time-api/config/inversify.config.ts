@@ -3,7 +3,7 @@ import { interfaces, TYPE } from 'inversify-express-utils'
 import { makeLoggerMiddleware } from 'inversify-logger-middleware'
 
 import { Tags, Types } from '@time/common/constants/inversify'
-import { ModelBuilder } from '@time/common/utils/goosetype'
+import { ModelBuilder } from '@time/common/utils/goosetype-model-builder'
 import { Authenticate } from '../auth/authenticate'
 import { AppController, ProductsController, UserController } from '../controllers'
 import { DbClient } from '../data-access/db-client'

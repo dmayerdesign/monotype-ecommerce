@@ -1,6 +1,6 @@
-import { prop, Schema } from '../../utils/goosetype'
+import { prop } from '../../utils/goosetype'
 
-export class Address extends Schema {
+export class Address {
     @prop() public name?: string
     @prop() public company?: string
     @prop() public street1: string

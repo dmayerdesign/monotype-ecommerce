@@ -4,13 +4,14 @@ import { Document, Error } from 'mongoose'
 import { ErrorMessage } from '@time/common/constants/error-message'
 import { HttpStatus } from '@time/common/constants/http'
 import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
+import { IMongooseModel } from '@time/common/utils/goosetype'
 
 @injectable()
 export class BasicCrudService<T extends Document> {
 
-    private model: ModelType<T>
+    private model: IMongooseModel<T>
 
-    constructor(model: ModelType<T>) {
+    constructor(model: IMongooseModel<T>) {
         this.model = model
     }
 

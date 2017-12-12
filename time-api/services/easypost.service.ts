@@ -1,6 +1,8 @@
+import * as mongoose from 'mongoose'
 import Easypost from 'node-easypost'
 
 import { Address } from '@time/common/models/api-models/address'
+import { EasypostRate } from '@time/common/models/api-models/easypost-rate'
 import { FindOrderError, Order, OrderModel, UpdateOrderError } from '@time/common/models/api-models/order'
 
 const easypost = new Easypost(process.env.EASYPOST_API_KEY)
@@ -43,8 +45,8 @@ export class EasypostService {
             })
 
             let easypostShipment: Easypost.Shipment
-            let order: InstanceType<Order>
-            let orderWithShipmentData: InstanceType<Order>
+            let order: Order & mongoose.Document
+            let orderWithShipmentData: Order & mongoose.Document
 
             // Get the Easypost shipment
 
@@ -76,7 +78,7 @@ export class EasypostService {
             // Update the order with shipment data
 
             order.shipmentId = easypostShipment.id
-            order.shippingRates = easypostShipment.rates
+            order.shippingRates = easypostShipment.rates as EasypostRate[]
             order.markModified('shippingRates')
 
             try {
@@ -157,7 +159,7 @@ export class EasypostService {
             order.selectedShippingRateId = purchasedShipment.selected_rate.id
             order.carrier = purchasedShipment.selected_rate ? purchasedShipment.selected_rate.carrier : null
             order.trackingCode = purchasedShipment.tracking_code
-            order.postageLabel = purchasedShipment.postage_label
+            order.postageLabelUrl = purchasedShipment.postage_label
             order.estDeliveryDays = estDeliveryDays
 
             try {

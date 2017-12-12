@@ -1,4 +1,4 @@
-import { arrayProp, prop, Model, Ref } from '../../utils/goosetype'
+import { arrayProp, prop, MongooseDocument, Ref } from '../../utils/goosetype'
 import { Price } from './price'
 import { Product } from './product'
 import { TaxonomyTerm } from './taxonomy-term'
@@ -8,7 +8,7 @@ class DiscountExceptions {
     @arrayProp({ itemsRef: TaxonomyTerm }) public taxonomyTerms: Ref<TaxonomyTerm>[]
 }
 
-export class Discount extends Model<Discount> {
+export class Discount extends MongooseDocument<Discount> {
     @prop() public code: string
     @prop() public amount: Price
     @prop() public percentage: number // `20` for a 20% discount

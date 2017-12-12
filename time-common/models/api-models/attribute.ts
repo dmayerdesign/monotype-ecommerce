@@ -1,8 +1,10 @@
 import * as findOrCreate from 'mongoose-findorcreate'
-import { plugin, prop, Model } from '../../utils/goosetype'
+import { plugin, prop, MongooseDocument } from '../../utils/goosetype'
+
+import * as goosetype from '../../utils/goosetype'
 
 @plugin(findOrCreate)
-export class Attribute extends Model<Attribute> {
+export class Attribute extends MongooseDocument<Attribute> {
     @prop() public name: string
     @prop() public pluralName: string
     @prop() public slug: string

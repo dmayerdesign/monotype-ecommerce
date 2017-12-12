@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify'
+import { Document } from 'mongoose'
 import * as Stripe from 'stripe'
 
 import { CurrencyEnum } from '@time/common/constants/currency'
 import { Types } from '@time/common/constants/inversify'
-import { InstanceType } from '@time/common/models/api-models/base-api-model'
 import { Order } from '@time/common/models/api-models/order'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
 import {
@@ -28,7 +28,7 @@ export class StripeProductService {
         @inject(Types.ProductService) private productService: ProductService,
     ) {}
 
-    private createProductsOrSkus<T extends StripeNode.products.IProduct|StripeNode.skus.ISku>(which: 'products'|'skus', products: InstanceType<Product>[], order: InstanceType<Order>) {
+    private createProductsOrSkus<T extends StripeNode.products.IProduct|StripeNode.skus.ISku>(which: 'products'|'skus', products: (Product & Document)[], order: Order & Document) {
         return new Promise<IStripeCreateProductsOrSkusData<StripeNode.products.IProduct|StripeNode.skus.ISku>>((resolve, reject) => {
             const productsToAdd = []
             let outOfStock = false
@@ -196,7 +196,7 @@ export class StripeProductService {
      *
      * @param {Product[]} products - Array of Parent and Standalone products to add to Stripe
      */
-    public createProducts(products: InstanceType<Product>[]) {
+    public createProducts(products: (Product & Document)[]) {
         return new Promise<StripeCreateProductsOrSkusResponse<StripeNode.products.IProduct>>(async (resolve, reject) => {
             try {
                 const createStripeProductsResponseData = await this.createProductsOrSkus<StripeNode.products.IProduct>('products', products, null)
@@ -214,7 +214,7 @@ export class StripeProductService {
      * @param {Product[]} products - Array of Standalone products and product Variations to add to Stripe
      * @param {Order} order - The order containing references to the products being added
      */
-    public createSkus(products: InstanceType<Product>[], order: InstanceType<Order>) {
+    public createSkus(products: (Product & Document)[], order: Order & Document) {
         return new Promise<StripeCreateProductsOrSkusResponse<StripeNode.skus.ISku>>(async (resolve, reject) => {
             try {
                 const createStripeProductsResponseData = await this.createProductsOrSkus<StripeNode.skus.ISku>('products', products, order)
@@ -227,11 +227,11 @@ export class StripeProductService {
     }
 
     public updateInventory(products, order) {
-        const productPromises: Promise<InstanceType<Product>>[] = []
+        const productPromises: Promise<Product & Document>[] = []
 
         products.forEach(product => {
             productPromises.push(
-                new Promise<InstanceType<Product>>((resolve, reject) => {
+                new Promise<Product & Document>((resolve, reject) => {
                     let qty = 0
                     if (product.isParent) {
                         const variations = products.map(p => p.parentSKU === product.SKU)

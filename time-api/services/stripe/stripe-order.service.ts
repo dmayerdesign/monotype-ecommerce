@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify'
+import { Document } from 'mongoose'
 import 'stripe'
 
 import { AppConfig } from '@time/app-config'
 import { Types } from '@time/common/constants/inversify'
-import { InstanceType } from '@time/common/models/api-models/base-api-model'
 import { Order } from '@time/common/models/api-models/order'
 import { OrganizationModel } from '@time/common/models/api-models/organization'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
@@ -37,7 +37,7 @@ export class StripeOrderService {
      * @param {Order} orderData An object representing the order to be created and paid
      * @param {Product[]} variationsAndStandalones Products from the database representing the variations and standalone products purchased
      */
-    public submitOrder(orderData: InstanceType<Order>, variationsAndStandalones: InstanceType<Product>[]) {
+    public submitOrder(orderData: Order & Document, variationsAndStandalones: (Product & Document)[]) {
         return new Promise<StripeSubmitOrderResponse>(async (resolve, reject) => {
             const parentSKUs = []
             const productSKUs = []

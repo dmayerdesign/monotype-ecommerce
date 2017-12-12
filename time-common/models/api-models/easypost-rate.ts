@@ -3,15 +3,6 @@ import { prop } from '../../utils/goosetype'
 import { CurrencyEnum } from '@time/common/constants/currency'
 
 export class EasypostRate {
-    public get getDate(): {
-        created_at: Date
-        updated_at: Date
-    } {
-        return {
-            created_at: new Date(this.created_at),
-            updated_at: new Date(this.updated_at),
-        }
-    }
     @prop() public readonly created_at: string
     @prop() public readonly updated_at: string
     @prop({ enum: ['test', 'production'] }) public readonly mode: string /* "test" or "production" */

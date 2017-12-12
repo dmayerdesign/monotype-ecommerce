@@ -1,11 +1,11 @@
 import * as findOrCreate from 'mongoose-findorcreate'
 
-import { arrayProp, plugin, prop, Model, Ref } from '../../utils/goosetype'
+import { arrayProp, plugin, prop, MongooseDocument, Ref } from '../../utils/goosetype'
 import { Taxonomy } from './taxonomy'
 import { TaxonomyTermSettings } from './taxonomy-term-settings'
 
 @plugin(findOrCreate)
-export class TaxonomyTerm extends Model<TaxonomyTerm> {
+export class TaxonomyTerm extends MongooseDocument<TaxonomyTerm> {
     @prop({ ref: Taxonomy }) public taxonomy: Ref<Taxonomy>
     @prop() public name: string
     @prop() public pluralName: string

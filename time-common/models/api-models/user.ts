@@ -1,10 +1,10 @@
-import { arrayProp, prop, Model, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
+import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
 import { Address } from './address'
 import { Cart } from './cart'
 import { Image } from './image'
 import { Order } from './order'
 
-export class User extends Model<User> {
+export class User extends MongooseDocument<User> {
     @prop({ required: true }) public email: string
     @prop() public emailIsVerified?: boolean
     @prop() public emailVerificationToken?: string

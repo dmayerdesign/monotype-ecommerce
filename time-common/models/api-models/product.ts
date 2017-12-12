@@ -1,5 +1,5 @@
 import * as mongooseDelete from 'mongoose-delete'
-import { arrayProp, plugin, pre, prop, Model, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
+import { arrayProp, plugin, pre, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
 
 import { ProductClass, ProductClassEnum } from '../types/product-class'
 import { Attribute } from './attribute'
@@ -31,7 +31,7 @@ import { Units } from './units'
     next()
 })
 @plugin(mongooseDelete)
-export class Product extends Model<Product> {
+export class Product extends MongooseDocument<Product> {
 	/* Aesthetic */
     @prop() public name: string
     @prop() public slug: string

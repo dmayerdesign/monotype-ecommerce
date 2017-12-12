@@ -1,6 +1,7 @@
 const webpack = require('webpack')
 const path = require('path')
 const fs = require('fs')
+const CircularDependencyPlugin = require('circular-dependency-plugin')
 require('dotenv').config()
 const packageJson = require('../../package.json')
 const version = packageJson.version
@@ -46,7 +47,7 @@ module.exports = {
 			{
 				test: /\.ts$/,
 				use: [
-					'ts-loader',
+					'awesome-typescript-loader',
 					'angular2-template-loader',
 				],
 				exclude: [
@@ -55,7 +56,7 @@ module.exports = {
 			},
 			{
 				test: /node_modules\/JSONStream\/index\.js$/,
-				use: ['shebang-loader']
+				use: ['shebang-loader'],
 			},
 			{
 				test: /\.(css|scss)$/,
@@ -81,5 +82,13 @@ module.exports = {
 			window: undefined,
 			document: undefined,
 		}),
+		new CircularDependencyPlugin({
+			// exclude detection of files based on a RegExp
+			exclude: /node_modules/,
+			// add errors to webpack instead of warnings
+			failOnError: true,
+			// set the current working directory for displaying module paths
+			cwd: process.cwd(),
+		})
 	],
 }

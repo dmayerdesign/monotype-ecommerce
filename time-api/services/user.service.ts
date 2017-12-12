@@ -114,7 +114,7 @@ export class UserService {
     }
 
     public refreshSession(req: Request, res: Response): void {
-        const payload = this.cleanUser(req.user)
+        const payload = this.cleanUser((req as any).user)
 
         delete (payload as any).exp
 

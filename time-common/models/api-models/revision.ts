@@ -1,6 +1,6 @@
-import { prop, Model, MongooseSchemaOptions } from '../../utils/goosetype'
+import { prop, MongooseDocument, MongooseSchemaOptions } from '../../utils/goosetype'
 
-export class Revision extends Model<Revision> {
+export class Revision extends MongooseDocument<Revision> {
     @prop() public id: string
     @prop() public field: string
     @prop() public value: any

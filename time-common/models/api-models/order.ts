@@ -1,4 +1,4 @@
-import { arrayProp, prop, Model, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
+import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
 import { OrderStatus, OrderStatusEnum } from '../types/order-status'
 import { Discount } from './discount'
 import { EasypostRate } from './easypost-rate'
@@ -7,7 +7,7 @@ import { Price } from './price'
 import { Product } from './product'
 import { StripeCardToken } from './stripe-card-token'
 
-export class Order extends Model<Order> {
+export class Order extends MongooseDocument<Order> {
     @arrayProp({ itemsRef: Product }) public items: Ref<Product>[]
     @arrayProp({ itemsRef: Discount }) public discounts: Ref<Discount>[]
     @prop() public total: Price

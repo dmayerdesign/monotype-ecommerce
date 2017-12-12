@@ -1,6 +1,6 @@
-import { prop, Model, MongooseSchemaOptions } from '../../utils/goosetype'
+import { prop, MongooseDocument, MongooseSchemaOptions } from '../../utils/goosetype'
 
-export class Timer extends Model<Timer> {
+export class Timer extends MongooseDocument<Timer> {
     @prop() public name: string
     @prop() public url: string
     @prop() public method: string

@@ -1,7 +1,7 @@
 import { CurrencyEnum } from '../../constants/currency'
-import { prop } from '../../utils/goosetype'
+import { prop, MongooseDocument } from '../../utils/goosetype'
 
-export class Price {
+export class Price extends MongooseDocument<Price> {
     @prop() public total: number
     @prop({ enum: Object.keys(CurrencyEnum) }) public currency: string
 }

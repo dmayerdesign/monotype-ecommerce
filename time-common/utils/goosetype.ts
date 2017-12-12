@@ -1,279 +1,24 @@
 import { injectable } from 'inversify'
-import * as mongoose from 'mongoose'
+import { model, DocumentToObjectOptions, ModelPopulateOptions, ModelUpdateOptions, MongooseDocument as Document, NativeError, Query, Schema, SchemaOptions, ValidationError } from 'mongoose'
 import * as findOrCreate from 'mongoose-findorcreate'
 import 'reflect-metadata'
 
-import { container } from '../../time-api/config/inversify.config'
-import { Types } from '../constants/inversify/types'
+// import { container } from '../../time-api/config/inversify.config'
+// import { Types } from '../constants/inversify/types'
+import { ArrayPropOptions, IMongooseDocument, IMongooseModel, ModelBuilder, MongooseSchemaOptions, PropOptions, Ref } from './goosetype-model-builder'
 
-const modelBuilder = container.get<ModelBuilder>(Types.ModelBuilder)
-
-// Types
-
-export type Func = (...args: any[]) => any
-
-export type RequiredType = boolean | [boolean, string] | string | Func | [Func, string]
-
-export interface BasePropOptions {
-    required?: RequiredType
-    enum?: string[] | object
-    default?: any
-    unique?: boolean
-    index?: boolean
-}
-
-export interface PropOptions extends BasePropOptions {
-    ref?: any
-}
-
-export interface ArrayPropOptions extends BasePropOptions {
-    items?: any
-    itemsRef?: any
-}
-
-export interface SchemaTypeOptions extends PropOptions {
-    type?: string | Function | Object | mongoose.Schema.Types.ObjectId
-}
-
-export interface ValidateNumberOptions {
-    min?: number | [number, string]
-    max?: number | [number, string]
-}
-
-export interface ValidateStringOptions {
-    minlength?: number | [number, string]
-    maxlength?: number | [number, string]
-    match?: RegExp | [RegExp, string]
-}
-
-export interface PropTypeArgs {
-    options: PropOptions & ArrayPropOptions
-    propType: PropType
-    key: string
-    target: Model<any>
-}
-
-export type PropType = 'array' | 'object'
-export type PropOptionsWithNumberValidate = PropOptions & ValidateNumberOptions
-export type PropOptionsWithStringValidate = PropOptions & ValidateStringOptions
-export type PropOptionsWithValidate = PropOptionsWithNumberValidate | PropOptionsWithStringValidate
-export type Ref<T> = T | string
-
-// Model builder
-
-@injectable()
-export class ModelBuilder {
-    public schemaDefinitions: any = {}
-    public preMiddleware: any = {}
-    public postMiddleware: any = {}
-    public plugins: any = {}
-
-    public get find() {
-        const that = this
-        return {
-            schemaDefinition(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.schemaDefinitions[name]) {
-                    return that.schemaDefinitions[name]
-                }
-                else {
-                    return null
-                }
-            },
-            preMiddleware(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.preMiddleware[name]) {
-                    return that.preMiddleware[name]
-                }
-                else {
-                    return null
-                }
-            },
-            postMiddleware(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.postMiddleware[name]) {
-                    return that.postMiddleware[name]
-                }
-                else {
-                    return null
-                }
-            },
-            plugin(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.plugins[name]) {
-                    return that.plugins[name]
-                }
-                else {
-                    return null
-                }
-            }
-        }
-    }
-
-    public get findOrCreate() {
-        const that = this
-        return {
-            schemaDefinition(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.find.schemaDefinition(name)) {
-                    return that.find.schemaDefinition(name)
-                }
-                else {
-                    that.schemaDefinitions[name] = {}
-                }
-            },
-            preMiddleware(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.find.preMiddleware(name)) {
-                    return that.find.preMiddleware(name)
-                }
-                else {
-                    that.preMiddleware[name] = []
-                }
-            },
-            postMiddleware(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.find.postMiddleware(name)) {
-                    return that.find.postMiddleware(name)
-                }
-                else {
-                    that.postMiddleware[name] = []
-                }
-            },
-            plugin(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.find.plugin(name)) {
-                    return that.find.plugin(name)
-                }
-                else {
-                    that.plugins[name] = []
-                }
-            }
-        }
-    }
-
-    public isValidPrimitiveOrObject(type): boolean {
-        return (
-            type === String ||
-            type === Number ||
-            type === Boolean ||
-            type === Object ||
-            type === Buffer
-        )
-    }
-
-    // public schema(schemaOptions?: mongoose.SchemaOptions): ClassDecorator {
-    //     return (constructor: any) => {
-    //         this.schemas[constructor.name] = new constructor().getSchema(schemaOptions)
-    //     }
-    // }
-
-    public pre(...args): ClassDecorator {
-        return (constructor: any) => {
-            this.findOrCreate.preMiddleware(constructor.name)
-        }
-    }
-
-    public post(...args): ClassDecorator {
-        return (constructor: any) => {
-            this.findOrCreate.postMiddleware(constructor.name)
-        }
-    }
-
-    public plugin(...args): ClassDecorator {
-        return (constructor: any) => {
-            this.findOrCreate.plugin(constructor.name)
-        }
-    }
-
-    public getTypeOrSchema(type: any): object {
-        if (this.isValidPrimitiveOrObject(type)) {
-            if (type === Object) {
-                return mongoose.Schema.Types.Mixed
-            }
-            if (type === Buffer) {
-                return mongoose.Schema.Types.Buffer
-            }
-            return type
-        }
-        else {
-            if (!this.schemaDefinitions[type.name]) {
-                throw new SchemaNotDefinedError('A schema associated with this class has not been defined. Make sure a `@schema()` decorator exists on the class.')
-            }
-            return this.schemaDefinitions[type.name]
-        }
-    }
-
-    public baseProp(propTypeArgs: PropTypeArgs) {
-        const { target, key, propType, options } = propTypeArgs
-        let schema: mongoose.SchemaDefinition = this.findOrCreate.schemaDefinition((target.constructor as any).name)
-        const schemaProperty: mongoose.SchemaTypeOpts<any> | mongoose.Schema | mongoose.SchemaType = {}
-
-        const nonPropertyOptions = [
-            'items',
-            'itemsRef'
-        ]
-
-        if (!schema) {
-            schema = {}
-        }
-
-        // Might need a second glance
-        for (const option in options) {
-            if (options.hasOwnProperty(option) && nonPropertyOptions.indexOf(option) === -1) {
-                schemaProperty[option] = options[option]
-            }
-        }
-
-        if (propType === 'array') {
-            schema[key] = [schemaProperty]
-
-            if (!options.items && !options.itemsRef) {
-                throw new InvalidArrayPropOptionsError('You must define items or itemsRef.')
-            }
-
-            if (options.items) {
-                schemaProperty.type = this.getTypeOrSchema(options.items)
-            }
-            else if (options.itemsRef) {
-                schemaProperty.type = mongoose.Schema.Types.ObjectId
-                schemaProperty.ref = options.itemsRef.name
-            }
-        }
-        else {
-            schema[key] = schemaProperty
-
-            let type = Reflect.getMetadata("design:type", target, key)
-
-            if (options && (options as SchemaTypeOptions).type) {
-                type = (options as SchemaTypeOptions).type
-            }
-
-            schemaProperty.type = this.getTypeOrSchema(type)
-        }
-    }
-    public prop(options: PropOptions) {
-        return (target: any, key: string) => {
-            this.baseProp({ propType: 'object', target, key, options })
-        }
-    }
-    public arrayProp(options: ArrayPropOptions) {
-        return (target: any, key: string) => {
-            this.baseProp({ propType: 'array', target, key, options })
-        }
-    }
-}
+const modelBuilder = new ModelBuilder() // container.get<ModelBuilder>(Types.ModelBuilder)
 
 // Utilities
 
-export function composeSchemaForInstance(target: Schema, schemaOptions?: mongoose.SchemaOptions) {
-    const __modelBuilder = container.get<ModelBuilder>(Types.ModelBuilder)
+export function composeSchemaForInstance<T>(target: MongooseDocument, schemaOptions?: SchemaOptions) {
+    const __modelBuilder = modelBuilder
     const schemaDefinition = __modelBuilder.find.schemaDefinition((target.constructor as any).name)
     const preMiddleware = __modelBuilder.find.preMiddleware((target.constructor as any).name)
     const postMiddleware = __modelBuilder.find.postMiddleware((target.constructor as any).name)
     const plugins = __modelBuilder.find.plugin((target.constructor as any).name)
 
-    const schema = new mongoose.Schema(schemaDefinition, schemaOptions)
+    const schema = new Schema(schemaDefinition, schemaOptions)
 
     if (preMiddleware) {
         preMiddleware.forEach((preHookArgs) => {
@@ -299,63 +44,213 @@ export function composeSchemaForInstance(target: Schema, schemaOptions?: mongoos
 
     if (plugins) {
         plugins.forEach((plugin) => {
-            schema.plugin(plugin[0] as (schema: mongoose.Schema, options?: Object) => void, plugin[1] as Object)
+            schema.plugin(plugin[0] as (schema: Schema, options?: Object) => void, plugin[1] as Object)
         })
     }
 
-    return schema
-}
+    const theSchema = __modelBuilder.findOrCreate.schema((target.constructor as any).name)
 
-export function composeModelForInstance(target: Model<any>, schemaOptions?: mongoose.SchemaOptions) {
-    const schema = composeSchemaForInstance(target, schemaOptions)
-    return mongoose.model((target.constructor as any).name, schema)
+    return theSchema
 }
 
 // Decorators
 
 export const prop: (options?: PropOptions) => PropertyDecorator = modelBuilder.prop.bind(modelBuilder)
 export const arrayProp: (options?: ArrayPropOptions) => PropertyDecorator = modelBuilder.arrayProp.bind(modelBuilder)
-// export const schema: (schemaOptions?: mongoose.SchemaOptions) => ClassDecorator = modelBuilder.schema.bind(modelBuilder)
-export const post: <T>(method: string, fn: (error: mongoose.Error, doc: T, next: (err?: mongoose.NativeError) => void) => void) => ClassDecorator = modelBuilder.post.bind(modelBuilder)
-export const pre: (method: string, parallel: boolean, fn: (next: (err?: mongoose.NativeError) => void, done: () => void) => void, errorCb?: (err: mongoose.Error) => void) => ClassDecorator = modelBuilder.pre.bind(modelBuilder)
-export const plugin: (plugin: (schema: mongoose.Schema, options?: Object) => void, options?: Object) => ClassDecorator = modelBuilder.plugin.bind(modelBuilder)
+// export const schema: (schemaOptions?: SchemaOptions) => ClassDecorator = modelBuilder.schema.bind(modelBuilder)
+export const post: <T>(method: string, fn: (error: Error, doc: T, next: (err?: NativeError) => void) => void) => ClassDecorator = modelBuilder.post.bind(modelBuilder)
+export const pre: (method: string, parallel: boolean, fn: (next: (err?: NativeError) => void, done: () => void) => void, errorCb?: (err: Error) => void) => ClassDecorator = modelBuilder.pre.bind(modelBuilder)
+export const plugin: (plugin: (schema: Schema, options?: Object) => void, options?: Object) => ClassDecorator = modelBuilder.plugin.bind(modelBuilder)
 
 // Base classes
 
-export abstract class Schema {
-    public __schema: mongoose.SchemaDefinition
-    public __middleware: { pre: any[], post: any[] } = { pre: [], post: [] }
-    public __plugins: any[]
-    public __modelBuilder = container.get(Types.ModelBuilder)
+export abstract class MongooseDocument<T = any> {
+    /** Hash containing current validation errors. */
+    public errors: Object
+    /** This documents _id. */
+    public _id: any
+    /** Boolean flag specifying if the document is new. */
+    public isNew: boolean
+    /** The documents schema. */
+    public schema: Schema
+    // public _id: string
+    public createdAt?: any
+    public updatedAt?: any
 
-    public getSchema(schemaOptions?: mongoose.SchemaOptions) {
-        return composeSchemaForInstance(this, schemaOptions)
+    /** Checks if a path is set to its default. */
+    public $isDefault?(path?: string): boolean { return }
+
+    /**
+     * Takes a populated field and returns it to its unpopulated state.
+     * If the path was not populated, this is a no-op.
+     */
+    public depopulate?(path: string): void { return }
+
+    /**
+     * Returns true if the Document stores the same data as doc.
+     * Documents are considered equal when they have matching _ids, unless neither document
+     * has an _id, in which case this function falls back to usin deepEqual().
+     * @param doc a document to compare
+     */
+    public equals?(doc: MongooseDocument): boolean { return }
+
+    /**
+     * Explicitly executes population and returns a promise.
+     * Useful for ES2015 integration.
+     * @returns promise that resolves to the document when population is done
+     */
+    public execPopulate?(): Promise<this> { return }
+
+    /**
+     * Returns the value of a path.
+     * @param type optionally specify a type for on-the-fly attributes
+     */
+    public get?(path: string, type?: any): any { return }
+
+    /**
+     * Initializes the document without setters or marking anything modified.
+     * Called internally after a document is returned from mongodb.
+     * @param doc document returned by mongo
+     * @param fn callback
+     */
+    public init?(doc: MongooseDocument, fn?: () => void): this { return this }
+    // public init?(doc: MongooseDocument, opts: Object, fn?: () => void): this { return this }
+
+    /** Helper for console.log */
+    public inspect?(options?: Object): any { return }
+
+    /**
+     * Marks a path as invalid, causing validation to fail.
+     * The errorMsg argument will become the message of the ValidationError.
+     * The value argument (if passed) will be available through the ValidationError.value property.
+     * @param path the field to invalidate
+     * @param errorMsg the error which states the reason path was invalid
+     * @param value optional invalid value
+     * @param kind optional kind property for the error
+     * @returns the current ValidationError, with all currently invalidated paths
+     */
+    public invalidate?(path: string, errorMsg: string | NativeError, value: any, kind?: string): ValidationError | boolean { return }
+
+    /** Returns true if path was directly set and modified, else false. */
+    public isDirectModified?(path: string): boolean { return }
+
+    /** Checks if path was initialized */
+    public isInit?(path: string): boolean { return }
+
+    /**
+     * Returns true if this document was modified, else false.
+     * If path is given, checks if a path or any full path containing path as part of its path
+     * chain has been modified.
+     */
+    public isModified?(path?: string): boolean { return }
+
+    /** Checks if path was selected in the source query which initialized this document. */
+    public isSelected?(path: string): boolean { return }
+
+    /**
+     * Marks the path as having pending changes to write to the db.
+     * Very helpful when using Mixed types.
+     * @param path the path to mark modified
+     */
+    public markModified?(path: string): void { return }
+
+    /** Returns the list of paths that have been modified. */
+    public modifiedPaths?(): string[] { return }
+
+    /**
+     * Populates document references, executing the callback when complete.
+     * If you want to use promises instead, use this function with
+     * execPopulate()
+     * Population does not occur unless a callback is passed or you explicitly
+     * call execPopulate(). Passing the same path a second time will overwrite
+     * the previous path options. See Model.populate() for explaination of options.
+     * @param path The path to populate or an options object
+     * @param names The properties to fetch from the populated document
+     * @param callback When passed, population is invoked
+     */
+    public populate?(callback: (err: any, res: this) => void): this
+    public populate?(path: string, callback?: (err: any, res: this) => void): this
+    public populate?(path: string, names: string, callback?: (err: any, res: this) => void): this
+    public populate?(options: ModelPopulateOptions | ModelPopulateOptions[], callback?: (err: any, res: this) => void): this
+
+    /** Gets _id(s) used during population of the given path. If the path was not populated, undefined is returned. */
+    public populated?(path: string): any { return }
+
+    /**
+     * Sets the value of a path, or many paths.
+     * @param path path or object of key/vals to set
+     * @param val the value to set
+     * @param type optionally specify a type for "on-the-fly" attributes
+     * @param options optionally specify options that modify the behavior of the set
+     */
+    public set?(path: string, val: any, options?: Object): this { return }
+    // public set?(path: string, val: any, type: any, options?: Object): this { return }
+    // public set?(value: Object): this { return }
+
+    /**
+     * The return value of this method is used in calls to JSON.stringify(doc).
+     * This method accepts the same options as Document#toObject. To apply the
+     * options to every document of your schema by default, set your schemas
+     * toJSON option to the same argument.
+     */
+    public toJSON(options?: DocumentToObjectOptions): Object { return }
+
+    /**
+     * Converts this document into a plain javascript object, ready for storage in MongoDB.
+     * Buffers are converted to instances of mongodb.Binary for proper storage.
+     */
+    public toObject(options?: DocumentToObjectOptions): Object { return }
+
+    /** Helper for console.log */
+    public toString(): string { return }
+
+    /**
+     * Clears the modified state on the specified path.
+     * @param path the path to unmark modified
+     */
+    public unmarkModified?(path: string): void { return }
+
+    /** Sends an update command with this document _id as the query selector.  */
+    public update?(doc: this, callback?: (err: any, raw: any) => void): Query<any> { return }
+    public update?(doc: this, options: ModelUpdateOptions, callback?: (err: any, raw: any) => void): Query<any>
+
+    /**
+     * Executes registered validation rules for this document.
+     * @param optional options internal options
+     * @param callback callback called after validation completes, passing an error if one occurred
+     */
+    public validate?(callback?: (err: any) => void): Promise<void>
+    public validate?(optional: Object, callback?: (err: any) => void): Promise<void>
+
+    /**
+     * Executes registered validation rules (skipping asynchronous validators) for this document.
+     * This method is useful if you need synchronous validation.
+     * @param pathsToValidate only validate the given paths
+     * @returns MongooseError if there are errors during validation, or undefined if there is no error.
+     */
+    public validateSync?(pathsToValidate?: string | string[]): Error { return }
+
+    public save?(...args: any[]): Promise<this> { return new Promise<this>((resolve) => {}) }
+    // public save(fn?: (err: any, product: this, numAffected: number) => void): Promise<this> { return new Promise<this>((resolve) => {}) }
+
+
+    /**
+     * Goosetype functions
+     */
+
+    public getSchema?(schemaOptions?: SchemaOptions): Schema {
+        return composeSchemaForInstance<T>(this, schemaOptions)
+    }
+
+    public getModel?(schemaOptions?: SchemaOptions): IMongooseModel<T & IMongooseDocument<T>> {
+        return composeModelForInstance<T & IMongooseDocument>(this, schemaOptions)
     }
 }
 
-export abstract class Model<T> extends Schema {
-    public static readonly findOrCreate: <T>(query: object) => Promise<{ doc: mongoose.Document & T; created: boolean }>
-    public __modelBuilder = container.get(Types.ModelBuilder)
-
-    public _id: string
-    public createdAt: any
-    public updatedAt: any
-
-    public readonly save: () => Promise<mongoose.Document & T>
-
-    public getModel(schemaOptions?: mongoose.SchemaOptions) {
-        return composeModelForInstance(this, schemaOptions)
-    }
+export function composeModelForInstance<T extends IMongooseDocument>(target: MongooseDocument, schemaOptions?: SchemaOptions) {
+    const schema = composeSchemaForInstance<T>(target, schemaOptions)
+    return <any>model((target.constructor as any).name, schema) as IMongooseModel<T>
 }
 
-// Errors
-
-export class InvalidArrayPropOptionsError extends Error { }
-export class SchemaNotDefinedError extends Error { }
-
-// Schema options
-
-export class MongooseSchemaOptions {
-    public static readonly Timestamped = { timestamps: true }
-}
+export { IMongooseModel, MongooseSchemaOptions, Ref }
 

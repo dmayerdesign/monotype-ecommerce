@@ -1,4 +1,4 @@
-import { prop, BaseApiModel, InstanceType } from '@time/common/models/api-models/base-api-model'
+import { prop, IMongooseModel, MongooseDocument } from '@time/common/utils/goosetype'
 import * as JSONStream from 'JSONStream'
 import { Response } from 'express'
 import { injectable } from 'inversify'
@@ -11,7 +11,7 @@ import { SchemaError } from '@time/common/models/types/errors'
 import { ProductModel } from '@time/common/models/api-models/product'
 
 @injectable()
-export class DbClient<T extends Document|BaseApiModel<any>> {
+export class DbClient<T extends MongooseDocument<T>> {
 
     /**
      * Gets a filtered set of documents from a collection
@@ -20,7 +20,7 @@ export class DbClient<T extends Document|BaseApiModel<any>> {
      * @param {object} query - The database query
      * @param {boolean} res - Pass the express `Response` if the set of documents should be streamed rather than loaded into memory
      */
-    public getFilteredCollection(model: Model<T & Document>, query: Object, options?: { limit: number; skip: number }, res?: Response): Promise<T[]> {
+    public getFilteredCollection(model: IMongooseModel<T>, query: Object, options?: { limit: number; skip: number }, res?: Response): Promise<T[]> {
 
         console.log('---- GET FILTERED COLLECTION ----')
 
@@ -62,7 +62,7 @@ export class DbClient<T extends Document|BaseApiModel<any>> {
                     const documents = await model.find(query)
                         .skip(options.skip)
                         .limit(options.limit)
-                    resolve(documents)
+                    resolve(documents as (T & Document)[])
                 }
                 catch (fetchError) {
                     reject(fetchError)
@@ -79,26 +79,26 @@ export class DbClient<T extends Document|BaseApiModel<any>> {
      * @param {object} update - An object representing the fields to be updated
      * @param {boolean} concatArrays - Set to `true` if fields containing arrays should be treated as additions to the existing array. Defaults to `false`, meaning that arrays are replaced in the same way as other fields
      */
-    public updateById(model: Model<T & Document>, id: string|Types.ObjectId, update: Object, concatArrays: boolean = false): Promise<T> {
+    public updateById(model: IMongooseModel<T>, id: string|Types.ObjectId, update: Object, concatArrays: boolean = false): Promise<T> {
 
         return new Promise<T>((resolve, reject) => {
             model.findById(id)
                 .then(document => {
                     try {
-                        updateDoc(document, update)
+                        updateDoc(document as T & Document, update)
                     }
                     catch (validationError) {
                         reject(validationError)
                         return
                     }
                     document.save()
-                        .then(updatedDocument => resolve(updatedDocument))
+                        .then(updatedDocument => resolve(updatedDocument as T & Document))
                         .catch((updateError: Error) => reject(updateError))
                 })
                 .catch((retrievalError: Error) => reject(retrievalError))
         })
 
-        function updateDoc(doc: T, iterable: Object) {
+        function updateDoc(doc: T & Document, iterable: Object) {
             if (!iterable || !Object.keys(iterable) || !Object.keys(iterable).length) {
                 throw new SchemaError('Invalid update')
             }

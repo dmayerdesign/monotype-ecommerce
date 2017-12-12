@@ -1,10 +1,10 @@
-import { prop, Model, MongooseSchemaOptions } from '../../utils/goosetype'
+import { prop, MongooseDocument, MongooseSchemaOptions } from '../../utils/goosetype'
 
 export class OrganizationRetailSettings {
     @prop() public salesTaxPercentage: number
 }
 
-export class Organization extends Model<Organization> {
+export class Organization extends MongooseDocument<Organization> {
     @prop() public name: string
     @prop() public retailSettings: OrganizationRetailSettings
 }

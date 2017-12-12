@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify'
+import { Document } from 'mongoose'
 import * as rp from 'request-promise'
 
 import { Types } from '@time/common/constants/inversify'
-import { InstanceType } from '@time/common/models/api-models/base-api-model'
 import { Timer, TimerModel } from '@time/common/models/api-models/timer'
 
 @injectable()
@@ -16,14 +16,14 @@ export class TimerService {
     }
 
     public async restartAll() {
-        let timers: InstanceType<Timer>[]
+        let timers: (Timer & Document)[]
         const requests = []
         let requestPromises: Promise<any>[] = []
 
         // Find all existing timers.
 
         try {
-            timers = await TimerModel.find({})
+            timers = await TimerModel.find({}) as (Timer & Document)[]
         }
         catch (error) {
             this.errorService.handleError(error)

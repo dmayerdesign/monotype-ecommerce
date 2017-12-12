@@ -91,39 +91,43 @@ export class UploadService {
                 revision.save(console.log)
             })
 
-            product.save((_err, _product) => {
-                if (!product.isVariation) {
-                    done(_err, _product)
-                } else {
-                    ProductModel.findOne({SKU: product.parentSKU}, (error, parent) => {
-                        if (error) return done(error)
+            product.save()
+                .then((_product) => {
+                    if (!product.isVariation) {
+                        done(null, _product)
+                    } else {
+                        ProductModel.findOne({SKU: product.parentSKU}, (error, parent) => {
+                            if (error) return done(error)
 
-                        Object.keys(editObj).forEach(field => {
-                            if (action === "remove") {
-                                parent[field].splice(parent[field].indexOf(editObj[field]), 1)
-                            }
-                            else if (action === "add") {
-                                parent[field].push(editObj[field])
-                            }
-                            parent.markModified(field)
+                            Object.keys(editObj).forEach(field => {
+                                if (action === "remove") {
+                                    parent[field].splice(parent[field].indexOf(editObj[field]), 1)
+                                }
+                                else if (action === "add") {
+                                    parent[field].push(editObj[field])
+                                }
+                                parent.markModified(field)
 
-                            /**
-                             * Add to revision history
-                             */
-                            const revision = new RevisionModel({
-                                id: parent._id.toString(),
-                                field: field,
-                                value: parent[field],
+                                /**
+                                 * Add to revision history
+                                 */
+                                const revision = new RevisionModel({
+                                    id: parent._id.toString(),
+                                    field: field,
+                                    value: parent[field],
+                                })
+                                revision.save(console.log)
                             })
-                            revision.save(console.log)
-                        })
 
-                        parent.save(($err, $product) => {
-                            done($err, product)
+                            parent.save(($err, $product) => {
+                                done($err, product)
+                            })
                         })
-                    })
-                }
-            })
+                    }
+                })
+                .catch((error) => {
+                    done(error)
+                })
         })
     }
 

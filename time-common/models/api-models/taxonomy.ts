@@ -1,8 +1,8 @@
 import * as findOrCreate from 'mongoose-findorcreate'
-import { plugin, prop, Model } from '../../utils/goosetype'
+import { plugin, prop, MongooseDocument } from '../../utils/goosetype'
 
 @plugin(findOrCreate)
-export class Taxonomy extends Model<Taxonomy> {
+export class Taxonomy extends MongooseDocument<Taxonomy> {
     @prop() public name: string
     @prop() public pluralName: string
     @prop() public slug: string

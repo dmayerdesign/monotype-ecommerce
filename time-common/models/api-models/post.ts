@@ -1,4 +1,4 @@
-import { arrayProp, prop, Model, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
+import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
 import { User } from './user'
 
 export class LinkEmbed {
@@ -21,7 +21,7 @@ export class Reactions {
     @arrayProp({ itemsRef: User }) public down: Ref<User>[]
 }
 
-export class Comment extends Model<Comment> {
+export class Comment extends MongooseDocument<Comment> {
     @prop() public author: Author
     @prop() public content: string
     @arrayProp({ items: String }) public images: string[]
@@ -29,7 +29,7 @@ export class Comment extends Model<Comment> {
     @prop() public reactions: Reactions
 }
 
-export class Post extends Model<Post> {
+export class Post extends MongooseDocument<Post> {
     @prop() public author: Author
     @prop({ default: 'normal' }) public type: string
     @prop() public content: Author

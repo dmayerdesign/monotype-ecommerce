@@ -4,6 +4,7 @@ import { ReplaySubject } from 'rxjs/ReplaySubject'
 
 import { LocalStorageKeys } from '@time/common/constants/local-storage-keys'
 import { Cart } from '@time/common/models/api-models/cart'
+import { Price } from '@time/common/models/api-models/price'
 import { Product } from '@time/common/models/api-models/product'
 import { ICartProduct } from '@time/common/models/interfaces/cart-product'
 import { ProductService } from '../../shop/services/product.service'
@@ -123,7 +124,7 @@ export class CartService {
                     subTotal: {
                         total: duplicateItem.subTotal.total + this.productService.getPrice(item).total,
                         currency: duplicateItem.subTotal.currency,
-                    },
+                    } as Price,
                 }
             }
             else {

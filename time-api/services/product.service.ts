@@ -1,5 +1,6 @@
 import { Response } from 'express'
 import { inject, injectable } from 'inversify'
+import * as mongoose from 'mongoose'
 
 import { Crud, CurrencyEnum, HttpStatus } from '@time/common/constants'
 import { Types } from '@time/common/constants/inversify'
@@ -8,6 +9,7 @@ import { Product, ProductModel } from '@time/common/models/api-models/product'
 import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
 import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
 import { IFetchService } from '@time/common/models/interfaces'
+import { IMongooseModel } from '@time/common/utils/goosetype'
 import { DbClient } from '../data-access/db-client'
 import { MongoQueries, ProductSearchUtils } from '../utils'
 
@@ -37,7 +39,7 @@ export class ProductService implements IFetchService<Product> {
     public getOne(slug: string): Promise<ApiResponse<Product>> {
         return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
             try {
-                const product = await ProductModel.findOne({ slug })
+                const product = await ProductModel.findOne({ slug }) as (Product & mongoose.Document)
                 resolve(new ApiResponse(product))
             }
             catch (error) {
@@ -55,7 +57,7 @@ export class ProductService implements IFetchService<Product> {
     public getById(id: string) {
         return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
             try {
-                const product = await ProductModel.findById(id)
+                const product = await ProductModel.findById(id) as (Product & mongoose.Document)
                 resolve(new ApiResponse(product))
             }
             catch (error) {
@@ -71,9 +73,9 @@ export class ProductService implements IFetchService<Product> {
      * @return {Promise<Product>}
      */
     public getSome(ids: string[]) {
-        return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
+        return new Promise<ApiResponse<(Product & mongoose.Document)[]>>(async (resolve, reject) => {
             try {
-                const products = await ProductModel.find({ _id: { $in: ids } })
+                const products = await ProductModel.find({ _id: { $in: ids } }) as (Product & mongoose.Document)[]
                 resolve(new ApiResponse(products))
             }
             catch (error) {
@@ -185,7 +187,7 @@ export class ProductService implements IFetchService<Product> {
     public createOne(product: Product): Promise<ApiResponse<Product>> {
         return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
             try {
-                const newProduct = await new ProductModel(product).save()
+                const newProduct = await new ProductModel(product).save() as (Product & mongoose.Document)
                 resolve(new ApiResponse(newProduct))
             }
             catch (error) {
@@ -197,7 +199,7 @@ export class ProductService implements IFetchService<Product> {
     public create(products: Product[]): Promise<ApiResponse<Product[]>> {
         return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
             try {
-                const newProducts = await ProductModel.create(products)
+                const newProducts = await ProductModel.create(products) as (Product & mongoose.Document)[]
                 resolve(new ApiResponse(newProducts))
             }
             catch (error) {
@@ -210,7 +212,7 @@ export class ProductService implements IFetchService<Product> {
         const mongoUpdate = this.dbClient.mongoSet(update)
         return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
             try {
-                const updatedProduct = await ProductModel.findByIdAndUpdate(id, mongoUpdate, { new: true })
+                const updatedProduct = await ProductModel.findByIdAndUpdate(id, mongoUpdate, { new: true }) as (Product & mongoose.Document)
                 resolve(new ApiResponse(updatedProduct))
             }
             catch (error) {
@@ -264,7 +266,7 @@ export class ProductService implements IFetchService<Product> {
                 SKU: "TEST_1",
             })
             try {
-                const product = await theProduct.save()
+                const product = await theProduct.save() as (Product & mongoose.Document)
                 resolve(new ApiResponse(product))
             }
             catch (error) {
@@ -273,7 +275,7 @@ export class ProductService implements IFetchService<Product> {
         })
     }
 
-    public determinePrice(product: InstanceType<Product>) {
+    public determinePrice(product: Product & mongoose.Document) {
         if (product.isOnSale && product.salePrice) {
             return product.salePrice
         }

@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify'
+import { Document } from 'mongoose'
 import * as Stripe from 'stripe'
 
 import { Types } from '@time/common/constants/inversify'
@@ -177,7 +178,7 @@ export class StripeOrderActionsService {
                     const paidStripeOrder = await <Promise<StripeOrder>>stripe.orders.pay(order.stripeOrderId, payment)
                     let paidOrder = await OrderModel.findById(order._id)
                     paidOrder.status = 'Paid'
-                    paidOrder = await paidOrder.save()
+                    paidOrder = await paidOrder.save() as (Order & Document)
                     resolve(new StripePayOrderResponse({
                         paidOrder,
                         paidStripeOrder,
