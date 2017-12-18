@@ -10,4 +10,4 @@ import { HomeComponent } from './components/home/home.component'
     ],
     exports: [RouterModule],
 })
-export class SiteRoutingModule {}
+export class BlogRoutingModule {}

@@ -1,21 +1,27 @@
 require('dotenv').config()
 import * as AWS from 'aws-sdk'
 import * as fs from 'fs-extra'
+import { inject, injectable } from 'inversify'
 import * as multer from 'multer'
 import * as path from 'path'
 import sharp from 'sharp'
 
 import { AppConfig } from '@time/app-config'
-import { ProductModel } from '@time/common/models/api-models/product'
+import { Types } from '@time/common/constants/inversify'
+import { Product, ProductModel } from '@time/common/models/api-models/product'
 import { RevisionModel } from '@time/common/models/api-models/revision'
+import { DbClient } from '../data-access/db-client'
 
 /**
  * AWS S3 uploads
  */
 AWS.config.region = AppConfig.aws_region
 
+@injectable()
 export class UploadService {
-    constructor() {}
+    constructor(
+        @inject(Types.DbClient) private dbClient: DbClient<Product>
+    ) {}
 
     private s3 = new AWS.S3({
         params: {
@@ -61,12 +67,12 @@ export class UploadService {
         })
     }
 
-    public editImages(action, sku, editObj, done) {
+    public async editImages(action, sku, editObj, done) {
         console.log("-------- Edit Product Images --------")
         console.log(editObj)
 
-        ProductModel.findOne({SKU: sku}, (err, product) => {
-            if (err) return done(err)
+        try {
+            const product = await this.dbClient.findOne(ProductModel, { sku })
 
             Object.keys(editObj).forEach(field => {
                 if (action === "remove") {
@@ -92,12 +98,12 @@ export class UploadService {
             })
 
             product.save()
-                .then((_product) => {
+                .then(async (_product) => {
                     if (!product.isVariation) {
-                        done(null, _product)
+                        done(null, _product._doc)
                     } else {
-                        ProductModel.findOne({SKU: product.parentSKU}, (error, parent) => {
-                            if (error) return done(error)
+                        try {
+                            const parent = await this.dbClient.findOne(ProductModel, {sku: product.parentSku})
 
                             Object.keys(editObj).forEach(field => {
                                 if (action === "remove") {
@@ -120,15 +126,21 @@ export class UploadService {
                             })
 
                             parent.save(($err, $product) => {
-                                done($err, product)
+                                done($err, $product._doc)
                             })
-                        })
+                        }
+                        catch (error) {
+                            return done(error)
+                        }
                     }
                 })
                 .catch((error) => {
                     done(error)
                 })
-        })
+        }
+        catch (error) {
+            return done(error)
+        }
     }
 
     public crunch(file, done) {

@@ -13,7 +13,7 @@ export class GAnalyticsService {
         return AppConfig.google_analytics_tracking_code
     }
 
-    public send(event, location, currentRoute): void {
+    public send(event, location, currentRoute) {
         if (event instanceof NavigationEnd) {
             const newRoute = location.path() || '/'   // When the route is '/', location.path actually returns ''
             if (currentRoute !== newRoute) {         // If the route has changed, send the new route to analytics
@@ -23,7 +23,7 @@ export class GAnalyticsService {
         }
     }
 
-    public init(): void {
+    public init() {
         const init = (i: Window, s: Document, o: string, g: string, r: string, a?: any, m?: any) => {
             i['GoogleAnalyticsObject'] = r
             i[r] = i[r] || function() {

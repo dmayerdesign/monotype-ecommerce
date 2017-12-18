@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router'
 import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
 
+import { Endpoints } from '@time/common/constants/endpoints'
 import { User } from '@time/common/models/api-models/user'
 import { ILogin } from '@time/common/models/interfaces/login'
 import { IUserRegistration } from '@time/common/models/interfaces/user-registration'
@@ -12,7 +13,7 @@ import { TimeHttpService } from '@time/common/ng-modules/http'
 @Injectable()
 export class UserService {
     private _user: User
-    public userSubject = new ReplaySubject<User>(1)
+    private userSubject = new ReplaySubject<User>(1)
     public user$: Observable<User>
 
     constructor (
@@ -37,40 +38,43 @@ export class UserService {
         return this._user
     }
 
-    private clearSession(): void {
+    private clearSession() {
         this.userSubject.next(null)
     }
 
-    private refreshSession(user: User): void {
+    private refreshSession(user: User) {
+        console.log('Refresh session:')
+        console.log(user)
         this.userSubject.next(user)
     }
 
-    public signup(userInfo: IUserRegistration): void {
-        this.http.post('/api/user/register', userInfo)
+    public signup(userInfo: IUserRegistration) {
+        this.http.post(`${Endpoints.User}/register`, userInfo)
             .subscribe((user: User) => {
                 this.refreshSession(user)
             })
     }
 
-    public login(credentials: ILogin): void {
-        // FOR TESTING
-        this.http.get('/api/user/login').subscribe((userData: User) => {
-            this.refreshSession(userData)
-        })
-        // this.http.post('/api/user/login', credentials)
+    public login(credentials: ILogin) {
+        this.http.post(`${Endpoints.User}/login`, credentials)
+            .subscribe((userData: User) => {
+                this.refreshSession(userData)
+            })
     }
 
-    public getUser(): void {
-        this.http.get('/api/user/get-user').subscribe((userData: User) => {
+    public getUser() {
+        this.http.get(`${Endpoints.User}/get-user`).subscribe((userData: User) => {
             this.refreshSession(userData)
         })
     }
 
-    public logout(): void {
-        this.http.post('/api/user/logout', {})
+    public logout() {
+        this.http.post(`${Endpoints.User}/logout`, {})
             .subscribe(successResponse => {
                 this.clearSession()
-                // If the route is protected, navigate away
+
+                // If the route is protected, navigate away.
+
                 if (this.route.routeConfig.canActivate
                     || (this.route.firstChild
                         && (this.route.firstChild.routeConfig.canActivate
@@ -85,6 +89,6 @@ export class UserService {
     }
 
     public verifyEmail(token: string): Observable<User> {
-        return this.http.get<User>(`/api/verify-email/${token}`)
+        return this.http.get<User>(`${Endpoints.User}/verify-email/${token}`)
     }
 }

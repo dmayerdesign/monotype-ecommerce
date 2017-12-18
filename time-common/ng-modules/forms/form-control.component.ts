@@ -41,7 +41,7 @@ export class TimeFormControlComponent implements ControlValueAccessor, OnInit {
     private propagateChange = (_: any) => { }
     private propagateTouch = () => { }
 
-    public ngOnInit(): void {
+    public ngOnInit() {
         const defaultErrorMessages: ErrorsMap = {
             required: this.label + " is required",
             email: "Invalid email"
@@ -52,11 +52,11 @@ export class TimeFormControlComponent implements ControlValueAccessor, OnInit {
         }
     }
 
-    public writeValue(val: any): void {
+    public writeValue(val: any) {
         this.value = val
         this.propagateChange(this.value)
         this.propagateTouch()
     }
-    public registerOnChange(fn: (_: any) => void): void { this.propagateChange = fn }
-    public registerOnTouched(fn: () => void): void { this.propagateTouch = fn }
+    public registerOnChange(fn: (_: any) => void) { this.propagateChange = fn }
+    public registerOnTouched(fn: () => void) { this.propagateTouch = fn }
 }

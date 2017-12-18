@@ -1,14 +1,20 @@
+import { inject, injectable } from 'inversify'
 import * as mongoose from 'mongoose'
 import Easypost from 'node-easypost'
 
+// import { Types } from '@time/common/constants/inversify'
 import { Address } from '@time/common/models/api-models/address'
 import { EasypostRate } from '@time/common/models/api-models/easypost-rate'
 import { FindOrderError, Order, OrderModel, UpdateOrderError } from '@time/common/models/api-models/order'
+// import { DbClient } from '../data-access/db-client'
 
 const easypost = new Easypost(process.env.EASYPOST_API_KEY)
 
+// @injectable()
 export class EasypostService {
-    constructor() {}
+    constructor(
+        // @inject(Types.DbClient) private dbClient: DbClient<Order>
+    ) {}
 
 	/**
 	 * Create a shipment in EasyPost
@@ -45,8 +51,8 @@ export class EasypostService {
             })
 
             let easypostShipment: Easypost.Shipment
-            let order: Order & mongoose.Document
-            let orderWithShipmentData: Order & mongoose.Document
+            let order: Order
+            let orderWithShipmentData: Order
 
             // Get the Easypost shipment
 
@@ -65,6 +71,7 @@ export class EasypostService {
 
             try {
                 order = await OrderModel.findById(orderId)
+                // order = await this.dbClient.findById(OrderModel, orderId)
                 if (!easypostShipment) {
                     reject(new FindOrderError("Couldn't find the order on which to update shipment details."))
                     return
@@ -89,7 +96,7 @@ export class EasypostService {
                 return
             }
 
-            resolve({ order: orderWithShipmentData, shipment: easypostShipment })
+            resolve({ order: orderWithShipmentData._doc, shipment: easypostShipment })
         })
     }
 
@@ -142,6 +149,7 @@ export class EasypostService {
 
             try {
                 order = await OrderModel.findById(orderId)
+                // order = await this.dbClient.findById(OrderModel, orderId)
 
                 if (!order) {
                     reject(new FindOrderError("Couldn't find the order to update with shipment data."))
@@ -171,7 +179,7 @@ export class EasypostService {
             }
 
             resolve({
-                order: orderWithShipmentData,
+                order: orderWithShipmentData._doc,
                 shipment: purchasedShipment
             })
         })

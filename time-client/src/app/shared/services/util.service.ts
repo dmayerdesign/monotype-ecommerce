@@ -17,7 +17,7 @@ export class UtilService {
         private titleService: Title,
     ) {}
 
-    public setTitle(title: string): void {
+    public setTitle(title: string) {
         this.titleService.setTitle(title + ' | ' + AppConfig.brand_name)
     }
 

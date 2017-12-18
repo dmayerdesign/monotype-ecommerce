@@ -5,10 +5,11 @@ import 'stripe'
 import { AppConfig } from '@time/app-config'
 import { Types } from '@time/common/constants/inversify'
 import { Order } from '@time/common/models/api-models/order'
-import { OrganizationModel } from '@time/common/models/api-models/organization'
+import { Organization, OrganizationModel } from '@time/common/models/api-models/organization'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
 import { StripeSubmitOrderResponse } from '@time/common/models/api-responses/stripe-submit-order.response'
 import { ApiErrorResponse } from '@time/common/models/helpers/api-error-response'
+import { DbClient } from '../../data-access/db-client'
 import { EmailService } from '../email.service'
 import { StripeCustomerService } from './stripe-customer.service'
 import { StripeOrderActionsService } from './stripe-order-actions.service'
@@ -25,6 +26,7 @@ import { StripeProductService } from './stripe-product.service'
 export class StripeOrderService {
 
     constructor(
+        @inject(Types.DbClient) private dbClient: DbClient<any>,
         @inject(Types.EmailService) private email: EmailService,
         @inject(Types.StripeCustomerService) private stripeCustomerService: StripeCustomerService,
         @inject(Types.StripeOrderActionsService) private stripeOrderActionsService: StripeOrderActionsService,
@@ -37,22 +39,22 @@ export class StripeOrderService {
      * @param {Order} orderData An object representing the order to be created and paid
      * @param {Product[]} variationsAndStandalones Products from the database representing the variations and standalone products purchased
      */
-    public submitOrder(orderData: Order & Document, variationsAndStandalones: (Product & Document)[]) {
+    public submitOrder(orderData: Order, variationsAndStandalones: Product[]) {
         return new Promise<StripeSubmitOrderResponse>(async (resolve, reject) => {
-            const parentSKUs = []
-            const productSKUs = []
+            const parentSkus = []
+            const productSkus = []
             variationsAndStandalones.forEach(product => {
-                productSKUs.push(product.SKU)
-                if (product.isVariation && product.parentSKU) {
-                    parentSKUs.push(product.parentSKU)
-                    productSKUs.push(product.parentSKU)
+                productSkus.push(product.sku)
+                if (product.isVariation && product.parentSku) {
+                    parentSkus.push(product.parentSku)
+                    productSkus.push(product.parentSku)
                 }
             })
 
             try {
                 // Retrieve parent products and combine them with `variationsAndStandalones` into `products`
                 // Use the new `products` array to create the products and SKUs in Stripe, if they don't exist
-                const parents = await ProductModel.find({ SKU: { $in: parentSKUs } })
+                const parents = await this.dbClient.find(ProductModel, { sku: { $in: parentSkus } }) as Product[]
                 const products = parents.concat(variationsAndStandalones)
                 await this.stripeProductService.createProducts(products)
                 console.log("Created products")
@@ -76,7 +78,7 @@ export class StripeOrderService {
                 // Update the stock quantity and total sales of each variation and standalone
                 this.stripeProductService.updateInventory(products, paidOrder)
 
-                const organization = await OrganizationModel.findOne({})
+                const organization = await this.dbClient.findOne(OrganizationModel, {}) as Organization
 
                 await this.email.sendReceipt({
                     organization,

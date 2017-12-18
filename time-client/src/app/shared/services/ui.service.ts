@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core'
 import { Title } from '@angular/platform-browser'
+import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Subject } from 'rxjs/Subject'
 
 import { ErrorMessage } from '@time/common/constants/error-message'
@@ -10,7 +11,7 @@ import { SimpleError, TimeHttpService } from '@time/common/ng-modules/http'
 
 @Injectable()
 export class UiService {
-    public viewReady$ = new Subject<boolean>()
+    public loading$ = new BehaviorSubject<boolean>(true)
     public flash$ = new Subject<IToast>()
     public modal$ = new Subject<IModalData>()
 

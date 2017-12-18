@@ -1,26 +1,28 @@
 import { NextFunction, Request, Response } from 'express'
-import { injectable } from 'inversify'
+import { inject, injectable } from 'inversify'
 import * as jwt from 'jsonwebtoken'
 
-import { HttpStatus } from '@time/common/constants'
-import { Cookies, Copy } from '@time/common/constants'
+import { Cookies, Copy, HttpStatus } from '@time/common/constants'
 import { ErrorMessage } from '@time/common/constants/error-message'
-import { User } from '@time/common/models/api-models/user'
+import { Types } from '@time/common/constants/inversify'
+import { User, UserModel } from '@time/common/models/api-models/user'
 import { ApiErrorResponse } from '@time/common/models/helpers/api-error-response'
+import { DbClient } from '../data-access/db-client'
+import { UserService } from '../services/user.service'
 
 const jwtSecret = process.env.JWT_SECRET
 
 @injectable()
 export class Authenticate {
 
+    private static dbClient = new DbClient<User>()
+    private static userService = new UserService()
+
     // If the user is logged in, call `next()`. Else, send an error response
 
-    public static isAuthenticated(req: Request, res: Response, next: NextFunction): void {
+    public static isAuthenticated(req: Request, res: Response, next: NextFunction) {
         const token = req.cookies[Cookies.jwt]
         let payload: User = null
-
-        console.log('Cookies:', req.cookies)
-        console.log('Token:', token)
 
         if (!token) {
             res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new ApiErrorResponse(new Error(ErrorMessage.UserNotAuthenticated), HttpStatus.CLIENT_ERROR_unauthorized))
@@ -28,36 +30,34 @@ export class Authenticate {
         }
 
         try {
-            payload = jwt.verify(token, jwtSecret)
+            payload = jwt.verify(token, jwtSecret) as User
         }
         catch (error) {
             res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new ApiErrorResponse(new Error(Copy.ErrorMessages.generic), HttpStatus.CLIENT_ERROR_unauthorized))
             return
         }
 
-        console.log('Payload:', payload)
         if (payload.email) {
-            req.user = payload
-            console.log('===> is authenticated?', req.user)
+            req.user = Authenticate.userService.cleanUser(payload)
             next()
         }
-        /*
-        User.findById(payload._id).then((user) => {
+
+        Authenticate.dbClient.findById(UserModel, payload._id).then((user) => {
             if (user) {
                 req.user = user
                 next()
             } else {
-                res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new Error(Copy.ErrorMessages.genericErrorMessage))
+                res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new Error(Copy.ErrorMessages.userNotAuthorized))
                 return
             }
         })
-        */
+
     }
 
     // If the user has the specified role, call `next()`. Else, send an error response
 
     public static isAuthorized(role: number) {
-        return (req: Request, res: Response, next: NextFunction): void => {
+        return (req: Request, res: Response, next: NextFunction) => {
             this.isAuthenticated(req, res, () => {
 
             // if ((<User>req.user).role === role) {

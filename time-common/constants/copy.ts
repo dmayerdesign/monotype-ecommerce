@@ -6,6 +6,7 @@ export class Copy {
         userEmailExists: "Looks like there's already an account with that email. Try logging in!",
         usernameExists: "Looks like there's already an account with that username. Try logging in!",
         userNotAuthorized: "You don't have permission to do that. Sorry!",
+        userNotFound: "We couldn't find a user with that email address.",
     }
 
     public static Warnings = {

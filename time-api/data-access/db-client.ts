@@ -1,4 +1,3 @@
-import { prop, IMongooseModel, MongooseDocument } from '@time/common/utils/goosetype'
 import * as JSONStream from 'JSONStream'
 import { Response } from 'express'
 import { injectable } from 'inversify'
@@ -7,8 +6,7 @@ import { Document, Error, Model, Types } from 'mongoose'
 
 import { ApiResponse } from '@time/common/models/helpers'
 import { SchemaError } from '@time/common/models/types/errors'
-
-import { ProductModel } from '@time/common/models/api-models/product'
+import { prop, IMongooseModel, MongooseDocument } from '@time/common/utils/goosetype'
 
 @injectable()
 export class DbClient<T extends MongooseDocument<T>> {
@@ -21,8 +19,6 @@ export class DbClient<T extends MongooseDocument<T>> {
      * @param {boolean} res - Pass the express `Response` if the set of documents should be streamed rather than loaded into memory
      */
     public getFilteredCollection(model: IMongooseModel<T>, query: Object, options?: { limit: number; skip: number }, res?: Response): Promise<T[]> {
-
-        console.log('---- GET FILTERED COLLECTION ----')
 
         if (!options) {
             options = { limit: 0, skip: 0 }
@@ -39,9 +35,8 @@ export class DbClient<T extends MongooseDocument<T>> {
             // Stream the data
 
             if (res) {
-                console.log('Try the thing')
                 try {
-                    await model.find(query)
+                    model.find(query)
                         .skip(options.skip)
                         .limit(options.limit)
                         .cursor()
@@ -72,30 +67,108 @@ export class DbClient<T extends MongooseDocument<T>> {
     }
 
     /**
-     * Updates a document
+     * Find some documents
+     *
+     * @param {IMongooseModel<T>} model The Mongoose `Model` representing the collection containing the document
+     * @param {object} query The query passed to `Model.findOne`
+     * @memberof DbClient
+     */
+    public find(model: IMongooseModel<T>, query: object) {
+        return new Promise<T[]>(async (resolve, reject) => {
+            let documents: T[]
+
+            try {
+                documents = await model.find(query)
+                resolve(documents)
+            }
+            catch (error) {
+                reject(error)
+            }
+        })
+    }
+
+    /**
+     * Find a document
+     *
+     * @param {IMongooseModel<T>} model The Mongoose `Model` representing the collection containing the document
+     * @param {object} query The query passed to `Model.findOne`
+     * @memberof DbClient
+     */
+    public findOne(model: IMongooseModel<T>, query: object) {
+        return new Promise<T>(async (resolve, reject) => {
+            let document: T
+            let documentResult: any
+
+            try {
+                documentResult = await model.findOne(query)
+                document = documentResult._doc
+                resolve(document)
+            }
+            catch (error) {
+                reject(error)
+            }
+        })
+    }
+
+    /**
+     * Find a document by `id`
+     *
+     * @param {IMongooseModel<T>} model The Mongoose `Model` representing the collection containing the document
+     * @param {string} id The id passed to `Model.findById`
+     * @memberof DbClient
+     */
+    public findById(model: IMongooseModel<T>, id: string) {
+        return new Promise<T>(async (resolve, reject) => {
+            let document: T
+            let documentResult: any
+
+            try {
+                documentResult = await model.findById(id)
+                document = documentResult._doc
+                resolve(document)
+            }
+            catch (error) {
+                reject(error)
+            }
+        })
+    }
+
+    /**
+     * Update a document by `id`
      *
      * @param {mongoose.Model} model - The Mongoose `Model` representing the collection containing the document
      * @param {ObjectId|string} id - The document's `<ObjectId>_id` field
      * @param {object} update - An object representing the fields to be updated
      * @param {boolean} concatArrays - Set to `true` if fields containing arrays should be treated as additions to the existing array. Defaults to `false`, meaning that arrays are replaced in the same way as other fields
+     * @memberof DbClient
      */
-    public updateById(model: IMongooseModel<T>, id: string|Types.ObjectId, update: Object, concatArrays: boolean = false): Promise<T> {
+    public updateById(model: IMongooseModel<T>, id: string|Types.ObjectId, update: Object, concatArrays: boolean = false) {
+        return new Promise<T>(async (resolve, reject) => {
+            let document: T
+            try {
+                document = await model.findById(id)
+            }
+            catch (retrievalError) {
+                reject(retrievalError)
+                return
+            }
 
-        return new Promise<T>((resolve, reject) => {
-            model.findById(id)
-                .then(document => {
-                    try {
-                        updateDoc(document as T & Document, update)
-                    }
-                    catch (validationError) {
-                        reject(validationError)
-                        return
-                    }
-                    document.save()
-                        .then(updatedDocument => resolve(updatedDocument as T & Document))
-                        .catch((updateError: Error) => reject(updateError))
-                })
-                .catch((retrievalError: Error) => reject(retrievalError))
+            try {
+                updateDoc(document as T & Document, update)
+            }
+            catch (validationError) {
+                reject(validationError)
+                return
+            }
+
+            try {
+                const updatedDocumentResult = await document.save()
+                const updatedDocument = updatedDocumentResult._doc
+                resolve(updatedDocument)
+            }
+            catch (updateError) {
+                reject(updateError)
+            }
         })
 
         function updateDoc(doc: T & Document, iterable: Object) {

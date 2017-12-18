@@ -61,7 +61,7 @@ export class CheckoutComponent implements OnInit {
         private organizationService: OrganizationService,
     ) {}
 
-    public ngOnInit(): void {
+    public ngOnInit() {
         this.util.setTitle('Checkout')
 
         this.cartService.cart$.subscribe(cart => {
@@ -92,7 +92,7 @@ export class CheckoutComponent implements OnInit {
         */
     }
 
-    public initStripeForm(): void {
+    public initStripeForm() {
         this.elements = stripe.elements()
 		// Create an instance of the card Element
         this.card = this.elements.create('card', {})
@@ -110,7 +110,7 @@ export class CheckoutComponent implements OnInit {
         })
     }
 
-    public populateOrder(): void {
+    public populateOrder() {
         this.order = new OrderBuilder(this.cart.items.map(item => (<Product>item)._id))
 
         this.organizationService.organization$.subscribe(organization => {
@@ -164,7 +164,7 @@ export class CheckoutComponent implements OnInit {
         })
     }
 
-    public submitOrder(): void {
+    public submitOrder() {
         // if (!this.order) return
         // if (!this.order || !this.order.products || !this.order.products.length) {
         //     return this.util.handleError("Your order doesn't have anything in it!")

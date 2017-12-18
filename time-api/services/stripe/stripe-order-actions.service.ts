@@ -12,6 +12,7 @@ import { StripePayOrderResponse } from '@time/common/models/api-responses/stripe
 import { StripeOrder } from '@time/common/models/helpers'
 import { ApiErrorResponse } from '@time/common/models/helpers/api-error-response'
 import { ApiResponse } from '@time/common/models/helpers/api-response'
+import { DbClient } from '../../data-access/db-client'
 import { DiscountService } from '../discount.service'
 import { ProductService } from '../product.service'
 
@@ -28,6 +29,7 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 export class StripeOrderActionsService {
 
     constructor(
+        @inject(Types.DbClient) private dbClient: DbClient<Order>,
         @inject(Types.ProductService) private productService: ProductService,
         @inject(Types.DiscountService) private discountService: DiscountService
     ) {}
@@ -98,7 +100,7 @@ export class StripeOrderActionsService {
             stripeOrder.email = order.customer.email
             stripeOrder.items = orderItems.map(product => {
                 return <StripeNode.orders.IOrderItem>{
-                    parent: product.SKU,
+                    parent: product.sku,
                     quantity: product.stockQuantity,
                 }
             })
@@ -114,7 +116,7 @@ export class StripeOrderActionsService {
                 dbOrder.stripeOrderId = newStripeOrder.id
                 const newOrder = await dbOrder.save()
                 resolve(new StripeCreateOrderResponse({
-                    order: newOrder,
+                    order: newOrder._doc,
                     stripeOrder: <StripeOrder>newStripeOrder
                 }))
             }
@@ -176,9 +178,10 @@ export class StripeOrderActionsService {
             async function makePayment() {
                 try {
                     const paidStripeOrder = await <Promise<StripeOrder>>stripe.orders.pay(order.stripeOrderId, payment)
-                    let paidOrder = await OrderModel.findById(order._id)
+                    let paidOrder = await this.dbClient.findById(OrderModel, order._id) as Order
                     paidOrder.status = 'Paid'
-                    paidOrder = await paidOrder.save() as (Order & Document)
+                    const paidOrderResponse = await paidOrder.save()
+                    paidOrder = paidOrderResponse._doc
                     resolve(new StripePayOrderResponse({
                         paidOrder,
                         paidStripeOrder,

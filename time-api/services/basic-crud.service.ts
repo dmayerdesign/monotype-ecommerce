@@ -17,7 +17,7 @@ export class BasicCrudService<T extends Document> {
 
     public get(query: any) {
         return new Promise<ApiResponse<T[]>>((resolve, reject) => {
-            this.model.find(query, (error: Error, data: T[]): void => {
+            this.model.find(query, (error: Error, data: T[]) => {
                 if (error) {
                     reject(new ApiErrorResponse(error))
                 }
@@ -33,7 +33,7 @@ export class BasicCrudService<T extends Document> {
 
     public getOne(id: string) {
         return new Promise<ApiResponse<T>>((resolve, reject) => {
-            this.model.findById(id, (error: Error, data: T): void => {
+            this.model.findById(id, (error: Error, data: T) => {
                 if (error) {
                     reject(new ApiErrorResponse(error))
                 }
@@ -49,7 +49,7 @@ export class BasicCrudService<T extends Document> {
 
     public createOne(doc: T) {
         return new Promise<ApiResponse<T>>((resolve, reject) => {
-            new this.model(doc).save((error: Error, newDoc: T): void => {
+            new this.model(doc).save((error: Error, newDoc: T) => {
                 if (error) {
                     reject(new ApiErrorResponse(error))
                 }
@@ -65,7 +65,7 @@ export class BasicCrudService<T extends Document> {
 
     public create(docs: T[]) {
         return new Promise<ApiResponse<T[]>>((resolve, reject) => {
-            this.model.create(docs, (error: Error, newDocs: T[]): void => {
+            this.model.create(docs, (error: Error, newDocs: T[]) => {
                 if (error) {
                     reject(new ApiErrorResponse(error))
                 }

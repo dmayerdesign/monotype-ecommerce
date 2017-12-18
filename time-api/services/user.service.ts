@@ -1,18 +1,21 @@
 import * as bcrypt from 'bcrypt-nodejs'
 import { Request, Response } from 'express'
-import { injectable } from 'inversify'
+import { inject, injectable } from 'inversify'
 import * as jwt from 'jsonwebtoken'
 
 import { AuthConfig } from '@time/common/config/auth.config'
 import { Cookies, Copy, HttpStatus } from '@time/common/constants'
+import { Types } from '@time/common/constants/inversify'
 import { User, UserModel } from '@time/common/models/api-models/user'
 import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
 import { ILogin } from '@time/common/models/interfaces/login'
+import { DbClient } from '../data-access/db-client'
 
 @injectable()
 export class UserService {
 
     private jwtSecret = process.env.JWT_SECRET
+    @inject(Types.DbClient) private dbClient: DbClient<User>
 
     public register(user: User, res: Response): Promise<null> {
         return new Promise<null>(async (resolve, reject) => {
@@ -30,10 +33,13 @@ export class UserService {
                 reject(new ApiErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest))
             }
 
-            // Check for an existing user.
-
             try {
-                const existingUser = await UserModel.findOne({ email: user.email })
+
+                // Check for an existing user.
+
+                const existingUser = await this.dbClient.findOne(UserModel, { email: user.email })
+
+                // If there's no existing user, create a new one.
 
                 if (!existingUser) {
                     const newUser = new UserModel({
@@ -43,9 +49,14 @@ export class UserService {
                         password: hash,
                     })
 
-                    const savedUser = await newUser.save()
+                    const savedUserResult = await newUser.save()
+                    const savedUser = savedUserResult._doc
+
+                    // Create the JWT token and the JWT cookie.
+
                     const payload = this.cleanUser(savedUser)
                     const authToken = jwt.sign(payload, this.jwtSecret, AuthConfig.JwtOptions)
+
                     res.cookie(Cookies.jwt, authToken, AuthConfig.CookieOptions).json(payload)
                     resolve()
                 }
@@ -63,60 +74,53 @@ export class UserService {
     }
 
     public login(credentials: ILogin, res: Response): Promise<null> {
-        return new Promise<null>((resolve, reject) => {
-
-            /////////////////////////
-            // FOR TESTING
-            /////////////////////////
-            const fakeUser = {
-                email: "test@example.com",
-                firstName: "Test",
-                lastName: "User",
-            }
-
+        return new Promise<null>(async (resolve, reject) => {
             try {
-                const authToken = jwt.sign(fakeUser, this.jwtSecret, AuthConfig.JwtOptions)
-                res.cookie(Cookies.jwt, authToken, AuthConfig.CookieOptions).json(fakeUser)
-                resolve()
+
+                // Find a user with the provided email.
+
+                const user = await this.dbClient.findOne(UserModel, {
+                        email: credentials.email
+                    })
+
+                // If no user is found, send a 404.
+
+                if (!user) {
+                    reject(new ApiErrorResponse(new Error(Copy.ErrorMessages.userNotFound), HttpStatus.CLIENT_ERROR_notFound))
+                    return
+                }
+
+                // If a user is found, authenticate their password.
+
+                const authenticated: boolean = bcrypt.compareSync(credentials.password, user.password)
+                if (authenticated) {
+                    const payload = this.cleanUser(user)
+                    const authToken = jwt.sign(payload, this.jwtSecret, AuthConfig.JwtOptions)
+
+                    console.log('Login payload:')
+                    console.log(payload)
+
+                    res.cookie(Cookies.jwt, authToken, AuthConfig.CookieOptions).json(payload)
+                    resolve()
+                } else {
+                    reject(new ApiErrorResponse(new Error(Copy.ErrorMessages.invalidPassword), 401))
+                }
             }
             catch (error) {
                 reject(new ApiErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest))
             }
-
-            /*
-            return User
-                .findOne({
-                    email: credentials.email
-                })
-                .then(user => {
-                    try {
-                        const authenticated: boolean = bcrypt.compareSync(credentials.password, user.password)
-                        if (authenticated) {
-                            const payload = this.cleanUser(user)
-                            const authToken = jwt.sign(payload, this.jwtSecret, AuthConfig.JwtOptions)
-                            res.cookie(Cookies.jwt, authToken, AuthConfig.CookieOptions).json(payload)
-                            resolve()
-                        } else {
-                            return reject(new ServiceErrorResponse(new Error(Copy.ErrorMessages.invalidPassword), 401))
-                        }
-                    }
-                    catch (error) {
-                        reject(new ServiceErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest))
-                    }
-                })
-                .catch((error) => reject(new ServiceErrorResponse(error, HttpStatus.CLIENT_ERROR_badRequest)))
-            */
         })
     }
 
-    public logout(res: Response): void {
+    public logout(res: Response) {
         res.clearCookie(Cookies.jwt).json({})
     }
 
-    public refreshSession(req: Request, res: Response): void {
+    public refreshSession(req: Request, res: Response) {
         const payload = this.cleanUser((req as any).user)
 
-        delete (payload as any).exp
+        console.log('Refresh session:')
+        console.log(payload)
 
         const authToken = jwt.sign(payload, this.jwtSecret, AuthConfig.JwtOptions)
         res.cookie(Cookies.jwt, authToken, AuthConfig.CookieOptions)
@@ -126,7 +130,8 @@ export class UserService {
     public updateUser(id: string, update: any): Promise<ApiResponse<User>> {
         return new Promise<ApiResponse<User>>(async (resolve, reject) => {
             try {
-                const user = await UserModel.findByIdAndUpdate(id, update, { new: true })
+                const { _doc } = await UserModel.findByIdAndUpdate(id, update, { new: true })
+                const user = _doc
                 resolve(new ApiResponse(user))
             }
             catch (error) {
@@ -150,7 +155,7 @@ export class UserService {
     public verifyEmail(token: string) {
         return new Promise<ApiResponse<User>>(async (resolve, reject) => {
             try {
-                const user = await UserModel.findOne({ emailVerificationToken: token })
+                const user = await this.dbClient.findOne(UserModel, { emailVerificationToken: token })
 
                 if (!user) {
                     reject(new ApiErrorResponse(new Error("User not found - the email verification token did not match any token in the database"), HttpStatus.CLIENT_ERROR_notFound))
@@ -170,10 +175,15 @@ export class UserService {
         })
     }
 
-    private cleanUser(user: User): User {
+    public cleanUser(user: User): User {
         const cleanUser = Object.assign({}, user)
         delete cleanUser.adminKey
         delete cleanUser.password
+
+        // Delete JWT properties.
+        delete (cleanUser as any).iat
+        delete (cleanUser as any).exp
+
         return cleanUser
     }
 }

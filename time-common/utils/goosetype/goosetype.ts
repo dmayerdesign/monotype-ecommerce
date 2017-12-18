@@ -3,8 +3,6 @@ import { model, DocumentToObjectOptions, ModelPopulateOptions, ModelUpdateOption
 import * as findOrCreate from 'mongoose-findorcreate'
 import 'reflect-metadata'
 
-// import { container } from '../../time-api/config/inversify.config'
-// import { Types } from '../constants/inversify/types'
 import { ArrayPropOptions, IMongooseDocument, IMongooseModel, ModelBuilder, MongooseSchemaOptions, PropOptions, Ref } from './goosetype-model-builder'
 
 const modelBuilder = new ModelBuilder() // container.get<ModelBuilder>(Types.ModelBuilder)
@@ -65,9 +63,10 @@ export const plugin: (plugin: (schema: Schema, options?: Object) => void, option
 // Base classes
 
 export abstract class MongooseDocument<T = any> {
+    public _doc: T
     /** Hash containing current validation errors. */
     public errors: Object
-    /** This documents _id. */
+    /** This document's _id. */
     public _id: any
     /** Boolean flag specifying if the document is new. */
     public isNew: boolean
@@ -84,7 +83,7 @@ export abstract class MongooseDocument<T = any> {
      * Takes a populated field and returns it to its unpopulated state.
      * If the path was not populated, this is a no-op.
      */
-    public depopulate?(path: string): void { return }
+    public depopulate?(path: string) { return }
 
     /**
      * Returns true if the Document stores the same data as doc.
@@ -152,7 +151,7 @@ export abstract class MongooseDocument<T = any> {
      * Very helpful when using Mixed types.
      * @param path the path to mark modified
      */
-    public markModified?(path: string): void { return }
+    public markModified?(path: string) { return }
 
     /** Returns the list of paths that have been modified. */
     public modifiedPaths?(): string[] { return }
@@ -208,7 +207,7 @@ export abstract class MongooseDocument<T = any> {
      * Clears the modified state on the specified path.
      * @param path the path to unmark modified
      */
-    public unmarkModified?(path: string): void { return }
+    public unmarkModified?(path: string) { return }
 
     /** Sends an update command with this document _id as the query selector.  */
     public update?(doc: this, callback?: (err: any, raw: any) => void): Query<any> { return }

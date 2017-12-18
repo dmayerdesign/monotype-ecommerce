@@ -3,9 +3,9 @@ import { BrowserModule } from '@angular/platform-browser'
 import { RouterModule } from '@angular/router'
 
 import { AppComponent } from './app.component'
+import { BlogModule } from './blog/blog.module'
 import { SharedModule } from './shared/shared.module'
 import { ShopModule } from './shop/shop.module'
-import { SiteModule } from './site/site.module'
 
 @NgModule({
     imports: [
@@ -13,7 +13,7 @@ import { SiteModule } from './site/site.module'
         BrowserModule.withServerTransition({ appId: 'time-client-universal' }),
         RouterModule.forRoot([]),
         SharedModule.forRoot(),
-        SiteModule,
+        BlogModule,
         ShopModule,
     ],
     declarations: [

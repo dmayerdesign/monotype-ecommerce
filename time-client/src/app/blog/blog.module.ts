@@ -1,17 +1,17 @@
 import { NgModule } from '@angular/core'
 
 import { SharedModule } from '../shared/shared.module'
-import { SiteRoutingModule } from './site-routing.module'
+import { BlogRoutingModule } from './blog-routing.module'
 
 import { HomeComponent } from './components/home/home.component'
 
 @NgModule({
   imports: [
     SharedModule.forRoot(),
-    SiteRoutingModule,
+    BlogRoutingModule,
   ],
   declarations: [
     HomeComponent,
   ],
 })
-export class SiteModule { }
+export class BlogModule { }

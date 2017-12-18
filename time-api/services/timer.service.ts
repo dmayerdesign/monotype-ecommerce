@@ -4,10 +4,15 @@ import * as rp from 'request-promise'
 
 import { Types } from '@time/common/constants/inversify'
 import { Timer, TimerModel } from '@time/common/models/api-models/timer'
+import { DbClient } from '../data-access/db-client'
+import { ErrorService } from '../services/error.service'
 
 @injectable()
 export class TimerService {
-    constructor(@inject(Types.ErrorService) private errorService) {
+    constructor(
+        @inject(Types.ErrorService) private errorService: ErrorService,
+        @inject(Types.DbClient) private dbClient: DbClient<Timer>
+    ) {
         this.onInit()
     }
 
@@ -16,14 +21,14 @@ export class TimerService {
     }
 
     public async restartAll() {
-        let timers: (Timer & Document)[]
+        let timers: Timer[]
         const requests = []
         let requestPromises: Promise<any>[] = []
 
         // Find all existing timers.
 
         try {
-            timers = await TimerModel.find({}) as (Timer & Document)[]
+            timers = await this.dbClient.find(TimerModel, {})
         }
         catch (error) {
             this.errorService.handleError(error)

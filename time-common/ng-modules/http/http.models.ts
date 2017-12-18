@@ -58,10 +58,10 @@ export abstract class RestService<T> {
         })
     }
 
-    public get?(): void {}
-    public getOne?(id: string): void {}
-    public create?(): void {}
-    public update?(id: string, update: object): void {}
-    public delete?(id: string): void {}
+    public get?() {}
+    public getOne?(id: string) {}
+    public create?() {}
+    public update?(id: string, update: object) {}
+    public delete?(id: string) {}
 }
 

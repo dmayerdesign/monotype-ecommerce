@@ -50,7 +50,7 @@ export class ProductsController implements interfaces.Controller {
     public getOne(
         @requestParam('slug') slug: string,
         @response() res: Response,
-    ): void {
+    ) {
         this.productService.getOne(slug)
             .then(({data, status}) => res.status(status).json(data))
             .catch(({data, status}) => res.status(status).json(data))
@@ -59,10 +59,10 @@ export class ProductsController implements interfaces.Controller {
     @httpGet('/update-test')
     public updateTest(
         @response() res: Response,
-    ): void {
+    ) {
         this.productService.updateTestProduct({
                 isStandalone: true,
-                SKU: "TEST_001",
+                sku: "TEST_001",
             })
             .then(data => res.json(data))
             .catch(err => res.status(500).json(err))
@@ -72,7 +72,7 @@ export class ProductsController implements interfaces.Controller {
     public delete(
         @requestParam("id") id: string,
         @response() res: Response,
-    ): void {
+    ) {
         this.productService.deleteOne(id)
             .then(({data, status}) => res.status(status).json(data))
             .catch(({data, status}) => res.status(status).json(data))

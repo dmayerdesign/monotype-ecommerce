@@ -1,11 +1,13 @@
-import { injectable } from 'inversify'
+import { inject, injectable } from 'inversify'
 import * as mongoose from 'mongoose'
 import * as Stripe from 'stripe'
 
+import { Types } from '@time/common/constants/inversify'
 import { Order } from '@time/common/models/api-models/order'
 import { User, UserModel } from '@time/common/models/api-models/user'
 import { ApiErrorResponse } from '@time/common/models/helpers/api-error-response'
 import { ApiResponse } from '@time/common/models/helpers/api-response'
+import { DbClient } from '../../data-access/db-client'
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
@@ -19,6 +21,8 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 @injectable()
 export class StripeCustomerService {
 
+    @inject(Types.DbClient) private dbClient: DbClient<User>
+
     /**
      * If the customer checked "save payment info," create a Stripe Customer
      *
@@ -27,9 +31,9 @@ export class StripeCustomerService {
     public createCustomer(order: Order) {
         return new Promise<StripeNode.customers.ICustomer>(async (resolve, reject) => {
             if (order.customer.userId && order.savePaymentInfo && order.stripeTokenObject && order.stripeTokenObject.card) {
-                let user: User & mongoose.Document
+                let user: User
                 try {
-                    user = await UserModel.findById(order.customer.userId) as User & mongoose.Document
+                    user = await this.dbClient.findById(UserModel, order.customer.userId)
                 }
                 catch (findUserError) {
                     reject(findUserError)

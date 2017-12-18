@@ -31,11 +31,14 @@ export class DiscountService implements IFetchService<Discount> {
      * @return {Promise<Discount>}
      */
     public getOne(id: string): Promise<ApiResponse<Discount>> {
-        return new Promise<ApiResponse<Discount>>((resolve, reject) => {
-            DiscountModel.findById(id, (error: Error, discount: Discount): void => {
-                if (error) reject(new ApiErrorResponse(error))
-                else resolve(new ApiResponse(discount))
-            })
+        return new Promise<ApiResponse<Discount>>(async (resolve, reject) => {
+            try {
+                const discount = await this.dbClient.findById(DiscountModel, id)
+                resolve(new ApiResponse(discount))
+            }
+            catch (error) {
+                reject(new ApiErrorResponse(error))
+            }
         })
     }
 

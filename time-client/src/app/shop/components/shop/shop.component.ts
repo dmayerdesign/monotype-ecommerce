@@ -28,9 +28,6 @@ export class ShopComponent implements OnInit, AfterViewInit {
     }
 
     public ngAfterViewInit() {
-
-        console.log("Do login")
-        // this.userService.login({email: "sadfasf", password: "asdfasdfdsf"})
         this.products$ = this.productService.get$
         this.productService.get$.subscribe(
             products => {

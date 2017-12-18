@@ -1,8 +1,9 @@
-import { injectable } from 'inversify'
+import { inject, injectable } from 'inversify'
 import { Document } from 'mongoose'
 
 import { CurrencyEnum } from '@time/common/constants'
 
+import { Types } from '@time/common/constants/inversify'
 import { Attribute, AttributeModel } from '@time/common/models/api-models/attribute'
 import { AttributeValue, AttributeValueModel } from '@time/common/models/api-models/attribute-value'
 import { Price } from '@time/common/models/api-models/price'
@@ -11,9 +12,12 @@ import { Taxonomy, TaxonomyModel } from '@time/common/models/api-models/taxonomy
 import { TaxonomyTerm, TaxonomyTermModel } from '@time/common/models/api-models/taxonomy-term'
 import { IMongooseModel } from '@time/common/utils/goosetype'
 import * as productsJSON from '@time/common/work-files/migration/hyzershop-products'
+import { DbClient } from '../data-access/db-client'
 
 @injectable()
 export class WoocommerceMigrationService {
+
+    @inject(Types.DbClient) private dbClient: DbClient<any>
 
     public createProductsFromExportedJSON(appConfig): Promise<any> {
         return new Promise<any>((resolve, reject) => {
@@ -22,7 +26,7 @@ export class WoocommerceMigrationService {
             async function createProducts() {
                 let product: any
                 for (product of productsJSON) {
-                    const newProduct: Product = Object.assign({}, product)
+                    const newProduct: Product = { ...product }
 
                     const variableAttributeIds: string[] = []
                     const variableAttributeValueIds: string[] = []
@@ -249,6 +253,15 @@ export class WoocommerceMigrationService {
                                     newProduct.description = newProduct.description.replace('</div>', '')
                                 }
                             }
+
+                            if (key === "SKU") {
+                                newProduct.sku = newProduct[key]
+                                delete newProduct[key]
+                            }
+                            if (key === "parentSKU") {
+                                newProduct.parentSku = newProduct[key]
+                                delete newProduct[key]
+                            }
                         }
                         else {
                             delete newProduct[key]
@@ -284,7 +297,7 @@ export class WoocommerceMigrationService {
                         })
 
                         try {
-                            attributeValues = await AttributeValueModel.find({ _id: { $in: newProduct.attributeValues } }) as (AttributeValue & Document)[]
+                            attributeValues = await this.dbClient.find(AttributeValueModel, { _id: { $in: newProduct.attributeValues } }) as AttributeValue[]
                             isDisc = attributeValues.some(attrValue => attrValue.slug === "product-type-disc")
                         }
                         catch (err) {
@@ -292,12 +305,12 @@ export class WoocommerceMigrationService {
                             return
                         }
 
-                        if (newProduct.parentSKU && newProduct.isVariation) imageBaseUrl += `${newProduct.parentSKU.toLowerCase()}-`
-                        else if (newProduct.SKU) imageBaseUrl += `${newProduct.SKU.toLowerCase()}-`
+                        if (newProduct.parentSku && newProduct.isVariation) imageBaseUrl += `${newProduct.parentSku.toLowerCase()}-`
+                        else if (newProduct.sku) imageBaseUrl += `${newProduct.sku.toLowerCase()}-`
 
                         if (isDisc) {
                             for (const attributeValueId of newProduct.attributeValues) {
-                                const attributeValue = new AttributeValueModel(attributeValues.find(val => val._id === attributeValueId)) as (AttributeValue & Document)
+                                const attributeValue = new AttributeValueModel(attributeValues.find(val => val._id === attributeValueId)) as AttributeValue
                                 if (attributeValue.slug.indexOf("plastic") > -1) {
                                     imageBaseUrl += `${attributeValue.value.toLowerCase()}-`
                                 }
@@ -337,7 +350,7 @@ export class WoocommerceMigrationService {
             newProducts.forEach((product, index, products) => {
                 let variations = []
                 if (product.isParent) {
-                    variations = products.filter(p => product.SKU === p.parentSKU)
+                    variations = products.filter(p => product.sku === p.parentSku)
                     variations.forEach(pv => {
                         products[index].images = products[index].images.concat(pv.images)
                         products[index].featuredImages = products[index].featuredImages.concat(pv.featuredImages)

@@ -76,19 +76,12 @@ module.exports = {
 		],
 	},
 	plugins: [
+		new CircularDependencyPlugin(),
 		new webpack.IgnorePlugin(/^vertx$/),
 		// Prevents errors in the server-rendered Angular app when `document` or `window` are accessed
 		new webpack.DefinePlugin({
 			window: undefined,
 			document: undefined,
 		}),
-		new CircularDependencyPlugin({
-			// exclude detection of files based on a RegExp
-			exclude: /node_modules/,
-			// add errors to webpack instead of warnings
-			failOnError: true,
-			// set the current working directory for displaying module paths
-			cwd: process.cwd(),
-		})
 	],
 }

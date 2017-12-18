@@ -17,7 +17,7 @@ export class ProductService extends RestService<Product> {
         super()
     }
 
-    public get(query?: GetProductsRequest): void {
+    public get(query?: GetProductsRequest) {
         const params = new HttpParams()
 
         if (query) params.set("query", JSON.stringify(query))
@@ -37,7 +37,7 @@ export class ProductService extends RestService<Product> {
         return this.http.get<Product[]>(Endpoints.Products, { params })
     }
 
-    public displayOne(slug: string): void {
+    public displayOne(slug: string) {
         this.getOneSubject.next(this.data.find(product => product.slug === slug))
     }
 

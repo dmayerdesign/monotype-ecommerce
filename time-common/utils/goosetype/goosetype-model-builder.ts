@@ -75,8 +75,9 @@ export type Ref<T> = T | string
 
 // Model builder
 
+// Create a singleton
 let modelBuilder: ModelBuilder
-// @injectable()
+
 export class ModelBuilder {
     public schemaDefinitions: any = {}
     public schemas: { [key: string]: mongoose.Schema } = {}
@@ -208,12 +209,6 @@ export class ModelBuilder {
         )
     }
 
-    // public schema(schemaOptions?: mongoose.SchemaOptions): ClassDecorator {
-    //     return (constructor: any) => {
-    //         this.schemas[constructor.name] = new constructor().getSchema(schemaOptions)
-    //     }
-    // }
-
     public pre(...args): ClassDecorator {
         return (constructor: any) => {
             this.findOrCreate.preMiddleware(constructor.name)
@@ -247,7 +242,6 @@ export class ModelBuilder {
                 return mongoose.Schema.Types.ObjectId
             }
             if (!this.schemaDefinitions[type.name.charAt(0).toLowerCase() + type.name.substring(1)]) {
-                console.log(this.schemaDefinitions)
                 throw new SchemaNotDefinedError(`A schema associated with ${type.name} has not been defined. Make sure the class extends MongooseDocument.`)
             }
             return this.findOrCreate.schema(type.name)
@@ -303,9 +297,6 @@ export class ModelBuilder {
                     type = mongoose.Schema.Types.ObjectId
                 }
             }
-
-            console.log(type)
-            console.log(this.getTypeOrSchema(type))
 
             schemaProperty.type = this.getTypeOrSchema(type)
         }

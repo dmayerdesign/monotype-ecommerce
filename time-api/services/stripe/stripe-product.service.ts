@@ -28,7 +28,7 @@ export class StripeProductService {
         @inject(Types.ProductService) private productService: ProductService,
     ) {}
 
-    private createProductsOrSkus<T extends StripeNode.products.IProduct|StripeNode.skus.ISku>(which: 'products'|'skus', products: (Product & Document)[], order: Order & Document) {
+    private createProductsOrSkus<T extends StripeNode.products.IProduct|StripeNode.skus.ISku>(which: 'products'|'skus', products: Product[], order: Order) {
         return new Promise<IStripeCreateProductsOrSkusData<StripeNode.products.IProduct|StripeNode.skus.ISku>>((resolve, reject) => {
             const productsToAdd = []
             let outOfStock = false
@@ -64,7 +64,7 @@ export class StripeProductService {
                 console.log("Let's make some products")
                 console.log(products)
                 products.forEach(product => {
-                    const productId = product.isStandalone ? product.SKU + "_parent" : product.SKU
+                    const productId = product.isStandalone ? product.sku + "_parent" : product.sku
                     if (!product.isEnteredIntoStripe && !product.isVariation) {
                         productsToAdd.push({
                             id: productId,
@@ -80,7 +80,7 @@ export class StripeProductService {
                     console.log(product)
                     const thePrice = this.productService.determinePrice(product)
                     const productToAdd: any = {
-                        id: product.SKU,
+                        id: product.sku,
                         price: thePrice.total * 100,
                         currency: order.total.currency || CurrencyEnum.USD,
                         inventory: {
@@ -92,7 +92,7 @@ export class StripeProductService {
                         },
                     }
                     if (!product.isEnteredIntoStripe && !product.isParent) {
-                        productToAdd.product = product.isStandalone ? product.SKU + "_parent" : product.parentSKU
+                        productToAdd.product = product.isStandalone ? product.sku + "_parent" : product.parentSku
                         productsToAdd.push(productToAdd)
                     }
                 })
@@ -102,7 +102,7 @@ export class StripeProductService {
 
             this.createStripeProductsOrSkus<T>(which, productsToAdd)
                 .then(stripeProductsOrSkus => {
-                    const query = { SKU: { $in: [] } }
+                    const query = { sku: { $in: [] } }
                     if (!stripeProductsOrSkus) return resolve({
                         products,
                         stripeProductsOrSkus: [],
@@ -110,7 +110,7 @@ export class StripeProductService {
 
                     products.forEach(product => {
                         if (!product.isEnteredIntoStripe) {
-                            query.SKU.$in.push(product.SKU)
+                            query.sku.$in.push(product.sku)
                         }
                     })
 
@@ -142,9 +142,9 @@ export class StripeProductService {
 
     private createStripeProductsOrSkus<T>(which: 'products'|'skus', products) {
         return new Promise<Array<T>>((resolve, reject) => {
-            recursivelyCreateProductsOrSKUs(products)
+            recursivelyCreateProductsOrSkus(products)
 
-            async function recursivelyCreateProductsOrSKUs(productArr) {
+            async function recursivelyCreateProductsOrSkus(productArr) {
                 const stripeProducts = {
                     products: [],
                     skus: [],
@@ -164,10 +164,9 @@ export class StripeProductService {
                         product = await stripe.skus.create(productArr[0])
                     }
 
-                    const logMsg = which === "skus" ? "SKU" : "product"
                     console.log(`
     ---------------------------------------
-    Created the ${logMsg} in Stripe
+    Created the ${which}s in Stripe
     ---------------------------------------`)
                     console.log(product.id)
 
@@ -175,7 +174,7 @@ export class StripeProductService {
                     productArr.shift()
 
                     if (productArr.length) {
-                        recursivelyCreateProductsOrSKUs(productArr)
+                        recursivelyCreateProductsOrSkus(productArr)
                     }
                     else {
                         resolve(stripeProducts[which])
@@ -196,7 +195,7 @@ export class StripeProductService {
      *
      * @param {Product[]} products - Array of Parent and Standalone products to add to Stripe
      */
-    public createProducts(products: (Product & Document)[]) {
+    public createProducts(products: Product[]) {
         return new Promise<StripeCreateProductsOrSkusResponse<StripeNode.products.IProduct>>(async (resolve, reject) => {
             try {
                 const createStripeProductsResponseData = await this.createProductsOrSkus<StripeNode.products.IProduct>('products', products, null)
@@ -214,7 +213,7 @@ export class StripeProductService {
      * @param {Product[]} products - Array of Standalone products and product Variations to add to Stripe
      * @param {Order} order - The order containing references to the products being added
      */
-    public createSkus(products: (Product & Document)[], order: Order & Document) {
+    public createSkus(products: Product[], order: Order) {
         return new Promise<StripeCreateProductsOrSkusResponse<StripeNode.skus.ISku>>(async (resolve, reject) => {
             try {
                 const createStripeProductsResponseData = await this.createProductsOrSkus<StripeNode.skus.ISku>('products', products, order)
@@ -227,23 +226,23 @@ export class StripeProductService {
     }
 
     public updateInventory(products, order) {
-        const productPromises: Promise<Product & Document>[] = []
+        const productPromises: Promise<Product>[] = []
 
         products.forEach(product => {
             productPromises.push(
-                new Promise<Product & Document>((resolve, reject) => {
+                new Promise<Product>((resolve, reject) => {
                     let qty = 0
                     if (product.isParent) {
-                        const variations = products.map(p => p.parentSKU === product.SKU)
-                        const variationSKUs = variations.map(v => v.SKU)
-                        const orderVariations = order.items.filter(op => variationSKUs.indexOf(op.SKU) > -1)
+                        const variations = products.map(p => p.parentSku === product.sku)
+                        const variationSkus = variations.map(v => v.sku)
+                        const orderVariations = order.items.filter(op => variationSkus.indexOf(op.sku) > -1)
                         orderVariations.forEach(ov => qty += ov.quantity)
                     }
                     else {
-                        qty = order.items.find(op => op.SKU === product.SKU).quantity
+                        qty = order.items.find(op => op.sku === product.sku).quantity
                     }
                     return ProductModel.update(
-                        { SKU: product.SKU },
+                        { sku: product.sku },
                         { $inc: { stockQuantity: -qty, totalSales: qty } }
                     )
                 })

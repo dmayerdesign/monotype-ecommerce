@@ -29,7 +29,7 @@ export class SeoService {
         return this.util.getTitle()
     }
 
-    public setTitle(newTitle: string): void {
+    public setTitle(newTitle: string) {
         this.util.setTitle(newTitle)
     }
 
@@ -37,7 +37,7 @@ export class SeoService {
         return this.metaDescription.getAttribute('content')
     }
 
-    public setMetaDescription(description: string): void {
+    public setMetaDescription(description: string) {
         this.metaDescription.setAttribute('content', description)
     }
 
@@ -45,7 +45,7 @@ export class SeoService {
         return this.robots.getAttribute('content')
     }
 
-    public setMetaRobots(robots: string): void {
+    public setMetaRobots(robots: string) {
         this.robots.setAttribute('content', robots)
     }
 

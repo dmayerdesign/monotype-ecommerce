@@ -42,7 +42,7 @@ export class Product extends MongooseDocument<Product> {
     @arrayProp({ items: String }) public thumbnails: string[]
 
 	/* Technical */
-    @prop({ unique: true }) public SKU: string
+    @prop({ unique: true }) public sku: string
     @prop() public price: Price
     @arrayProp({ items: Price }) public priceRange: Price[]
 
@@ -52,11 +52,11 @@ export class Product extends MongooseDocument<Product> {
     @prop({ enum: Object.keys(ProductClassEnum) }) public class: ProductClass
     @prop() public isStandalone: boolean
     @prop() public isParent: boolean 				                // Defines an abstract parent for a variable product
-    @arrayProp({ items: String }) public variationSKUs: string[] 	// Array of product SKUs
+    @arrayProp({ items: String }) public variationSkus: string[] 	// Array of product SKUs
     @arrayProp({ itemsRef: Product }) public variations: Ref<Product>[]
     @prop() public isVariation: boolean 			                // Defines a product variation with a parent product
     @prop() public isDefaultVariation: boolean 	                    // Defines the default product variation
-    @prop() public parentSKU: string				                // The SKU of the parent product
+    @prop() public parentSku: string				                // The SKU of the parent product
     @prop({ ref: Product }) public parent: Ref<Product>
 
 	/* Attributes */
