@@ -92,20 +92,25 @@ export class TimeToastComponent implements OnInit, OnDestroy {
             })
 
             this.subscriptions.toastTimeout = timeout(this.toast.timeout).subscribe(() => {
-                this.isShowing = false
-                this.isFadedIn = false
-                this.queue.shift()
-
-                if (this.queue.length) {
-                    this.showToast(true)
-                }
+                this.endToast()
             })
         })
     }
 
-    public close() {
+    private endToast() {
         this.isShowing = false
         this.isFadedIn = false
-        if (this.subscriptions.toastTimeout) this.subscriptions.toastTimeout.unsubscribe()
+        this.queue.shift()
+
+        if (this.subscriptions.toastTimeout) {
+            this.subscriptions.toastTimeout.unsubscribe()
+        }
+        if (this.queue.length) {
+            this.showToast(true)
+        }
+    }
+
+    public close() {
+        this.endToast()
     }
 }

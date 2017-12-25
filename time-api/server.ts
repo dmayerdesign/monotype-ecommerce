@@ -44,8 +44,8 @@ function serverConfig(app) {
     app.use('/scripts', express.static('node_modules'))
     app.use('/assets', express.static('dist/public/assets'))
     app.use('/images', express.static('dist/public/assets/images'))
-    app.use(bodyParser.json())
     app.use(bodyParser.urlencoded({ extended: true }))
+    app.use(bodyParser.json())
     if (!isProduction()) app.use(morgan('dev'))
     app.use(helmet())
     app.disable('x-powered-by') // removes "x-powered-by: express" from the header to avoid specifically-targeted attacks

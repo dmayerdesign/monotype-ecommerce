@@ -27,7 +27,7 @@ import { timeout } from '../../utils/timeout'
                     <div class="modal-title-bar">
                         <h2>{{ data.title }}</h2>
                         <button (click)="cancel()" class="blank-btn modal-close-btn">
-                            <img alt="close modal" [src]="_config.client_url + '/images/x-dark.svg'">
+                            <img alt="close modal" [src]="appConfig.client_url + '/images/x-dark.svg'">
                         </button>
                     </div>
                     <div class="modal-content" *ngIf="data.body">
@@ -53,7 +53,7 @@ export class TimeModalComponent implements OnInit, OnDestroy {
     public defaultCancelText = "Cancel"
     public isShowing = false
     public isFadedIn = false
-    public _config = AppConfig
+    public appConfig = AppConfig
     private isTransitioning = false
     private modalInner: HTMLElement
 

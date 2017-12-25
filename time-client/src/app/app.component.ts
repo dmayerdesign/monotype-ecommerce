@@ -14,23 +14,8 @@ import { UtilService } from './shared/services/util.service'
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss'],
 })
-export class AppComponent implements OnInit {
-    public toastSubject = new Subject<IToast>()
-    public toast$: Observable<IToast>
-    public modalDataSubject = new Subject<IModalData>()
-    public modalData$: Observable<IModalData>
-
+export class AppComponent {
     constructor(
-        private ui: UiService,
-        private util: UtilService,
+        public ui: UiService,
     ) { }
-
-    public ngOnInit() {
-        this.toast$ = this.toastSubject.asObservable()
-        this.modalData$ = this.modalDataSubject.asObservable()
-
-        this.ui.flash$.subscribe(flash => this.toastSubject.next(flash))
-
-        this.ui.modal$.subscribe(modalData => this.modalDataSubject.next(modalData))
-    }
 }

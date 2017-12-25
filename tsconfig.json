@@ -18,16 +18,15 @@
     ],
     "types": [ "node" ],
     "typeRoots": [
-      "./node_modules/@types",
-      "./time-common/types/node-easypost"
+      "./time-common/types",
+      "./node_modules/@types"
     ],
     "noImplicitAny": false,
     "sourceMap": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "moduleResolution": "node",
-    "allowJs": false,
-    "allowSyntheticDefaultImports": true
+    "allowJs": false
   },
   "outDir": "dist/",
   "compileOnSave": false,

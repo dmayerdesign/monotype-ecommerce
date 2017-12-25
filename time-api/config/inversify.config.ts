@@ -3,14 +3,15 @@ import { interfaces, TYPE } from 'inversify-express-utils'
 import { makeLoggerMiddleware } from 'inversify-logger-middleware'
 
 import { Tags, Types } from '@time/common/constants/inversify'
+import { MongooseDocument } from '@time/common/utils/goosetype'
+// TODO: Figure out why easypost-node import breaks when this is added to DI
 import { Authenticate } from '../auth/authenticate'
 import { AppController } from '../controllers/app.controller'
 import { ProductsController } from '../controllers/products.controller'
 import { UserController } from '../controllers/user.controller'
 import { DbClient } from '../data-access/db-client'
 import { DiscountService } from '../services/discount.service'
-// TODO: Figure out why easypost-node import breaks when this is added to DI
-// import { EasypostService } from '../services/easypost.service'
+import { EasypostService } from '../services/easypost.service'
 import { EmailService } from '../services/email.service'
 import { ErrorService } from '../services/error.service'
 import { ProductService } from '../services/product.service'
@@ -23,18 +24,21 @@ import { UserService } from '../services/user.service'
 import { WoocommerceMigrationService } from '../services/woocommerce-migration.service'
 import { isDev, ProductSearchUtils } from '../utils'
 
-// load everything needed to the Container
+// The container is where you register DI bindings.
+
 const container = new Container()
+
+// If we're developing, apply logger middleware.
 
 if (isDev()) {
   const logger = makeLoggerMiddleware()
-  // container.applyMiddleware(logger)
+  container.applyMiddleware(logger)
 }
 
 // Services
-container.bind<DbClient<any>>(Types.DbClient).to(DbClient)
+container.bind<DbClient<MongooseDocument<any>>>(Types.DbClient).to(DbClient)
 container.bind<DiscountService>(Types.DiscountService).to(DiscountService)
-// container.bind<EasypostService>(Types.EasypostService).to(EasypostService)
+container.bind<EasypostService>(Types.EasypostService).to(EasypostService)
 container.bind<EmailService>(Types.EmailService).to(EmailService)
 container.bind<ErrorService>(Types.ErrorService).to(ErrorService)
 container.bind<ProductSearchUtils>(Types.ProductSearchUtils).to(ProductSearchUtils)

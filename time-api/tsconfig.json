@@ -10,7 +10,11 @@
       "@time/environment": [ "../time-client/src/environments/environment" ],
       "mongoose": [ "../node_modules/@types/mongoose" ],
       "stripe": [ "../node_modules/@types/stripe-node" ]
-    }
+    },
+    "typeRoots": [
+      "../time-common/types",
+      "../node_modules/@types"
+    ]
   },
   "outDir": "../dist/server",
   "files": [

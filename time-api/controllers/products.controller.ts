@@ -38,7 +38,7 @@ export class ProductsController implements interfaces.Controller {
         if (parsedQuery.ids) {
             this.productService.getSome(parsedQuery.ids)
                 .then(({data, status}) => res.status(status).json(data))
-                .catch(({data, status}) => res.status(status).json(data))
+                .catch(({message, status}) => res.status(status).json({message, status}))
         }
         else {
             res.setHeader('content-type', 'application/json')
@@ -53,7 +53,7 @@ export class ProductsController implements interfaces.Controller {
     ) {
         this.productService.getOne(slug)
             .then(({data, status}) => res.status(status).json(data))
-            .catch(({data, status}) => res.status(status).json(data))
+            .catch(({message, status}) => res.status(status).json({message, status}))
     }
 
     @httpGet('/update-test')
@@ -75,7 +75,7 @@ export class ProductsController implements interfaces.Controller {
     ) {
         this.productService.deleteOne(id)
             .then(({data, status}) => res.status(status).json(data))
-            .catch(({data, status}) => res.status(status).json(data))
+            .catch(({message, status}) => res.status(status).json({message, status}))
     }
 
     @httpGet('/migrate'/*, Types.isAuthorized*/)

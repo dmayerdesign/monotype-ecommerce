@@ -1,4 +1,14 @@
-declare module 'node-easypost' {
+// declare module 'types/@easypost/api' {
+
+    export interface Easypost {
+        Address: typeof Easypost.Address
+        CustomsInfo: any
+        Insurance: typeof Easypost.Insurance
+        Parcel: any
+        Shipment: typeof Easypost.Shipment
+
+        new(apiKey: string)
+    }
 
     export namespace Easypost {
 
@@ -6,12 +16,12 @@ declare module 'node-easypost' {
             public readonly field: string
             public readonly message: string
         }
-        
+
         export class Error {
             public readonly code: string
             public readonly message: string
             public readonly errors: FieldError[]
-        }    
+        }
 
         /**
          * Parent class for Easypost resources
@@ -31,24 +41,24 @@ declare module 'node-easypost' {
             public readonly updated_at: string
         }
 
-        
+
         export class VerificationDetails {
             public readonly latitude: number
             public readonly longitude: number
             public readonly time_zone: string
         }
-        
+
         export class Verification {
             public readonly success: boolean
             public readonly errors: FieldError[]
             public readonly details: VerificationDetails
         }
-        
+
         export class Verifications {
             public zip4: Verification
             public delivery: Verification
         }
-        
+
         export class Address extends Resource<'Address'> {
             public mode: string
             public street1: string
@@ -85,9 +95,11 @@ declare module 'node-easypost' {
                 federal_tax_id?: string
                 state_tax_id?: string
                 verifications?: Verifications
-            })
+            }) {
+                super()
+            }
         }
-        
+
         export class Form extends TimestampedResource {
             public readonly object: 'Form'
             public readonly mode: 'test' | 'production'
@@ -96,7 +108,7 @@ declare module 'node-easypost' {
             public readonly submitted_electronically: boolean
         }
 
-        
+
         export class Rate extends TimestampedResource<'Rate'> {
             public readonly mode: 'test' | 'production' /* "test" or "production" */
             public readonly service: string /* service level/name */
@@ -176,7 +188,7 @@ declare module 'node-easypost' {
             carrier_accounts?: string[]
             customs_info?: any /* CustomsInfo */
         }
-        
+
         /**
          * An Easypost Shipment
          *
@@ -187,7 +199,7 @@ declare module 'node-easypost' {
          */
         export class Shipment extends TimestampedResource<'Shipment'> {
             public static retrieve: (shipmentId: string) => Promise<Shipment>
-            
+
             public reference?: string
             public readonly mode?: 'test' | 'production'
             public to_address: Address
@@ -219,23 +231,10 @@ declare module 'node-easypost' {
             public buy: (rate: string | Rate, insurance: number) => Promise<Shipment>
             public lowestRate: () => Rate
             public save: () => Promise<Shipment>
-        
-            constructor(s?: INewShipment)
+
+            constructor(s?: INewShipment) {
+                super()
+            }
         }
     }
-
-    export class Easypost {
-        
-        public Address: typeof Easypost.Address
-        public CustomsInfo: any
-        public Insurance: typeof Easypost.Insurance
-        public Parcel: any
-        public Shipment: typeof Easypost.Shipment
-
-        constructor(apiKey: string)
-
-    }
-
-    export default Easypost
-
-}
+// }

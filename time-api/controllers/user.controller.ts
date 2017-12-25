@@ -29,7 +29,7 @@ export class UserController {
         @response() res: Response,
     ) {
         this.userService.login(req.body, res)
-            .catch(({error, status}) => res.status(status).json(error))
+            .catch(({message, status}) => res.status(status).json({message, status}))
     }
 
     @httpPost('/verify-email/:token')
@@ -39,7 +39,7 @@ export class UserController {
     ) {
         this.userService.verifyEmail(token)
             .then(({data, status}) => res.status(status).json(data))
-            .catch(({error, status}) => res.status(status).json(error))
+            .catch(({message, status}) => res.status(status).json({message, status}))
     }
 
     @httpPost('/logout')
@@ -63,7 +63,7 @@ export class UserController {
         @response() res: Response,
     ) {
         this.userService.register(req.body, res)
-            .catch(({error, status}) => res.status(status).json(error))
+            .catch(({message, status}) => res.status(status).json({message, status}))
     }
 
     @httpPut('/update', Types.isAuthenticated)
@@ -73,7 +73,7 @@ export class UserController {
     ) {
         this.userService.updateUser(req.user._id, req.body)
             .then(({data, status}) => res.status(status).json(data))
-            .catch(({error, status}) => res.status(status).json(error))
+            .catch(({message, status}) => res.status(status).json({message, status}))
     }
 
     @httpDelete('/:id', Types.isAuthorized)
@@ -83,6 +83,6 @@ export class UserController {
     ) {
         this.userService.deleteUser(req.params.id)
             .then(({data, status}) => res.status(status).json(data))
-            .catch(({error, status}) => res.status(status).json(error))
+            .catch(({message, status}) => res.status(status).json({message, status}))
     }
 }

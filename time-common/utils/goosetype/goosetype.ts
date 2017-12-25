@@ -1,4 +1,3 @@
-import { injectable } from 'inversify'
 import { model, DocumentToObjectOptions, ModelPopulateOptions, ModelUpdateOptions, MongooseDocument as Document, NativeError, Query, Schema, SchemaOptions, ValidationError } from 'mongoose'
 import * as findOrCreate from 'mongoose-findorcreate'
 import 'reflect-metadata'

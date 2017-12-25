@@ -25,7 +25,7 @@ export class Authenticate {
         let payload: User = null
 
         if (!token) {
-            res.status(HttpStatus.CLIENT_ERROR_unauthorized).json(new ApiErrorResponse(new Error(ErrorMessage.UserNotAuthenticated), HttpStatus.CLIENT_ERROR_unauthorized))
+            res.status(HttpStatus.CLIENT_ERROR_unauthorized).send(new ApiErrorResponse(new Error(ErrorMessage.UserNotAuthenticated), HttpStatus.CLIENT_ERROR_unauthorized))
             return
         }
 

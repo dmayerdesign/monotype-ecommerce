@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http'
+import { HttpErrorResponse, HttpEvent } from '@angular/common/http'
 import { Observable } from 'rxjs/Observable'
 import { Subject } from 'rxjs/Subject'
 
@@ -8,9 +8,11 @@ export class SimpleError {
     public message: string
     public status: HttpStatus
 
-    constructor(error?: HttpErrorResponse) {
-        this.message = error ? error.error : undefined
-        this.status = error ? error.status : undefined
+    constructor(errorResponse?: HttpErrorResponse & HttpEvent<any>) {
+        if (errorResponse) {
+            this.message = errorResponse.error ? errorResponse.error.message : null
+            this.status = errorResponse.status
+        }
     }
 }
 

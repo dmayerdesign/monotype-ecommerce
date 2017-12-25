@@ -20,7 +20,6 @@ export class UiService {
         private timeHttpService: TimeHttpService,
     ) {
         this.timeHttpService.error$.subscribe(error => {
-            console.log("ERROR!!!@!@#!@#")
             this.flashError(error)
         })
     }
@@ -30,11 +29,13 @@ export class UiService {
     }
 
 	/**
-	 * Show a flash message
-	 *
-	 * @param msg
-	 * @param {string} [t = success|error|info|warning]
-	 */
+     * Display a flash message.
+     *
+     * @param {string} message
+     * @param {ToastType} [type=ToastType.Info]
+     * @param {number} [timeout=5500]
+     * @memberof UiService
+     */
     public flash(message: string, type: ToastType = ToastType.Info, timeout: number = 5500) {
         const data: IToast = {
             type,
@@ -45,11 +46,10 @@ export class UiService {
     }
 
 	/**
-	 * Display an error as a flash message
+	 * Display an error as a flash message.
 	 */
     public flashError(error: SimpleError) {
-        console.error(error)
-        this.flash(ErrorMessage.ServerError, ToastType.Error)
+        this.flash(error.message || ErrorMessage.ServerError, ToastType.Error)
     }
 
     /**
