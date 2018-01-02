@@ -13,6 +13,9 @@
       "stripe": [ "../node_modules/@types/stripe-node" ]
     }
   },
+  "files": [
+    "src/main.server.ts"
+  ],
   "exclude": [
     "test.ts",
     "**/*.spec.ts"

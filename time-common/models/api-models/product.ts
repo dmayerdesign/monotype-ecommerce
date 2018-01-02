@@ -1,7 +1,7 @@
 import * as mongooseDelete from 'mongoose-delete'
 import { arrayProp, plugin, pre, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
 
-import { ProductClass, ProductClassEnum } from '../types/product-class'
+import { ProductClass } from '../enums/product-class'
 import { Attribute } from './attribute'
 import { AttributeValue } from './attribute-value'
 import { Dimensions } from './dimensions'
@@ -12,10 +12,10 @@ import { Units } from './units'
 @pre('save', false, function(next) {
     const product = this
     if (!product.slug && product.isNew) {
-        product.slug = product.name.trim().toLowerCase().replace(/[^a-z0-9]/g, "-")
+        product.slug = product.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '-')
     }
     if (product.slug && (product.isNew || product.isModified('slug'))) {
-        product.slug = product.slug.trim().toLowerCase().replace(/[^a-z0-9]/g, "-")
+        product.slug = product.slug.trim().toLowerCase().replace(/[^a-z0-9]/g, '-')
     }
     if (product.isNew || product.isModified('class')) {
         product.isStandalone = product.class === 'standalone'
@@ -49,7 +49,7 @@ export class Product extends MongooseDocument<Product> {
     @prop() public salePrice: Price
     @arrayProp({ items: Price }) public salePriceRange: Price[]
     @prop() public isOnSale: boolean
-    @prop({ enum: Object.keys(ProductClassEnum) }) public class: ProductClass
+    @prop({ enum: ProductClass }) public class: ProductClass
     @prop() public isStandalone: boolean
     @prop() public isParent: boolean 				                // Defines an abstract parent for a variable product
     @arrayProp({ items: String }) public variationSkus: string[] 	// Array of product SKUs

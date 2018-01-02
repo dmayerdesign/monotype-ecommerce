@@ -15,13 +15,13 @@ declare const process: any
 let AppConfig = class AppConfig extends ProdConfig { }
 
 if (process.env && process.env.ENVIRONMENT) {
-    if (process.env.ENVIRONMENT === "production") {
+    if (process.env.ENVIRONMENT === 'production') {
         AppConfig = ProdConfig
     }
-    else if (process.env.ENVIRONMENT === "staging") {
+    else if (process.env.ENVIRONMENT === 'staging') {
         AppConfig = StagingConfig
     }
-    else if (process.env.ENVIRONMENT === "development") {
+    else if (process.env.ENVIRONMENT === 'development') {
         AppConfig = DevConfig
     }
 }

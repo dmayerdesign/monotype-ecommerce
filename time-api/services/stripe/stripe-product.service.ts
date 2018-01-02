@@ -2,9 +2,9 @@ import { inject, injectable } from 'inversify'
 import { Document } from 'mongoose'
 import * as Stripe from 'stripe'
 
-import { CurrencyEnum } from '@time/common/constants/currency'
 import { Types } from '@time/common/constants/inversify'
 import { Order } from '@time/common/models/api-models/order'
+import { Currency } from '@time/common/models/enums/currency'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
 import {
     StripeCreateProductsOrSkusResponse,
@@ -82,7 +82,7 @@ export class StripeProductService {
                     const productToAdd: any = {
                         id: product.sku,
                         price: thePrice.total * 100,
-                        currency: order.total.currency || CurrencyEnum.USD,
+                        currency: order.total.currency || Currency.USD,
                         inventory: {
                             quantity: product.stockQuantity,
                             type: "finite",

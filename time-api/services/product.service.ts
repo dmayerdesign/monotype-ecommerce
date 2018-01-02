@@ -2,13 +2,14 @@ import { Response } from 'express'
 import { inject, injectable } from 'inversify'
 import * as mongoose from 'mongoose'
 
-import { Crud, CurrencyEnum, HttpStatus } from '@time/common/constants'
+import { Crud, HttpStatus } from '@time/common/constants'
+import { Currency } from '@time/common/models/enums/currency'
 import { Types } from '@time/common/constants/inversify'
 import { Price } from '@time/common/models/api-models/price'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
 import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
 import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
-import { IFetchService } from '@time/common/models/interfaces'
+import { IFetchService } from '@time/common/models/interfaces/api/fetch-service'
 import { IMongooseModel } from '@time/common/utils/goosetype'
 import { DbClient } from '../data-access/db-client'
 import { MongoQueries, ProductSearchUtils } from '../utils'
@@ -256,15 +257,15 @@ export class ProductService implements IFetchService<Product> {
     }
 
     public updateTestProduct(update: any): Promise<ApiResponse<Product>> {
-        return this.updateProduct("5988d5f44b224b068cda7d61", update)
+        return this.updateProduct('5988d5f44b224b068cda7d61', update)
     }
 
     public createTest(): Promise<ApiResponse<Product>> {
         return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
             const theProduct = new ProductModel({
-                name: "Test product",
-                slug: "test-product",
-                sku: "TEST_1",
+                name: 'Test product',
+                slug: 'test-product',
+                sku: 'TEST_1',
             })
             try {
                 const product = await theProduct.save() as Product
@@ -285,7 +286,7 @@ export class ProductService implements IFetchService<Product> {
         }
         return {
             total: 0,
-            currency: CurrencyEnum.USD,
+            currency: Currency.USD,
         }
     }
 }

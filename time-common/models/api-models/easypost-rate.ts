@@ -1,6 +1,6 @@
 import { prop } from '../../utils/goosetype'
 
-import { CurrencyEnum } from '@time/common/constants/currency'
+import { Currency } from '@time/common/models/enums/currency'
 
 export class EasypostRate {
     @prop() public readonly created_at: string
@@ -15,7 +15,7 @@ export class EasypostRate {
     @prop() public readonly retail_rate: string /* the retail rate is the in-store rate given with no account */
     @prop() public readonly retail_currency: string /* currency for the retail rate */
     @prop() public readonly list_rate: string /* the list rate is the non-negotiated rate given for having an account with the carrier */
-    @prop({ enum: CurrencyEnum }) public readonly list_currency: string /* currency for the list rate */
+    @prop({ enum: Currency }) public readonly list_currency: string /* currency for the list rate */
     @prop() public readonly delivery_days: number /* delivery days for this service */
     @prop() public readonly delivery_date: string /* date for delivery */
     @prop() public readonly delivery_date_guaranteed: boolean /* indicates if delivery window is guaranteed (true) or not (false) */

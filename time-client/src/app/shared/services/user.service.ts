@@ -6,9 +6,10 @@ import { ReplaySubject } from 'rxjs/ReplaySubject'
 
 import { Endpoints } from '@time/common/constants/endpoints'
 import { User } from '@time/common/models/api-models/user'
-import { ILogin } from '@time/common/models/interfaces/login'
-import { IUserRegistration } from '@time/common/models/interfaces/user-registration'
+import { ILogin } from '@time/common/models/interfaces/api/login'
+import { IUserRegistration } from '@time/common/models/interfaces/api/user-registration'
 import { TimeHttpService } from '@time/common/ng-modules/http'
+import { AppRoutes } from '../../../../constants/app-routes'
 
 @Injectable()
 export class UserService {
@@ -27,14 +28,12 @@ export class UserService {
             this._user = user
         })
         this.timeHttpService.sessionInvalid$.subscribe(err => {
-            if (this.user) {
-                this.clearSession()
-            }
+            this.clearSession()
         })
         this.getUser()
     }
 
-    public get user(): User {
+    public get user() {
         return this._user
     }
 
@@ -43,8 +42,6 @@ export class UserService {
     }
 
     private refreshSession(user: User) {
-        console.log('Refresh session:')
-        console.log(user)
         this.userSubject.next(user)
     }
 
@@ -75,20 +72,11 @@ export class UserService {
 
                 // If the route is protected, navigate away.
 
-                if (this.route.routeConfig.canActivate
-                    || (this.route.firstChild
-                        && (this.route.firstChild.routeConfig.canActivate
-                            || this.route.firstChild.routeConfig.canActivateChild))
-                    || (this.route.firstChild.children[0]
-                        && (this.route.firstChild.children[0].routeConfig.canActivate
-                            || this.route.firstChild.children[0].routeConfig.canActivateChild))
-                ) {
-                    this.router.navigateByUrl('/shop')
-                }
+                this.router.navigateByUrl(AppRoutes.Shop)
             })
     }
 
-    public verifyEmail(token: string): Observable<User> {
+    public verifyEmail(token: string) {
         return this.http.get<User>(`${Endpoints.User}/verify-email/${token}`)
     }
 }

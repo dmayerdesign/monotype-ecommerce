@@ -5,7 +5,7 @@ import { Subject } from 'rxjs/Subject'
 
 import { ErrorMessage } from '@time/common/constants/error-message'
 import { ToastType } from '@time/common/models/enums/toast-type'
-import { IModalData } from '@time/common/models/interfaces'
+import { IModalData } from '@time/common/models/interfaces/ui/modal-data'
 import { IToast } from '@time/common/models/interfaces/ui/toast'
 import { SimpleError, TimeHttpService } from '@time/common/ng-modules/http'
 
@@ -24,6 +24,12 @@ export class UiService {
         })
     }
 
+    /**
+     * Set the document title.
+     *
+     * @param {string} title
+     * @memberof UiService
+     */
     public setTitle(title: string) {
         this.titleService.setTitle(title)
     }
@@ -45,15 +51,21 @@ export class UiService {
         this.flash$.next(data)
     }
 
-	/**
+    /**
 	 * Display an error as a flash message.
-	 */
+     *
+     * @param {SimpleError} error
+     * @memberof UiService
+     */
     public flashError(error: SimpleError) {
         this.flash(error.message || ErrorMessage.ServerError, ToastType.Error)
     }
 
     /**
-     * Display a modal
+     * Display a modal.
+     *
+     * @param {IModalData} data
+     * @memberof UiService
      */
     public showModal(data: IModalData) {
         this.modal$.next(data)

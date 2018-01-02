@@ -209,24 +209,6 @@ export class ModelBuilder {
         )
     }
 
-    public pre(...args): ClassDecorator {
-        return (constructor: any) => {
-            this.findOrCreate.preMiddleware(constructor.name)
-        }
-    }
-
-    public post(...args): ClassDecorator {
-        return (constructor: any) => {
-            this.findOrCreate.postMiddleware(constructor.name)
-        }
-    }
-
-    public plugin(...args): ClassDecorator {
-        return (constructor: any) => {
-            this.findOrCreate.plugin(constructor.name)
-        }
-    }
-
     public getTypeOrSchema(type: any, options?: mongoose.SchemaOptions): object {
         if (this.isValidPrimitiveOrObject(type)) {
             if (type === Object) {
@@ -265,7 +247,26 @@ export class ModelBuilder {
         // Might need a second glance
         for (const option in options) {
             if (options.hasOwnProperty(option) && nonPropertyOptions.indexOf(option) === -1) {
-                schemaProperty[option] = options[option]
+                if (option === 'enum') {
+                    const theEnum = options[option]
+                    let enumArr: string[] = []
+                    if (Array.isArray(theEnum)) {
+                        enumArr = theEnum as string[]
+                    }
+                    else {
+                        const enumKeys = Object.keys(theEnum)
+                        if (typeof theEnum[enumKeys[enumKeys.length - 1]] === 'number') {
+                            enumArr = enumKeys.slice(enumKeys.length / 2)
+                        }
+                        else {
+                            enumArr = enumKeys
+                        }
+                    }
+                    schemaProperty[option] = enumArr
+                }
+                else {
+                    schemaProperty[option] = options[option]
+                }
             }
         }
 
@@ -287,7 +288,7 @@ export class ModelBuilder {
         else {
             schema[key] = schemaProperty
 
-            let type = Reflect.getMetadata("design:type", target, key)
+            let type = Reflect.getMetadata('design:type', target, key)
 
             if (options) {
                 if ((options as SchemaTypeOptions).type) {
@@ -299,16 +300,6 @@ export class ModelBuilder {
             }
 
             schemaProperty.type = this.getTypeOrSchema(type)
-        }
-    }
-    public prop(options?: PropOptions) {
-        return (target: any, key: string) => {
-            this.baseProp({ propType: 'object', target, key, options })
-        }
-    }
-    public arrayProp(options?: ArrayPropOptions) {
-        return (target: any, key: string) => {
-            this.baseProp({ propType: 'array', target, key, options })
         }
     }
 }

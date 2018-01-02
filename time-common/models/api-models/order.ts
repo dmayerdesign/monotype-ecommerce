@@ -1,5 +1,5 @@
 import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
-import { OrderStatus, OrderStatusEnum } from '../types/order-status'
+import { OrderStatus } from '../enums/order-status'
 import { Discount } from './discount'
 import { EasypostRate } from './easypost-rate'
 import { OrderCustomer } from './order-customer'
@@ -12,7 +12,7 @@ export class Order extends MongooseDocument<Order> {
     @arrayProp({ itemsRef: Discount }) public discounts: Ref<Discount>[]
     @prop() public total: Price
     @prop() public taxPercent: number
-    @prop() public shippingCost: number
+    @prop() public shippingCost: Price
     @arrayProp({ items: EasypostRate }) public shippingRates: EasypostRate[]
     @prop() public selectedShippingRateId: string
     @prop() public shippingInsuranceAmt: number
@@ -23,7 +23,7 @@ export class Order extends MongooseDocument<Order> {
     @prop() public paymentMethod: string
     @prop() public savePaymentInfo: boolean
     @prop() public shipmentId: string
-    @prop({ enum: Object.keys(OrderStatusEnum) }) public status: OrderStatus
+    @prop({ enum: OrderStatus }) public status: OrderStatus
     @prop() public stripeCardId: string
     @prop() public stripeOrderId: string
     @prop() public stripeSource: string

@@ -3,7 +3,7 @@ const mailgun = require('mailgun-js')({ apiKey: process.env.MAILGUN_API_KEY, dom
 
 import { AppConfig } from '@time/app-config'
 import { Types } from '@time/common/constants/inversify'
-import { IEmailOptions } from '@time/common/models/interfaces/email'
+import { IEmailOptions } from '@time/common/models/interfaces/api/email'
 import { OrderService } from './order.service'
 
 const receipt = require('@time/common/emails/templates/receipt')

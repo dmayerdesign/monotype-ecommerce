@@ -1,5 +1,4 @@
 import { ModuleWithProviders, NgModule } from '@angular/core'
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 
 // FEATURE MODULES
 import { TimeFormsModule } from '@time/common/ng-modules/forms'
@@ -12,6 +11,7 @@ import { SignupComponent } from './components/signup/signup.component'
 import { SiteLocatorComponent } from './components/site-locator/site-locator.component'
 
 // SERVICES
+import { AdminGuardService } from './services/admin-guard.service'
 import { AuthGuardService } from './services/auth-guard.service'
 import { CartService } from './services/cart.service'
 import { GAnalyticsService } from './services/ga.service'
@@ -24,7 +24,6 @@ import { UtilService } from './services/util.service'
 
 @NgModule({
     imports: [
-        BrowserAnimationsModule,
         TimeHttpModule.forRoot(),
         TimeUiModule,
         TimeFormsModule,
@@ -48,6 +47,7 @@ export class SharedModule {
         return {
             ngModule: SharedModule,
             providers: [
+                AdminGuardService,
                 AuthGuardService,
                 CartService,
                 GAnalyticsService,

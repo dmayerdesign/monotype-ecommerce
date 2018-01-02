@@ -1,4 +1,4 @@
-import { ToastType } from '../../types/toast-type'
+import { ToastType } from '../../enums/toast-type'
 
 export interface IToast {
     type: ToastType

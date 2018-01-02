@@ -1,8 +1,8 @@
 import { prop } from '../../utils/goosetype'
-
-import { LengthUnit, LengthUnitEnum, WeightUnit, WeightUnitEnum } from '../types'
+import { LengthUnit } from '../enums/length-unit'
+import { WeightUnit } from '../enums/weight-unit'
 
 export class Units {
-    @prop({ enum: Object.keys(WeightUnitEnum) }) public weight: WeightUnit
-    @prop({ enum: Object.keys(LengthUnitEnum) }) public length: LengthUnit
+    @prop({ enum: WeightUnit }) public weight: WeightUnit
+    @prop({ enum: LengthUnit }) public length: LengthUnit
 }

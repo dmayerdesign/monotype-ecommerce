@@ -12,7 +12,7 @@ export class ShopPrimaryNavComponent implements OnInit {
     public user: User
 
     constructor(
-        private userService: UserService
+        public userService: UserService
     ) { }
 
     public ngOnInit() {

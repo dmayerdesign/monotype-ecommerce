@@ -1,8 +1,6 @@
 import { inject, injectable } from 'inversify'
 import { Document } from 'mongoose'
 
-import { CurrencyEnum } from '@time/common/constants'
-
 import { Types } from '@time/common/constants/inversify'
 import { Attribute, AttributeModel } from '@time/common/models/api-models/attribute'
 import { AttributeValue, AttributeValueModel } from '@time/common/models/api-models/attribute-value'
@@ -10,6 +8,8 @@ import { Price } from '@time/common/models/api-models/price'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
 import { Taxonomy, TaxonomyModel } from '@time/common/models/api-models/taxonomy'
 import { TaxonomyTerm, TaxonomyTermModel } from '@time/common/models/api-models/taxonomy-term'
+import { Currency } from '@time/common/models/enums/currency'
+import { ProductClass } from '@time/common/models/enums/product-class'
 import { IMongooseModel } from '@time/common/utils/goosetype'
 import * as productsJSON from '@time/common/work-files/migration/hyzershop-products'
 import { DbClient } from '../data-access/db-client'
@@ -46,13 +46,13 @@ export class WoocommerceMigrationService {
                     }
 
                     for (const key of Object.keys(product)) {
-                        if (typeof newProduct[key] !== "undefined" && newProduct[key] !== undefined && newProduct[key] !== "") {
+                        if (typeof newProduct[key] !== 'undefined' && newProduct[key] !== undefined && newProduct[key] !== '') {
 
-                            if (key.indexOf("attributes.") > -1) {
-                                const theKey = key.replace("attributes.", "")
-                                if (product.class === "Variable" && product[key] && product[key].indexOf("|") > -1) {
+                            if (key.indexOf('attributes.') > -1) {
+                                const theKey = key.replace('attributes.', '')
+                                if (product.class === 'Variable' && product[key] && product[key].indexOf('|') > -1) {
                                     const value = product[key]
-                                    const variableAttributeValueSlugs = product[key].split("|").map(val => val.replace(/\s/g, "-").toLowerCase())
+                                    const variableAttributeValueSlugs = product[key].split('|').map(val => val.replace(/\s/g, '-').toLowerCase())
                                     const variableAttributeSlug = theKey
                                     try {
                                         const variableAttributeResponse = await AttributeModel.findOrCreate({
@@ -81,7 +81,7 @@ export class WoocommerceMigrationService {
                                 }
                                 else {
                                     const value = product[key]
-                                    const attributeValueSlug = theKey + "-" + product[key].replace(/\s/g, "-").toLowerCase()
+                                    const attributeValueSlug = theKey + '-' + product[key].replace(/\s/g, '-').toLowerCase()
                                     const attributeSlug = theKey
                                     try {
                                         const attributeResponse = await AttributeModel.findOrCreate({
@@ -103,18 +103,18 @@ export class WoocommerceMigrationService {
                                     }
                                 }
 
-                                if (theKey === "fade" || theKey === "glide" || theKey === "turn" || theKey === "speed") {
+                                if (theKey === 'fade' || theKey === 'glide' || theKey === 'turn' || theKey === 'speed') {
                                     flightStats[theKey] = product[key]
 
                                     const stability = function(stabilityStats): 'overstable'|'stable'|'understable' {
                                         if ( stabilityStats.fade + stabilityStats.turn >= 3 ) {
-                                            return "overstable"
+                                            return 'overstable'
                                         }
                                         else if ( stabilityStats.fade + stabilityStats.turn < 3 && stabilityStats.fade + stabilityStats.turn >= 0 ) {
-                                            return "stable"
+                                            return 'stable'
                                         }
                                         else if ( stabilityStats.fade + stabilityStats.turn < 0 ) {
-                                            return "understable"
+                                            return 'understable'
                                         }
                                     }
 
@@ -123,8 +123,8 @@ export class WoocommerceMigrationService {
                                             const stabilityValue = stability(flightStats)
                                             const attributeSlug = 'stability'
                                             const taxonomySlug = 'stability'
-                                            const attributeValueSlug = attributeSlug + "-" + stabilityValue
-                                            const taxonomyTermSlug = taxonomySlug + "-" + stabilityValue
+                                            const attributeValueSlug = attributeSlug + '-' + stabilityValue
+                                            const taxonomyTermSlug = taxonomySlug + '-' + stabilityValue
 
                                             const attributeResponse = await AttributeModel.findOrCreate({
                                                 slug: attributeSlug,
@@ -156,9 +156,9 @@ export class WoocommerceMigrationService {
                                     }
                                 }
                             }
-                            if (key.indexOf("taxonomies.") > -1) {
-                                const taxonomySlug = key.replace("taxonomies.", "")
-                                const taxonomyTermSlug = key.replace("taxonomies.", "") + "-" + product[key].replace(/\s/g, "-").toLowerCase()
+                            if (key.indexOf('taxonomies.') > -1) {
+                                const taxonomySlug = key.replace('taxonomies.', '')
+                                const taxonomyTermSlug = key.replace('taxonomies.', '') + '-' + product[key].replace(/\s/g, '-').toLowerCase()
                                 try {
                                     const taxonomyResponse = await TaxonomyModel.findOrCreate({ slug: taxonomySlug })
                                     const taxonomy = taxonomyResponse.doc
@@ -175,23 +175,23 @@ export class WoocommerceMigrationService {
                                     return
                                 }
                             }
-                            if (key === "netWeight") {
-                                newProduct[key] = (<any>newProduct[key]).replace(/g/g, "")
-                                if ( (<any>newProduct[key]).indexOf("|") > -1 ) {
+                            if (key === 'netWeight') {
+                                newProduct[key] = (<any>newProduct[key]).replace(/g/g, '')
+                                if ( (<any>newProduct[key]).indexOf('|') > -1 ) {
                                     delete newProduct[key]
                                 }
                             }
-                            if (key === "price") {
-                                if ( newProduct[key].toString().indexOf("-") > -1 ) {
-                                    const priceRangeTotals = (<any>newProduct[key]).split("-")
+                            if (key === 'price') {
+                                if ( newProduct[key].toString().indexOf('-') > -1 ) {
+                                    const priceRangeTotals = (<any>newProduct[key]).split('-')
                                     newProduct.priceRange = [
                                         {
                                             total: 0,
-                                            currency: CurrencyEnum.USD,
+                                            currency: Currency.USD,
                                         } as Price,
                                         {
                                             total: 0,
-                                            currency: CurrencyEnum.USD,
+                                            currency: Currency.USD,
                                         } as Price,
                                     ]
                                     newProduct.priceRange[0].total = parseInt(priceRangeTotals[0].total, 10)
@@ -201,21 +201,21 @@ export class WoocommerceMigrationService {
                                 else {
                                     newProduct[key] = {
                                         total: +newProduct[key],
-                                        currency: CurrencyEnum.USD
+                                        currency: Currency.USD
                                     } as Price
                                 }
                             }
-                            if (key === "salePrice") {
-                                if ( newProduct[key].toString().indexOf("-") > -1 ) {
-                                    const salePriceRangeTotals = (<any>newProduct[key]).split("-")
+                            if (key === 'salePrice') {
+                                if ( newProduct[key].toString().indexOf('-') > -1 ) {
+                                    const salePriceRangeTotals = (<any>newProduct[key]).split('-')
                                     newProduct.salePriceRange = [
                                         {
                                             total: 0,
-                                            currency: CurrencyEnum.USD,
+                                            currency: Currency.USD,
                                         } as Price,
                                         {
                                             total: 0,
-                                            currency: CurrencyEnum.USD,
+                                            currency: Currency.USD,
                                         } as Price,
                                     ]
                                     newProduct.salePriceRange[0].total = parseInt(salePriceRangeTotals[0].total, 10)
@@ -225,27 +225,27 @@ export class WoocommerceMigrationService {
                                 else {
                                     newProduct[key] = {
                                         total: +newProduct[key],
-                                        currency: CurrencyEnum.USD
+                                        currency: Currency.USD
                                     } as Price
                                 }
                             }
 
-                            if (key === "class") {
-                                if ((<string>newProduct.class) === "Variable") {
+                            if (key === 'class') {
+                                if ((<string>newProduct.class) === 'Variable') {
                                     newProduct.isParent = true
-                                    newProduct.class = "parent"
+                                    newProduct.class = ProductClass.Parent
                                 }
-                                if ((<string>newProduct.class) === "Variation") {
+                                if ((<string>newProduct.class) === 'Variation') {
                                     newProduct.isVariation = true
-                                    newProduct.class = "variation"
+                                    newProduct.class = ProductClass.Variation
                                 }
-                                if ((<string>newProduct.class) === "Simple Product") {
+                                if ((<string>newProduct.class) === 'Simple Product') {
                                     newProduct.isStandalone = true
-                                    newProduct.class = "standalone"
+                                    newProduct.class = ProductClass.Standalone
                                 }
                             }
 
-                            if (key === "description") {
+                            if (key === 'description') {
                                 if (newProduct.description) {
                                     newProduct.description = newProduct.description.replace(/http:\/\/stage\.hyzershop\.com\/product/g, '/shop/product')
                                     newProduct.description = newProduct.description.replace(/Š—È/g, '\'')
@@ -254,11 +254,11 @@ export class WoocommerceMigrationService {
                                 }
                             }
 
-                            if (key === "SKU") {
+                            if (key === 'SKU') {
                                 newProduct.sku = newProduct[key]
                                 delete newProduct[key]
                             }
-                            if (key === "parentSKU") {
+                            if (key === 'parentSKU') {
                                 newProduct.parentSku = newProduct[key]
                                 delete newProduct[key]
                             }
@@ -283,22 +283,22 @@ export class WoocommerceMigrationService {
                         let attributeValues: AttributeValue[]
                         let imageBaseUrl = `${appConfig.cloudfront_url}/product-images/`
                         newProduct.taxonomyTermSlugs.forEach(term => {
-                            if (term.indexOf("brand") === 0) {
-                                if (term.indexOf("MVP") > -1) {
-                                    imageBaseUrl += "mvp-"
+                            if (term.indexOf('brand') === 0) {
+                                if (term.indexOf('MVP') > -1) {
+                                    imageBaseUrl += 'mvp-'
                                 }
-                                if (term.indexOf("Axiom") > -1) {
-                                    imageBaseUrl += "axiom-"
+                                if (term.indexOf('Axiom') > -1) {
+                                    imageBaseUrl += 'axiom-'
                                 }
-                                if (term.indexOf("Discraft") > -1) {
-                                    imageBaseUrl += "discraft-"
+                                if (term.indexOf('Discraft') > -1) {
+                                    imageBaseUrl += 'discraft-'
                                 }
                             }
                         })
 
                         try {
                             attributeValues = await this.dbClient.find(AttributeValueModel, { _id: { $in: newProduct.attributeValues } }) as AttributeValue[]
-                            isDisc = attributeValues.some(attrValue => attrValue.slug === "product-type-disc")
+                            isDisc = attributeValues.some(attrValue => attrValue.slug === 'product-type-disc')
                         }
                         catch (err) {
                             reject(err)
@@ -311,15 +311,15 @@ export class WoocommerceMigrationService {
                         if (isDisc) {
                             for (const attributeValueId of newProduct.attributeValues) {
                                 const attributeValue = new AttributeValueModel(attributeValues.find(val => val._id === attributeValueId)) as AttributeValue
-                                if (attributeValue.slug.indexOf("plastic") > -1) {
+                                if (attributeValue.slug.indexOf('plastic') > -1) {
                                     imageBaseUrl += `${attributeValue.value.toLowerCase()}-`
                                 }
                             }
-                            imageBaseUrl += newProduct.netWeight.toString().replace(".", "")
+                            imageBaseUrl += newProduct.netWeight.toString().replace('.', '')
                         } else {
                             for (const attributeValueId of newProduct.attributeValues) {
                                 const attributeValue = attributeValues.find(val => val._id === attributeValueId)
-                                if (attributeValue.slug.indexOf("color") > -1) {
+                                if (attributeValue.slug.indexOf('color') > -1) {
                                     imageBaseUrl += `${attributeValue.value.toLowerCase()}-`
                                 }
                             }
@@ -330,9 +330,9 @@ export class WoocommerceMigrationService {
                         newProduct.images = []
                         newProduct.thumbnails = []
 
-                        newProduct.featuredImages.push(imageBaseUrl + "-medium.png")
-                        newProduct.largeImages.push(imageBaseUrl + "-large.png")
-                        newProduct.thumbnails.push(imageBaseUrl + "-thumbnail.png")
+                        newProduct.featuredImages.push(imageBaseUrl + '-medium.png')
+                        newProduct.largeImages.push(imageBaseUrl + '-large.png')
+                        newProduct.thumbnails.push(imageBaseUrl + '-thumbnail.png')
                     } else {
                         newProduct.featuredImages = []
                         newProduct.largeImages = []

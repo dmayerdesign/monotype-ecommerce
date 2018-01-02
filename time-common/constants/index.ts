@@ -1,7 +1,6 @@
 export * from './cookies'
 export * from './copy'
 export * from './crud'
-export * from './currency'
 export * from './endpoints'
 export * from './error-message'
 export * from './http'

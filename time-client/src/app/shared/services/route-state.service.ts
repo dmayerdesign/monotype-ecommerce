@@ -8,7 +8,7 @@ import 'rxjs/add/operator/switchMap'
 @Injectable()
 export class RouteStateService {
 
-    public previousUrl = "/"
+    public previousUrl: string
     public routerEvents$: Observable<any>
 
     constructor(
@@ -26,9 +26,9 @@ export class RouteStateService {
                 if (this.route.snapshot.firstChild
                     && this.route.snapshot.firstChild.url
                     && this.route.snapshot.firstChild.url.length) {
-                    this.previousUrl = this.route.snapshot.firstChild.url.map(segment => "/" + segment.path).join("")
+                    this.previousUrl = this.route.snapshot.firstChild.url.map(segment => '/' + segment.path).join('')
                 } else {
-                    this.previousUrl = "/"
+                    this.previousUrl = '/'
                 }
             })
     }

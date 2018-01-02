@@ -9,6 +9,7 @@ import { Product } from '@time/common/models/api-models/product'
 import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
 import { StripeCreateOrderResponse } from '@time/common/models/api-responses/stripe-create-order.response'
 import { StripePayOrderResponse } from '@time/common/models/api-responses/stripe-pay-order.response'
+import { OrderStatus } from '@time/common/models/enums/order-status'
 import { StripeOrder } from '@time/common/models/helpers'
 import { ApiErrorResponse } from '@time/common/models/helpers/api-error-response'
 import { ApiResponse } from '@time/common/models/helpers/api-response'
@@ -50,7 +51,7 @@ export class StripeOrderActionsService {
             if (!order.total
                 || !order.total.currency
                 || !order.customer.email) {
-                reject(new Error("Not a valid order"))
+                reject(new Error('Not a valid order'))
             }
 
             order.total.total = 0
@@ -140,7 +141,7 @@ export class StripeOrderActionsService {
                     orderID: order._id,
                 },
             }
-            console.log("******** order.stripeToken ********")
+            console.log('******** order.stripeToken ********')
             console.log(order.stripeToken)
 
             if (order.customer.stripeCustomerId && !order.stripeToken && !order.stripeCardId) {
@@ -151,7 +152,7 @@ export class StripeOrderActionsService {
                 payment.email = order.customer.email
             }
             else {
-                return reject(new Error("Missing one of: Stripe Customer ID, Stripe Token ID, or email"))
+                return reject(new Error('Missing one of: Stripe Customer ID, Stripe Token ID, or email'))
             }
 
             if (order.savePaymentInfo && order.stripeToken && order.customer.stripeCustomerId) {
@@ -160,9 +161,9 @@ export class StripeOrderActionsService {
                 payment.customer = order.customer.stripeCustomerId
 
                 try {
-                    console.log("******** Saving new card ********")
+                    console.log('******** Saving new card ********')
                     const card = await stripe.customers.createSource(order.customer.stripeCustomerId, { source: order.stripeToken })
-                    if (!card) return reject(new Error("Couldn't save your payment info. Please try again."))
+                    if (!card) return reject(new Error('Couldn\'t save your payment info. Please try again.'))
                     await stripe.customers.update(order.customer.stripeCustomerId, {
                         default_source: card.id
                     })
@@ -179,7 +180,7 @@ export class StripeOrderActionsService {
                 try {
                     const paidStripeOrder = await <Promise<StripeOrder>>stripe.orders.pay(order.stripeOrderId, payment)
                     let paidOrder = await this.dbClient.findById(OrderModel, order._id) as Order
-                    paidOrder.status = 'Paid'
+                    paidOrder.status = OrderStatus.Paid
                     const paidOrderResponse = await paidOrder.save()
                     paidOrder = paidOrderResponse._doc
                     resolve(new StripePayOrderResponse({

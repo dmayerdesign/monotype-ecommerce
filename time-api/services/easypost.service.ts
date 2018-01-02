@@ -7,6 +7,7 @@ import { Types } from '@time/common/constants/inversify'
 import { Address } from '@time/common/models/api-models/address'
 import { EasypostRate } from '@time/common/models/api-models/easypost-rate'
 import { FindOrderError, Order, OrderModel, UpdateOrderError } from '@time/common/models/api-models/order'
+import { OrderStatus } from '@time/common/models/enums/order-status'
 import { DbClient } from '../data-access/db-client'
 
 const easypost = new EasypostModule(process.env.EASYPOST_API_KEY) as Easypost
@@ -36,7 +37,7 @@ export class EasypostService {
      */
     public createShipment(options, orderId) {
         return new Promise<{ order: Order, shipment: Easypost.Shipment }>(async (resolve, reject) => {
-            console.log("Easypost shipment options:")
+            console.log('Easypost shipment options:')
             console.log(options)
 
             /* Either objects or ids can be passed in. If the object does
@@ -63,7 +64,7 @@ export class EasypostService {
             try {
                 easypostShipment = await shipment.save()
                 if (!easypostShipment) {
-                    return reject(new Error("Couldn't create the shipment."))
+                    return reject(new Error('Couldn\'t create the shipment.'))
                 }
             }
             catch (error) {
@@ -76,7 +77,7 @@ export class EasypostService {
             try {
                 order = await this.dbClient.findById(OrderModel, orderId)
                 if (!easypostShipment) {
-                    reject(new FindOrderError("Couldn't find the order on which to update shipment details."))
+                    reject(new FindOrderError('Couldn\'t find the order on which to update shipment details.'))
                     return
                 }
             }
@@ -139,7 +140,7 @@ export class EasypostService {
             try {
                 purchasedShipment = await shipment.buy(rateId || shipment.lowestRate(), insurance)
                 if (!purchasedShipment) {
-                    reject(new Error("Couldn't purchase the shipment."))
+                    reject(new Error('Couldn\'t purchase the shipment.'))
                     return
                 }
             }
@@ -155,7 +156,7 @@ export class EasypostService {
                 order = await this.dbClient.findById(OrderModel, orderId)
 
                 if (!order) {
-                    reject(new FindOrderError("Couldn't find the order to update with shipment data."))
+                    reject(new FindOrderError('Couldn\'t find the order to update with shipment data.'))
                     return
                 }
             }
@@ -166,7 +167,7 @@ export class EasypostService {
 
             // Update the order with the shipment data.
 
-            order.status = "Shipped"
+            order.status = OrderStatus.Shipped
             order.selectedShippingRateId = purchasedShipment.selected_rate.id
             order.carrier = purchasedShipment.selected_rate ? purchasedShipment.selected_rate.carrier : null
             order.trackingCode = purchasedShipment.tracking_code
@@ -196,7 +197,7 @@ export class EasypostService {
     public verifyAddress(address: Address) {
         return new Promise<Easypost.Address>(async (resolve, reject) => {
             if (!address) {
-                return reject(new UpdateOrderError("No shipping address was provided."))
+                return reject(new UpdateOrderError('No shipping address was provided.'))
             }
 
             // Verify the address.
@@ -218,7 +219,7 @@ export class EasypostService {
                 resolve(verifiedAddress)
             }
             else {
-                reject(new Error("The shipping address provided is undeliverable or invalid."))
+                reject(new Error('The shipping address provided is undeliverable or invalid.'))
             }
         })
     }

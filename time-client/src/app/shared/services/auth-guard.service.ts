@@ -7,6 +7,7 @@ import {
     RouterStateSnapshot,
 } from '@angular/router'
 import { Observable } from 'rxjs/Observable'
+import 'rxjs/add/operator/take'
 
 import { AppRoutes } from '../../../../constants/app-routes'
 import { RouteStateService } from './route-state.service'
@@ -21,7 +22,7 @@ export class AuthGuardService implements CanActivate, CanActivateChild {
         private routeState: RouteStateService,
     ) {}
 
-    public canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
+    public canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
         return this.userService.user$
             .map(user => {
                 if (user) {
@@ -35,7 +36,7 @@ export class AuthGuardService implements CanActivate, CanActivateChild {
             })
     }
 
-    public canActivateChild(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
+    public canActivateChild(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
         return this.canActivate(route, state)
     }
 

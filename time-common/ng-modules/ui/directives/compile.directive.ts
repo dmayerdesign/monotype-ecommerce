@@ -66,11 +66,8 @@ export class CompileDirective implements AfterViewInit {
         return CustomDynamicComponent
     }
 
-    private createDynamicModule (component: Type<any>) {
+    private createDynamicModule(component: Type<any>) {
         @NgModule({
-            // You might need other modules, providers, etc...
-            // Note that whatever components you want to be able
-            // to render dynamically must be known to this module
             imports: [
                 CommonModule,
                 FormsModule,

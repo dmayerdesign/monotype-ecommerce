@@ -12,7 +12,7 @@ export class User extends MongooseDocument<User> {
     @prop() public password?: string
     @prop() public passwordResetToken?: string
     @prop() public passwordResetExpires?: string
-    @prop() public adminKey?: string
+    @prop() public role?: number
 
     @prop() public name: string
     @prop() public lastName: string

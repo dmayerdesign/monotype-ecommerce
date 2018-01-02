@@ -1,14 +1,13 @@
-import { IOrder, IOrderCustomer } from '../interfaces'
-import { OrderStatus, OrderStatusEnum } from '../types/order-status'
+import { OrderStatus } from '../enums/order-status'
+import { IOrder } from '../interfaces/api/order'
+import { IOrderCustomer } from '../interfaces/api/order-customer'
+import { IPrice } from '../interfaces/api/price'
 
 export class OrderBuilder implements IOrder {
     public discounts: string[]
-    public total: {
-        amount: number
-        currency: string
-    }
+    public total: IPrice
     public taxPercent: number
-    public shippingCost: number
+    public shippingCost: IPrice
     public shippingRates: any[]
     public selectedShippingRate: any
     public shippingInsuranceAmt: number
@@ -28,6 +27,6 @@ export class OrderBuilder implements IOrder {
     public customer: IOrderCustomer
 
     constructor(public items: string[]) {
-        this.status = OrderStatusEnum.Pending
+        this.status = OrderStatus.Pending
     }
 }

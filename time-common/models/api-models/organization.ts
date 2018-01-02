@@ -1,7 +1,10 @@
 import { prop, MongooseDocument, MongooseSchemaOptions } from '../../utils/goosetype'
+import { Price } from './price'
 
 export class OrganizationRetailSettings {
     @prop() public salesTaxPercentage: number
+    @prop() public addSalesTax?: boolean
+    @prop() public shippingFlatRate?: Price
 }
 
 export class Organization extends MongooseDocument<Organization> {

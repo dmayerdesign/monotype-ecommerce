@@ -1,10 +1,10 @@
-import { IAddress } from '../interfaces'
+import { IAddress } from '../interfaces/api/address'
 
 export class UserBuilder {
   public email: string
   public username?: string
   public password?: string
-  public adminKey?: string
+  public role?: string
 
   public lastName?: string
   public firstName?: string

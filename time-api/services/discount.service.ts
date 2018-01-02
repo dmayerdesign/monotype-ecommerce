@@ -5,7 +5,7 @@ import { Error } from 'mongoose'
 import { Types } from '@time/common/constants/inversify'
 import { Discount, DiscountModel } from '@time/common/models/api-models/discount'
 import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
-import { IFetchService } from '@time/common/models/interfaces/fetch-service'
+import { IFetchService } from '@time/common/models/interfaces/api/fetch-service'
 import { IMongooseModel } from '@time/common/utils/goosetype'
 import { DbClient } from '../data-access/db-client'
 

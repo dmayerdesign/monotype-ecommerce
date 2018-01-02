@@ -12,4 +12,8 @@ export class Copy {
     public static Warnings = {
         userNotLoggedIn: "You're not logged in.",
     }
+
+    public static Actions = {
+        cancel: "Cancel",
+    }
 }

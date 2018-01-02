@@ -1,5 +1,5 @@
 import { HttpStatus } from '../../constants/http'
-import { IApiResponse } from '../interfaces'
+import { IApiResponse } from '../interfaces/api/api-response'
 
 export class ApiResponse<T> implements IApiResponse<T> {
     constructor(

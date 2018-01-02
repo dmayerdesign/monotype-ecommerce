@@ -8,7 +8,7 @@ import { Cookies, Copy, HttpStatus } from '@time/common/constants'
 import { Types } from '@time/common/constants/inversify'
 import { User, UserModel } from '@time/common/models/api-models/user'
 import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
-import { ILogin } from '@time/common/models/interfaces/login'
+import { ILogin } from '@time/common/models/interfaces/api/login'
 import { DbClient } from '../data-access/db-client'
 
 @injectable()
@@ -158,11 +158,11 @@ export class UserService {
                 const user = await this.dbClient.findOne(UserModel, { emailVerificationToken: token })
 
                 if (!user) {
-                    reject(new ApiErrorResponse(new Error("User not found - the email verification token did not match any token in the database"), HttpStatus.CLIENT_ERROR_notFound))
+                    reject(new ApiErrorResponse(new Error('User not found - the email verification token did not match any token in the database'), HttpStatus.CLIENT_ERROR_notFound))
                 }
                 else {
                     if (user.emailTokenExpires < Date.now()) {
-                        reject(new ApiErrorResponse(new Error("Verification token has expired"), HttpStatus.CLIENT_ERROR_badRequest))
+                        reject(new ApiErrorResponse(new Error('Verification token has expired'), HttpStatus.CLIENT_ERROR_badRequest))
                     }
                     else {
                         resolve(new ApiResponse(user))
@@ -177,7 +177,7 @@ export class UserService {
 
     public cleanUser(user: User): User {
         const cleanUser = Object.assign({}, user)
-        delete cleanUser.adminKey
+        delete cleanUser.role
         delete cleanUser.password
 
         // Delete JWT properties.

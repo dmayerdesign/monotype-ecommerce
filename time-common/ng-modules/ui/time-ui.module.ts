@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common'
 import { NgModule } from '@angular/core'
+import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { ClickOutsideModule } from 'ng-click-outside'
 
 import { TimeModalComponent } from './components/modal/time-modal.component'
@@ -14,6 +15,8 @@ import { TruncatePipe } from './pipes/truncate.pipe'
 @NgModule({
     imports: [
         CommonModule,
+        FormsModule,
+        ReactiveFormsModule,
         ClickOutsideModule,
     ],
     declarations: [

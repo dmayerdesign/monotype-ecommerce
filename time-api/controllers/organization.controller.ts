@@ -5,7 +5,7 @@ import {
     interfaces,
 } from 'inversify-express-utils'
 
-import { IOrganization } from '@time/common/models/interfaces'
+import { IOrganization } from '@time/common/models/interfaces/api/organization'
 
 @injectable()
 @controller('/api/organization')

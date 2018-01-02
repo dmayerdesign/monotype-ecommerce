@@ -1,5 +1,5 @@
 import { arrayProp, prop, Ref } from '../../utils/goosetype'
-import { ICartProduct } from '../interfaces/cart-product'
+import { ICartProduct } from '../interfaces/ui/cart-product'
 import { Discount } from './discount'
 import { Product } from './product'
 

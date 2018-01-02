@@ -4,7 +4,7 @@ import 'reflect-metadata'
 
 import { ArrayPropOptions, IMongooseDocument, IMongooseModel, ModelBuilder, MongooseSchemaOptions, PropOptions, Ref } from './goosetype-model-builder'
 
-const modelBuilder = new ModelBuilder() // container.get<ModelBuilder>(Types.ModelBuilder)
+const modelBuilder = new ModelBuilder()
 
 // Utilities
 
@@ -52,25 +52,51 @@ export function composeSchemaForInstance<T>(target: MongooseDocument, schemaOpti
 
 // Decorators
 
-export const prop: (options?: PropOptions) => PropertyDecorator = modelBuilder.prop.bind(modelBuilder)
-export const arrayProp: (options?: ArrayPropOptions) => PropertyDecorator = modelBuilder.arrayProp.bind(modelBuilder)
-// export const schema: (schemaOptions?: SchemaOptions) => ClassDecorator = modelBuilder.schema.bind(modelBuilder)
-export const post: <T>(method: string, fn: (error: Error, doc: T, next: (err?: NativeError) => void) => void) => ClassDecorator = modelBuilder.post.bind(modelBuilder)
-export const pre: (method: string, parallel: boolean, fn: (next: (err?: NativeError) => void, done: () => void) => void, errorCb?: (err: Error) => void) => ClassDecorator = modelBuilder.pre.bind(modelBuilder)
-export const plugin: (plugin: (schema: Schema, options?: Object) => void, options?: Object) => ClassDecorator = modelBuilder.plugin.bind(modelBuilder)
+export function pre(method: string, parallel: boolean, fn: (next: (err?: NativeError) => void, done: () => void) => void, errorCb?: (err: Error) => void): ClassDecorator {
+    return (constructor: any) => {
+        let preHookArgs = modelBuilder.findOrCreate.preMiddleware(constructor.name)
+        preHookArgs = [ method, parallel, fn ]
+    }
+}
+
+export function post<T>(method: string, fn: (error: Error, doc: T, next: (err?: NativeError) => void) => void): ClassDecorator {
+    return (constructor: any) => {
+        let postHookArgs = modelBuilder.findOrCreate.postMiddleware(constructor.name)
+        postHookArgs = [ method, fn ]
+    }
+}
+
+export function plugin(plugin: (schema: Schema, options?: Object) => void, options?: Object): ClassDecorator {
+    return (constructor: any) => {
+        let pluginArgs = modelBuilder.findOrCreate.plugin(constructor.name)
+        pluginArgs = [ plugin, options ]
+    }
+}
+
+export function prop(options?: PropOptions): PropertyDecorator {
+    return (target: any, key: string) => {
+        modelBuilder.baseProp({ propType: 'object', target, key, options })
+    }
+}
+
+export function arrayProp(options?: ArrayPropOptions): PropertyDecorator {
+    return (target: any, key: string) => {
+        modelBuilder.baseProp({ propType: 'array', target, key, options })
+    }
+}
 
 // Base classes
 
 export abstract class MongooseDocument<T = any> {
-    public _doc: T
+    public _doc?: T
     /** Hash containing current validation errors. */
-    public errors: Object
+    public errors?: Object
     /** This document's _id. */
-    public _id: any
+    public _id?: any
     /** Boolean flag specifying if the document is new. */
-    public isNew: boolean
+    public isNew?: boolean
     /** The documents schema. */
-    public schema: Schema
+    public schema?: Schema
     // public _id: string
     public createdAt?: any
     public updatedAt?: any
@@ -191,13 +217,13 @@ export abstract class MongooseDocument<T = any> {
      * options to every document of your schema by default, set your schemas
      * toJSON option to the same argument.
      */
-    public toJSON(options?: DocumentToObjectOptions): Object { return }
+    public toJSON?(options?: DocumentToObjectOptions): Object { return }
 
     /**
      * Converts this document into a plain javascript object, ready for storage in MongoDB.
      * Buffers are converted to instances of mongodb.Binary for proper storage.
      */
-    public toObject(options?: DocumentToObjectOptions): Object { return }
+    public toObject?(options?: DocumentToObjectOptions): Object { return }
 
     /** Helper for console.log */
     public toString(): string { return }
