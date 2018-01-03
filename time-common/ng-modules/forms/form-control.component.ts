@@ -4,7 +4,7 @@ import {
     NG_VALUE_ACCESSOR,
 } from '@angular/forms'
 
-import { ErrorsMap } from './form.models'
+import { ErrorsMap } from './models/errors-map'
 
 @Component({
     selector: 'time-form-control',
@@ -41,10 +41,10 @@ export class TimeFormControlComponent implements ControlValueAccessor, OnInit {
     private propagateChange = (_: any) => { }
     private propagateTouch = () => { }
 
-    public ngOnInit() {
+    public ngOnInit(): void {
         const defaultErrorMessages: ErrorsMap = {
-            required: this.label + " is required",
-            email: "Invalid email"
+            required: this.label + ' is required',
+            email: 'Invalid email'
         }
         this.errMessages = {
             ...defaultErrorMessages,

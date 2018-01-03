@@ -8,12 +8,11 @@ import { ProductDetailComponent } from './containers/product-detail/product-deta
 import { ShopComponent } from './containers/shop/shop.component'
 import { TaxonomyComponent } from './containers/taxonomy/taxonomy.component'
 import { CheckoutService } from './services/checkout.service'
-import { ProductService } from './services/product.service'
-import { ShopRoutingModule } from './shop-routing.module'
+import { ShopRoutingModule } from './shop.routing.module'
 
 @NgModule({
     imports: [
-        SharedModule.forRoot(),
+        SharedModule.forChild(),
         ShopRoutingModule,
     ],
     declarations: [
@@ -33,7 +32,6 @@ import { ShopRoutingModule } from './shop-routing.module'
     ],
     providers: [
         CheckoutService,
-        ProductService,
     ],
 })
 export class ShopModule { }

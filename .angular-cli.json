@@ -20,6 +20,7 @@
       "testTsconfig": "../tsconfig.spec.json",
       "prefix": "time",
       "styles": [
+        "../../node_modules/bootstrap/dist/css/bootstrap.min.css",
         "styles.scss"
       ],
       "stylePreprocessorOptions": {
@@ -51,6 +52,7 @@
       "testTsconfig": "../tsconfig.spec.json",
       "prefix": "time",
       "styles": [
+        "../../node_modules/bootstrap/dist/css/bootstrap.min.css",
         "styles.scss"
       ],
       "stylePreprocessorOptions": {
@@ -82,6 +84,7 @@
       "testTsconfig": "../tsconfig.spec.json",
       "prefix": "time",
       "styles": [
+        "../../node_modules/bootstrap/dist/css/bootstrap.min.css",
         "styles.scss"
       ],
       "stylePreprocessorOptions": {

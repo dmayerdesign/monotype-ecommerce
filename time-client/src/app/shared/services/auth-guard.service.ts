@@ -9,7 +9,7 @@ import {
 import { Observable } from 'rxjs/Observable'
 import 'rxjs/add/operator/take'
 
-import { AppRoutes } from '../../../../constants/app-routes'
+import { AppRoutes } from '../../../../constants/app-routes.constants'
 import { RouteStateService } from './route-state.service'
 import { UserService } from './user.service'
 

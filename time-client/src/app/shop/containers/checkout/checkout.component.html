@@ -1,3 +1,57 @@
-<p>
-  checkout works!
-</p>
+<div class="container">
+    <h1>Checkout</h1>
+
+    <form [formGroup]="checkoutFormGroup">
+
+        <!-- First name -->
+        <time-form-field [options]="checkoutForm.getOptions('firstName')"
+                         [element]="firstName">
+            <input #firstName
+                   id="checkout-form-first-name"
+                   type="text"
+                   maxlength="100"
+                   formControlName="firstName">
+        </time-form-field>
+
+        <!-- Last name -->
+        <time-form-field [options]="checkoutForm.getOptions('lastName')"
+                         [element]="lastName">
+            <input #lastName
+                   id="checkout-form-last-name"
+                   type="text"
+                   maxlength="100"
+                   formControlName="lastName">
+        </time-form-field>
+
+        <!-- Email -->
+        <time-form-field [options]="checkoutForm.getOptions('email')"
+                         [element]="email">
+            <input #email
+                   id="checkout-form-email"
+                   type="email"
+                   formControlName="email">
+        </time-form-field>
+
+    </form>
+
+    <form id="payment-form">
+        <div class="form-group">
+            <label for="card-element">
+                Credit or debit card
+            </label>
+
+            <div id="card-element">
+                <!-- Stripe Element goes here. -->
+            </div>
+
+            <!-- Stripe Element Element errors go here. -->
+            <div id="card-errors"></div>
+        </div>
+
+        <button (click)="submitOrder()">Submit Payment</button>
+    </form>
+
+    <!--
+    * Display current card set as customer.default_source
+    -->
+</div>

@@ -47,7 +47,7 @@ module.exports = {
 			{
 				test: /\.ts$/,
 				use: [
-					'awesome-typescript-loader',
+					'awesome-typescript-loader?configFileName=time-api/tsconfig.json',
 					'angular2-template-loader',
 				],
 				exclude: [

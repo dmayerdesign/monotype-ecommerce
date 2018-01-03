@@ -64,4 +64,43 @@ export class UtilService {
     public ozToG(pK: number): number {
         return pK * 28.3495
     }
+
+    /**
+     * Load a script from the provided `url` into the <head>.
+     *
+     * @see https://www.nczonline.net/blog/2009/07/28/the-best-way-to-load-external-javascript/
+     *
+     * @export
+     * @param {any} url
+     * @returns {Promise<void>}
+     */
+    public loadScript(url) {
+        return new Promise<void>((resolve, reject) => {
+            if (!window) { // If server app, error out immediately.
+                reject()
+                return
+            }
+
+            const script = document.createElement('script')
+            script.type = 'text/javascript'
+
+            if ((script as any).readyState){  // IE fix.
+                (script as any).onreadystatechange = () => {
+                    if ((script as any).readyState === 'loaded' ||
+                        (script as any).readyState === 'complete'
+                    ) {
+                        (script as any).onreadystatechange = null
+                        resolve()
+                    }
+                }
+            } else {  // Others
+                script.onload = function() {
+                    resolve()
+                }
+            }
+
+            script.src = url
+            document.getElementsByTagName('head')[0].appendChild(script)
+        })
+    }
 }

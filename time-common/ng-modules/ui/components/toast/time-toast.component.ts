@@ -48,7 +48,7 @@ export class TimeToastComponent implements OnInit, OnDestroy {
 
     constructor() { }
 
-    public ngOnInit() {
+    public ngOnInit(): void {
         if (this.toast$) {
             this.toastSubscription = this.toast$.subscribe(toast => {
                 this.queueToast(toast)

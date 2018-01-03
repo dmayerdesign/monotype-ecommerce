@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core'
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 
 import { Cart } from '@time/common/models/api-models/cart'
 import { Organization } from '@time/common/models/api-models/organization'
@@ -7,40 +8,21 @@ import { User } from '@time/common/models/api-models/user'
 import { Currency } from '@time/common/models/enums/currency'
 import { OrderBuilder } from '@time/common/models/helpers/order.builder'
 import { IPrice } from '@time/common/models/interfaces/api/price'
+import { TimeFormBuilderService } from '@time/common/ng-modules/forms/services/form-builder.service'
+import { TimeFormBuilder } from '@time/common/ng-modules/forms/utilities/form.builder'
 import { CartService, OrganizationService, UserService, UtilService } from '../../../shared/services'
 import { CheckoutService } from '../../services/checkout.service'
 
-declare let stripe
+let stripe
 
 @Component({
     selector: 'checkout',
-    template: `
-<div class="container">
-	<h1>Checkout</h1>
-</div>
-
-<form novalidate id="payment-form">
-	<div class="form-row">
-		<label for="card-element">
-			Credit or debit card
-		</label>
-		<div id="card-element">
-			<!-- a Stripe Element will be inserted here. -->
-		</div>
-
-		<!-- Used to display Element errors -->
-		<div id="card-errors"></div>
-	</div>
-
-	<button (click)="submitOrder()">Submit Payment</button>
-</form>
-
-<!--
-* Display current card set as customer.default_source
--->
-`,
+    templateUrl: './checkout.component.html',
 })
 export class CheckoutComponent implements OnInit {
+
+    public checkoutFormGroup: FormGroup
+    public checkoutForm: TimeFormBuilder
 
     private user: User
     // private stripeCustomer: any
@@ -62,26 +44,55 @@ export class CheckoutComponent implements OnInit {
         private checkoutService: CheckoutService,
         private organizationService: OrganizationService,
         private userService: UserService,
+        private formBuilder: FormBuilder,
+        private timeFormBuilder: TimeFormBuilderService,
     ) {}
 
-    public ngOnInit() {
+    public ngOnInit(): void {
         this.util.setTitle('Checkout')
+
+        this.checkoutForm = this.timeFormBuilder.create({
+            firstName: {
+                defaultValue: '',
+                label: 'First name',
+                showLabel: true,
+            },
+            lastName: {
+                defaultValue: '',
+                label: 'Last name',
+                showLabel: true,
+                validators: [ Validators.required ]
+            },
+            email: {
+                defaultValue: '',
+                validators: [ Validators.email, Validators.required ],
+                label: 'Email',
+                showLabel: true,
+            }
+        })
+        this.checkoutFormGroup = this.checkoutForm.formGroup
 
         this.cartService.cart$.subscribe(cart => {
             this.cart = cart
             this.populateOrder()
         })
 
-        stripe = (<any>window).Stripe(this.checkoutService.stripeKey)
-        this.initStripeForm()
+        try {
+            stripe = (window as any).Stripe(this.checkoutService.stripeKey)
+            setTimeout(() => this.initStripeForm())
+        }
+        catch (error) { // If running on the server, the above will throw an error -- catch the error.
+            console.log(error)
+            return
+        }
     }
 
     public initStripeForm() {
         this.elements = stripe.elements()
-		// Create an instance of the card Element
+		// Create an instance of the card Element.
         this.card = this.elements.create('card', {})
 
-		// Add an instance of the card Element into the `card-element` <div>
+		// Add an instance of the card Element into the `card-element` <div>.
         this.card.mount('#card-element')
 
         this.card.addEventListener('change', ({error}) => {

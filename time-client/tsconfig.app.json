@@ -15,7 +15,9 @@
     }
   },
   "files": [
-    "src/main.ts"
+    "src/main.ts",
+    "src/app/blog/blog.module.ts",
+    "src/app/shop/shop.module.ts"
   ],
   "exclude": [
     "node_modules",

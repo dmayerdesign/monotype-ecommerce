@@ -25,7 +25,7 @@ export class CartService {
     }
     private cart: Cart
     private cartSubject = new ReplaySubject<Cart>(1)
-    public cart$: Observable<Cart>
+    public cart$ = this.cartSubject.asObservable()
 
     constructor(
         private util: UtilService,
@@ -40,7 +40,6 @@ export class CartService {
     }
 
     public init() {
-        this.cart$ = this.cartSubject.asObservable()
         const cart = <Cart>this.util.getFromLocalStorage(LocalStorageKeys.Cart)
         if (cart) {
             this.populateAndStream(cart)

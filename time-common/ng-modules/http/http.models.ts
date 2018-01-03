@@ -67,3 +67,6 @@ export abstract class RestService<T> {
     public delete?(id: string) {}
 }
 
+export abstract class IHttpSettings {
+    public static httpFlashErrorBlacklist: { endpoint: string, method: string }[]
+}

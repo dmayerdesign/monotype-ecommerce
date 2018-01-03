@@ -1,16 +1,20 @@
 import { ModuleWithProviders, NgModule } from '@angular/core'
 
-// FEATURE MODULES
+// Settings
+import { HttpSettings } from './config/http.settings'
+
+// Feature modules
 import { TimeFormsModule } from '@time/common/ng-modules/forms'
-import { TimeHttpModule } from '@time/common/ng-modules/http'
+import { HttpInjectionTokens, TimeHttpModule } from '@time/common/ng-modules/http'
 import { TimeUiModule } from '@time/common/ng-modules/ui'
 
-// COMPONENTS
+// Components
 import { LoginComponent } from './components/login/login.component'
 import { SignupComponent } from './components/signup/signup.component'
 import { SiteLocatorComponent } from './components/site-locator/site-locator.component'
 
-// SERVICES
+// Services
+import { ProductService } from '../shop/services/index'
 import { AdminGuardService } from './services/admin-guard.service'
 import { AuthGuardService } from './services/auth-guard.service'
 import { CartService } from './services/cart.service'
@@ -24,9 +28,9 @@ import { UtilService } from './services/util.service'
 
 @NgModule({
     imports: [
+        TimeFormsModule,
         TimeHttpModule.forRoot(),
         TimeUiModule,
-        TimeFormsModule,
     ],
     declarations: [
         SiteLocatorComponent,
@@ -52,12 +56,23 @@ export class SharedModule {
                 CartService,
                 GAnalyticsService,
                 OrganizationService,
+                ProductService,
                 RouteStateService,
                 SeoService,
                 UiService,
                 UserService,
                 UtilService,
+                {
+                    provide: HttpInjectionTokens.HttpSettings,
+                    useValue: HttpSettings,
+                },
             ],
+        }
+    }
+
+    public static forChild(): ModuleWithProviders {
+        return {
+            ngModule: SharedModule,
         }
     }
 }

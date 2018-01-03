@@ -20,7 +20,7 @@ export class ProductService extends RestService<Product> {
     public get(query?: GetProductsRequest) {
         const params = new HttpParams()
 
-        if (query) params.set("query", JSON.stringify(query))
+        if (query) params.set('query', JSON.stringify(query))
 
         // this.http.get("https://jsonplaceholder.typicode.com/posts")
         this.http.get<Product[]>(Endpoints.Products, { params })

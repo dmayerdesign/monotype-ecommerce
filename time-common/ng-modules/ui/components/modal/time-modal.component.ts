@@ -96,8 +96,10 @@ export class TimeModalComponent implements OnInit, OnDestroy {
         private formBuilder: FormBuilder
     ) {}
 
-    public ngOnInit() {
-        this.subscriptions.data = this.data$.subscribe((data) => this.show(data))
+    public ngOnInit(): void {
+        this.subscriptions.data = this.data$.subscribe((data) => {
+            this.show(data)
+        })
     }
 
     public ngOnDestroy() {
@@ -142,7 +144,7 @@ export class TimeModalComponent implements OnInit, OnDestroy {
     }
 
     public updateYPos(scrollTop: number) {
-        this.modalInner = <HTMLElement>document.querySelector(".showing .modal-inner-wrapper")
+        this.modalInner = <HTMLElement>document.querySelector('.showing .modal-inner-wrapper')
         if (!this.modalInner) return
         this.modalInner.style.top = (scrollTop / 10 + 11).toString() + 'rem'
     }

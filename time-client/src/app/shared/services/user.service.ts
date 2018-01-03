@@ -9,7 +9,7 @@ import { User } from '@time/common/models/api-models/user'
 import { ILogin } from '@time/common/models/interfaces/api/login'
 import { IUserRegistration } from '@time/common/models/interfaces/api/user-registration'
 import { TimeHttpService } from '@time/common/ng-modules/http'
-import { AppRoutes } from '../../../../constants/app-routes'
+import { AppRoutes } from '../../../../constants/app-routes.constants'
 
 @Injectable()
 export class UserService {

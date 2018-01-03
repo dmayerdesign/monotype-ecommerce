@@ -13,11 +13,11 @@ export class LoginComponent implements OnInit {
         private userService: UserService
     ) { }
 
-    public ngOnInit() {}
+    public ngOnInit(): void {}
 
     public doMockLogin() {
-        const email = "hyzer-shop-test@sharklasers.com"
-        const password = "sohcahtoa"
+        const email = 'hyzer-shop-test@sharklasers.com'
+        const password = 'sohcahtoa'
 
         this.userService.login({ email, password })
     }

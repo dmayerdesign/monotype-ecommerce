@@ -5,9 +5,7 @@ import { RouterModule } from '@angular/router'
 
 import { AppComponent } from './app.component'
 import { AppRoutingModule } from './app.routing.module'
-import { BlogModule } from './blog/blog.module'
 import { SharedModule } from './shared/shared.module'
-import { ShopModule } from './shop/shop.module'
 
 @NgModule({
     imports: [
@@ -15,13 +13,11 @@ import { ShopModule } from './shop/shop.module'
         BrowserModule.withServerTransition({ appId: 'time-client-universal' }),
         BrowserAnimationsModule,
         SharedModule.forRoot(),
-        BlogModule,
-        ShopModule,
         AppRoutingModule,
     ],
     declarations: [
         AppComponent,
     ],
-    bootstrap: [AppComponent],
+    bootstrap: [ AppComponent ],
 })
 export class AppModule { }

@@ -11,10 +11,10 @@ import { SimpleError } from '@time/common/ng-modules/http'
 @Injectable()
 export class OrganizationService {
     public organization: Organization
-    public organization$: Observable<Organization>
-    public organizationError$: Observable<SimpleError>
     private organizationSubject = new ReplaySubject<Organization>(1)
+    public organization$ = this.organizationSubject.asObservable()
     private organizationErrorSubject = new Subject<SimpleError>()
+    public organizationError$ = this.organizationErrorSubject.asObservable()
 
     constructor (
         private http: HttpClient,

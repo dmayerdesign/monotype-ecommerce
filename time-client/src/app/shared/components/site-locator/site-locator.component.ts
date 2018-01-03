@@ -24,7 +24,7 @@ export class SiteLocatorComponent implements OnInit {
 
     constructor() {}
 
-    public ngOnInit() {
+    public ngOnInit(): void {
         if (typeof window === 'undefined') {
             return
         }
@@ -108,7 +108,7 @@ export class SiteLocatorComponent implements OnInit {
                 // For each place, get the icon, name and location.
                 places.forEach((place) => {
                     if (!place.geometry) {
-                        console.log("Returned place contains no geometry")
+                        console.log('Returned place contains no geometry')
                         return
                     }
                     if (place.geometry.viewport) {
@@ -138,12 +138,12 @@ export class SiteLocatorComponent implements OnInit {
             **/
         }
 
-        if (document.getElementById("mapsApiScript")) {
-            document.body.removeChild(document.getElementById("mapsApiScript"))
+        if (document.getElementById('mapsApiScript')) {
+            document.body.removeChild(document.getElementById('mapsApiScript'))
         }
 
-        const theScript = document.createElement("script")
-        theScript.id = "mapsApiScript"
+        const theScript = document.createElement('script')
+        theScript.id = 'mapsApiScript'
         theScript.src = `https://maps.googleapis.com/maps/api/js?key=${(<any>AppConfig).google_maps_api_key}&libraries=places&callback=initGoogleMapsSiteLocator`
         document.body.appendChild(theScript)
 

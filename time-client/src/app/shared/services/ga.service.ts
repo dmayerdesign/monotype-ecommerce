@@ -9,7 +9,7 @@ export class GAnalyticsService {
 
     constructor() {}
 
-    public getTracking(): string {
+    public getTracking() {
         return AppConfig.google_analytics_tracking_code
     }
 

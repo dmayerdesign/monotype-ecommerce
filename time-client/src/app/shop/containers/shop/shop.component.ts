@@ -24,7 +24,7 @@ export class ShopComponent implements OnInit, AfterViewInit {
         private ui: UiService,
     ) { }
 
-    public ngOnInit() {
+    public ngOnInit(): void {
         this.productService.get()
     }
 

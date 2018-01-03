@@ -13,7 +13,7 @@ export class SignupComponent implements OnInit {
         private userService: UserService
     ) { }
 
-    public ngOnInit() { }
+    public ngOnInit(): void { }
 
     public doMockSignup() {
         const email = 'hyzer-shop-test@sharklasers.com'
