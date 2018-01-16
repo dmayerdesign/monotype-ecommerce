@@ -6,9 +6,10 @@ import * as mongoose from 'mongoose'
 import { Types } from '@time/common/constants/inversify'
 import { Address } from '@time/common/models/api-models/address'
 import { EasypostRate } from '@time/common/models/api-models/easypost-rate'
-import { FindOrderError, Order, OrderModel, UpdateOrderError } from '@time/common/models/api-models/order'
+import { FindOrderError, Order, UpdateOrderError } from '@time/common/models/api-models/order'
 import { OrderStatus } from '@time/common/models/enums/order-status'
 import { DbClient } from '../data-access/db-client'
+import { OrderService } from './order.service'
 
 const easypost = new EasypostModule(process.env.EASYPOST_API_KEY) as Easypost
 
@@ -16,7 +17,7 @@ const easypost = new EasypostModule(process.env.EASYPOST_API_KEY) as Easypost
 export class EasypostService {
 
     constructor(
-        @inject(Types.DbClient) private dbClient: DbClient<Order>
+        @inject(Types.OrderService) private orderService: OrderService
     ) {}
 
 	/**
@@ -75,7 +76,8 @@ export class EasypostService {
             // Get the order from the database.
 
             try {
-                order = await this.dbClient.findById(OrderModel, orderId)
+                const orderResponse = await this.orderService.getOne(orderId)
+                order = orderResponse.data
                 if (!easypostShipment) {
                     reject(new FindOrderError('Couldn\'t find the order on which to update shipment details.'))
                     return
@@ -152,8 +154,8 @@ export class EasypostService {
             // Retrieve the order.
 
             try {
-                // order = await OrderModel.findById(orderId)
-                order = await this.dbClient.findById(OrderModel, orderId)
+                const orderResponse = await this.orderService.getOne(orderId)
+                order = orderResponse.data
 
                 if (!order) {
                     reject(new FindOrderError('Couldn\'t find the order to update with shipment data.'))

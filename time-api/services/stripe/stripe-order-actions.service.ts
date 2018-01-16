@@ -3,16 +3,17 @@ import { Document } from 'mongoose'
 import * as Stripe from 'stripe'
 
 import { Types } from '@time/common/constants/inversify'
+import { StripeOrder } from '@time/common/lib/stripe-order'
 import { Discount } from '@time/common/models/api-models/discount'
 import { Order, OrderModel } from '@time/common/models/api-models/order'
 import { Product } from '@time/common/models/api-models/product'
-import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
+import { GetProductsFromIdsRequest } from '@time/common/models/api-requests/get-products.request'
+import { ListFromIdsRequest } from '@time/common/models/api-requests/list.request'
+import { ApiErrorResponse } from '@time/common/models/api-responses/api-error.response'
+import { ApiResponse } from '@time/common/models/api-responses/api.response'
 import { StripeCreateOrderResponse } from '@time/common/models/api-responses/stripe-create-order.response'
 import { StripePayOrderResponse } from '@time/common/models/api-responses/stripe-pay-order.response'
 import { OrderStatus } from '@time/common/models/enums/order-status'
-import { StripeOrder } from '@time/common/models/helpers'
-import { ApiErrorResponse } from '@time/common/models/helpers/api-error-response'
-import { ApiResponse } from '@time/common/models/helpers/api-response'
 import { DbClient } from '../../data-access/db-client'
 import { DiscountService } from '../discount.service'
 import { ProductService } from '../product.service'
@@ -54,15 +55,15 @@ export class StripeOrderActionsService {
                 reject(new Error('Not a valid order'))
             }
 
-            order.total.total = 0
+            order.total.amount = 0
 
             try {
-                const orderItemsRequest = new GetProductsRequest()
+                const orderItemsRequest = new GetProductsFromIdsRequest()
                 orderItemsRequest.ids = <string[]>order.items
                 const orderItemsResponse = await <Promise<ApiResponse<Product[]>>>this.productService.get(orderItemsRequest)
                 orderItems = orderItemsResponse.data
                 orderItems.forEach(orderItem => {
-                    order.total.total += this.productService.getPrice(orderItem).total
+                    order.total.amount += this.productService.getPrice(orderItem).amount
                 })
             }
             catch (getItemsError) {
@@ -70,10 +71,11 @@ export class StripeOrderActionsService {
             }
 
             try {
-                const orderDiscountsResponse = await this.discountService.get({ _id: { $in: order.discounts } })
+                const orderDiscountsRequest = new ListFromIdsRequest({ ids: order.discounts })
+                const orderDiscountsResponse = await this.discountService.getIds(orderDiscountsRequest)
                 orderDiscounts = orderDiscountsResponse.data
                 orderDiscounts.forEach(orderDiscount => {
-                    order.total.total -= orderDiscount.amount.total
+                    order.total.amount -= orderDiscount.total.amount
                 })
             }
             catch (getDiscountsError) {

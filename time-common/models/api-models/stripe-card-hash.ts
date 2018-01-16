@@ -1,4 +1,4 @@
-import { prop } from '../../utils/goosetype'
+import { prop } from '../../lib/goosetype'
 
 export class StripeCardHash {
     @prop() public id: string

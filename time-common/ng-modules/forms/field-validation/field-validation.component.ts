@@ -10,7 +10,7 @@ import {
 import { FormControl } from '@angular/forms'
 import { Subscription } from 'rxjs/Subscription'
 
-import { AutoUnsubscribe } from '@time/common/utils/auto-unsubscribe/auto-unsubscribe.decorator'
+import { AutoUnsubscribe } from '@time/common/lib/auto-unsubscribe/auto-unsubscribe.decorator'
 
 @AutoUnsubscribe()
 @Component({

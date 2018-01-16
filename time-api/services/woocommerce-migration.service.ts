@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify'
 import { Document } from 'mongoose'
 
 import { Types } from '@time/common/constants/inversify'
+import { IMongooseModel } from '@time/common/lib/goosetype'
 import { Attribute, AttributeModel } from '@time/common/models/api-models/attribute'
 import { AttributeValue, AttributeValueModel } from '@time/common/models/api-models/attribute-value'
 import { Price } from '@time/common/models/api-models/price'
@@ -10,7 +11,6 @@ import { Taxonomy, TaxonomyModel } from '@time/common/models/api-models/taxonomy
 import { TaxonomyTerm, TaxonomyTermModel } from '@time/common/models/api-models/taxonomy-term'
 import { Currency } from '@time/common/models/enums/currency'
 import { ProductClass } from '@time/common/models/enums/product-class'
-import { IMongooseModel } from '@time/common/utils/goosetype'
 import * as productsJSON from '@time/common/work-files/migration/hyzershop-products'
 import { DbClient } from '../data-access/db-client'
 
@@ -186,21 +186,21 @@ export class WoocommerceMigrationService {
                                     const priceRangeTotals = (<any>newProduct[key]).split('-')
                                     newProduct.priceRange = [
                                         {
-                                            total: 0,
+                                            amount: 0,
                                             currency: Currency.USD,
                                         } as Price,
                                         {
-                                            total: 0,
+                                            amount: 0,
                                             currency: Currency.USD,
                                         } as Price,
                                     ]
-                                    newProduct.priceRange[0].total = parseInt(priceRangeTotals[0].total, 10)
-                                    newProduct.priceRange[1].total = parseInt(priceRangeTotals[1].total, 10)
+                                    newProduct.priceRange[0].amount = parseInt(priceRangeTotals[0].total, 10)
+                                    newProduct.priceRange[1].amount = parseInt(priceRangeTotals[1].total, 10)
                                     delete newProduct[key]
                                 }
                                 else {
                                     newProduct[key] = {
-                                        total: +newProduct[key],
+                                        amount: +newProduct[key],
                                         currency: Currency.USD
                                     } as Price
                                 }
@@ -210,21 +210,21 @@ export class WoocommerceMigrationService {
                                     const salePriceRangeTotals = (<any>newProduct[key]).split('-')
                                     newProduct.salePriceRange = [
                                         {
-                                            total: 0,
+                                            amount: 0,
                                             currency: Currency.USD,
                                         } as Price,
                                         {
-                                            total: 0,
+                                            amount: 0,
                                             currency: Currency.USD,
                                         } as Price,
                                     ]
-                                    newProduct.salePriceRange[0].total = parseInt(salePriceRangeTotals[0].total, 10)
-                                    newProduct.salePriceRange[1].total = parseInt(salePriceRangeTotals[1].total, 10)
+                                    newProduct.salePriceRange[0].amount = parseInt(salePriceRangeTotals[0].total, 10)
+                                    newProduct.salePriceRange[1].amount = parseInt(salePriceRangeTotals[1].total, 10)
                                     delete newProduct[key]
                                 }
                                 else {
                                     newProduct[key] = {
-                                        total: +newProduct[key],
+                                        amount: +newProduct[key],
                                         currency: Currency.USD
                                     } as Price
                                 }

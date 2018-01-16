@@ -1,4 +1,6 @@
 export class Types {
+    public static isAuthenticated = Symbol('isAuthenticated')
+    public static isAuthorized = Symbol('isAuthorized')
     public static Authenticate = Symbol('Authenticate')
     public static DbClient = Symbol('DbClient')
     public static DiscountService = Symbol('DiscountService')
@@ -7,8 +9,10 @@ export class Types {
     public static EmailService = Symbol('EmailService')
     public static ErrorService = Symbol('ErrorService')
     public static ModelBuilder = Symbol('ModelBuilder')
+    public static OrganizationService = Symbol('OrganizationService')
+    public static OrderHelper = Symbol('OrderHelper')
     public static OrderService = Symbol('OrderService')
-    public static ProductSearchUtils = Symbol('ProductSearchUtils')
+    public static ProductSearchHelper = Symbol('ProductSearchHelper')
     public static ProductService = Symbol('ProductService')
     public static StripeCustomerService = Symbol('StripeCustomerService')
     public static StripeOrderActionsService = Symbol('StripeOrderActionsService')
@@ -17,6 +21,4 @@ export class Types {
     public static TimerService = Symbol('TimerService')
     public static UserService = Symbol('UserService')
     public static WoocommerceMigrationService = Symbol('WoocommerceMigrationService')
-    public static isAuthenticated = Symbol('isAuthenticated')
-    public static isAuthorized = Symbol('isAuthorized')
 }

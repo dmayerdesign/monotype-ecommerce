@@ -6,7 +6,7 @@ import { Cookies, Copy, HttpStatus } from '@time/common/constants'
 import { ErrorMessage } from '@time/common/constants/error-message'
 import { Types } from '@time/common/constants/inversify'
 import { User, UserModel } from '@time/common/models/api-models/user'
-import { ApiErrorResponse } from '@time/common/models/helpers/api-error-response'
+import { ApiErrorResponse } from '@time/common/models/api-responses/api-error.response'
 import { DbClient } from '../data-access/db-client'
 import { UserService } from '../services/user.service'
 
@@ -20,7 +20,7 @@ export class Authenticate {
 
     // If the user is logged in, call `next()`. Else, send an error response
 
-    public static isAuthenticated(req: Request, res: Response, next: NextFunction) {
+    public static isAuthenticated(req: Request, res: Response, next: NextFunction): void {
         const token = req.cookies[Cookies.jwt]
         let payload: User = null
 
@@ -56,17 +56,15 @@ export class Authenticate {
 
     // If the user has the specified role, call `next()`. Else, send an error response
 
-    public static isAuthorized(role: number) {
+    public static isAuthorized(role: number): (req: Request, res: Response, next: NextFunction) => void {
         return (req: Request, res: Response, next: NextFunction) => {
             this.isAuthenticated(req, res, () => {
-
-            // if ((<User>req.user).role === role) {
-                return next()
-            // }
-            // else {
-            //   res.status(403).json({})
-            // }
-
+                if ((req.user as User).role === role) {
+                    return next()
+                }
+                else {
+                    res.status(HttpStatus.CLIENT_ERROR_forbidden).json(new Error(Copy.ErrorMessages.userNotAuthorized))
+                }
             })
         }
     }

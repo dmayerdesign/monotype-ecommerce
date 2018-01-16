@@ -3,81 +3,52 @@ import { inject, injectable } from 'inversify'
 import * as mongoose from 'mongoose'
 
 import { Crud, HttpStatus } from '@time/common/constants'
-import { Currency } from '@time/common/models/enums/currency'
 import { Types } from '@time/common/constants/inversify'
+import { IMongooseModel } from '@time/common/lib/goosetype'
 import { Price } from '@time/common/models/api-models/price'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
-import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
-import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
-import { IFetchService } from '@time/common/models/interfaces/api/fetch-service'
-import { IMongooseModel } from '@time/common/utils/goosetype'
+import { GetProductsFromIdsRequest, GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
+import { ListFromQueryRequest } from '@time/common/models/api-requests/list.request'
+import { ApiErrorResponse } from '@time/common/models/api-responses/api-error.response'
+import { ApiResponse } from '@time/common/models/api-responses/api.response'
+import { Currency } from '@time/common/models/enums/currency'
+import { IPrice } from '@time/common/models/interfaces/api/price'
 import { DbClient } from '../data-access/db-client'
-import { MongoQueries, ProductSearchUtils } from '../utils'
+import { ProductSearchHelper } from '../helpers/product-search.helper'
+import { CrudService } from './crud.service'
 
 /**
- * Service for fetching documents from the `products` collection
+ * Methods for querying the `products` collection
+ *
+ * @export
+ * @class ProductService
+ * @extends {CrudService<Product>}
  */
 @injectable()
-export class ProductService implements IFetchService<Product> {
+export class ProductService extends CrudService<Product> {
 
-    /**
-     * Instantiate the service
-     *
-     * @param {DbClient<Product>} dbClient A service containing helper methods for database operations
-     * @param {ProductSearchUtils} productSearchUtils A service containing helper methods for product search
-     */
+    protected model = ProductModel
+    protected listRequestType = GetProductsRequest
+    protected listFromIdsRequestType = GetProductsFromIdsRequest
+
     constructor(
-        @inject(Types.DbClient) private dbClient: DbClient<Product>,
-        @inject(Types.ProductSearchUtils) private productSearchUtils: ProductSearchUtils,
-    ) {}
+        @inject(Types.DbClient) protected dbClient: DbClient<Product>,
+        @inject(Types.ProductSearchHelper) private productSearchHelper: ProductSearchHelper,
+    ) {
+        super()
+    }
 
     /**
-     * Get a single product
+     * Get a single product by slug.
      *
      * @param {string} slug The `slug` of the product to be retrieved
      * @return {Promise<Product>}
      */
-    public getOne(slug: string): Promise<ApiResponse<Product>> {
+    public getOneSlug(slug: string): Promise<ApiResponse<Product>> {
         return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
             try {
                 const product = await this.dbClient.findOne(ProductModel, { slug })
                 resolve(new ApiResponse(product))
-            }
-            catch (error) {
-                reject(new ApiErrorResponse(error))
-            }
-        })
-    }
-
-    /**
-     * Get a single product by ID
-     *
-     * @param {string} id The `_id` of the product to be retrieved
-     * @return {Promise<Product>}
-     */
-    public getById(id: string) {
-        return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
-            try {
-                const product = await this.dbClient.findById(ProductModel, id)
-                resolve(new ApiResponse(product))
-            }
-            catch (error) {
-                reject(new ApiErrorResponse(error))
-            }
-        })
-    }
-
-    /**
-     * Get a list of products with an array of `_id`s
-     *
-     * @param {string} id The `_id` of the product to be retrieved
-     * @return {Promise<Product>}
-     */
-    public getSome(ids: string[]) {
-        return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
-            try {
-                const products = await this.dbClient.find(ProductModel, { _id: { $in: ids } })
-                resolve(new ApiResponse(products))
             }
             catch (error) {
                 reject(new ApiErrorResponse(error))
@@ -92,21 +63,26 @@ export class ProductService implements IFetchService<Product> {
      * @param {GetProductsRequest} body The search options
      * @param {express.Response} [res] The express Response; pass this in if you want the documents fetched as a stream and piped into the response
      */
-    public get(body: GetProductsRequest, res?: Response): Promise<ApiResponse<Product[]>>|void {
-        const searchRegExp = body.search ? new RegExp(body.search, 'gi') : undefined
-        const limit = body.page ? Crud.Pagination.productsPerPage : 0
-        const page = body.page
-        const skip = (page > 0) ? ((page - 1) * limit) : 0
+    public getProducts(body: GetProductsRequest, res?: Response): Promise<ApiResponse<Product[]>>|void {
+        const {
+            limit,
+            skip,
+            search,
+            filters,
+            sortBy,
+            sortDirection,
+        } = new GetProductsRequest(body)
+        const searchRegExp = search ? new RegExp(search, 'gi') : undefined
         let searchNameAndDesc: {
             [key: string]: { $regex: RegExp }
         }[] = []
         let allQuery: any
-        let searchQuery: MongoQueries.And
+        let searchQuery: { $and: object[] }
         let query: any
 
         // If it's a search or filter, create a basic `$and` query for parent and standalone products
 
-        if (body.search || body.filters) {
+        if (search || filters) {
             searchQuery = {
                 $and: [
                     { isVariation: { $ne: true } },
@@ -132,8 +108,8 @@ export class ProductService implements IFetchService<Product> {
 
         // If there are filters, convert each filter to MongoDB query syntax and add it to `searchQuery.$and`
 
-        if (body.filters) {
-            body.filters.forEach(filter => {
+        if (filters) {
+            filters.forEach((filter) => {
 
                 const isPropertyFilter: boolean = filter.type === 'property' ? true : false
                 const isAttrFilter: boolean = filter.type === 'attribute' ? true : false
@@ -142,40 +118,47 @@ export class ProductService implements IFetchService<Product> {
                 // Property Filter
 
                 if (isPropertyFilter) {
-                    searchQuery = this.productSearchUtils.propertyFilter(filter, searchQuery)
+                    searchQuery = this.productSearchHelper.propertyFilter(filter, searchQuery)
                 }
 
                 // Attribute Key/Value Filter - performs an `$elemMatch` on `Product.attributeValues`
 
                 if (isAttrFilter && filter.key) {
-                    searchQuery = this.productSearchUtils.attributeKeyValueFilter(filter, searchQuery)
+                    searchQuery = this.productSearchHelper.attributeKeyValueFilter(filter, searchQuery)
                 }
 
                 // Attribute Value Filter - performs an `$elemMatch` on `Product.attributeValues`
 
                 if (isAttrFilter && !filter.key) {
-                    searchQuery = this.productSearchUtils.attributeValueFilter(filter, searchQuery)
+                    searchQuery = this.productSearchHelper.attributeValueFilter(filter, searchQuery)
                 }
 
                 // Taxonomy Filter - performs an `$elemMatch` on `Product.taxonomies`
 
                 if (isTaxFilter) {
-                    searchQuery = this.productSearchUtils.taxonomyFilter(filter, searchQuery)
+                    searchQuery = this.productSearchHelper.taxonomyFilter(filter, searchQuery)
                 }
             })
         }
 
         query = allQuery || searchQuery
 
+        const listFromQueryRequest = new ListFromQueryRequest({
+            limit,
+            skip,
+            sortBy,
+            sortDirection,
+            query
+        })
+
         if (res) {
-            this.dbClient.getFilteredCollection(ProductModel, query, {limit, skip}, res)
-                .catch(err => new ApiErrorResponse(err))
+            this.dbClient.findQuery(ProductModel, listFromQueryRequest, res)
         }
         else {
             return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
                 // Retrieve the products normally, loading them into memory
                 try {
-                    const products = await this.dbClient.getFilteredCollection(ProductModel, query, {limit, skip})
+                    const products = await this.dbClient.findQuery(ProductModel, listFromQueryRequest)
                     resolve(new ApiResponse(products))
                 }
                 catch (error) {
@@ -209,41 +192,6 @@ export class ProductService implements IFetchService<Product> {
         })
     }
 
-    public updateProductWithoutValidation(id: string, update: any): Promise<ApiResponse<Product>> {
-        const mongoUpdate = this.dbClient.mongoSet(update)
-        return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
-            try {
-                const updatedProductResult = await ProductModel.findByIdAndUpdate(id, mongoUpdate, { new: true })
-                const updatedProduct = updatedProductResult._doc
-                resolve(new ApiResponse(updatedProduct))
-            }
-            catch (error) {
-                reject(new ApiErrorResponse(error))
-            }
-        })
-    }
-
-    public updateProduct(id: string, update: any): Promise<ApiResponse<Product>> {
-        return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
-            try {
-                const updatedProduct = await this.dbClient.updateById(ProductModel, id, update)
-                resolve(new ApiResponse(updatedProduct))
-            }
-            catch (validationError) {
-                reject(new ApiErrorResponse(validationError))
-            }
-        })
-    }
-
-    public getPrice(product: Product): Price {
-        if (product.isOnSale) {
-            return product.salePrice
-        }
-        else {
-            return product.price
-        }
-    }
-
     public deleteOne(id: string): Promise<ApiResponse<any>> {
         return new Promise<ApiResponse<any>>(async (resolve, reject) => {
             try {
@@ -257,7 +205,7 @@ export class ProductService implements IFetchService<Product> {
     }
 
     public updateTestProduct(update: any): Promise<ApiResponse<Product>> {
-        return this.updateProduct('5988d5f44b224b068cda7d61', update)
+        return this.updateOne('5988d5f44b224b068cda7d61', update)
     }
 
     public createTest(): Promise<ApiResponse<Product>> {
@@ -277,7 +225,16 @@ export class ProductService implements IFetchService<Product> {
         })
     }
 
-    public determinePrice(product: Product) {
+    public getPrice(product: Product): Price {
+        if (product.isOnSale) {
+            return product.salePrice
+        }
+        else {
+            return product.price
+        }
+    }
+
+    public determinePrice(product: Product): IPrice {
         if (product.isOnSale && product.salePrice) {
             return product.salePrice
         }
@@ -285,7 +242,7 @@ export class ProductService implements IFetchService<Product> {
             return product.price
         }
         return {
-            total: 0,
+            amount: 0,
             currency: Currency.USD,
         }
     }

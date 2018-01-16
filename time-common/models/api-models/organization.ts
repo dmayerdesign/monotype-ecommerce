@@ -1,4 +1,4 @@
-import { prop, MongooseDocument, MongooseSchemaOptions } from '../../utils/goosetype'
+import { prop, MongooseDocument, MongooseSchemaOptions } from '../../lib/goosetype'
 import { Price } from './price'
 
 export class OrganizationRetailSettings {

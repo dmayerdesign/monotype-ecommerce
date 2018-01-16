@@ -1,5 +1,5 @@
 import * as findOrCreate from 'mongoose-findorcreate'
-import { plugin, prop, MongooseDocument } from '../../utils/goosetype'
+import { plugin, prop, MongooseDocument } from '../../lib/goosetype'
 
 @plugin(findOrCreate)
 export class Taxonomy extends MongooseDocument<Taxonomy> {

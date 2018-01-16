@@ -1,4 +1,4 @@
-import { prop } from '../../utils/goosetype'
+import { prop } from '../../lib/goosetype'
 
 export class Dimensions {
     @prop() public length: number

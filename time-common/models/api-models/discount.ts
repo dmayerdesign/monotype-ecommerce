@@ -1,4 +1,4 @@
-import { arrayProp, prop, MongooseDocument, Ref } from '../../utils/goosetype'
+import { arrayProp, prop, MongooseDocument, Ref } from '../../lib/goosetype'
 import { Price } from './price'
 import { Product } from './product'
 import { TaxonomyTerm } from './taxonomy-term'
@@ -10,7 +10,7 @@ class DiscountExceptions {
 
 export class Discount extends MongooseDocument<Discount> {
     @prop() public code: string
-    @prop() public amount: Price
+    @prop() public total: Price
     @prop() public percentage: number // `20` for a 20% discount
     @prop() public freeShipping: boolean
     @prop() public includes: DiscountExceptions

@@ -5,8 +5,8 @@ import * as Stripe from 'stripe'
 import { Types } from '@time/common/constants/inversify'
 import { Order } from '@time/common/models/api-models/order'
 import { User, UserModel } from '@time/common/models/api-models/user'
-import { ApiErrorResponse } from '@time/common/models/helpers/api-error-response'
-import { ApiResponse } from '@time/common/models/helpers/api-response'
+import { ApiErrorResponse } from '@time/common/models/api-responses/api-error.response'
+import { ApiResponse } from '@time/common/models/api-responses/api.response'
 import { DbClient } from '../../data-access/db-client'
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
@@ -28,7 +28,7 @@ export class StripeCustomerService {
      *
      * @param {Order} order - The order from which the customer's information is being collected
      */
-    public createCustomer(order: Order) {
+    public createCustomer(order: Order): Promise<StripeNode.customers.ICustomer> {
         return new Promise<StripeNode.customers.ICustomer>(async (resolve, reject) => {
             if (order.customer.userId && order.savePaymentInfo && order.stripeTokenObject && order.stripeTokenObject.card) {
                 let user: User
@@ -70,9 +70,9 @@ export class StripeCustomerService {
                             source: order.stripeToken,
                             email: order.customer.email,
                         })
-                        if (!customer) return reject(new Error("Couldn't create the customer in Stripe"))
+                        if (!customer) return reject(new Error('Couldn\'t create the customer in Stripe'))
 
-                        console.log("New customer")
+                        console.log('New customer')
                         console.log(customer)
 
                         user.stripeCustomerId = customer.id
@@ -86,7 +86,7 @@ export class StripeCustomerService {
 
                 // });
             } else {
-                reject(new Error("The order did not contain sufficient data to create a customer in Stripe."))
+                reject(new Error('The order did not contain sufficient data to create a customer in Stripe.'))
             }
         })
     }
@@ -97,7 +97,7 @@ export class StripeCustomerService {
      * @param {string} source - The tokenized card
      * @param {string} stripeCustomerId - The Stripe customer's ID
      */
-    public addCard(tokenID: string, stripeCustomerId: string) {
+    public addCard(tokenID: string, stripeCustomerId: string): Promise<ApiResponse<StripeNode.cards.ICard>> {
         return new Promise<ApiResponse<StripeNode.cards.ICard>>(async (resolve, reject) => {
             try {
                 const card = await stripe.customers.createSource(stripeCustomerId, { source: tokenID })
@@ -114,7 +114,7 @@ export class StripeCustomerService {
      *
      * @param {string} stripeCustomerId - The Stripe customer's ID
      */
-    public getCustomer(customerID: string) {
+    public getCustomer(customerID: string): Promise<ApiResponse<StripeNode.customers.ICustomer>> {
         return new Promise<ApiResponse<StripeNode.customers.ICustomer>>(async (resolve, reject) => {
             try {
                 const customer = await stripe.customers.retrieve(customerID)
@@ -132,7 +132,7 @@ export class StripeCustomerService {
      * @param {string} stripeCustomerId - The Stripe customer's ID
      * @param {object} updateObj - An object containing the values to be updated (@see https://stripe.com/docs/api/node#update_customer)
      */
-    public updateCustomer(stripeCustomerId: string, updateObj: object) {
+    public updateCustomer(stripeCustomerId: string, updateObj: object): Promise<ApiResponse<StripeNode.customers.ICustomer>> {
         return new Promise<ApiResponse<StripeNode.customers.ICustomer>>(async (resolve, reject) => {
             try {
                 const customer = await stripe.customers.update(stripeCustomerId, updateObj)
@@ -151,7 +151,7 @@ export class StripeCustomerService {
      * @param {string} stripeCardID - The ID of the Stripe source, usually a card (*not* a single-use token)
      * @example `card_19rzdy2eZvKYlo2CzJQXXiuV`
      */
-    public updateCustomerDefaultSource(stripeCustomerId: string, stripeCardID: string) {
+    public updateCustomerDefaultSource(stripeCustomerId: string, stripeCardID: string): Promise<ApiResponse<StripeNode.customers.ICustomer>> {
         return new Promise<ApiResponse<StripeNode.customers.ICustomer>>(async (resolve, reject) => {
             try {
                 const customer = await stripe.customers.update(stripeCustomerId, { default_source: stripeCardID })

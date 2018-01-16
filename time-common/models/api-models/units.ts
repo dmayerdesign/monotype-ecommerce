@@ -1,4 +1,4 @@
-import { prop } from '../../utils/goosetype'
+import { prop } from '../../lib/goosetype'
 import { LengthUnit } from '../enums/length-unit'
 import { WeightUnit } from '../enums/weight-unit'
 

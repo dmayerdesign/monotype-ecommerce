@@ -1,6 +1,6 @@
 import { Currency } from '../../enums/currency'
 
 export interface IPrice {
-    total: number
+    amount: number
     currency: Currency | string
 }

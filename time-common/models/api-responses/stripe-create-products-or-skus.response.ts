@@ -1,5 +1,5 @@
 import { Product } from '@time/common/models/api-models/product'
-import { ApiResponse } from '@time/common/models/helpers/api-response'
+import { ApiResponse } from '@time/common/models/api-responses/api.response'
 
 export interface IStripeCreateProductsOrSkusData<T> {
     products: Product[]

@@ -1,5 +1,5 @@
 import * as mongooseDelete from 'mongoose-delete'
-import { arrayProp, plugin, pre, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
+import { arrayProp, plugin, pre, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 
 import { ProductClass } from '../enums/product-class'
 import { Attribute } from './attribute'
@@ -87,3 +87,8 @@ export class Product extends MongooseDocument<Product> {
 }
 
 export const ProductModel = new Product().getModel()
+
+export class CreateProductError extends Error { }
+export class FindProductError extends Error { }
+export class UpdateProductError extends Error { }
+export class DeleteProductError extends Error { }

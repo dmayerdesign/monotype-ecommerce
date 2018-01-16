@@ -1,7 +1,7 @@
-import { OrderStatus } from '../enums/order-status'
-import { IOrder } from '../interfaces/api/order'
-import { IOrderCustomer } from '../interfaces/api/order-customer'
-import { IPrice } from '../interfaces/api/price'
+import { OrderStatus } from '../models/enums/order-status'
+import { IOrder } from '../models/interfaces/api/order'
+import { IOrderCustomer } from '../models/interfaces/api/order-customer'
+import { IPrice } from '../models/interfaces/api/price'
 
 export class OrderBuilder implements IOrder {
     public discounts: string[]

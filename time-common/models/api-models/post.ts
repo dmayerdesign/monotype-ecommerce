@@ -1,4 +1,4 @@
-import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
+import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 import { User } from './user'
 
 export class LinkEmbed {

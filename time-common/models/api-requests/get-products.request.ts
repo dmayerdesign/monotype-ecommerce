@@ -1,4 +1,4 @@
-import { ListRequest } from './list.request'
+import { ListFromIdsRequest, ListFromSearchRequest } from './list.request'
 
 export interface IGetProductsFilter {
     type: 'property'|'attribute'|'taxonomy'
@@ -7,13 +7,15 @@ export interface IGetProductsFilter {
     range?: number[]
 }
 
-export class GetProductsRequest extends ListRequest {
-    public search?: string
-    public ids?: string[]
+export class GetProductsRequest extends ListFromSearchRequest {
+    public filters?: IGetProductsFilter[]
 
-    constructor(
-        public filters?: IGetProductsFilter[]
-    ) {
-        super()
+    constructor(request?: GetProductsRequest) {
+        super(request)
+        if (request) {
+            if (typeof request.filters !== 'undefined') this.filters = request.filters
+        }
     }
 }
+
+export class GetProductsFromIdsRequest extends ListFromIdsRequest { }

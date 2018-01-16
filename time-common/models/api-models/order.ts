@@ -1,4 +1,4 @@
-import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../utils/goosetype'
+import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 import { OrderStatus } from '../enums/order-status'
 import { Discount } from './discount'
 import { EasypostRate } from './easypost-rate'

@@ -12,7 +12,7 @@ import { Subscription } from 'rxjs/Subscription'
 import 'rxjs/add/observable/fromEvent'
 
 import { Copy } from '@time/common/constants/copy'
-import { AutoUnsubscribe } from '@time/common/utils/auto-unsubscribe/auto-unsubscribe.decorator'
+import { AutoUnsubscribe } from '@time/common/lib/auto-unsubscribe/auto-unsubscribe.decorator'
 import { ITimeFormFieldOptions } from '../../models/form-field-options'
 
 @AutoUnsubscribe()

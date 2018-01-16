@@ -4,7 +4,7 @@ import { IPrice } from './price'
 
 export interface IDiscount extends Document {
     code: string
-    amount: IPrice
+    total: IPrice
     percentage: number // `20` for a 20% discount
     freeShipping: boolean
     includes: {

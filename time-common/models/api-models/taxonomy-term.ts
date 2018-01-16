@@ -1,6 +1,6 @@
 import * as findOrCreate from 'mongoose-findorcreate'
 
-import { arrayProp, plugin, prop, MongooseDocument, Ref } from '../../utils/goosetype'
+import { arrayProp, plugin, prop, MongooseDocument, Ref } from '../../lib/goosetype'
 import { Taxonomy } from './taxonomy'
 import { TaxonomyTermSettings } from './taxonomy-term-settings'
 

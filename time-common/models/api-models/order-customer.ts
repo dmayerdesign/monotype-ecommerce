@@ -1,4 +1,4 @@
-import { prop } from '../../utils/goosetype'
+import { prop } from '../../lib/goosetype'
 import { Address } from './address'
 
 export class OrderCustomer {

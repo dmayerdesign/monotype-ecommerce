@@ -1,4 +1,4 @@
-import { arrayProp, MongooseDocument, Ref } from '../../utils/goosetype'
+import { arrayProp, MongooseDocument, Ref } from '../../lib/goosetype'
 
 import { Attribute } from './attribute'
 

@@ -3,12 +3,16 @@ import { Document } from 'mongoose'
 import 'stripe'
 
 import { AppConfig } from '@time/app-config'
+import { HttpStatus } from '@time/common/constants'
 import { Types } from '@time/common/constants/inversify'
+import { UserHelper } from '@time/common/helpers/user.helper'
 import { Order } from '@time/common/models/api-models/order'
 import { Organization, OrganizationModel } from '@time/common/models/api-models/organization'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
+import { FindProductError } from '@time/common/models/api-models/product'
+import { ListFromIdsRequest, ListFromQueryRequest } from '@time/common/models/api-requests/list.request'
+import { ApiErrorResponse } from '@time/common/models/api-responses/api-error.response'
 import { StripeSubmitOrderResponse } from '@time/common/models/api-responses/stripe-submit-order.response'
-import { ApiErrorResponse } from '@time/common/models/helpers/api-error-response'
 import { DbClient } from '../../data-access/db-client'
 import { EmailService } from '../email.service'
 import { StripeCustomerService } from './stripe-customer.service'
@@ -39,27 +43,50 @@ export class StripeOrderService {
      * @param {Order} orderData An object representing the order to be created and paid
      * @param {Product[]} variationsAndStandalones Products from the database representing the variations and standalone products purchased
      */
-    public submitOrder(orderData: Order, variationsAndStandalones: Product[]) {
+    public submitOrder(orderData: Order) {
         return new Promise<StripeSubmitOrderResponse>(async (resolve, reject) => {
-            const parentSkus = []
-            const productSkus = []
+            const variationAndStandaloneSKUs: string[] = []
+            const parentIds: string[] = []
+
+            let variationsAndStandalones: Product[]
+
+            orderData.items.forEach(orderProduct => {
+                variationAndStandaloneSKUs.push((orderProduct as Product).sku)
+            })
+
+            try {
+                const request = new ListFromQueryRequest({
+                    query: { SKU: { $in: variationAndStandaloneSKUs } },
+                    limit: 0,
+                })
+                variationsAndStandalones = await this.dbClient.findQuery<Product>(ProductModel, request)
+                if (!variationsAndStandalones || !variationsAndStandalones.length) {
+                    reject(new ApiErrorResponse(new FindProductError(), HttpStatus.CLIENT_ERROR_notFound))
+                }
+            }
+            catch (findProductsError) {
+                reject(new ApiErrorResponse(findProductsError))
+            }
+
             variationsAndStandalones.forEach(product => {
-                productSkus.push(product.sku)
                 if (product.isVariation && product.parentSku) {
-                    parentSkus.push(product.parentSku)
-                    productSkus.push(product.parentSku)
+                    parentIds.push(product.parentSku)
                 }
             })
 
             try {
                 // Retrieve parent products and combine them with `variationsAndStandalones` into `products`
                 // Use the new `products` array to create the products and SKUs in Stripe, if they don't exist
-                const parents = await this.dbClient.find(ProductModel, { sku: { $in: parentSkus } }) as Product[]
+                const findParentsRequest = new ListFromIdsRequest({
+                    ids: parentIds,
+                    limit: 0
+                })
+                const parents = await this.dbClient.findIds(ProductModel, findParentsRequest) as Product[]
                 const products = parents.concat(variationsAndStandalones)
                 await this.stripeProductService.createProducts(products)
-                console.log("Created products")
+                console.log('Created products')
                 await this.stripeProductService.createSkus(products, orderData)
-                console.log("Created SKUs")
+                console.log('Created SKUs')
 
                 // Create the order in Stripe
                 const createOrderResponse = await this.stripeOrderActionsService.createOrder(orderData)
@@ -83,10 +110,8 @@ export class StripeOrderService {
                 await this.email.sendReceipt({
                     organization,
                     order: paidOrder,
-                    fromEmail: AppConfig.organization_email,
-                    fromName: AppConfig.brand_name,
                     toEmail: paidOrder.customer.email,
-                    toName: paidOrder.customer.firstName + ' ' + paidOrder.customer.lastName,
+                    toName: UserHelper.getFullName(paidOrder.customer)
                 })
 
                 resolve(new StripeSubmitOrderResponse({

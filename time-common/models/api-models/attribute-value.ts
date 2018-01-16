@@ -1,11 +1,11 @@
 import * as findOrCreate from 'mongoose-findorcreate'
 
-import { plugin, prop, MongooseDocument, Ref } from '../../utils/goosetype'
-// import { Attribute } from './attribute'
+import { plugin, prop, MongooseDocument, Ref } from '../../lib/goosetype'
+import { Attribute } from './attribute'
 
 @plugin(findOrCreate)
 export class AttributeValue extends MongooseDocument<AttributeValue> {
-    // @prop({ ref: Attribute }) public attribute: Ref<Attribute>
+    @prop({ ref: Attribute }) public attribute: Ref<Attribute>
     @prop() public name: string
     @prop() public slug: string
     @prop() public description: string

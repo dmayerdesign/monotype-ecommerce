@@ -1,6 +1,6 @@
+import { StripeOrder } from '@time/common/lib/stripe-order'
 import { Order } from '@time/common/models/api-models/order'
-import { StripeOrder } from '@time/common/models/helpers'
-import { ApiResponse } from '@time/common/models/helpers/api-response'
+import { ApiResponse } from '@time/common/models/api-responses/api.response'
 
 export interface IStripePayOrderData {
     paidOrder: Order

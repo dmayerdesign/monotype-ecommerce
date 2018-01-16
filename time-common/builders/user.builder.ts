@@ -1,4 +1,4 @@
-import { IAddress } from '../interfaces/api/address'
+import { IAddress } from '../models/interfaces/api/address'
 
 export class UserBuilder {
   public email: string

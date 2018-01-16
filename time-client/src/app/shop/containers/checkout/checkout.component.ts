@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core'
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 
+import { OrderBuilder } from '@time/common/builders/order.builder'
 import { Cart } from '@time/common/models/api-models/cart'
 import { Organization } from '@time/common/models/api-models/organization'
 import { Product } from '@time/common/models/api-models/product'
 import { User } from '@time/common/models/api-models/user'
 import { Currency } from '@time/common/models/enums/currency'
-import { OrderBuilder } from '@time/common/models/helpers/order.builder'
 import { IPrice } from '@time/common/models/interfaces/api/price'
 import { TimeFormBuilderService } from '@time/common/ng-modules/forms/services/form-builder.service'
 import { TimeFormBuilder } from '@time/common/ng-modules/forms/utilities/form.builder'
@@ -119,7 +119,7 @@ export class CheckoutComponent implements OnInit {
             this.order.shippingCost =
                 !this.order.shippingCost && this.organization.retailSettings.shippingFlatRate
                 ? this.organization.retailSettings.shippingFlatRate as IPrice
-                : { total: 0, currency: Currency.USD } as IPrice
+                : { amount: 0, currency: Currency.USD } as IPrice
 
             if (!this.order.shippingCost && this.organization.retailSettings.shippingFlatRate)
             this.order.shippingCost = this.organization.retailSettings.shippingFlatRate

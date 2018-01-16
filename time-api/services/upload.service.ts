@@ -37,7 +37,7 @@ export class UploadService {
                 cb(null, path.resolve(__dirname, '../../tmp/'))
             },
             filename: function (req, file, cb) {
-                console.log("req.file:", req.file)
+                console.log('req.file:', req.file)
                 cb(null, req.files[0].fieldname + '_' + Date.now() + '.csv')
             }
         }),
@@ -45,13 +45,13 @@ export class UploadService {
 
     public appendFileExt(file) {
         if (file && file.mimetype) {
-            if (file.mimetype.indexOf("jpeg") > -1) return ".jpg"
-            else return "." + file.mimetype.match(/image\/(.*)/)[1]
+            if (file.mimetype.indexOf('jpeg') > -1) return '.jpg'
+            else return '.' + file.mimetype.match(/image\/(.*)/)[1]
         }
     }
 
     public uploadProductImage(sku) {
-        if (sku) sku += "-"
+        if (sku) sku += '-'
         else sku = ''
 
         return multer({
@@ -60,7 +60,7 @@ export class UploadService {
                     cb(null, path.resolve(__dirname, 'tmp'))
                 },
                 filename: (req, file, cb) => {
-                    console.log("file:", file)
+                    console.log('file:', file)
                     cb(null, sku + Date.now().toString() + '-medium' + this.appendFileExt(file))
                 },
             }),
@@ -68,17 +68,17 @@ export class UploadService {
     }
 
     public async editImages(action, sku, editObj, done) {
-        console.log("-------- Edit Product Images --------")
+        console.log('-------- Edit Product Images --------')
         console.log(editObj)
 
         try {
             const product = await this.dbClient.findOne(ProductModel, { sku })
 
             Object.keys(editObj).forEach(field => {
-                if (action === "remove") {
+                if (action === 'remove') {
                     product[field].splice(product[field].indexOf(editObj[field]), 1)
                 }
-                else if (action === "add") {
+                else if (action === 'add') {
                     if (field === 'featuredImages' || field === 'thumbnails') { // For now, only allowing one featured image and one thumbnail per SKU
                         product[field] = []
                     }
@@ -106,10 +106,10 @@ export class UploadService {
                             const parent = await this.dbClient.findOne(ProductModel, {sku: product.parentSku})
 
                             Object.keys(editObj).forEach(field => {
-                                if (action === "remove") {
+                                if (action === 'remove') {
                                     parent[field].splice(parent[field].indexOf(editObj[field]), 1)
                                 }
-                                else if (action === "add") {
+                                else if (action === 'add') {
                                     parent[field].push(editObj[field])
                                 }
                                 parent.markModified(field)
@@ -144,7 +144,7 @@ export class UploadService {
     }
 
     public crunch(file, done) {
-        const newFilePath = file.path.indexOf(".") > -1 ? file.path.replace("-medium.", "-thumbnail.") : file.path + "-thumbnail"
+        const newFilePath = file.path.indexOf('.') > -1 ? file.path.replace('-medium.', '-thumbnail.') : file.path + '-thumbnail'
         let thumbnailBuffer, mediumBuffer
 
         try {

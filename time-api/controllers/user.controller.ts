@@ -14,20 +14,19 @@ import {
 import { Endpoints } from '@time/common/constants/endpoints'
 import { Types } from '@time/common/constants/inversify/types'
 import { UserService } from '../services/user.service'
+import { ApiController } from './api.controller'
 
 @injectable()
 @controller(Endpoints.User)
-export class UserController {
+export class UserController extends ApiController {
 
-    constructor(
-        @inject(Types.UserService) private userService: UserService,
-    ) { }
+    @inject(Types.UserService) private userService: UserService
 
     @httpPost('/login')
     public login(
         @request() req: Request,
         @response() res: Response,
-    ) {
+    ): void {
         this.userService.login(req.body, res)
             .catch(({message, status}) => res.status(status).json({message, status}))
     }
@@ -36,16 +35,14 @@ export class UserController {
     public verifyEmail(
         @requestParam('token') token: string,
         @response() res: Response,
-    ) {
-        this.userService.verifyEmail(token)
-            .then(({data, status}) => res.status(status).json(data))
-            .catch(({message, status}) => res.status(status).json({message, status}))
+    ): void {
+        this.handleApiResponse(this.userService.verifyEmail(token), res)
     }
 
     @httpPost('/logout')
     public logout(
         @response() res: Response,
-    ) {
+    ): void {
         this.userService.logout(res)
     }
 
@@ -53,7 +50,7 @@ export class UserController {
     public getUser(
         @request() req: Request,
         @response() res: Response,
-    ) {
+    ): void {
         this.userService.refreshSession(req, res)
     }
 
@@ -61,7 +58,7 @@ export class UserController {
     public createUser(
         @request() req: Request,
         @response() res: Response,
-    ) {
+    ): void {
         this.userService.register(req.body, res)
             .catch(({message, status}) => res.status(status).json({message, status}))
     }
@@ -70,19 +67,15 @@ export class UserController {
     public updateUser(
         @request() req: Request,
         @response() res: Response,
-    ) {
-        this.userService.updateUser(req.user._id, req.body)
-            .then(({data, status}) => res.status(status).json(data))
-            .catch(({message, status}) => res.status(status).json({message, status}))
+    ): void {
+        this.handleApiResponse(this.userService.updateUser(req.user._id, req.body), res)
     }
 
     @httpDelete('/:id', Types.isAuthorized)
     public deleteUser(
         @request() req: Request,
         @response() res: Response,
-    ) {
-        this.userService.deleteUser(req.params.id)
-            .then(({data, status}) => res.status(status).json(data))
-            .catch(({message, status}) => res.status(status).json({message, status}))
+    ): void {
+        this.handleApiResponse(this.userService.deleteUser(req.params.id), res)
     }
 }

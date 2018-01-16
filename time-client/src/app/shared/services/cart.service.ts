@@ -97,7 +97,7 @@ export class CartService {
     private getSubTotal(items: Product[]): number {
         return items
             .map(p => {
-                return this.productService.getPrice(p).total
+                return this.productService.getPrice(p).amount
             })
             .reduce((prev: number, current: number) => {
                 return prev + current
@@ -121,7 +121,7 @@ export class CartService {
                     ...duplicateItem,
                     quantity: duplicateItem.quantity + 1,
                     subTotal: {
-                        total: duplicateItem.subTotal.total + this.productService.getPrice(item).total,
+                        amount: duplicateItem.subTotal.amount + this.productService.getPrice(item).amount,
                         currency: duplicateItem.subTotal.currency,
                     } as Price,
                 }

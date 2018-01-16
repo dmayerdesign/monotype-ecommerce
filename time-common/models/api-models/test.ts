@@ -1,4 +1,4 @@
-import { prop, MongooseDocument } from '../../utils/goosetype'
+import { prop, MongooseDocument } from '../../lib/goosetype'
 
 export class Test extends MongooseDocument<Test> {
     @prop() public name: string

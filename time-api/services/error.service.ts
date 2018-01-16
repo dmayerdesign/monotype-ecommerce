@@ -5,7 +5,7 @@ import { EmailService } from './email.service'
 
 @injectable()
 export class ErrorService {
-    constructor(@inject(Types.EmailService) private emailService: EmailService) { }
+    @inject(Types.EmailService) private emailService: EmailService
 
     public handleError(error: Error) {
         console.error(error)

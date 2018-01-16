@@ -11,7 +11,7 @@ export class AppController {
     @request() req: Request,
     @response() res: Response,
     @next() next: any,
-  ): any {
+  ): void {
     // res.sendFile('index.html', { root: 'dist/public' })
     // ANGULAR UNIVERSAL
     if (req.url.indexOf('/api/') > -1) {

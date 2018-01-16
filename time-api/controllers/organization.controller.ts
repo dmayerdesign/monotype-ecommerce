@@ -1,31 +1,28 @@
-import { injectable } from 'inversify'
+import { Response } from 'express'
+import { inject, injectable } from 'inversify'
 import {
     controller,
     httpGet,
     interfaces,
+    response,
 } from 'inversify-express-utils'
 
-import { IOrganization } from '@time/common/models/interfaces/api/organization'
+import { Endpoints } from '@time/common/constants/endpoints'
+import { Types } from '@time/common/constants/inversify'
+import { Organization } from '@time/common/models/api-models/organization'
+import { OrganizationService } from '../services/organization.service'
+import { ApiController } from './api.controller'
 
 @injectable()
-@controller('/api/organization')
-export class OrganizationController implements interfaces.Controller {
+@controller(Endpoints.Organization)
+export class OrganizationController extends ApiController implements interfaces.Controller {
 
-    constructor(
-        // @inject(TYPES.ProductService) private organizationService: OrganizationService,
-    ) {}
+    @inject(Types.OrganizationService) private organizationService: OrganizationService
 
     @httpGet('/')
-    public get(): Promise<IOrganization> {
-        // return this.organizationService.get()
-        const testOrg: any = {
-            name: "Hyzer Shop",
-            retailSettings: {
-                salesTaxPercentage: 6,
-            },
-        }
-        return new Promise<IOrganization>(resolve => {
-            resolve(testOrg)
-        })
+    public get(
+        @response() res: Response
+    ): void {
+        this.handleApiResponse(this.organizationService.getOrganization(), res)
     }
 }

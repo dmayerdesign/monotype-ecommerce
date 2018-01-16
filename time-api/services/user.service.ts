@@ -7,7 +7,8 @@ import { AuthConfig } from '@time/common/config/auth.config'
 import { Cookies, Copy, HttpStatus } from '@time/common/constants'
 import { Types } from '@time/common/constants/inversify'
 import { User, UserModel } from '@time/common/models/api-models/user'
-import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
+import { ApiErrorResponse } from '@time/common/models/api-responses/api-error.response'
+import { ApiResponse } from '@time/common/models/api-responses/api.response'
 import { ILogin } from '@time/common/models/interfaces/api/login'
 import { DbClient } from '../data-access/db-client'
 
@@ -17,13 +18,13 @@ export class UserService {
     private jwtSecret = process.env.JWT_SECRET
     @inject(Types.DbClient) private dbClient: DbClient<User>
 
-    public register(user: User, res: Response): Promise<null> {
-        return new Promise<null>(async (resolve, reject) => {
+    public register(user: User, res: Response): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
             const plainTextPassword = user.password
             let salt, hash
             delete user.password
 
-            // Hash the password.
+            // Hash the password
 
             try {
                 salt = bcrypt.genSaltSync(12)
@@ -35,24 +36,24 @@ export class UserService {
 
             try {
 
-                // Check for an existing user.
+                // Check for an existing user
 
-                const existingUser = await this.dbClient.findOne(UserModel, { email: user.email })
+                const existingUser = await this.dbClient.findOne(UserModel, { email: user.email.toLowerCase() })
 
-                // If there's no existing user, create a new one.
+                // If there's no existing user, create a new one
 
                 if (!existingUser) {
                     const newUser = new UserModel({
                         firstName: user.firstName,
                         lastName: user.lastName,
-                        email: user.email,
+                        email: user.email.toLowerCase(),
                         password: hash,
                     })
 
                     const savedUserResult = await newUser.save()
                     const savedUser = savedUserResult._doc
 
-                    // Create the JWT token and the JWT cookie.
+                    // Create the JWT token and the JWT cookie
 
                     const payload = this.cleanUser(savedUser)
                     const authToken = jwt.sign(payload, this.jwtSecret, AuthConfig.JwtOptions)
@@ -73,24 +74,24 @@ export class UserService {
         })
     }
 
-    public login(credentials: ILogin, res: Response): Promise<null> {
-        return new Promise<null>(async (resolve, reject) => {
+    public login(credentials: ILogin, res: Response): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
             try {
 
-                // Find a user with the provided email.
+                // Find a user with the provided email
 
                 const user = await this.dbClient.findOne(UserModel, {
-                        email: credentials.email
+                        email: credentials.email.toLowerCase()
                     })
 
-                // If no user is found, send a 404.
+                // If no user is found, send a 404
 
                 if (!user) {
                     reject(new ApiErrorResponse(new Error(Copy.ErrorMessages.userNotFound), HttpStatus.CLIENT_ERROR_notFound))
                     return
                 }
 
-                // If a user is found, authenticate their password.
+                // If a user is found, authenticate their password
 
                 const authenticated: boolean = bcrypt.compareSync(credentials.password, user.password)
                 if (authenticated) {
@@ -180,7 +181,7 @@ export class UserService {
         delete cleanUser.role
         delete cleanUser.password
 
-        // Delete JWT properties.
+        // Delete JWT properties
         delete (cleanUser as any).iat
         delete (cleanUser as any).exp
 

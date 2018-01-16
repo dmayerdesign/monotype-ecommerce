@@ -5,7 +5,7 @@ import { Observable } from 'rxjs/Observable'
 import { Endpoints } from '@time/common/constants/endpoints'
 import { Price } from '@time/common/models/api-models/price'
 import { Product } from '@time/common/models/api-models/product'
-import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
+import { GetProductsFromIdsRequest, GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
 import { SimpleError } from '@time/common/ng-modules/http'
 import { RestService } from '@time/common/ng-modules/http/http.models'
 
@@ -17,10 +17,10 @@ export class ProductService extends RestService<Product> {
         super()
     }
 
-    public get(query?: GetProductsRequest) {
+    public get(request?: GetProductsRequest) {
         const params = new HttpParams()
 
-        if (query) params.set('query', JSON.stringify(query))
+        if (request) params.append('request', JSON.stringify(request))
 
         // this.http.get("https://jsonplaceholder.typicode.com/posts")
         this.http.get<Product[]>(Endpoints.Products, { params })
@@ -31,9 +31,12 @@ export class ProductService extends RestService<Product> {
     }
 
     public getSome(ids: string[]): Observable<Product[]> {
-        const query = new GetProductsRequest()
+        const request = new GetProductsFromIdsRequest()
+        request.ids = ids
+
         const params = new HttpParams()
-        query.ids = ids
+        params.append('request', JSON.stringify(request))
+
         return this.http.get<Product[]>(Endpoints.Products, { params })
     }
 
@@ -49,7 +52,7 @@ export class ProductService extends RestService<Product> {
             )
     }
 
-    public getPrice(product: Product): Price {
+    public getPrice(product: Product) {
         if (product.isOnSale) {
             return product.salePrice
         }
