@@ -2,18 +2,17 @@ import { model, DocumentToObjectOptions, ModelPopulateOptions, ModelUpdateOption
 import * as findOrCreate from 'mongoose-findorcreate'
 import 'reflect-metadata'
 
-import { ArrayPropOptions, IMongooseDocument, IMongooseModel, ModelBuilder, MongooseSchemaOptions, PropOptions, Ref } from './goosetype-model-builder'
+import { camelCase, ArrayPropOptions, IMongooseDocument, IMongooseModel, ModelBuilder, MongooseSchemaOptions, PropOptions, Ref } from './goosetype-model-builder'
 
 const modelBuilder = new ModelBuilder()
 
 // Utilities
 
-export function composeSchemaForInstance<T>(target: MongooseDocument, schemaOptions?: SchemaOptions) {
-    const __modelBuilder = modelBuilder
-    const schemaDefinition = __modelBuilder.find.schemaDefinition((target.constructor as any).name)
-    const preMiddleware = __modelBuilder.find.preMiddleware((target.constructor as any).name)
-    const postMiddleware = __modelBuilder.find.postMiddleware((target.constructor as any).name)
-    const plugins = __modelBuilder.find.plugin((target.constructor as any).name)
+export function composeSchemaForInstance<T>(target: MongooseDocument, schemaOptions?: SchemaOptions): Schema {
+    const schemaDefinition = modelBuilder.schemaDefinitions[camelCase(target.constructor.name)]
+    const preMiddleware = modelBuilder.preMiddleware[camelCase(target.constructor.name)]
+    const postMiddleware = modelBuilder.postMiddleware[camelCase(target.constructor.name)]
+    const plugins = modelBuilder.plugins[camelCase(target.constructor.name)]
 
     const schema = new Schema(schemaDefinition, schemaOptions)
 
@@ -45,31 +44,33 @@ export function composeSchemaForInstance<T>(target: MongooseDocument, schemaOpti
         })
     }
 
-    const theSchema = __modelBuilder.findOrCreate.schema((target.constructor as any).name)
+    modelBuilder.schemas[camelCase(target.constructor.name)] = schema
 
-    return theSchema
+    return schema
+}
+
+export function composeModelForInstance<T extends IMongooseDocument>(target: MongooseDocument, schemaOptions?: SchemaOptions): IMongooseModel<T> {
+    const schema = composeSchemaForInstance<T>(target, schemaOptions)
+    return model(target.constructor.name, schema) as IMongooseModel<T>
 }
 
 // Decorators
 
 export function pre(method: string, parallel: boolean, fn: (next: (err?: NativeError) => void, done: () => void) => void, errorCb?: (err: Error) => void): ClassDecorator {
     return (constructor: any) => {
-        let preHookArgs = modelBuilder.findOrCreate.preMiddleware(constructor.name)
-        preHookArgs = [ method, parallel, fn ]
+        modelBuilder.addTo('preMiddleware', constructor.name, [ method, parallel, fn ])
     }
 }
 
 export function post<T>(method: string, fn: (error: Error, doc: T, next: (err?: NativeError) => void) => void): ClassDecorator {
     return (constructor: any) => {
-        let postHookArgs = modelBuilder.findOrCreate.postMiddleware(constructor.name)
-        postHookArgs = [ method, fn ]
+        modelBuilder.addTo('postMiddleware', constructor.name, [ method, fn ])
     }
 }
 
 export function plugin(plugin: (schema: Schema, options?: Object) => void, options?: Object): ClassDecorator {
     return (constructor: any) => {
-        let pluginArgs = modelBuilder.findOrCreate.plugin(constructor.name)
-        pluginArgs = [ plugin, options ]
+        modelBuilder.addTo('plugins', constructor.name, [ plugin, options ])
     }
 }
 
@@ -269,11 +270,6 @@ export abstract class MongooseDocument<T = any> {
     public getModel?(schemaOptions?: SchemaOptions): IMongooseModel<T & IMongooseDocument<T>> {
         return composeModelForInstance<T & IMongooseDocument>(this, schemaOptions)
     }
-}
-
-export function composeModelForInstance<T extends IMongooseDocument>(target: MongooseDocument, schemaOptions?: SchemaOptions) {
-    const schema = composeSchemaForInstance<T>(target, schemaOptions)
-    return <any>model((target.constructor as any).name, schema) as IMongooseModel<T>
 }
 
 export { IMongooseModel, MongooseSchemaOptions, Ref }

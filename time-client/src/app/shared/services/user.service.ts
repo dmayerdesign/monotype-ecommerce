@@ -4,12 +4,12 @@ import { ActivatedRoute, Router } from '@angular/router'
 import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
 
-import { Endpoints } from '@time/common/constants/endpoints'
+import { ApiEndpoints } from '@time/common/constants/api-endpoints'
 import { User } from '@time/common/models/api-models/user'
 import { ILogin } from '@time/common/models/interfaces/api/login'
 import { IUserRegistration } from '@time/common/models/interfaces/api/user-registration'
 import { TimeHttpService } from '@time/common/ng-modules/http'
-import { AppRoutes } from '../../../../constants/app-routes.constants'
+import { AppRoutes } from '../../constants/app-routes'
 
 @Injectable()
 export class UserService {
@@ -46,27 +46,27 @@ export class UserService {
     }
 
     public signup(userInfo: IUserRegistration) {
-        this.http.post(`${Endpoints.User}/register`, userInfo)
+        this.http.post(`${ApiEndpoints.User}/register`, userInfo)
             .subscribe((user: User) => {
                 this.refreshSession(user)
             })
     }
 
     public login(credentials: ILogin) {
-        this.http.post(`${Endpoints.User}/login`, credentials)
+        this.http.post(`${ApiEndpoints.User}/login`, credentials)
             .subscribe((userData: User) => {
                 this.refreshSession(userData)
             })
     }
 
     public getUser() {
-        this.http.get(`${Endpoints.User}/get-user`).subscribe((userData: User) => {
+        this.http.get(`${ApiEndpoints.User}/get-user`).subscribe((userData: User) => {
             this.refreshSession(userData)
         })
     }
 
     public logout() {
-        this.http.post(`${Endpoints.User}/logout`, {})
+        this.http.post(`${ApiEndpoints.User}/logout`, {})
             .subscribe(successResponse => {
                 this.clearSession()
 
@@ -77,6 +77,6 @@ export class UserService {
     }
 
     public verifyEmail(token: string) {
-        return this.http.get<User>(`${Endpoints.User}/verify-email/${token}`)
+        return this.http.get<User>(`${ApiEndpoints.User}/verify-email/${token}`)
     }
 }

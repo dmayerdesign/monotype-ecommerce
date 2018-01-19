@@ -7,14 +7,14 @@ import {
     response,
 } from 'inversify-express-utils'
 
-import { Endpoints } from '@time/common/constants/endpoints'
+import { ApiEndpoints } from '@time/common/constants/api-endpoints'
 import { Types } from '@time/common/constants/inversify'
 import { Organization } from '@time/common/models/api-models/organization'
 import { OrganizationService } from '../services/organization.service'
 import { ApiController } from './api.controller'
 
 @injectable()
-@controller(Endpoints.Organization)
+@controller(ApiEndpoints.Organization)
 export class OrganizationController extends ApiController implements interfaces.Controller {
 
     @inject(Types.OrganizationService) private organizationService: OrganizationService

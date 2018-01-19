@@ -6,6 +6,7 @@ import { Tags, Types } from '@time/common/constants/inversify'
 import { MongooseDocument } from '@time/common/lib/goosetype'
 import { Authenticate } from '../auth/authenticate'
 import { AppController } from '../controllers/app.controller'
+import { ProductsAdminController } from '../controllers/products.admin.controller'
 import { ProductsController } from '../controllers/products.controller'
 import { UserController } from '../controllers/user.controller'
 import { DbClient } from '../data-access/db-client'
@@ -65,11 +66,12 @@ container.bind<WoocommerceMigrationService>(Types.WoocommerceMigrationService).t
 
 // Middleware
 container.bind(Types.isAuthenticated).toConstantValue(Authenticate.isAuthenticated)
-container.bind(Types.isAuthorized).toConstantValue(Authenticate.isAuthorized)
+container.bind(Types.isOwner).toConstantValue(Authenticate.isAuthorized(1))
 
 // Controllers
-container.bind<interfaces.Controller>(TYPE.Controller).to(UserController).whenTargetNamed(Tags.UserController)
-container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsController).whenTargetNamed(Tags.ProductsController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsAdminController).whenTargetNamed(Tags.ProductsAdminController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(AppController).whenTargetNamed(Tags.AppController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsController).whenTargetNamed(Tags.ProductsController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(UserController).whenTargetNamed(Tags.UserController)
 
 export { container }

@@ -7,7 +7,7 @@ export class ApiErrorResponse {
 
     constructor(
         error: Error,
-        public status?: HttpStatus,
+        public status: HttpStatus = HttpStatus.SERVER_ERROR_internal,
     ) {
         if (error) {
             this.message = error.message

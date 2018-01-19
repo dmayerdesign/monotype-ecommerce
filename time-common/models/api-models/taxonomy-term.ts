@@ -13,7 +13,6 @@ export class TaxonomyTerm extends MongooseDocument<TaxonomyTerm> {
     @prop() public description: string
     @prop({ ref: TaxonomyTerm }) public parent: Ref<TaxonomyTerm>
     @arrayProp({ itemsRef: TaxonomyTerm }) public children: Ref<TaxonomyTerm>[]
-
     @prop() public settings: TaxonomyTermSettings
 }
 

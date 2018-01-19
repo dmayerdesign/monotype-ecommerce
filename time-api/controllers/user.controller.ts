@@ -11,13 +11,13 @@ import {
     response,
 } from 'inversify-express-utils'
 
-import { Endpoints } from '@time/common/constants/endpoints'
+import { ApiEndpoints } from '@time/common/constants/api-endpoints'
 import { Types } from '@time/common/constants/inversify/types'
 import { UserService } from '../services/user.service'
 import { ApiController } from './api.controller'
 
 @injectable()
-@controller(Endpoints.User)
+@controller(ApiEndpoints.User)
 export class UserController extends ApiController {
 
     @inject(Types.UserService) private userService: UserService
@@ -71,7 +71,7 @@ export class UserController extends ApiController {
         this.handleApiResponse(this.userService.updateUser(req.user._id, req.body), res)
     }
 
-    @httpDelete('/:id', Types.isAuthorized)
+    @httpDelete('/:id', Types.isOwner)
     public deleteUser(
         @request() req: Request,
         @response() res: Response,

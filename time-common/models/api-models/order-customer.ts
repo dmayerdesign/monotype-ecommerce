@@ -1,7 +1,7 @@
-import { prop } from '../../lib/goosetype'
+import { prop, MongooseDocument } from '../../lib/goosetype'
 import { Address } from './address'
 
-export class OrderCustomer {
+export class OrderCustomer extends MongooseDocument<OrderCustomer> {
     @prop() public userId: string
     @prop() public stripeCustomerId: string
     @prop() public email: string
@@ -10,3 +10,4 @@ export class OrderCustomer {
     @prop() public shippingAddress: Address
     @prop() public billingAddress: Address
 }
+new OrderCustomer().getSchema()

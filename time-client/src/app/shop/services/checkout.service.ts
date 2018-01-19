@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
 
 import { AppConfig } from '@time/app-config'
-import { Endpoints } from '@time/common/constants/endpoints'
+import { ApiEndpoints } from '@time/common/constants/api-endpoints'
 import { Order } from '@time/common/models/api-models/order'
 
 @Injectable()
@@ -14,7 +14,7 @@ export class CheckoutService {
     ) {}
 
     public checkout(order: Order): Observable<any> {
-        return this.http.post(`${Endpoints.Orders}/execute`, order)
+        return this.http.post(`${ApiEndpoints.Orders}/execute`, order)
     }
 
     public get stripeKey(): string {

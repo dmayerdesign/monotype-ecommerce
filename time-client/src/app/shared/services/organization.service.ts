@@ -4,7 +4,7 @@ import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
 import { Subject } from 'rxjs/Subject'
 
-import { Endpoints } from '@time/common/constants/endpoints'
+import { ApiEndpoints } from '@time/common/constants/api-endpoints'
 import { Organization } from '@time/common/models/api-models/organization'
 import { SimpleError } from '@time/common/ng-modules/http'
 
@@ -23,7 +23,7 @@ export class OrganizationService {
     }
 
     public get() {
-        this.http.get<Organization>(Endpoints.Organization)
+        this.http.get<Organization>(ApiEndpoints.Organization)
             .subscribe(
                 organization => {
                     this.organization = organization

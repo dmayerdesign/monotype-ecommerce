@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify'
 import { Document } from 'mongoose'
 
+import { AppConfig } from '@time/app-config'
 import { Types } from '@time/common/constants/inversify'
 import { IMongooseModel } from '@time/common/lib/goosetype'
 import { Attribute, AttributeModel } from '@time/common/models/api-models/attribute'
@@ -9,6 +10,8 @@ import { Price } from '@time/common/models/api-models/price'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
 import { Taxonomy, TaxonomyModel } from '@time/common/models/api-models/taxonomy'
 import { TaxonomyTerm, TaxonomyTermModel } from '@time/common/models/api-models/taxonomy-term'
+import { ApiErrorResponse } from '@time/common/models/api-responses/api-error.response'
+import { ApiResponse } from '@time/common/models/api-responses/api.response'
 import { Currency } from '@time/common/models/enums/currency'
 import { ProductClass } from '@time/common/models/enums/product-class'
 import * as productsJSON from '@time/common/work-files/migration/hyzershop-products'
@@ -19,8 +22,8 @@ export class WoocommerceMigrationService {
 
     @inject(Types.DbClient) private dbClient: DbClient<any>
 
-    public createProductsFromExportedJSON(appConfig): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
+    public createProductsFromExportedJSON(): Promise<ApiResponse<Product[]>> {
+        return new Promise<ApiResponse<Product[]>>((resolve, reject) => {
             const newProducts = []
 
             async function createProducts() {
@@ -70,12 +73,12 @@ export class WoocommerceMigrationService {
                                                 variableAttributeValueIds.push(variableAttributeValue._id)
                                             }
                                             catch (error) {
-                                                reject(error)
+                                                reject(new ApiErrorResponse(error))
                                             }
                                         }
                                     }
                                     catch (error) {
-                                        reject(error)
+                                        reject(new ApiErrorResponse(error))
                                         return
                                     }
                                 }
@@ -98,7 +101,7 @@ export class WoocommerceMigrationService {
                                         delete newProduct[key]
                                     }
                                     catch (error) {
-                                        reject(error)
+                                        reject(new ApiErrorResponse(error))
                                         return
                                     }
                                 }
@@ -150,7 +153,7 @@ export class WoocommerceMigrationService {
                                             taxonomyTermIds.push(taxonomyTerm._id)
                                         }
                                         catch (error) {
-                                            reject(error)
+                                            reject(new ApiErrorResponse(error))
                                             return
                                         }
                                     }
@@ -171,7 +174,7 @@ export class WoocommerceMigrationService {
                                     delete newProduct[key]
                                 }
                                 catch (error) {
-                                    reject(error)
+                                    reject(new ApiErrorResponse(error))
                                     return
                                 }
                             }
@@ -281,7 +284,7 @@ export class WoocommerceMigrationService {
                     if (!newProduct.isParent) {
                         let isDisc: boolean
                         let attributeValues: AttributeValue[]
-                        let imageBaseUrl = `${appConfig.cloudfront_url}/product-images/`
+                        let imageBaseUrl = `${AppConfig.cloudfront_url}/product-images/`
                         newProduct.taxonomyTermSlugs.forEach(term => {
                             if (term.indexOf('brand') === 0) {
                                 if (term.indexOf('MVP') > -1) {
@@ -300,8 +303,8 @@ export class WoocommerceMigrationService {
                             attributeValues = await this.dbClient.find(AttributeValueModel, { _id: { $in: newProduct.attributeValues } }) as AttributeValue[]
                             isDisc = attributeValues.some(attrValue => attrValue.slug === 'product-type-disc')
                         }
-                        catch (err) {
-                            reject(err)
+                        catch (error) {
+                            reject(new ApiErrorResponse(error))
                             return
                         }
 
@@ -364,8 +367,8 @@ export class WoocommerceMigrationService {
              * The switch
              ******* -> */
             ProductModel.create(newProducts)
-                .then(products => resolve(products))
-                .catch(err => reject(err))
+                .then(products => resolve(new ApiResponse(products)))
+                .catch(error => reject(new ApiErrorResponse(error)))
             /**/
         })
     }

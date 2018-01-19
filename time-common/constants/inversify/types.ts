@@ -1,6 +1,6 @@
 export class Types {
     public static isAuthenticated = Symbol('isAuthenticated')
-    public static isAuthorized = Symbol('isAuthorized')
+    public static isOwner = Symbol('isOwner')
     public static Authenticate = Symbol('Authenticate')
     public static DbClient = Symbol('DbClient')
     public static DiscountService = Symbol('DiscountService')

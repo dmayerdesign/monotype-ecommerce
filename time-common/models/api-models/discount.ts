@@ -3,10 +3,12 @@ import { Price } from './price'
 import { Product } from './product'
 import { TaxonomyTerm } from './taxonomy-term'
 
-class DiscountExceptions {
+export class DiscountExceptions extends MongooseDocument<DiscountExceptions> {
     @arrayProp({ itemsRef: Product }) public products: Ref<Product>[]
     @arrayProp({ itemsRef: TaxonomyTerm }) public taxonomyTerms: Ref<TaxonomyTerm>[]
 }
+
+new DiscountExceptions().getSchema()
 
 export class Discount extends MongooseDocument<Discount> {
     @prop() public code: string

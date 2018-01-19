@@ -13,7 +13,7 @@ import {
 } from 'inversify-express-utils'
 
 import { AppConfig } from '@time/app-config'
-import { Endpoints, Types } from '@time/common/constants'
+import { ApiEndpoints, Types } from '@time/common/constants'
 import { Order } from '@time/common/models/api-models/order'
 import { ExecuteOrderRequest } from '@time/common/models/api-requests/execute-order.request'
 import { GetOrdersRequest } from '@time/common/models/api-requests/get-orders.request'
@@ -23,7 +23,7 @@ import { WoocommerceMigrationService } from '../services/woocommerce-migration.s
 import { ApiController } from './api.controller'
 
 @injectable()
-@controller(Endpoints.Orders)
+@controller(ApiEndpoints.Orders)
 export class OrdersController extends ApiController implements interfaces.Controller {
 
     @inject(Types.OrderService) private orderService: OrderService

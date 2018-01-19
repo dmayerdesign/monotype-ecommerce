@@ -1,6 +1,12 @@
 import { injectable } from 'inversify'
 import * as mongoose from 'mongoose'
 
+// Utilities
+
+export function camelCase(str: string): string {
+    return str.charAt(0).toLowerCase() + str.substring(1)
+}
+
 // Errors
 
 export class InvalidArrayPropOptionsError extends Error { }
@@ -92,111 +98,12 @@ export class ModelBuilder {
         return modelBuilder
     }
 
-    public get find() {
-        const that = this
-        return {
-            schema(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.schemas[name]) {
-                    return that.schemas[name]
-                }
-                else {
-                    return null
-                }
-            },
-            schemaDefinition(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.schemaDefinitions[name]) {
-                    return that.schemaDefinitions[name]
-                }
-                else {
-                    return null
-                }
-            },
-            preMiddleware(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.preMiddleware[name]) {
-                    return that.preMiddleware[name]
-                }
-                else {
-                    return null
-                }
-            },
-            postMiddleware(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.postMiddleware[name]) {
-                    return that.postMiddleware[name]
-                }
-                else {
-                    return null
-                }
-            },
-            plugin(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.plugins[name]) {
-                    return that.plugins[name]
-                }
-                else {
-                    return null
-                }
-            }
+    public addTo(which: string, constructorName: string, value: any): void {
+        let definition = this[which][camelCase(constructorName)]
+        if (!definition) {
+            definition = []
         }
-    }
-
-    public get findOrCreate() {
-        const that = this
-        return {
-            schema(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.find.schema(name)) {
-                    return that.find.schema(name)
-                }
-                else {
-                    that.schemas[name] = new mongoose.Schema(that.schemaDefinitions[name])
-                    return that.schemas[name]
-                }
-            },
-            schemaDefinition(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.find.schemaDefinition(name)) {
-                    return that.find.schemaDefinition(name)
-                }
-                else {
-                    that.schemaDefinitions[name] = {}
-                    return that.schemaDefinitions[name]
-                }
-            },
-            preMiddleware(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.find.preMiddleware(name)) {
-                    return that.find.preMiddleware(name)
-                }
-                else {
-                    that.preMiddleware[name] = []
-                    return that.preMiddleware[name]
-                }
-            },
-            postMiddleware(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.find.postMiddleware(name)) {
-                    return that.find.postMiddleware(name)
-                }
-                else {
-                    that.postMiddleware[name] = []
-                    return that.postMiddleware[name]
-                }
-            },
-            plugin(schemaName) {
-                const name = schemaName.charAt(0).toLowerCase() + schemaName.substring(1)
-                if (that.find.plugin(name)) {
-                    return that.find.plugin(name)
-                }
-                else {
-                    that.plugins[name] = []
-                    return that.plugins[name]
-                }
-            }
-        }
+        definition.push(value)
     }
 
     public isValidPrimitiveOrObject(type): boolean {
@@ -223,17 +130,19 @@ export class ModelBuilder {
             if (type === mongoose.Schema.Types.ObjectId) {
                 return mongoose.Schema.Types.ObjectId
             }
-            if (!this.schemaDefinitions[type.name.charAt(0).toLowerCase() + type.name.substring(1)]) {
+            if (!this.schemaDefinitions[camelCase(type.name)]) {
                 throw new SchemaNotDefinedError(`A schema associated with ${type.name} has not been defined. Make sure the class extends MongooseDocument.`)
             }
-            return this.findOrCreate.schema(type.name)
+
+            return this.schemas[camelCase(type.name)]
         }
     }
 
     public baseProp(propTypeArgs: PropTypeArgs) {
         const { target, key, propType, options } = propTypeArgs
-        let schema: mongoose.SchemaDefinition = this.findOrCreate.schemaDefinition((target.constructor as any).name)
-        const schemaProperty: mongoose.SchemaTypeOpts<any> | mongoose.Schema | mongoose.SchemaType = {}
+        let schema: mongoose.SchemaDefinition = this.schemaDefinitions[camelCase((target.constructor as any).name)]
+        let schemaProperty: mongoose.SchemaTypeOpts<any> | mongoose.Schema | mongoose.SchemaType = {}
+        let type
 
         const nonPropertyOptions = [
             'items',
@@ -241,7 +150,7 @@ export class ModelBuilder {
         ]
 
         if (!schema) {
-            schema = {}
+            schema = this.schemaDefinitions[camelCase((target.constructor as any).name)] = {}
         }
 
         // Might need a second glance
@@ -271,14 +180,12 @@ export class ModelBuilder {
         }
 
         if (propType === 'array') {
-            schema[key] = [schemaProperty]
-
             if (!options.items && !options.itemsRef) {
                 throw new InvalidArrayPropOptionsError('You must define items or itemsRef.')
             }
 
             if (options.items) {
-                schemaProperty.type = this.getTypeOrSchema(options.items)
+                schemaProperty = [ this.getTypeOrSchema(options.items) ]
             }
             else if (options.itemsRef) {
                 schemaProperty.type = mongoose.Schema.Types.ObjectId
@@ -286,9 +193,7 @@ export class ModelBuilder {
             }
         }
         else {
-            schema[key] = schemaProperty
-
-            let type = Reflect.getMetadata('design:type', target, key)
+            type = Reflect.getMetadata('design:type', target, key)
 
             if (options) {
                 if ((options as SchemaTypeOptions).type) {
@@ -301,5 +206,7 @@ export class ModelBuilder {
 
             schemaProperty.type = this.getTypeOrSchema(type)
         }
+
+        schema[key] = schemaProperty
     }
 }
