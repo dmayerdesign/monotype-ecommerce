@@ -1,7 +1,7 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "target": "es2016",
+    "target": "es2015",
     "baseUrl": ".",
     "paths": {
       "@angular/*": [ "../node_modules/@angular/*" ],
@@ -10,10 +10,18 @@
       "@time/environment": [ "../time-client/src/environments/environment" ],
       "mongoose": [ "../node_modules/@types/mongoose" ],
       "stripe": [ "../node_modules/@types/stripe-node" ]
-    }
+    },
+    "typeRoots": [
+      "../time-common/types",
+      "../node_modules/@types"
+    ]
   },
   "outDir": "../dist/server",
   "files": [
     "./server.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist/"
   ]
 }

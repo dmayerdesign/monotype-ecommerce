@@ -1,14 +1,15 @@
-import { arrayProp, prop, Ref } from 'typegoose'
-
-import { ICartProduct } from '../interfaces/cart-product'
+import { arrayProp, prop, MongooseDocument, Ref } from '../../lib/goosetype'
+import { ICartProduct } from '../interfaces/ui/cart-product'
 import { Discount } from './discount'
 import { Product } from './product'
 
-export class Cart {
+export class Cart extends MongooseDocument<Cart> {
+    public displayItems: ICartProduct[]
     @prop() public count: number
     @arrayProp({ itemsRef: Product }) public items: Ref<Product>[]
-    public displayItems: ICartProduct[]
     @prop() public subTotal: number
     @prop() public total: number
     @arrayProp({ itemsRef: Discount }) public discounts: Ref<Discount>[]
 }
+
+new Cart().getSchema()

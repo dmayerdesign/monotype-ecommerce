@@ -1,15 +1,24 @@
 import { Component, OnInit } from '@angular/core'
 
+import { UserService } from '../../services/user.service'
+
 @Component({
-  selector: 'time-login',
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss']
+    selector: 'time-login',
+    templateUrl: './login.component.html',
+    styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit {
 
-  constructor() { }
+    constructor(
+        private userService: UserService
+    ) { }
 
-  public ngOnInit() {
-  }
+    public ngOnInit(): void {}
 
+    public doMockLogin() {
+        const email = 'hyzer-shop-test@sharklasers.com'
+        const password = 'sohcahtoa'
+
+        this.userService.login({ email, password })
+    }
 }

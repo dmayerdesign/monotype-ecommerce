@@ -1,0 +1,9 @@
+<nav>
+  <p>{{ organization?.name }}</p>
+  <time-signup></time-signup>
+  <time-login></time-login>
+  <button (click)="userService.logout()">Log out</button>
+  
+  <p *ngIf="user">Welcome, {{ user.firstName }}</p>
+  <a [routerLink]="['/shop', 'checkout']">Checkout</a>
+</nav>

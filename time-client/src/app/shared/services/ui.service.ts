@@ -1,58 +1,71 @@
 import { Injectable } from '@angular/core'
 import { Title } from '@angular/platform-browser'
+import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Subject } from 'rxjs/Subject'
 
-import { IModalData } from '@time/common/models/interfaces'
+import { ErrorMessage } from '@time/common/constants/error-message'
+import { ToastType } from '@time/common/models/enums/toast-type'
+import { IModalData } from '@time/common/models/interfaces/ui/modal-data'
+import { IToast } from '@time/common/models/interfaces/ui/toast'
 import { SimpleError, TimeHttpService } from '@time/common/ng-modules/http'
-import { FlashMessageType, IFlash } from '../models/ui.models'
 
 @Injectable()
 export class UiService {
-    public viewReady$ = new Subject<boolean>()
-    public flash$ = new Subject<IFlash>()
-    public flashCancel$ = new Subject<any>()
+    public loading$ = new BehaviorSubject<boolean>(true)
+    public flash$ = new Subject<IToast>()
     public modal$ = new Subject<IModalData>()
 
     constructor(
         private titleService: Title,
         private timeHttpService: TimeHttpService,
     ) {
-        this.timeHttpService.error$.subscribe(err => {
-            console.log("ERROR!!@#!@!@#!@#", err)
+        this.timeHttpService.error$.subscribe(error => {
+            this.flashError(error)
         })
     }
 
+    /**
+     * Set the document title.
+     *
+     * @param {string} title
+     * @memberof UiService
+     */
     public setTitle(title: string) {
         this.titleService.setTitle(title)
     }
 
 	/**
-	 * Show a flash message
-	 *
-	 * @param msg
-	 * @param {string} [t = success|error|info|warning]
-	 */
-    public flash(message: string, type: FlashMessageType = 'info', timeout: number = 5000) {
-        const data: IFlash = {
+     * Display a flash message.
+     *
+     * @param {string} message
+     * @param {ToastType} [type=ToastType.Info]
+     * @param {number} [timeout=5500]
+     * @memberof UiService
+     */
+    public flash(message: string, type: ToastType = ToastType.Info, timeout: number = 5500) {
+        const data: IToast = {
             type,
             message,
             timeout,
         }
         this.flash$.next(data)
-        setTimeout(() => {
-            this.flashCancel$.next()
-        }, timeout)
-    }
-
-	/**
-	 * Display an error as a flash message
-	 */
-    public flashError(error: SimpleError) {
-        this.flash(error.message, 'error')
     }
 
     /**
-     * Display a modal
+	 * Display an error as a flash message.
+     *
+     * @param {SimpleError} error
+     * @memberof UiService
+     */
+    public flashError(error: SimpleError) {
+        this.flash(error.message || ErrorMessage.ServerError, ToastType.Error)
+    }
+
+    /**
+     * Display a modal.
+     *
+     * @param {IModalData} data
+     * @memberof UiService
      */
     public showModal(data: IModalData) {
         this.modal$.next(data)

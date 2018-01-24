@@ -14,7 +14,7 @@ const facebookStrategyConfig = {
 /**
  * Runs the passport configuration for user authentication via email + password and Facebook
  */
-export function passportConfig() {
+export function passportConfig(): void {
 
    /**
     * Configures facebook strategy

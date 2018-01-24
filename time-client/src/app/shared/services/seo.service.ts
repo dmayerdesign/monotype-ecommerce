@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@angular/core'
-import { DOCUMENT, Title } from '@angular/platform-browser'
-import { AppConfig } from '@time/app-config'
+import { DOCUMENT } from '@angular/platform-browser'
+
+import { UtilService } from './util.service'
 
 @Injectable()
 export class SeoService {
@@ -10,27 +11,33 @@ export class SeoService {
     private robots: HTMLElement
 
     constructor(
-        private titleService: Title,
+        private util: UtilService,
         @Inject(DOCUMENT) private DOM: any,
     ) {
-        this.headElement = this.DOM.querySelector('head')
+        if (!this.util.isServerApp()) {
+            this.headElement = this.DOM.querySelector('head')
+        }
+        else {
+            this.headElement = new HTMLElement()
+        }
+
         this.metaDescription = this.getOrCreateMetaElement('description')
         this.robots = this.getOrCreateMetaElement('robots')
     }
 
     public getTitle(): string {
-        return this.titleService.getTitle()
+        return this.util.getTitle()
     }
 
-    public setTitle(newTitle: string): void {
-        this.titleService.setTitle(newTitle + ' | ' + AppConfig.brand_name)
+    public setTitle(newTitle: string) {
+        this.util.setTitle(newTitle)
     }
 
     public getMetaDescription(): string {
         return this.metaDescription.getAttribute('content')
     }
 
-    public setMetaDescription(description: string): void {
+    public setMetaDescription(description: string) {
         this.metaDescription.setAttribute('content', description)
     }
 
@@ -38,7 +45,7 @@ export class SeoService {
         return this.robots.getAttribute('content')
     }
 
-    public setMetaRobots(robots: string): void {
+    public setMetaRobots(robots: string) {
         this.robots.setAttribute('content', robots)
     }
 
@@ -48,14 +55,19 @@ export class SeoService {
      * @returns {HTMLElement}
      */
     private getOrCreateMetaElement(name: string): HTMLElement {
-        let el: HTMLElement
-        el = this.DOM.querySelector('meta[name=' + name + ']')
-        if (el == null) {
-            el = this.DOM.createElement('meta')
-            el.setAttribute('name', name)
-            this.headElement.appendChild(el)
+        if (!this.util.isServerApp()) {
+            let el: HTMLElement
+            el = this.DOM.querySelector('meta[name=' + name + ']')
+            if (el == null) {
+                el = this.DOM.createElement('meta')
+                el.setAttribute('name', name)
+                this.headElement.appendChild(el)
+            }
+            return el
         }
-        return el
+        else {
+            return new HTMLElement()
+        }
     }
 
 }

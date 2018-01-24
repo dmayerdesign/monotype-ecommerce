@@ -1,11 +1,10 @@
 import * as findOrCreate from 'mongoose-findorcreate'
-import { plugin, prop, Ref } from 'typegoose'
 
+import { plugin, prop, MongooseDocument, Ref } from '../../lib/goosetype'
 import { Attribute } from './attribute'
-import { TimeModel } from './time-model'
 
 @plugin(findOrCreate)
-export class AttributeValue extends TimeModel {
+export class AttributeValue extends MongooseDocument<AttributeValue> {
     @prop({ ref: Attribute }) public attribute: Ref<Attribute>
     @prop() public name: string
     @prop() public slug: string
@@ -13,4 +12,9 @@ export class AttributeValue extends TimeModel {
     @prop() public value: any
 }
 
-export const AttributeValueModel = new AttributeValue().getModelForClass(AttributeValue)
+export const AttributeValueModel = new AttributeValue().getModel()
+
+export class CreateAttributeValueError extends Error { }
+export class FindAttributeValueError extends Error { }
+export class UpdateAttributeValueError extends Error { }
+export class DeleteAttributeValueError extends Error { }

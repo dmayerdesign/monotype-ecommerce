@@ -2,8 +2,8 @@ import { CommonModule } from '@angular/common'
 import { NgModule } from '@angular/core'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 
-import { TimeFormControlComponent } from './form-control.component'
-import { TimeInputComponent } from './input/input.component'
+import { TimeFormFieldComponent } from './components/form-field/form-field.component'
+import { TimeFormBuilderService } from './services/form-builder.service'
 
 @NgModule({
   imports: [
@@ -12,14 +12,15 @@ import { TimeInputComponent } from './input/input.component'
     ReactiveFormsModule,
   ],
   declarations: [
-    TimeFormControlComponent,
-    TimeInputComponent,
+    TimeFormFieldComponent,
   ],
   exports: [
     FormsModule,
     ReactiveFormsModule,
-    TimeFormControlComponent,
-    TimeInputComponent,
+    TimeFormFieldComponent,
   ],
+  providers: [
+    TimeFormBuilderService
+  ]
 })
 export class TimeFormsModule {}

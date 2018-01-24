@@ -1,11 +1,10 @@
-import { arrayProp, prop, Ref, Typegoose } from 'typegoose'
-
+import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 import { Address } from './address'
 import { Cart } from './cart'
 import { Image } from './image'
 import { Order } from './order'
 
-export class User extends Typegoose {
+export class User extends MongooseDocument<User> {
     @prop({ required: true }) public email: string
     @prop() public emailIsVerified?: boolean
     @prop() public emailVerificationToken?: string
@@ -13,7 +12,7 @@ export class User extends Typegoose {
     @prop() public password?: string
     @prop() public passwordResetToken?: string
     @prop() public passwordResetExpires?: string
-    @prop() public adminKey?: string
+    @prop() public role?: number
 
     @prop() public name: string
     @prop() public lastName: string
@@ -29,8 +28,6 @@ export class User extends Typegoose {
     @prop() public stripeCustomerId: string
 
     @prop() public cart: Cart
-
-    @prop() public customFields: {}
 }
 
-export const UserModel = new User().getModelForClass(User, { schemaOptions: { timestamps: true } })
+export const UserModel = new User().getModel(MongooseSchemaOptions.Timestamped)

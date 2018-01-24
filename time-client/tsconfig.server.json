@@ -1,8 +1,21 @@
 {
   "extends": "./tsconfig.app.json",
   "compilerOptions": {
-    "module": "commonjs"
+    "module": "commonjs",
+    "baseUrl": ".",
+    "paths": {
+      "@angular/*": [ "../node_modules/@angular/*" ],
+      "rxjs/*": [ "../node_modules/rxjs/*" ],
+      "@time/common/*": [ "./src/common/*" ],
+      "@time/app-config": [ "../app-config.ts" ],
+      "@time/environment": [ "./src/environments/environment" ],
+      "mongoose": [ "../node_modules/@types/mongoose" ],
+      "stripe": [ "../node_modules/@types/stripe-node" ]
+    }
   },
+  "files": [
+    "src/main.server.ts"
+  ],
   "exclude": [
     "test.ts",
     "**/*.spec.ts"

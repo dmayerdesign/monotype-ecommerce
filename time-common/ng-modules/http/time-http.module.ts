@@ -1,5 +1,4 @@
-import { HTTP_INTERCEPTORS } from '@angular/common/http'
-import { HttpClientModule } from '@angular/common/http'
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http'
 import { ModuleWithProviders, NgModule } from '@angular/core'
 import { TimeHttpRequestInterceptor } from './http-request.interceptor'
 import { TimeHttpResponseInterceptor } from './http-response.interceptor'

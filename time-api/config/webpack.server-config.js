@@ -1,22 +1,35 @@
 const webpack = require('webpack')
 const path = require('path')
 const fs = require('fs')
+const CircularDependencyPlugin = require('circular-dependency-plugin')
 require('dotenv').config()
 const packageJson = require('../../package.json')
 const version = packageJson.version
 
+// Exclude all packages from the build, since your node server
+// has access to node_modules directly.
 const externals = {}
 fs.readdirSync(path.resolve(__dirname, '../../node_modules'))
 	.filter(x => ['.bin'].indexOf(x) === -1)
 	.forEach(mod => {
-		externals[mod] = `commonjs ${mod}`
+		// Don't forget scoped packages
+		if (mod.indexOf('@') === 0) {
+			fs.readdirSync(path.resolve(__dirname, '../../node_modules/' + mod))
+				.filter(x => ['.bin'].indexOf(x) === -1)
+				.forEach(subMod => {
+					externals[mod + '/' + subMod] = `commonjs ${mod + '/' + subMod}`
+				})
+		}
+		else {
+			externals[mod] = `commonjs ${mod}`
+		}
 	})
 
 module.exports = {
 	name: 'server',
 	target: 'node',
-	entry: path.resolve(__dirname, '../server.ts'),
 	externals,
+	entry: path.resolve(__dirname, '../server.ts'),
 	output: {
 			path: path.resolve(__dirname, '../../dist/'),
 			filename: 'server.js',
@@ -34,7 +47,7 @@ module.exports = {
 			{
 				test: /\.ts$/,
 				use: [
-					'ts-loader',
+					'awesome-typescript-loader?configFileName=time-api/tsconfig.json',
 					'angular2-template-loader',
 				],
 				exclude: [
@@ -43,7 +56,7 @@ module.exports = {
 			},
 			{
 				test: /node_modules\/JSONStream\/index\.js$/,
-				use: ['shebang-loader']
+				use: ['shebang-loader'],
 			},
 			{
 				test: /\.(css|scss)$/,
@@ -63,8 +76,9 @@ module.exports = {
 		],
 	},
 	plugins: [
+		new CircularDependencyPlugin(),
 		new webpack.IgnorePlugin(/^vertx$/),
-		// Prevents errors in the server-rendered Angular app when `document` or `window` are accessed
+		// Prevents errors in the server-rendered Angular app when `document` or `window` are accessed.
 		new webpack.DefinePlugin({
 			window: undefined,
 			document: undefined,

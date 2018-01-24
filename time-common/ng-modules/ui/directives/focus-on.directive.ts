@@ -12,7 +12,7 @@ export class FocusOnDirective implements OnInit {
         private renderer: Renderer,
     ) {}
 
-    public ngOnInit() {
+    public ngOnInit(): void {
         if (this.focusOn) {
             this.focusOn.subscribe(event => {
                 if (event) {

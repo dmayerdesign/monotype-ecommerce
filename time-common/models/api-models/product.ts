@@ -1,23 +1,21 @@
 import * as mongooseDelete from 'mongoose-delete'
-import { arrayProp, plugin, pre, prop, Ref } from 'typegoose'
+import { arrayProp, plugin, pre, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 
-import { ProductClass, ProductClassEnum } from '../types/product-class'
+import { ProductClass } from '../enums/product-class'
 import { Attribute } from './attribute'
 import { AttributeValue } from './attribute-value'
 import { Dimensions } from './dimensions'
 import { Price } from './price'
 import { TaxonomyTerm } from './taxonomy-term'
-import { TimeModel } from './time-model'
 import { Units } from './units'
 
-@plugin(mongooseDelete)
-@pre<Product>('save', function(next) {
+@pre('save', false, function(next) {
     const product = this
     if (!product.slug && product.isNew) {
-        product.slug = product.name.trim().toLowerCase().replace(/[^a-z0-9]/g, "-")
+        product.slug = product.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '-')
     }
     if (product.slug && (product.isNew || product.isModified('slug'))) {
-        product.slug = product.slug.trim().toLowerCase().replace(/[^a-z0-9]/g, "-")
+        product.slug = product.slug.trim().toLowerCase().replace(/[^a-z0-9]/g, '-')
     }
     if (product.isNew || product.isModified('class')) {
         product.isStandalone = product.class === 'standalone'
@@ -32,7 +30,8 @@ import { Units } from './units'
     }
     next()
 })
-export class Product extends TimeModel {
+@plugin(mongooseDelete)
+export class Product extends MongooseDocument<Product> {
 	/* Aesthetic */
     @prop() public name: string
     @prop() public slug: string
@@ -43,31 +42,21 @@ export class Product extends TimeModel {
     @arrayProp({ items: String }) public thumbnails: string[]
 
 	/* Technical */
-    @prop({ unique: true }) public SKU: string
+    @prop({ unique: true }) public sku: string
     @prop() public price: Price
-    @arrayProp({
-        items: {
-            total: Number,
-            currency: String,
-        }
-    }) public priceRange: Price[]
+    @arrayProp({ items: Price }) public priceRange: Price[]
 
     @prop() public salePrice: Price
-    @arrayProp({
-        items: {
-            total: Number,
-            currency: String,
-        }
-    }) public salePriceRange: Price[]
+    @arrayProp({ items: Price }) public salePriceRange: Price[]
     @prop() public isOnSale: boolean
-    @prop({ enum: Object.keys(ProductClassEnum) }) public class: ProductClass
+    @prop({ enum: ProductClass }) public class: ProductClass
     @prop() public isStandalone: boolean
     @prop() public isParent: boolean 				                // Defines an abstract parent for a variable product
-    @arrayProp({ items: String }) public variationSKUs: string[] 	// Array of product SKUs
+    @arrayProp({ items: String }) public variationSkus: string[] 	// Array of product SKUs
     @arrayProp({ itemsRef: Product }) public variations: Ref<Product>[]
     @prop() public isVariation: boolean 			                // Defines a product variation with a parent product
     @prop() public isDefaultVariation: boolean 	                    // Defines the default product variation
-    @prop() public parentSKU: string				                // The SKU of the parent product
+    @prop() public parentSku: string				                // The SKU of the parent product
     @prop({ ref: Product }) public parent: Ref<Product>
 
 	/* Attributes */
@@ -97,4 +86,9 @@ export class Product extends TimeModel {
     @prop() public isEnteredIntoStripe: boolean
 }
 
-export const ProductModel = new Product().getModelForClass(Product, { schemaOptions: { timestamps: true } })
+export const ProductModel = new Product().getModel()
+
+export class CreateProductError extends Error { }
+export class FindProductError extends Error { }
+export class UpdateProductError extends Error { }
+export class DeleteProductError extends Error { }

@@ -1,55 +1,22 @@
 import { inject, injectable } from 'inversify'
-import { Error } from 'mongoose'
 
 import { Types } from '@time/common/constants/inversify'
 import { Discount, DiscountModel } from '@time/common/models/api-models/discount'
-import { ApiErrorResponse, ApiResponse } from '@time/common/models/helpers'
-import { IFetchService } from '@time/common/models/interfaces/fetch-service'
-import { DbClient } from '../utils'
+import { DbClient } from '../data-access/db-client'
+import { CrudService } from './crud.service'
 
 /**
  * Service for fetching documents from the `discounts` collection
  */
 @injectable()
-export class DiscountService implements IFetchService<Discount> {
+export class DiscountService extends CrudService<Discount> {
 
-    /**
-     * Instantiate the service
-     *
-     * @param {DbClient<Discount>} dbClient A service containing helper methods for database operations
-     * @param {DiscountSearchUtils} discountSearchUtils A service containing helper methods for discount search
-     */
+    protected model = DiscountModel
+
     constructor(
-        @inject(Types.DbClient) private dbClient: DbClient<Discount>,
-    ) {}
-
-    /**
-     * Get a single discount
-     *
-     * @param {string} id The `_id` of the discount to be retrieved
-     * @return {Promise<Discount>}
-     */
-    public getOne(id: string): Promise<ApiResponse<Discount>> {
-        return new Promise<ApiResponse<Discount>>((resolve, reject) => {
-            DiscountModel.findById(id, (error: Error, discount): void => {
-                if (error) reject(new ApiErrorResponse(error))
-                else resolve(new ApiResponse(discount))
-            })
-        })
+        @inject(Types.DbClient) protected dbClient: DbClient<Discount>
+    ) {
+        super()
     }
 
-    /**
-     * Retrieve a list of discounts
-     *
-     * @param {object} query The database query
-     * @return {Promise<Discount>}
-     */
-    public get(query: object): Promise<ApiResponse<Discount[]>> {
-        return new Promise<ApiResponse<Discount[]>>((resolve, reject) => {
-            // Retrieve the discounts normally, loading them into memory
-            this.dbClient.getFilteredCollection(DiscountModel, query)
-                .then(discounts => resolve(new ApiResponse(discounts)))
-                .catch(err => reject(new ApiErrorResponse(err)))
-        })
-    }
 }

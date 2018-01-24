@@ -4,7 +4,7 @@
   ],
   "rules": {
     "arrow-return-shorthand": true,
-    "callable-types": true,
+    "callable-types": false,
     "class-name": true,
     "comment-format": [
       true,
@@ -12,7 +12,7 @@
     ],
     "curly": false,
     "eofline": true,
-    "forin": true,
+    "forin": false,
     "import-blacklist": [
       true,
       "rxjs",
@@ -53,7 +53,7 @@
     "no-debugger": true,
     "no-duplicate-super": true,
     "no-empty": false,
-    "no-empty-interface": true,
+    "no-empty-interface": false,
     "no-eval": true,
     "no-inferrable-types": [
       true,
@@ -68,7 +68,10 @@
     "no-trailing-whitespace": true,
     "no-unnecessary-initializer": true,
     "no-unused-expression": true,
-    "no-unused-variable": true,
+    "no-unused-variable": [
+      true,
+      { "ignore-pattern": "^_" }
+    ],
     "no-use-before-declare": true,
     "no-var-keyword": true,
     "object-literal-sort-keys": false,
@@ -81,7 +84,10 @@
       }
     ],
     "prefer-const": true,
-    "quotemark": false,
+    "quotemark": [
+      true,
+      "single"
+    ],
     "radix": true,
     "semicolon": [
       true,
@@ -103,7 +109,7 @@
       }
     ],
     "typeof-compare": true,
-    "unified-signatures": true,
+    "unified-signatures": false,
     "variable-name": false,
     "whitespace": [
       true,

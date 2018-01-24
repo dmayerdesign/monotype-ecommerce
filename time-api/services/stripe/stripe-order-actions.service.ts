@@ -1,16 +1,20 @@
 import { inject, injectable } from 'inversify'
+import { Document } from 'mongoose'
 import * as Stripe from 'stripe'
 
 import { Types } from '@time/common/constants/inversify'
+import { StripeOrder } from '@time/common/lib/stripe-order'
 import { Discount } from '@time/common/models/api-models/discount'
 import { Order, OrderModel } from '@time/common/models/api-models/order'
 import { Product } from '@time/common/models/api-models/product'
-import { GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
-import { StripeCreateOrderResponse } from '@time/common/models/api-responses/stripe-create-order.response'
-import { StripePayOrderResponse } from '@time/common/models/api-responses/stripe-pay-order.response'
-import { StripeOrder } from '@time/common/models/helpers'
-import { ApiErrorResponse } from '@time/common/models/helpers/api-error-response'
-import { ApiResponse } from '@time/common/models/helpers/api-response'
+import { GetProductsFromIdsRequest } from '@time/common/models/api-requests/get-products.request'
+import { ListFromIdsRequest } from '@time/common/models/api-requests/list.request'
+import { ApiErrorResponse } from '@time/common/models/api-responses/api-error.response'
+import { ApiResponse } from '@time/common/models/api-responses/api.response'
+import { StripeCreateOrderResponse } from '@time/common/models/api-responses/stripe/stripe-create-order.response'
+import { StripePayOrderResponse } from '@time/common/models/api-responses/stripe/stripe-pay-order.response'
+import { OrderStatus } from '@time/common/models/enums/order-status'
+import { DbClient } from '../../data-access/db-client'
 import { DiscountService } from '../discount.service'
 import { ProductService } from '../product.service'
 
@@ -27,6 +31,7 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 export class StripeOrderActionsService {
 
     constructor(
+        @inject(Types.DbClient) private dbClient: DbClient<Order>,
         @inject(Types.ProductService) private productService: ProductService,
         @inject(Types.DiscountService) private discountService: DiscountService
     ) {}
@@ -47,18 +52,18 @@ export class StripeOrderActionsService {
             if (!order.total
                 || !order.total.currency
                 || !order.customer.email) {
-                reject(new Error("Not a valid order"))
+                reject(new Error('Not a valid order'))
             }
 
-            order.total.total = 0
+            order.total.amount = 0
 
             try {
-                const orderItemsRequest = new GetProductsRequest()
+                const orderItemsRequest = new GetProductsFromIdsRequest()
                 orderItemsRequest.ids = <string[]>order.items
                 const orderItemsResponse = await <Promise<ApiResponse<Product[]>>>this.productService.get(orderItemsRequest)
-                orderItems = orderItemsResponse.data
+                orderItems = orderItemsResponse.body
                 orderItems.forEach(orderItem => {
-                    order.total.total += this.productService.getPrice(orderItem).total
+                    order.total.amount += this.productService.getPrice(orderItem).amount
                 })
             }
             catch (getItemsError) {
@@ -66,10 +71,11 @@ export class StripeOrderActionsService {
             }
 
             try {
-                const orderDiscountsResponse = await this.discountService.get({ _id: { $in: order.discounts } })
-                orderDiscounts = orderDiscountsResponse.data
+                const orderDiscountsRequest = new ListFromIdsRequest({ ids: order.discounts })
+                const orderDiscountsResponse = await this.discountService.getIds(orderDiscountsRequest)
+                orderDiscounts = orderDiscountsResponse.body
                 orderDiscounts.forEach(orderDiscount => {
-                    order.total.total -= orderDiscount.amount.total
+                    order.total.amount -= orderDiscount.total.amount
                 })
             }
             catch (getDiscountsError) {
@@ -78,7 +84,7 @@ export class StripeOrderActionsService {
 
             const dbOrder = new OrderModel(order)
 
-            // Build the stripe order
+            // Build the stripe order.
             const stripeOrder = new StripeOrder()
 
             stripeOrder.shipping = {
@@ -97,7 +103,7 @@ export class StripeOrderActionsService {
             stripeOrder.email = order.customer.email
             stripeOrder.items = orderItems.map(product => {
                 return <StripeNode.orders.IOrderItem>{
-                    parent: product.SKU,
+                    parent: product.sku,
                     quantity: product.stockQuantity,
                 }
             })
@@ -113,7 +119,7 @@ export class StripeOrderActionsService {
                 dbOrder.stripeOrderId = newStripeOrder.id
                 const newOrder = await dbOrder.save()
                 resolve(new StripeCreateOrderResponse({
-                    order: newOrder,
+                    order: newOrder._doc,
                     stripeOrder: <StripeOrder>newStripeOrder
                 }))
             }
@@ -137,7 +143,7 @@ export class StripeOrderActionsService {
                     orderID: order._id,
                 },
             }
-            console.log("******** order.stripeToken ********")
+            console.log('******** order.stripeToken ********')
             console.log(order.stripeToken)
 
             if (order.customer.stripeCustomerId && !order.stripeToken && !order.stripeCardId) {
@@ -148,7 +154,7 @@ export class StripeOrderActionsService {
                 payment.email = order.customer.email
             }
             else {
-                return reject(new Error("Missing one of: Stripe Customer ID, Stripe Token ID, or email"))
+                return reject(new Error('Missing one of: Stripe Customer ID, Stripe Token ID, or email'))
             }
 
             if (order.savePaymentInfo && order.stripeToken && order.customer.stripeCustomerId) {
@@ -157,9 +163,9 @@ export class StripeOrderActionsService {
                 payment.customer = order.customer.stripeCustomerId
 
                 try {
-                    console.log("******** Saving new card ********")
+                    console.log('******** Saving new card ********')
                     const card = await stripe.customers.createSource(order.customer.stripeCustomerId, { source: order.stripeToken })
-                    if (!card) return reject(new Error("Couldn't save your payment info. Please try again."))
+                    if (!card) return reject(new Error('Couldn\'t save your payment info. Please try again.'))
                     await stripe.customers.update(order.customer.stripeCustomerId, {
                         default_source: card.id
                     })
@@ -175,9 +181,10 @@ export class StripeOrderActionsService {
             async function makePayment() {
                 try {
                     const paidStripeOrder = await <Promise<StripeOrder>>stripe.orders.pay(order.stripeOrderId, payment)
-                    let paidOrder = await OrderModel.findById(order._id)
-                    paidOrder.status = 'Paid'
-                    paidOrder = await paidOrder.save()
+                    let paidOrder = await this.dbClient.findById(OrderModel, order._id) as Order
+                    paidOrder.status = OrderStatus.Paid
+                    const paidOrderResponse = await paidOrder.save()
+                    paidOrder = paidOrderResponse._doc
                     resolve(new StripePayOrderResponse({
                         paidOrder,
                         paidStripeOrder,

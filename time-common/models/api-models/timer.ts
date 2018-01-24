@@ -1,14 +1,12 @@
-import { prop } from 'typegoose'
+import { prop, MongooseDocument, MongooseSchemaOptions } from '../../lib/goosetype'
 
-import { TimeModel } from './time-model'
-
-export class Timer extends TimeModel {
+export class Timer extends MongooseDocument<Timer> {
     @prop() public name: string
     @prop() public url: string
     @prop() public method: string
     @prop() public startedAt: number
     @prop() public duration: number
-    @prop() public data: any
+    @prop() public jsonData: string
 }
 
-export const TimerModel = new Timer().getModelForClass(Timer, { schemaOptions: { timestamps: true } })
+export const TimerModel = new Timer().getModel(MongooseSchemaOptions.Timestamped)

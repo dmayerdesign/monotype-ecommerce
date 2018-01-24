@@ -1,14 +1,21 @@
-import { prop } from 'typegoose'
+import { prop, MongooseDocument, MongooseSchemaOptions } from '../../lib/goosetype'
+import { Price } from './price'
 
-import { timestamped, TimeModel } from './time-model'
-
-export class OrganizationRetailSettings {
+export class OrganizationRetailSettings extends MongooseDocument<OrganizationRetailSettings> {
     @prop() public salesTaxPercentage: number
+    @prop() public addSalesTax?: boolean
+    @prop() public shippingFlatRate?: Price
 }
+new OrganizationRetailSettings().getSchema()
 
-export class Organization extends TimeModel {
+export class Organization extends MongooseDocument<Organization> {
     @prop() public name: string
     @prop() public retailSettings: OrganizationRetailSettings
 }
 
-export const OrganizationModel = new Organization().getModelForClass(Organization, timestamped)
+export const OrganizationModel = new Organization().getModel(MongooseSchemaOptions.Timestamped)
+
+export class CreateOrganizationError extends Error { }
+export class FindOrganizationError extends Error { }
+export class UpdateOrganizationError extends Error { }
+export class DeleteOrganizationError extends Error { }

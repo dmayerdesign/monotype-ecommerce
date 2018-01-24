@@ -1,8 +1,9 @@
-import { prop } from 'typegoose'
+import { prop, MongooseDocument } from '../../lib/goosetype'
+import { LengthUnit } from '../enums/length-unit'
+import { WeightUnit } from '../enums/weight-unit'
 
-import { LengthUnit, LengthUnitEnum, WeightUnit, WeightUnitEnum } from '../types'
-
-export class Units {
-    @prop({ enum: Object.keys(WeightUnitEnum) }) public weight: WeightUnit
-    @prop({ enum: Object.keys(LengthUnitEnum) }) public length: LengthUnit
+export class Units extends MongooseDocument<Units> {
+    @prop({ enum: WeightUnit }) public weight: WeightUnit
+    @prop({ enum: LengthUnit }) public length: LengthUnit
 }
+new Units().getSchema()

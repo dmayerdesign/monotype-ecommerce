@@ -3,14 +3,14 @@
     "baseUrl": ".",
     "paths": {
       "@angular/*": [ "./node_modules/@angular/*" ],
+      "rxjs/*": [ "./node_modules/rxjs/*" ],
       "@time/common/*": [ "./time-common/*" ],
       "@time/app-config": [ "./app-config.ts" ],
       "@time/environment": [ "./time-client/src/environments/environment.ts" ],
-      "mongoose": [ "./node_modules/@types/mongoose" ],
-      "stripe": [ "./node_modules/@types/stripe-node" ]
+      "stripe": [ "./node_modules/@types/stripe-node", "./node_modules/stripe" ]
     },
     "module": "commonjs",
-    "target": "es5",
+    "target": "es2015",
     "lib": [
       "dom",
       "es2015",
@@ -18,17 +18,15 @@
     ],
     "types": [ "node" ],
     "typeRoots": [
-      "./node_modules/@types",
-      "./time-common/types/node-easypost"
+      "./time-common/types",
+      "./node_modules/@types"
     ],
     "noImplicitAny": false,
     "sourceMap": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "moduleResolution": "node",
-    "noUnusedLocals": true,
-    "allowJs": false,
-    "allowSyntheticDefaultImports": true
+    "allowJs": false
   },
   "outDir": "dist/",
   "compileOnSave": false,

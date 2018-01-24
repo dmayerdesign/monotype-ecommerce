@@ -1,13 +1,24 @@
-import Easypost from 'node-easypost'
-import { InstanceType } from 'typegoose'
+const EasypostModule = require('@easypost/api')
+import { Easypost } from '@time/common/types/node-easypost'
+import { inject, injectable } from 'inversify'
+import * as mongoose from 'mongoose'
 
+import { Types } from '@time/common/constants/inversify'
 import { Address } from '@time/common/models/api-models/address'
-import { FindOrderError, Order, OrderModel, UpdateOrderError } from '@time/common/models/api-models/order'
+import { EasypostRate } from '@time/common/models/api-models/easypost-rate'
+import { FindOrderError, Order, UpdateOrderError } from '@time/common/models/api-models/order'
+import { OrderStatus } from '@time/common/models/enums/order-status'
+import { DbClient } from '../data-access/db-client'
+import { OrderService } from './order.service'
 
-const easypost = new Easypost(process.env.EASYPOST_API_KEY)
+const easypost = new EasypostModule(process.env.EASYPOST_API_KEY) as Easypost
 
+@injectable()
 export class EasypostService {
-    constructor() {}
+
+    constructor(
+        @inject(Types.OrderService) private orderService: OrderService
+    ) {}
 
 	/**
 	 * Create a shipment in EasyPost
@@ -21,11 +32,13 @@ export class EasypostService {
 	 * @param {number} options.parcel.weight
 	 * @param {object} options.customs_info
 	 * @param {string} orderId
-	 * @param {function} done - (error, Order, easypost_shipment)
-	 */
+     *
+     * @returns {Promise<{ order: Order, shipment: Easypost.Shipment }>}
+     * @memberof EasypostService
+     */
     public createShipment(options, orderId) {
         return new Promise<{ order: Order, shipment: Easypost.Shipment }>(async (resolve, reject) => {
-            console.log("Easypost shipment options:")
+            console.log('Easypost shipment options:')
             console.log(options)
 
             /* Either objects or ids can be passed in. If the object does
@@ -44,15 +57,15 @@ export class EasypostService {
             })
 
             let easypostShipment: Easypost.Shipment
-            let order: InstanceType<Order>
-            let orderWithShipmentData: InstanceType<Order>
+            let order: Order
+            let orderWithShipmentData: Order
 
-            // Get the Easypost shipment
+            // Get the Easypost shipment.
 
             try {
                 easypostShipment = await shipment.save()
                 if (!easypostShipment) {
-                    return reject(new Error("Couldn't create the shipment."))
+                    return reject(new Error('Couldn\'t create the shipment.'))
                 }
             }
             catch (error) {
@@ -60,12 +73,13 @@ export class EasypostService {
                 return
             }
 
-            // Get the order from the database
+            // Get the order from the database.
 
             try {
-                order = await OrderModel.findById(orderId)
+                const orderResponse = await this.orderService.getOne(orderId)
+                order = orderResponse.body
                 if (!easypostShipment) {
-                    reject(new FindOrderError("Couldn't find the order on which to update shipment details."))
+                    reject(new FindOrderError('Couldn\'t find the order on which to update shipment details.'))
                     return
                 }
             }
@@ -77,7 +91,7 @@ export class EasypostService {
             // Update the order with shipment data
 
             order.shipmentId = easypostShipment.id
-            order.shippingRates = easypostShipment.rates
+            order.shippingRates = easypostShipment.rates as EasypostRate[]
             order.markModified('shippingRates')
 
             try {
@@ -88,7 +102,7 @@ export class EasypostService {
                 return
             }
 
-            resolve({ order: orderWithShipmentData, shipment: easypostShipment })
+            resolve({ order: orderWithShipmentData._doc, shipment: easypostShipment })
         })
     }
 
@@ -113,7 +127,7 @@ export class EasypostService {
             let order: Order
             let orderWithShipmentData: Order
 
-            // Retrieve the shipment from Easypost
+            // Retrieve the shipment from Easypost.
 
             try {
                 shipment = await easypost.Shipment.retrieve(shipmentId)
@@ -123,12 +137,12 @@ export class EasypostService {
                 return
             }
 
-            // Buy the shipment from Easypost
+            // Buy the shipment from Easypost.
 
             try {
                 purchasedShipment = await shipment.buy(rateId || shipment.lowestRate(), insurance)
                 if (!purchasedShipment) {
-                    reject(new Error("Couldn't purchase the shipment."))
+                    reject(new Error('Couldn\'t purchase the shipment.'))
                     return
                 }
             }
@@ -137,13 +151,14 @@ export class EasypostService {
                 return
             }
 
-            // Retrieve the order
+            // Retrieve the order.
 
             try {
-                order = await OrderModel.findById(orderId)
+                const orderResponse = await this.orderService.getOne(orderId)
+                order = orderResponse.body
 
                 if (!order) {
-                    reject(new FindOrderError("Couldn't find the order to update with shipment data."))
+                    reject(new FindOrderError('Couldn\'t find the order to update with shipment data.'))
                     return
                 }
             }
@@ -152,13 +167,13 @@ export class EasypostService {
                 return
             }
 
-            // Update the order with the shipment data
+            // Update the order with the shipment data.
 
-            order.status = "Shipped"
+            order.status = OrderStatus.Shipped
             order.selectedShippingRateId = purchasedShipment.selected_rate.id
             order.carrier = purchasedShipment.selected_rate ? purchasedShipment.selected_rate.carrier : null
             order.trackingCode = purchasedShipment.tracking_code
-            order.postageLabel = purchasedShipment.postage_label
+            order.postageLabelUrl = purchasedShipment.postage_label
             order.estDeliveryDays = estDeliveryDays
 
             try {
@@ -170,7 +185,7 @@ export class EasypostService {
             }
 
             resolve({
-                order: orderWithShipmentData,
+                order: orderWithShipmentData._doc,
                 shipment: purchasedShipment
             })
         })
@@ -184,10 +199,10 @@ export class EasypostService {
     public verifyAddress(address: Address) {
         return new Promise<Easypost.Address>(async (resolve, reject) => {
             if (!address) {
-                return reject(new UpdateOrderError("No shipping address was provided."))
+                return reject(new UpdateOrderError('No shipping address was provided.'))
             }
 
-            // Verify the address
+            // Verify the address.
 
             const addressToVerify = new easypost.Address(address)
             let verifiedAddress: Easypost.Address
@@ -200,13 +215,13 @@ export class EasypostService {
                 return
             }
 
-            // Check if the verification was successful
+            // Check if the verification was successful.
 
             if (verifiedAddress.verifications.delivery.success) {
                 resolve(verifiedAddress)
             }
             else {
-                reject(new Error("The shipping address provided is undeliverable or invalid."))
+                reject(new Error('The shipping address provided is undeliverable or invalid.'))
             }
         })
     }

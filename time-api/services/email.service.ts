@@ -1,21 +1,17 @@
+import { Order } from '@time/common/models/api-models/order'
+import { Organization } from '@time/common/models/api-models/organization'
 import { inject, injectable } from 'inversify'
 const mailgun = require('mailgun-js')({ apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN })
 
 import { AppConfig } from '@time/app-config'
+import { EmailBuilder } from '@time/common/builders/email.builder'
 import { Types } from '@time/common/constants/inversify'
-import { IEmailOptions } from '@time/common/models/interfaces/email'
-import { OrderService } from './order.service'
+import { IEmailOptions, IEmailServiceOptions, IOrderEmailOptions } from '@time/common/models/interfaces/api/email-options'
+import { OrderHelper } from '../helpers/order.helper'
 
 const receipt = require('@time/common/emails/templates/receipt')
 const shippingNotification = require('@time/common/emails/templates/shippingNotification')
 const emailVerification = require('@time/common/emails/templates/emailVerification')
-
-const styleOptions = {
-    mastheadBgColor: "#00b0ff",
-    accentColor: "#ff3c7c",
-    fontFamily: "Montserrat",
-    innerBgColor: "#fdfdfd",
-}
 
 /**
  * Send emails with Mailgun
@@ -23,28 +19,21 @@ const styleOptions = {
 @injectable()
 export class EmailService {
     constructor(
-        @inject(Types.OrderService) private orderService: OrderService
+        @inject(Types.OrderHelper) private orderHelper: OrderHelper,
     ) {}
-
-    private setStyleOptions(options) {
-        Object.keys(styleOptions).forEach(key => {
-            options[key] = styleOptions[key]
-        })
-        return options
-    }
 
     /**
      * Send an email
      *
      * @param {IEmailOptions} options
      */
-    public sendEmail(options) {
+    public sendEmail(options: IEmailOptions): Promise<any> {
         return new Promise<any>((resolve, reject) => {
 
             const mailOptions: any = {
-            to: options.toEmail,
-            from: `${options.fromName} <${options.fromEmail}>`,
-            subject: options.subject,
+                to: options.toEmail,
+                from: `${options.fromName} <${options.fromEmail}>`,
+                subject: options.subject,
             }
 
             if (options.html) {
@@ -55,41 +44,49 @@ export class EmailService {
             }
 
             mailgun.messages().send(mailOptions, (err, body) => {
-                if (err) return reject(err)
+                if (err) {
+                    return reject(err)
+                }
                 resolve(body)
             })
         })
     }
 
     /**
-     * Send a receipt
+     * Send a receipt for an order
      *
-     * @param {Email} options
-     * @param {Order} options.order
+     * @param {IOrderEmailOptions} options
      */
-    public sendReceipt(options) {
-        options.subject = options.subject || `Your receipt | ${options.store.name}`
-        options.preheader = options.preheader || `View your receipt from your recent order`
-        options = this.setStyleOptions(options)
+    public sendReceipt(options: IOrderEmailOptions): void {
+        const emailBuilder = new EmailBuilder()
+            .setOptions({
+                ...options,
+                subject: `Your receipt | ${options.organization.name}`,
+                preheader: `View your receipt from your recent order`,
+            })
+            .setHtml(receipt)
 
-        options.html = receipt(options)
-        return this.sendEmail(options)
+        this.sendEmail(emailBuilder.sendEmailOptions)
     }
 
     /**
      * Send a shipping notification
      *
-     * @param {Email} options
-     * @param {Order} options.order
+     * @param {IOrderEmailOptions} options
      */
-    public sendShippingNotification(options) {
-        options.subject = options.subject || `Your ${options.store.name} order has been shipped`
-        options.preheader = options.preheader || `It's on the way! View the shipping details from your recent order`
-        options.estArrivalDate = this.orderService.calculateEstArrival(options.order.estDeliveryDays)
-        options = this.setStyleOptions(options)
+    public sendShippingNotification(options: IOrderEmailOptions) {
+        const emailBuilder = new EmailBuilder()
+            .setOptions({
+                ...options,
+                subject: `Your ${options.organization.name} order has been shipped`,
+                preheader: `It's on the way! View the shipping details from your recent order`,
+            })
+            .setCustomData({
+                estArrivalDate: this.orderHelper.calculateEstArrival(options.order.estDeliveryDays),
+            })
+            .setHtml(shippingNotification)
 
-        options.html = shippingNotification(options)
-        return this.sendEmail(options)
+        return this.sendEmail(emailBuilder.sendEmailOptions)
     }
 
     /**
@@ -99,13 +96,16 @@ export class EmailService {
      * @param {User} options.user
      * @param {string} options.verificationCode
      */
-    public sendEmailVerification(options) {
-        options.subject = options.subject || `Verify your new ${options.store.name} account`
-        options.preheader = options.preheader || `One click, and your account will be verified`
-        options = this.setStyleOptions(options)
+    public sendEmailVerification(options: IEmailServiceOptions) {
+        const emailBuilder = new EmailBuilder()
+            .setOptions({
+                ...options,
+                subject: `Verify your new ${options.organization.name} account`,
+                preheader: `One click, and your account will be verified`,
+            })
+            .setHtml(emailVerification)
 
-        options.html = emailVerification(options)
-        return this.sendEmail(options)
+        return this.sendEmail(emailBuilder.sendEmailOptions)
     }
 
     /**
@@ -119,7 +119,7 @@ export class EmailService {
             fromName: AppConfig.brand_name,
             fromEmail: AppConfig.organization_email,
             subject: `New error from ${AppConfig.brand_name}: ${error.message}`,
-            text: error.message + '\n\n' + JSON.stringify(error),
+            text: error.message + '\n\n' + error.toString()
         }
         return this.sendEmail(options)
     }

@@ -4,8 +4,9 @@ import { ReplaySubject } from 'rxjs/ReplaySubject'
 
 import { LocalStorageKeys } from '@time/common/constants/local-storage-keys'
 import { Cart } from '@time/common/models/api-models/cart'
+import { Price } from '@time/common/models/api-models/price'
 import { Product } from '@time/common/models/api-models/product'
-import { ICartProduct } from '@time/common/models/interfaces/cart-product'
+import { ICartProduct } from '@time/common/models/interfaces/ui/cart-product'
 import { ProductService } from '../../shop/services/product.service'
 import { OrganizationService } from './organization.service'
 import { UserService } from './user.service'
@@ -24,7 +25,7 @@ export class CartService {
     }
     private cart: Cart
     private cartSubject = new ReplaySubject<Cart>(1)
-    public cart$: Observable<Cart>
+    public cart$ = this.cartSubject.asObservable()
 
     constructor(
         private util: UtilService,
@@ -39,7 +40,6 @@ export class CartService {
     }
 
     public init(): void {
-        this.cart$ = this.cartSubject.asObservable()
         const cart = <Cart>this.util.getFromLocalStorage(LocalStorageKeys.Cart)
         if (cart) {
             this.populateAndStream(cart)
@@ -97,7 +97,7 @@ export class CartService {
     private getSubTotal(items: Product[]): number {
         return items
             .map(p => {
-                return this.productService.getPrice(p).total
+                return this.productService.getPrice(p).amount
             })
             .reduce((prev: number, current: number) => {
                 return prev + current
@@ -121,9 +121,9 @@ export class CartService {
                     ...duplicateItem,
                     quantity: duplicateItem.quantity + 1,
                     subTotal: {
-                        total: duplicateItem.subTotal.total + this.productService.getPrice(item).total,
+                        amount: duplicateItem.subTotal.amount + this.productService.getPrice(item).amount,
                         currency: duplicateItem.subTotal.currency,
-                    },
+                    } as Price,
                 }
             }
             else {
