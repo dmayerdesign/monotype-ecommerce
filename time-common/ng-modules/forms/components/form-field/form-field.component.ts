@@ -1,5 +1,7 @@
 import {
+    AfterContentInit,
     Component,
+    ContentChild,
     ElementRef,
     Input,
     OnDestroy,
@@ -30,7 +32,7 @@ import { ITimeFormFieldOptions } from '../../models/form-field-options'
             </div>
 
             <span *ngIf="isShowingDefaultMessage"
-                  [ngClass]="errorMessageClassNameObject">
+                  [ngClass]="getErrorMessageClassNameObject()">
                 {{ errorMessage }}
             </span>
 
@@ -40,12 +42,13 @@ import { ITimeFormFieldOptions } from '../../models/form-field-options'
         </div>
     `,
 })
-export class TimeFormFieldComponent implements OnInit, OnDestroy {
+export class TimeFormFieldComponent implements OnInit, OnDestroy, AfterContentInit {
 
     @Input() public options: ITimeFormFieldOptions
     @Input() public customErrorMessage: TemplateRef<any>
-    @Input() public element: any
+    @ContentChild('input', { read: ElementRef }) public input: ElementRef
 
+    public element: ElementRef
     public errorMessage: string
     public formGroupSubscription: Subscription
     public formControlSubscription: Subscription
@@ -69,40 +72,40 @@ export class TimeFormFieldComponent implements OnInit, OnDestroy {
             this.setErrorMessage()
         }
 
-        this.formControlSubscription = control.valueChanges.subscribe((value) => {
-            this.value = value
-        })
+        if (control) {
+            this.formControlSubscription = control.valueChanges.subscribe((value) => {
+                this.value = value
+            })
 
-        this.formGroupSubscription = control.parent.valueChanges.subscribe((value) => {
-            this.parentValue = value
-        })
-
-        if (window) {
-            setTimeout(() => {
-                this.inputBlurSubscription = Observable.fromEvent(this.element, 'blur').subscribe(() => {
-                    this.isFocused = false
-                    this.hasBlurred = true
-                })
-
-                this.inputFocusSubscription = Observable.fromEvent(this.element, 'focus').subscribe(() => {
-                    this.isFocused = true
-                })
+            this.formGroupSubscription = control.parent.valueChanges.subscribe((value) => {
+                this.parentValue = value
             })
         }
+    }
+
+    public ngAfterContentInit(): void {
+        if (this.input) {
+            this.element = this.input
+        }
+
+        this.inputBlurSubscription = Observable.fromEvent(this.element.nativeElement, 'blur').subscribe(() => {
+            this.isFocused = false
+            this.hasBlurred = true
+        })
+
+        this.inputFocusSubscription = Observable.fromEvent(this.element.nativeElement, 'focus').subscribe(() => {
+            this.isFocused = true
+        })
     }
 
     public ngOnDestroy(): void { }
 
     public getLabelClassName(): string {
-        const { showLabel } = this.options
         const classNames: string[] = []
-        if (!showLabel) {
-            classNames.push('sr-only')
-        }
         return classNames.join(' ')
     }
 
-    public get errorMessageClassNameObject(): { [key: string]: boolean } {
+    public getErrorMessageClassNameObject(): { [key: string]: boolean } {
         return {
             'text-danger': !this.isValid
         }
@@ -119,7 +122,8 @@ export class TimeFormFieldComponent implements OnInit, OnDestroy {
 
     public get isShowingMessage(): boolean {
         if (!this.isValid) {
-            if (this.options.control &&
+            if (this.options &&
+                this.options.control &&
                 this.options.control.dirty &&
                 this.hasBlurred &&
                 !this.isFocused
@@ -144,6 +148,8 @@ export class TimeFormFieldComponent implements OnInit, OnDestroy {
     }
 
     public get currentError(): string {
+        if (!this.options || !this.options.control) return null
+
         const errors = this.options.control.errors
 
         if (!errors) {

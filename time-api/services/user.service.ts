@@ -24,7 +24,7 @@ export class UserService {
             let salt, hash
             delete user.password
 
-            // Hash the password
+            // Hash the password.
 
             try {
                 salt = bcrypt.genSaltSync(12)
@@ -36,11 +36,11 @@ export class UserService {
 
             try {
 
-                // Check for an existing user
+                // Check for an existing user.
 
                 const existingUser = await this.dbClient.findOne(UserModel, { email: user.email.toLowerCase() })
 
-                // If there's no existing user, create a new one
+                // If there's no existing user, create a new one.
 
                 if (!existingUser) {
                     const newUser = new UserModel({
@@ -53,7 +53,7 @@ export class UserService {
                     const savedUserResult = await newUser.save()
                     const savedUser = savedUserResult._doc
 
-                    // Create the JWT token and the JWT cookie
+                    // Create the JWT token and the JWT cookie.
 
                     const payload = this.cleanUser(savedUser)
                     const authToken = jwt.sign(payload, this.jwtSecret, AuthConfig.JwtOptions)
@@ -78,20 +78,20 @@ export class UserService {
         return new Promise<void>(async (resolve, reject) => {
             try {
 
-                // Find a user with the provided email
+                // Find a user with the provided email.
 
                 const user = await this.dbClient.findOne(UserModel, {
                         email: credentials.email.toLowerCase()
                     })
 
-                // If no user is found, send a 404
+                // If no user is found, send a 404.
 
                 if (!user) {
                     reject(new ApiErrorResponse(new Error(Copy.ErrorMessages.userNotFound), HttpStatus.CLIENT_ERROR_notFound))
                     return
                 }
 
-                // If a user is found, authenticate their password
+                // If a user is found, authenticate their password.
 
                 const authenticated: boolean = bcrypt.compareSync(credentials.password, user.password)
                 if (authenticated) {
@@ -181,7 +181,7 @@ export class UserService {
         delete cleanUser.role
         delete cleanUser.password
 
-        // Delete JWT properties
+        // Delete JWT properties.
         delete (cleanUser as any).iat
         delete (cleanUser as any).exp
 

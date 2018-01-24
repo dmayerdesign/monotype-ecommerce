@@ -77,7 +77,7 @@ export class EasypostService {
 
             try {
                 const orderResponse = await this.orderService.getOne(orderId)
-                order = orderResponse.data
+                order = orderResponse.body
                 if (!easypostShipment) {
                     reject(new FindOrderError('Couldn\'t find the order on which to update shipment details.'))
                     return
@@ -155,7 +155,7 @@ export class EasypostService {
 
             try {
                 const orderResponse = await this.orderService.getOne(orderId)
-                order = orderResponse.data
+                order = orderResponse.body
 
                 if (!order) {
                     reject(new FindOrderError('Couldn\'t find the order to update with shipment data.'))

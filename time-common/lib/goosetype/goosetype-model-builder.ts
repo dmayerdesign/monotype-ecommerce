@@ -1,24 +1,24 @@
 import { injectable } from 'inversify'
 import * as mongoose from 'mongoose'
 
-// Utilities
+// Utilities.
 
 export function camelCase(str: string): string {
     return str.charAt(0).toLowerCase() + str.substring(1)
 }
 
-// Errors
+// Errors.
 
 export class InvalidArrayPropOptionsError extends Error { }
 export class SchemaNotDefinedError extends Error { }
 
-// Schema options
+// Schema options.
 
 export class MongooseSchemaOptions {
     public static readonly Timestamped = { timestamps: true }
 }
 
-// Types
+// Types.
 
 export type Func = (...args: any[]) => any
 
@@ -79,9 +79,9 @@ export type PropOptionsWithStringValidate = PropOptions & ValidateStringOptions
 export type PropOptionsWithValidate = PropOptionsWithNumberValidate | PropOptionsWithStringValidate
 export type Ref<T> = T | string
 
-// Model builder
+// Model builder.
 
-// Create a singleton
+// Create a singleton.
 let modelBuilder: ModelBuilder
 
 export class ModelBuilder {
@@ -104,6 +104,7 @@ export class ModelBuilder {
             definition = []
         }
         definition.push(value)
+        this[which][camelCase(constructorName)] = definition
     }
 
     public isValidPrimitiveOrObject(type): boolean {
@@ -153,23 +154,22 @@ export class ModelBuilder {
             schema = this.schemaDefinitions[camelCase((target.constructor as any).name)] = {}
         }
 
-        // Might need a second glance
+        // Might need a second glance.
         for (const option in options) {
             if (options.hasOwnProperty(option) && nonPropertyOptions.indexOf(option) === -1) {
                 if (option === 'enum') {
                     const theEnum = options[option]
                     let enumArr: string[] = []
+                    let enumKeys: string[]
                     if (Array.isArray(theEnum)) {
                         enumArr = theEnum as string[]
                     }
+                    // If the enum value is not an array, assume it's an actual `enum`.
                     else {
-                        const enumKeys = Object.keys(theEnum)
-                        if (typeof theEnum[enumKeys[enumKeys.length - 1]] === 'number') {
-                            enumArr = enumKeys.slice(enumKeys.length / 2)
-                        }
-                        else {
-                            enumArr = enumKeys
-                        }
+                        enumKeys = Object.keys(theEnum)
+                        enumArr = !isNaN(parseInt(enumKeys[0], 10))
+                            ? enumKeys.slice(0, enumKeys.length / 2)
+                            : enumKeys.map((enumKey) => theEnum[enumKey])
                     }
                     schemaProperty[option] = enumArr
                 }
@@ -188,8 +188,10 @@ export class ModelBuilder {
                 schemaProperty = [ this.getTypeOrSchema(options.items) ]
             }
             else if (options.itemsRef) {
-                schemaProperty.type = mongoose.Schema.Types.ObjectId
-                schemaProperty.ref = options.itemsRef.name
+                schemaProperty = [{
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: options.itemsRef.name,
+                }]
             }
         }
         else {

@@ -39,7 +39,7 @@ export class CartService {
         })
     }
 
-    public init() {
+    public init(): void {
         const cart = <Cart>this.util.getFromLocalStorage(LocalStorageKeys.Cart)
         if (cart) {
             this.populateAndStream(cart)
@@ -53,7 +53,7 @@ export class CartService {
         })
     }
 
-    public add(slug: string, quantity = 1) {
+    public add(slug: string, quantity = 1): void {
         const newCart = { ...this.cart }
         this.previousState = { ...this.cart }
 
@@ -68,7 +68,7 @@ export class CartService {
         this.productService.getOne(slug)
     }
 
-    private populateAndStream(newCart: Cart, refreshProducts = true) {
+    private populateAndStream(newCart: Cart, refreshProducts = true): void {
         newCart.subTotal = this.getSubTotal(<Product[]>newCart.items)
         newCart.total = this.getTotal(<Product[]>newCart.items)
         if (refreshProducts) {
@@ -86,7 +86,7 @@ export class CartService {
         }
     }
 
-    public remove(slug: string) {
+    public remove(slug: string): void {
         const newCart = { ...this.cart }
         this.previousState = { ...this.cart }
         newCart.items.splice(newCart.items.findIndex((i: Product) => i.slug === slug), 1)

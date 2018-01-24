@@ -6,53 +6,42 @@ import { ApiEndpoints } from '@time/common/constants/api-endpoints'
 import { Price } from '@time/common/models/api-models/price'
 import { Product } from '@time/common/models/api-models/product'
 import { GetProductsFromIdsRequest, GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
+import { GetProductDetailResponseBody } from '@time/common/models/api-responses/product-detail/get-product-detail.response.body'
 import { SimpleError } from '@time/common/ng-modules/http'
 import { RestService } from '@time/common/ng-modules/http/http.models'
+import { Subject } from 'rxjs/Subject'
 
 @Injectable()
 export class ProductService extends RestService<Product> {
+    public endpoint = ApiEndpoints.Products
+    public getSomeRequestType = GetProductsFromIdsRequest
+
+    public getDetail$: Observable<GetProductDetailResponseBody>
+    public getDetailError$: Observable<SimpleError>
+    private getDetailSubject = new Subject<GetProductDetailResponseBody>()
+    private getDetailErrorSubject = new Subject<SimpleError>()
+
     constructor (
-        private http: HttpClient,
+        protected http: HttpClient,
     ) {
-        super()
+        super(http)
+        this.getDetail$ = this.getDetailSubject.asObservable()
+        this.getDetailError$ = this.getDetailErrorSubject.asObservable()
     }
 
-    public get(request?: GetProductsRequest) {
-        const params = new HttpParams()
+    public get(request = new GetProductsRequest()): void {
+        return super.get(request)
+    }
 
-        if (request) params.append('request', JSON.stringify(request))
-
-        // this.http.get("https://jsonplaceholder.typicode.com/posts")
-        this.http.get<Product[]>(ApiEndpoints.Products, { params })
+    public getDetail(slug: string): void {
+        this.http.get<GetProductDetailResponseBody>(`${this.endpoint}/${slug}/detail`)
             .subscribe(
-                (products) => this.getSubject.next(products),
-                (error: SimpleError) => this.getErrorSubject.next(error),
+                (responseBody) => this.getDetailSubject.next(responseBody),
+                (error: SimpleError) => this.getDetailErrorSubject.next(error),
             )
     }
 
-    public getSome(ids: string[]): Observable<Product[]> {
-        const request = new GetProductsFromIdsRequest()
-        request.ids = ids
-
-        const params = new HttpParams()
-        params.append('request', JSON.stringify(request))
-
-        return this.http.get<Product[]>(ApiEndpoints.Products, { params })
-    }
-
-    public displayOne(slug: string) {
-        this.getOneSubject.next(this.data.find(product => product.slug === slug))
-    }
-
-    public getOne(slug: string) {
-        this.http.get<Product>(`${ApiEndpoints.Products}/${slug}`)
-            .subscribe(
-                (product) => this.getOneSubject.next(product),
-                (error: SimpleError) => this.getOneErrorSubject.next(error),
-            )
-    }
-
-    public getPrice(product: Product) {
+    public getPrice(product: Product): Price {
         if (product.isOnSale) {
             return product.salePrice
         }

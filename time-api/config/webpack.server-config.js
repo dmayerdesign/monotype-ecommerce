@@ -7,7 +7,7 @@ const packageJson = require('../../package.json')
 const version = packageJson.version
 
 // Exclude all packages from the build, since your node server
-// has access to node_modules directly
+// has access to node_modules directly.
 const externals = {}
 fs.readdirSync(path.resolve(__dirname, '../../node_modules'))
 	.filter(x => ['.bin'].indexOf(x) === -1)
@@ -78,7 +78,7 @@ module.exports = {
 	plugins: [
 		new CircularDependencyPlugin(),
 		new webpack.IgnorePlugin(/^vertx$/),
-		// Prevents errors in the server-rendered Angular app when `document` or `window` are accessed
+		// Prevents errors in the server-rendered Angular app when `document` or `window` are accessed.
 		new webpack.DefinePlugin({
 			window: undefined,
 			document: undefined,

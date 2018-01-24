@@ -11,8 +11,8 @@ import { GetProductsFromIdsRequest } from '@time/common/models/api-requests/get-
 import { ListFromIdsRequest } from '@time/common/models/api-requests/list.request'
 import { ApiErrorResponse } from '@time/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@time/common/models/api-responses/api.response'
-import { StripeCreateOrderResponse } from '@time/common/models/api-responses/stripe-create-order.response'
-import { StripePayOrderResponse } from '@time/common/models/api-responses/stripe-pay-order.response'
+import { StripeCreateOrderResponse } from '@time/common/models/api-responses/stripe/stripe-create-order.response'
+import { StripePayOrderResponse } from '@time/common/models/api-responses/stripe/stripe-pay-order.response'
 import { OrderStatus } from '@time/common/models/enums/order-status'
 import { DbClient } from '../../data-access/db-client'
 import { DiscountService } from '../discount.service'
@@ -61,7 +61,7 @@ export class StripeOrderActionsService {
                 const orderItemsRequest = new GetProductsFromIdsRequest()
                 orderItemsRequest.ids = <string[]>order.items
                 const orderItemsResponse = await <Promise<ApiResponse<Product[]>>>this.productService.get(orderItemsRequest)
-                orderItems = orderItemsResponse.data
+                orderItems = orderItemsResponse.body
                 orderItems.forEach(orderItem => {
                     order.total.amount += this.productService.getPrice(orderItem).amount
                 })
@@ -73,7 +73,7 @@ export class StripeOrderActionsService {
             try {
                 const orderDiscountsRequest = new ListFromIdsRequest({ ids: order.discounts })
                 const orderDiscountsResponse = await this.discountService.getIds(orderDiscountsRequest)
-                orderDiscounts = orderDiscountsResponse.data
+                orderDiscounts = orderDiscountsResponse.body
                 orderDiscounts.forEach(orderDiscount => {
                     order.total.amount -= orderDiscount.total.amount
                 })
@@ -84,7 +84,7 @@ export class StripeOrderActionsService {
 
             const dbOrder = new OrderModel(order)
 
-            // Build the stripe order
+            // Build the stripe order.
             const stripeOrder = new StripeOrder()
 
             stripeOrder.shipping = {

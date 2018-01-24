@@ -12,7 +12,7 @@ import { Product, ProductModel } from '@time/common/models/api-models/product'
 import { FindProductError } from '@time/common/models/api-models/product'
 import { ListFromIdsRequest, ListFromQueryRequest } from '@time/common/models/api-requests/list.request'
 import { ApiErrorResponse } from '@time/common/models/api-responses/api-error.response'
-import { StripeSubmitOrderResponse } from '@time/common/models/api-responses/stripe-submit-order.response'
+import { StripeSubmitOrderResponse } from '@time/common/models/api-responses/stripe/stripe-submit-order.response'
 import { DbClient } from '../../data-access/db-client'
 import { EmailService } from '../email.service'
 import { StripeCustomerService } from './stripe-customer.service'
@@ -75,8 +75,8 @@ export class StripeOrderService {
             })
 
             try {
-                // Retrieve parent products and combine them with `variationsAndStandalones` into `products`
-                // Use the new `products` array to create the products and SKUs in Stripe, if they don't exist
+                // Retrieve parent products and combine them with `variationsAndStandalones` into `products`.
+                // Use the new `products` array to create the products and SKUs in Stripe, if they don't exist.
                 const findParentsRequest = new ListFromIdsRequest({
                     ids: parentIds,
                     limit: 0
@@ -88,21 +88,21 @@ export class StripeOrderService {
                 await this.stripeProductService.createSkus(products, orderData)
                 console.log('Created SKUs')
 
-                // Create the order in Stripe
+                // Create the order in Stripe.
                 const createOrderResponse = await this.stripeOrderActionsService.createOrder(orderData)
-                const { order } = createOrderResponse.data
+                const { order } = createOrderResponse.body
 
-                // Create the customer in Stripe
+                // Create the customer in Stripe.
                 const stripeCustomer = await this.stripeCustomerService.createCustomer(order)
 
-                // Update the order with the Stripe customer info
+                // Update the order with the Stripe customer info.
                 order.customer.stripeCustomerId = stripeCustomer.id
 
-                // Pay the order
+                // Pay the order.
                 const payOrderResponse = await this.stripeOrderActionsService.payOrder(order)
-                const { paidOrder, paidStripeOrder } = payOrderResponse.data
+                const { paidOrder, paidStripeOrder } = payOrderResponse.body
 
-                // Update the stock quantity and total sales of each variation and standalone
+                // Update the stock quantity and total sales of each variation and standalone.
                 this.stripeProductService.updateInventory(products, paidOrder)
 
                 const organization = await this.dbClient.findOne(OrganizationModel, {}) as Organization

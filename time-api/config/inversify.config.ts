@@ -34,18 +34,18 @@ import { Order } from '@time/common/models/api-models/order'
 import { Organization } from '@time/common/models/api-models/organization'
 import { Product } from '@time/common/models/api-models/product'
 
-// The container is where you register DI bindings
+// The container is where you register DI bindings.
 
 const container = new Container()
 
-// If we're developing, apply logger middleware
+// If we're developing, apply logger middleware.
 
 if (isDev()) {
   const logger = makeLoggerMiddleware()
   container.applyMiddleware(logger)
 }
 
-// Services
+// Services.
 container.bind<DbClient<MongooseDocument<any>>>(Types.DbClient).to(DbClient)
 container.bind<CrudService<Discount>>(Types.DiscountService).to(DiscountService)
 container.bind<EasypostService>(Types.EasypostService).to(EasypostService)
@@ -64,11 +64,11 @@ container.bind<TimerService>(Types.TimerService).to(TimerService)
 container.bind<UserService>(Types.UserService).to(UserService)
 container.bind<WoocommerceMigrationService>(Types.WoocommerceMigrationService).to(WoocommerceMigrationService)
 
-// Middleware
+// Middleware.
 container.bind(Types.isAuthenticated).toConstantValue(Authenticate.isAuthenticated)
 container.bind(Types.isOwner).toConstantValue(Authenticate.isAuthorized(1))
 
-// Controllers
+// Controllers.
 container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsAdminController).whenTargetNamed(Tags.ProductsAdminController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(AppController).whenTargetNamed(Tags.AppController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsController).whenTargetNamed(Tags.ProductsController)

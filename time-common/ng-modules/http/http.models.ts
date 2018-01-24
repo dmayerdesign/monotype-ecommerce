@@ -1,8 +1,9 @@
-import { HttpErrorResponse, HttpEvent } from '@angular/common/http'
+import { HttpClient, HttpErrorResponse, HttpEvent, HttpParams } from '@angular/common/http'
 import { Observable } from 'rxjs/Observable'
 import { Subject } from 'rxjs/Subject'
 
 import { HttpStatus } from '../../constants/http'
+import { ListFromIdsRequest, ListRequest } from '../../models/api-requests/list.request'
 
 export class SimpleError {
     public message: string
@@ -17,6 +18,10 @@ export class SimpleError {
 }
 
 export abstract class RestService<T> {
+    public abstract endpoint: string
+    public getRequestType? = ListRequest
+    public getSomeRequestType? = ListFromIdsRequest
+
     protected getSubject = new Subject<T[]>()
     protected getOneSubject = new Subject<T>()
     protected createSubject = new Subject<T>()
@@ -42,7 +47,7 @@ export abstract class RestService<T> {
     public updateError$: Observable<SimpleError>
     public deleteError$: Observable<SimpleError>
 
-    constructor() {
+    constructor(protected http: HttpClient) {
         this.get$ = this.getSubject.asObservable()
         this.getOne$ = this.getOneSubject.asObservable()
         this.create$ = this.createSubject.asObservable()
@@ -60,11 +65,38 @@ export abstract class RestService<T> {
         })
     }
 
-    public get?() {}
-    public getOne?(id: string) {}
-    public create?() {}
-    public update?(id: string, update: object) {}
-    public delete?(id: string) {}
+    public get(request?: ListRequest): void {
+        let params = new HttpParams()
+
+        if (request) params = params.set('request', JSON.stringify(request))
+
+        this.http.get<T[]>(this.endpoint, { params })
+            .subscribe(
+                (docs) => this.getSubject.next(docs),
+                (error: SimpleError) => this.getErrorSubject.next(error),
+            )
+    }
+
+    public getSome(ids: string[]): Observable<T[]> {
+        const request = new this.getSomeRequestType()
+        request.ids = ids
+
+        const params = new HttpParams().set('request', JSON.stringify(request))
+
+        return this.http.get<T[]>(this.endpoint, { params })
+    }
+
+    public getOne(id: string): void {
+        this.http.get<T>(`${this.endpoint}/${id}`)
+            .subscribe(
+                (doc) => this.getOneSubject.next(doc),
+                (error: SimpleError) => this.getOneErrorSubject.next(error),
+            )
+    }
+
+    public create?(): void
+    public update?(id: string, update: object): void
+    public delete?(id: string): void
 }
 
 export abstract class IHttpSettings {

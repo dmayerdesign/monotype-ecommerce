@@ -1,19 +1,19 @@
 import { ModuleWithProviders, NgModule } from '@angular/core'
 
-// Settings
+// Settings.
 import { HttpSettings } from './config/http.settings'
 
-// Feature modules
+// Feature modules.
 import { TimeFormsModule } from '@time/common/ng-modules/forms'
 import { HttpInjectionTokens, TimeHttpModule } from '@time/common/ng-modules/http'
 import { TimeUiModule } from '@time/common/ng-modules/ui'
 
-// Components
+// Components.
 import { LoginComponent } from './components/login/login.component'
 import { SignupComponent } from './components/signup/signup.component'
 import { SiteLocatorComponent } from './components/site-locator/site-locator.component'
 
-// Services
+// Services.
 import { ProductService } from '../shop/services/index'
 import { AdminGuardService } from './services/admin-guard.service'
 import { AuthGuardService } from './services/auth-guard.service'

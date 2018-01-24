@@ -21,7 +21,6 @@ import { AutoUnsubscribe } from '@time/common/lib/auto-unsubscribe/auto-unsubscr
             <ng-content *ngIf="message"></ng-content>
             <span *ngIf="defaultMessage">{{ defaultMessage }}</span>
         </span>`,
-    styleUrls: ['./field-validation.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimeFieldValidationComponent implements OnInit, OnDestroy {

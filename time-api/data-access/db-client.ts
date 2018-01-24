@@ -9,6 +9,12 @@ import { prop, IMongooseModel, MongooseDocument } from '@time/common/lib/goosety
 import { SchemaError } from '@time/common/models/types/errors'
 import { ListFromIdsRequest, ListFromQueryRequest, ListFromSearchRequest, ListRequest } from '../../time-common/models/api-requests/list.request'
 
+interface IPopulateOptions {
+    path: string
+    model?: string
+    populate?: IPopulateOptions
+}
+
 /**
  * Methods for querying the database
  *
@@ -46,7 +52,7 @@ export class DbClient<T extends MongooseDocument<T>> {
                 }
             }
 
-            // Fetch the data normally
+            // Fetch the data normally.
 
             else {
                 try {
@@ -54,6 +60,7 @@ export class DbClient<T extends MongooseDocument<T>> {
                         .skip(skip)
                         .limit(limit)
                         .sort({ [sortBy]: sortDirection })
+                        .exec()
 
                     resolve(documents as (T & Document)[])
                 }
@@ -145,7 +152,7 @@ export class DbClient<T extends MongooseDocument<T>> {
             try {
                 const documents = await model.find({
                     _id: { $in: request.ids }
-                })
+                }).exec()
                 resolve(documents)
             }
             catch (error) {
@@ -155,16 +162,24 @@ export class DbClient<T extends MongooseDocument<T>> {
     }
 
     /**
-     * Find a document
+     * Find a document. Optionally, perform a series of Mongoose `populate`s.
      *
      * @param {IMongooseModel<T>} model The Mongoose `Model` representing the collection containing the document
      * @param {object} query The query passed to `Model.findOne`
      * @memberof DbClient
      */
-    public findOne(model: IMongooseModel<T>, query: object): Promise<T> {
+    public findOne(model: IMongooseModel<T>, query: object, populateOptionsArr?: IPopulateOptions[]): Promise<T> {
         return new Promise<T>(async (resolve, reject) => {
             try {
-                const documentResult = await model.findOne(query)
+                const findQuery = model.findOne(query)
+
+                if (populateOptionsArr) {
+                    populateOptionsArr.forEach((populateOptions) => {
+                        findQuery.populate(populateOptions)
+                    })
+                }
+
+                const documentResult = await findQuery.exec()
                 const document = documentResult._doc
                 resolve(document)
             }
@@ -187,7 +202,7 @@ export class DbClient<T extends MongooseDocument<T>> {
             let documentResult: any
 
             try {
-                documentResult = await model.findById(id)
+                documentResult = await model.findById(id).exec()
                 document = documentResult._doc
                 resolve(document)
             }
@@ -224,7 +239,7 @@ export class DbClient<T extends MongooseDocument<T>> {
                     documents = await model.updateMany({ _id: { $in: ids } }, {
                         $set: update,
                         $addToSet
-                    })
+                    }).exec()
                 }
                 catch (retrievalError) {
                     reject(retrievalError)
@@ -258,7 +273,7 @@ export class DbClient<T extends MongooseDocument<T>> {
         return new Promise<T>(async (resolve, reject) => {
             let document: T
             try {
-                document = await model.findById(id)
+                document = await model.findById(id).exec()
             }
             catch (retrievalError) {
                 reject(retrievalError)
@@ -331,7 +346,7 @@ export class DbClient<T extends MongooseDocument<T>> {
     public delete(model: IMongooseModel<T>, id: string): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             try {
-                await model.findByIdAndRemove(id)
+                await model.findByIdAndRemove(id).exec()
                 resolve()
             }
             catch (deleteError) {

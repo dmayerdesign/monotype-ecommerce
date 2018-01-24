@@ -7,7 +7,11 @@ import { ApiResponse } from '@time/common/models/api-responses/api.response'
 export class ApiController<T = any> {
     public handleApiResponse(method: Promise<ApiResponse<T>>, res: Response): void {
         method
-            .then(({data, status}) => res.status(status).json(data))
-            .catch(({message, status}) => res.status(status).json({message, status}))
+            .then(({ body, status }) => {
+                res.status(status).json(body)
+            })
+            .catch(({ message, status }) => {
+                res.status(status).json({message, status})
+            })
     }
 }

@@ -27,23 +27,50 @@ export class ProductsController extends ApiController implements interfaces.Cont
     @httpGet('/')
     public get(
         @queryParam('request') request: string,
+        @request() req: Request,
         @response() res: Response,
     ): void {
-        const parsedQuery: GetProductsRequest | GetProductsFromIdsRequest = request ? <GetProductsRequest | GetProductsFromIdsRequest>JSON.parse(request) : null
+        const parsedQuery: GetProductsRequest | GetProductsFromIdsRequest = request
+            ? <GetProductsRequest | GetProductsFromIdsRequest>JSON.parse(request)
+            : new GetProductsRequest()
 
         if ((parsedQuery as GetProductsFromIdsRequest).ids) {
+            // Get a list of products from the requested `id`s.
             this.handleApiResponse(this.productService.getIds(new GetProductsFromIdsRequest((parsedQuery as GetProductsFromIdsRequest))), res)
         }
         else {
+            // Pipe a stream of products into the response.
             this.productService.getProducts(new GetProductsRequest(parsedQuery as GetProductsRequest), res)
         }
     }
 
+    /**
+     * Get a single product.
+     *
+     * @param {string} slug
+     * @param {Response} res
+     * @memberof ProductsController
+     */
     @httpGet('/:slug')
     public getOne(
         @requestParam('slug') slug: string,
         @response() res: Response,
     ): void {
         this.handleApiResponse(this.productService.getOneSlug(slug), res)
+    }
+
+    /**
+     * Get the product along with any variations.
+     *
+     * @param {string} slug
+     * @param {Response} res
+     * @memberof ProductsController
+     */
+    @httpGet('/:slug/detail')
+    public getDetail(
+        @requestParam('slug') slug: string,
+        @response() res: Response,
+    ): void {
+        this.handleApiResponse(this.productService.getDetail(slug), res)
     }
 }

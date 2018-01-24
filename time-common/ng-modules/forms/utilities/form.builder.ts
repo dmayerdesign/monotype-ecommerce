@@ -25,7 +25,6 @@ export class TimeFormBuilder {
     public getOptions(field: string): ITimeFormFieldOptions {
         return {
             label: this.options[field].label,
-            showLabel: this.options[field].showLabel,
             control: this._formGroup.get(field),
             errorMessages: this.options[field].errorMessages
         }

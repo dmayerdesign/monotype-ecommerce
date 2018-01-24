@@ -31,10 +31,10 @@ export class ListFromSearchRequest extends ListRequest {
     }
 }
 
-export class ListFromIdsRequest extends ListRequest {
-    public ids: string[]|Ref<any>[]
+export class ListFromIdsRequest<T = any> extends ListRequest {
+    public ids: string[]|Ref<T>[]
 
-    constructor(request?: ListFromIdsRequest) {
+    constructor(request?: ListFromIdsRequest<T>) {
         super(request)
         if (request) {
             if (typeof request.ids !== 'undefined') this.ids = request.ids

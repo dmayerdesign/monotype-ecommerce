@@ -5,4 +5,4 @@ export class Price extends MongooseDocument<Price> {
     @prop() public amount: number
     @prop({ enum: Currency }) public currency: string
 }
-new Price().getSchema()
+new Price().getSchema({ _id: false })

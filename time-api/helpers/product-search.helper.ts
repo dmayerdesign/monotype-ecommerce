@@ -124,7 +124,7 @@ export class ProductSearchHelper {
         return newQuery
     }
 
-    // Reminder: parents and variations must share the same taxonomy terms
+    // Reminder: parents and variations must share the same taxonomy terms.
     public taxonomyFilter(filter: IGetProductsFilter, query: MongoHelper.AndOperation): MongoHelper.AndOperation {
         const newQuery = { ...query }
 

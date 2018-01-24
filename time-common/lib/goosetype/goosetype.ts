@@ -6,54 +6,6 @@ import { camelCase, ArrayPropOptions, IMongooseDocument, IMongooseModel, ModelBu
 
 const modelBuilder = new ModelBuilder()
 
-// Utilities
-
-export function composeSchemaForInstance<T>(target: MongooseDocument, schemaOptions?: SchemaOptions): Schema {
-    const schemaDefinition = modelBuilder.schemaDefinitions[camelCase(target.constructor.name)]
-    const preMiddleware = modelBuilder.preMiddleware[camelCase(target.constructor.name)]
-    const postMiddleware = modelBuilder.postMiddleware[camelCase(target.constructor.name)]
-    const plugins = modelBuilder.plugins[camelCase(target.constructor.name)]
-
-    const schema = new Schema(schemaDefinition, schemaOptions)
-
-    if (preMiddleware) {
-        preMiddleware.forEach((preHookArgs) => {
-            if (preHookArgs.length > 1) {
-                (schema.pre as any)(...preHookArgs)
-            }
-            else {
-                throw new Error(`Invalid number of preMiddleware arguments: got ${preHookArgs.length}, expected between 2 and 3`)
-            }
-        })
-    }
-
-    if (postMiddleware) {
-        postMiddleware.post.forEach((postHookArgs) => {
-            if (postHookArgs.length > 1) {
-                (schema.post as any)(...postHookArgs)
-            }
-            else {
-                throw new Error(`Invalid number of preMiddleware arguments: got ${postHookArgs.length}, expected between 2 and 3`)
-            }
-        })
-    }
-
-    if (plugins) {
-        plugins.forEach((plugin) => {
-            schema.plugin(plugin[0] as (schema: Schema, options?: Object) => void, plugin[1] as Object)
-        })
-    }
-
-    modelBuilder.schemas[camelCase(target.constructor.name)] = schema
-
-    return schema
-}
-
-export function composeModelForInstance<T extends IMongooseDocument>(target: MongooseDocument, schemaOptions?: SchemaOptions): IMongooseModel<T> {
-    const schema = composeSchemaForInstance<T>(target, schemaOptions)
-    return model(target.constructor.name, schema) as IMongooseModel<T>
-}
-
 // Decorators
 
 export function pre(method: string, parallel: boolean, fn: (next: (err?: NativeError) => void, done: () => void) => void, errorCb?: (err: Error) => void): ClassDecorator {
@@ -258,17 +210,80 @@ export abstract class MongooseDocument<T = any> {
     public save?(...args: any[]): Promise<this> { return new Promise<this>((resolve) => {}) }
     // public save(fn?: (err: any, product: this, numAffected: number) => void): Promise<this> { return new Promise<this>((resolve) => {}) }
 
-
     /**
      * Goosetype functions
      */
 
-    public getSchema?(schemaOptions?: SchemaOptions): Schema {
-        return composeSchemaForInstance<T>(this, schemaOptions)
+    private composeSchemaForInstance?<T>(schemaOptions?: SchemaOptions): Schema {
+        const target = this
+        const schemaDefinition = modelBuilder.schemaDefinitions[camelCase(target.constructor.name)]
+        const preMiddleware = modelBuilder.preMiddleware[camelCase(target.constructor.name)]
+        const postMiddleware = modelBuilder.postMiddleware[camelCase(target.constructor.name)]
+        const plugins = modelBuilder.plugins[camelCase(target.constructor.name)]
+
+        const schema = new Schema(schemaDefinition, schemaOptions)
+
+        if (preMiddleware) {
+            preMiddleware.forEach((preHookArgs) => {
+                if (preHookArgs.length > 1) {
+                    (schema.pre as any)(...preHookArgs)
+                }
+                else {
+                    throw new Error(`Invalid number of preMiddleware arguments: got ${preHookArgs.length}, expected between 2 and 3`)
+                }
+            })
+        }
+
+        if (postMiddleware) {
+            postMiddleware.post.forEach((postHookArgs) => {
+                if (postHookArgs.length > 1) {
+                    (schema.post as any)(...postHookArgs)
+                }
+                else {
+                    throw new Error(`Invalid number of preMiddleware arguments: got ${postHookArgs.length}, expected between 2 and 3`)
+                }
+            })
+        }
+
+        if (plugins) {
+            plugins.forEach((plugin) => {
+                schema.plugin(plugin[0] as (schema: Schema, options?: Object) => void, plugin[1] as Object)
+            })
+        }
+
+        modelBuilder.schemas[camelCase(target.constructor.name)] = schema
+
+        return schema
     }
 
-    public getModel?(schemaOptions?: SchemaOptions): IMongooseModel<T & IMongooseDocument<T>> {
-        return composeModelForInstance<T & IMongooseDocument>(this, schemaOptions)
+    private composeModelForInstance?(schemaOptions?: SchemaOptions): IMongooseModel<this> {
+        const target = this
+        // if (!!target.constructor.name.match(/^taxonomy$/i)) {
+        //     console.log('[composeModelForInstance]: Instance of', target.constructor.name)
+        //     console.log('\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n')
+        //     console.log({ ...(this as any).prototype })
+        // }
+        type T = this & IMongooseDocument
+        const schema = this.composeSchemaForInstance(schemaOptions)
+        // if (!!target.constructor.name.match(/^taxonomy$/i)) {
+        //     console.log('[composeModelForInstance]: Schema for', target.constructor.name)
+        //     console.log({...(schema as object)})
+        // }
+        return model(target.constructor.name, schema) as IMongooseModel<this>
+    }
+
+    public getSchema?(schemaOptions?: SchemaOptions): Schema {
+        const schema = this.composeSchemaForInstance(schemaOptions)
+        return schema
+    }
+
+    public getModel?(schemaOptions?: SchemaOptions): IMongooseModel<this> {
+        const model = this.composeModelForInstance(schemaOptions)
+        // if (!!this.constructor.name.match(/^taxonomy$/i)) {
+        //     console.log('[getModel]: Schema for', this.constructor.name)
+        //     console.log(JSON.stringify(model))
+        // }
+        return model
     }
 }
 

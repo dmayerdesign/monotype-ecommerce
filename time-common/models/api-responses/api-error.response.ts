@@ -10,6 +10,7 @@ export class ApiErrorResponse {
         public status: HttpStatus = HttpStatus.SERVER_ERROR_internal,
     ) {
         if (error) {
+            console.error(error)
             this.message = error.message
             this.name = error.name
             this.stack = error.stack

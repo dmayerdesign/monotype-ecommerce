@@ -10,6 +10,7 @@ import { Price } from '@time/common/models/api-models/price'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
 import { Taxonomy, TaxonomyModel } from '@time/common/models/api-models/taxonomy'
 import { TaxonomyTerm, TaxonomyTermModel } from '@time/common/models/api-models/taxonomy-term'
+import { ListFromQueryRequest } from '@time/common/models/api-requests/list.request'
 import { ApiErrorResponse } from '@time/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@time/common/models/api-responses/api.response'
 import { Currency } from '@time/common/models/enums/currency'
@@ -23,7 +24,7 @@ export class WoocommerceMigrationService {
     @inject(Types.DbClient) private dbClient: DbClient<any>
 
     public createProductsFromExportedJSON(): Promise<ApiResponse<Product[]>> {
-        return new Promise<ApiResponse<Product[]>>((resolve, reject) => {
+        return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
             const newProducts = []
 
             async function createProducts() {
@@ -53,56 +54,59 @@ export class WoocommerceMigrationService {
 
                             if (key.indexOf('attributes.') > -1) {
                                 const theKey = key.replace('attributes.', '')
-                                if (product.class === 'Variable' && product[key] && product[key].indexOf('|') > -1) {
-                                    const value = product[key]
-                                    const variableAttributeValueSlugs = product[key].split('|').map(val => val.replace(/\s/g, '-').toLowerCase())
-                                    const variableAttributeSlug = theKey
-                                    try {
-                                        const variableAttributeResponse = await AttributeModel.findOrCreate({
-                                            slug: variableAttributeSlug
-                                        })
-                                        const variableAttribute = variableAttributeResponse.doc
-                                        for (const variableAttributeValueSlug of variableAttributeValueSlugs) {
-                                            try {
-                                                const variableAttributeValueResponse = await AttributeValueModel.findOrCreate({
-                                                    attribute: variableAttribute._id,
-                                                    slug: variableAttributeValueSlug,
-                                                    value,
-                                                })
-                                                const variableAttributeValue = variableAttributeValueResponse.doc
-                                                variableAttributeValueIds.push(variableAttributeValue._id)
-                                            }
-                                            catch (error) {
-                                                reject(new ApiErrorResponse(error))
+                                if (typeof product[key] === 'string') {
+                                    if (product.class === 'Variable' && product[key].indexOf('|') > -1) {
+                                        const value = product[key]
+                                        const variableAttributeValueSlugs = product[key].split('|').map(val => theKey + '-' + val.replace(/\s/g, '-').toLowerCase())
+                                        const variableAttributeValueValues = product[key].split('|')
+                                        const variableAttributeSlug = theKey
+                                        try {
+                                            const variableAttributeResponse = await AttributeModel.findOrCreate({
+                                                slug: variableAttributeSlug
+                                            })
+                                            const variableAttribute = variableAttributeResponse.doc
+                                            for (const variableAttributeValueSlug of variableAttributeValueSlugs) {
+                                                try {
+                                                    const variableAttributeValueResponse = await AttributeValueModel.findOrCreate({
+                                                        attribute: variableAttribute._id,
+                                                        slug: variableAttributeValueSlug,
+                                                        value: variableAttributeValueValues[variableAttributeValueSlugs.indexOf(variableAttributeValueSlug)],
+                                                    })
+                                                    const variableAttributeValue = variableAttributeValueResponse.doc
+                                                    variableAttributeValueIds.push(variableAttributeValue._id)
+                                                }
+                                                catch (error) {
+                                                    reject(new ApiErrorResponse(error))
+                                                }
                                             }
                                         }
+                                        catch (error) {
+                                            reject(new ApiErrorResponse(error))
+                                            return
+                                        }
                                     }
-                                    catch (error) {
-                                        reject(new ApiErrorResponse(error))
-                                        return
-                                    }
-                                }
-                                else {
-                                    const value = product[key]
-                                    const attributeValueSlug = theKey + '-' + product[key].replace(/\s/g, '-').toLowerCase()
-                                    const attributeSlug = theKey
-                                    try {
-                                        const attributeResponse = await AttributeModel.findOrCreate({
-                                            slug: attributeSlug
-                                        })
-                                        const attribute = attributeResponse.doc
-                                        const attributeValueResponse = await AttributeValueModel.findOrCreate({
-                                            attribute: attribute._id,
-                                            slug: attributeValueSlug,
-                                            value,
-                                        })
-                                        const attributeValue = attributeValueResponse.doc
-                                        attributeValueIds.push(attributeValue._id)
-                                        delete newProduct[key]
-                                    }
-                                    catch (error) {
-                                        reject(new ApiErrorResponse(error))
-                                        return
+                                    else {
+                                        const value = product[key]
+                                        const attributeValueSlug = theKey + '-' + product[key].replace(/\s/g, '-').toLowerCase()
+                                        const attributeSlug = theKey
+                                        try {
+                                            const attributeResponse = await AttributeModel.findOrCreate({
+                                                slug: attributeSlug
+                                            })
+                                            const attribute = attributeResponse.doc
+                                            const attributeValueResponse = await AttributeValueModel.findOrCreate({
+                                                attribute: attribute._id,
+                                                slug: attributeValueSlug,
+                                                value,
+                                            })
+                                            const attributeValue = attributeValueResponse.doc
+                                            attributeValueIds.push(attributeValue._id)
+                                            delete newProduct[key]
+                                        }
+                                        catch (error) {
+                                            reject(new ApiErrorResponse(error))
+                                            return
+                                        }
                                     }
                                 }
 
@@ -160,17 +164,28 @@ export class WoocommerceMigrationService {
                                 }
                             }
                             if (key.indexOf('taxonomies.') > -1) {
+                                const taxonomyTermPromises: Promise<{ doc: TaxonomyTerm }>[] = []
                                 const taxonomySlug = key.replace('taxonomies.', '')
-                                const taxonomyTermSlug = key.replace('taxonomies.', '') + '-' + product[key].replace(/\s/g, '-').toLowerCase()
+                                const taxonomyTermSlugs = product[key].split('|').map((originalTaxonomyTermSlug) => {
+                                    return key.replace('taxonomies.', '') + '-' + originalTaxonomyTermSlug.replace(/\s/g, '-').toLowerCase()
+                                })
                                 try {
                                     const taxonomyResponse = await TaxonomyModel.findOrCreate({ slug: taxonomySlug })
                                     const taxonomy = taxonomyResponse.doc
-                                    const taxonomyTermResponse = await TaxonomyTermModel.findOrCreate({
-                                        taxonomy: taxonomy._id,
-                                        slug: taxonomyTermSlug
+
+                                    taxonomyTermSlugs.forEach((taxonomyTermSlug) => {
+                                        taxonomyTermPromises.push(TaxonomyTermModel.findOrCreate({
+                                            taxonomy: taxonomy._id,
+                                            slug: taxonomyTermSlug
+                                        }))
                                     })
-                                    const taxonomyTerm = taxonomyTermResponse.doc
-                                    taxonomyTermIds.push(taxonomyTerm._id)
+
+                                    const taxonomyTermsResponse = await Promise.all(taxonomyTermPromises)
+                                    const taxonomyTerms = taxonomyTermsResponse.map((taxonomyTermResponse) => taxonomyTermResponse.doc)
+
+                                    taxonomyTerms.forEach((taxonomyTerm) => taxonomyTermIds.push(taxonomyTerm._id))
+
+                                    newProduct.taxonomyTermSlugs = taxonomyTermSlugs
                                     delete newProduct[key]
                                 }
                                 catch (error) {
@@ -197,8 +212,8 @@ export class WoocommerceMigrationService {
                                             currency: Currency.USD,
                                         } as Price,
                                     ]
-                                    newProduct.priceRange[0].amount = parseInt(priceRangeTotals[0].total, 10)
-                                    newProduct.priceRange[1].amount = parseInt(priceRangeTotals[1].total, 10)
+                                    newProduct.priceRange[0].amount = parseFloat(priceRangeTotals[0])
+                                    newProduct.priceRange[1].amount = parseFloat(priceRangeTotals[1])
                                     delete newProduct[key]
                                 }
                                 else {
@@ -209,7 +224,7 @@ export class WoocommerceMigrationService {
                                 }
                             }
                             if (key === 'salePrice') {
-                                if ( newProduct[key].toString().indexOf('-') > -1 ) {
+                                if ( newProduct.salePrice.toString().indexOf('-') > -1 ) {
                                     const salePriceRangeTotals = (<any>newProduct[key]).split('-')
                                     newProduct.salePriceRange = [
                                         {
@@ -221,12 +236,12 @@ export class WoocommerceMigrationService {
                                             currency: Currency.USD,
                                         } as Price,
                                     ]
-                                    newProduct.salePriceRange[0].amount = parseInt(salePriceRangeTotals[0].total, 10)
-                                    newProduct.salePriceRange[1].amount = parseInt(salePriceRangeTotals[1].total, 10)
-                                    delete newProduct[key]
+                                    newProduct.salePriceRange[0].amount = parseFloat(salePriceRangeTotals[0])
+                                    newProduct.salePriceRange[1].amount = parseFloat(salePriceRangeTotals[1])
+                                    delete newProduct.salePrice
                                 }
                                 else {
-                                    newProduct[key] = {
+                                    newProduct.salePrice = {
                                         amount: +newProduct[key],
                                         currency: Currency.USD
                                     } as Price
@@ -285,23 +300,26 @@ export class WoocommerceMigrationService {
                         let isDisc: boolean
                         let attributeValues: AttributeValue[]
                         let imageBaseUrl = `${AppConfig.cloudfront_url}/product-images/`
-                        newProduct.taxonomyTermSlugs.forEach(term => {
-                            if (term.indexOf('brand') === 0) {
-                                if (term.indexOf('MVP') > -1) {
-                                    imageBaseUrl += 'mvp-'
+
+                        if (newProduct.taxonomyTermSlugs) {
+                            newProduct.taxonomyTermSlugs.forEach(term => {
+                                if (term.indexOf('brand') === 0) {
+                                    if (term.indexOf('MVP') > -1) {
+                                        imageBaseUrl += 'mvp-'
+                                    }
+                                    if (term.indexOf('Axiom') > -1) {
+                                        imageBaseUrl += 'axiom-'
+                                    }
+                                    if (term.indexOf('Discraft') > -1) {
+                                        imageBaseUrl += 'discraft-'
+                                    }
                                 }
-                                if (term.indexOf('Axiom') > -1) {
-                                    imageBaseUrl += 'axiom-'
-                                }
-                                if (term.indexOf('Discraft') > -1) {
-                                    imageBaseUrl += 'discraft-'
-                                }
-                            }
-                        })
+                            })
+                        }
 
                         try {
                             attributeValues = await this.dbClient.find(AttributeValueModel, { _id: { $in: newProduct.attributeValues } }) as AttributeValue[]
-                            isDisc = attributeValues.some(attrValue => attrValue.slug === 'product-type-disc')
+                            isDisc = attributeValues && attributeValues.some((attrValue) => attrValue.slug === 'productType-disc')
                         }
                         catch (error) {
                             reject(new ApiErrorResponse(error))
@@ -314,7 +332,7 @@ export class WoocommerceMigrationService {
                         if (isDisc) {
                             for (const attributeValueId of newProduct.attributeValues) {
                                 const attributeValue = new AttributeValueModel(attributeValues.find(val => val._id === attributeValueId)) as AttributeValue
-                                if (attributeValue.slug.indexOf('plastic') > -1) {
+                                if (attributeValue && attributeValue.slug.indexOf('plastic') > -1) {
                                     imageBaseUrl += `${attributeValue.value.toLowerCase()}-`
                                 }
                             }
@@ -322,7 +340,7 @@ export class WoocommerceMigrationService {
                         } else {
                             for (const attributeValueId of newProduct.attributeValues) {
                                 const attributeValue = attributeValues.find(val => val._id === attributeValueId)
-                                if (attributeValue.slug.indexOf('color') > -1) {
+                                if (attributeValue && attributeValue.slug.indexOf('color') > -1) {
                                     imageBaseUrl += `${attributeValue.value.toLowerCase()}-`
                                 }
                             }
@@ -348,7 +366,13 @@ export class WoocommerceMigrationService {
                 }
             }
 
-            createProducts()
+            try {
+                await createProducts.call(this)
+            }
+            catch (error) {
+                reject(new ApiErrorResponse(error))
+                return
+            }
 
             newProducts.forEach((product, index, products) => {
                 let variations = []
@@ -361,14 +385,37 @@ export class WoocommerceMigrationService {
                         products[index].thumbnails = products[index].thumbnails.concat(pv.thumbnails)
                     })
                 }
+
+                // [!]
+                // One-off exceptions
+                const sku = product.sku
+                if (sku === 'METEOR_GLOZ_1769') {
+                    if (newProducts.find((newProduct) => newProduct.sku === 'METEOR_GLOZ_1769')) {
+                        products[index].sku = 'METEOR_GLOZ_1769_2'
+                    }
+                }
             })
 
             /*************
              * The switch
              ******* -> */
-            ProductModel.create(newProducts)
-                .then(products => resolve(new ApiResponse(products)))
-                .catch(error => reject(new ApiErrorResponse(error)))
+            try {
+                const allProducts = await this.dbClient.create(ProductModel, newProducts)
+
+                const parentProducts = allProducts.filter((p) => p.isParent)
+
+                for (let i = 0; i < parentProducts.length; i++) {
+                    const parentProduct = parentProducts[i]
+                    const variations = allProducts.filter((p) => p.parentSku === parentProduct.sku)
+                    parentProduct.variations = variations.map((v) => v._id)
+                    await parentProduct.save()
+                }
+
+                resolve(new ApiResponse(allProducts))
+            }
+            catch (error) {
+                reject(new ApiErrorResponse(error))
+            }
             /**/
         })
     }

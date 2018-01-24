@@ -1,3 +1,13 @@
 <p>
   product-detail works!
 </p>
+
+<time-form-field [options]="{
+        label: 'Quantity'
+    }">
+    <input #input
+           id="add-to-cart-form--quantity-to-add"
+           type="number"
+           [attr.max]="(selectedProduct ? selectedProduct.stockQuantity : 1)"
+           [(ngModel)]="quantityToAdd">
+</time-form-field>

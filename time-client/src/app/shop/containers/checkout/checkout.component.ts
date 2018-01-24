@@ -55,19 +55,16 @@ export class CheckoutComponent implements OnInit {
             firstName: {
                 defaultValue: '',
                 label: 'First name',
-                showLabel: true,
             },
             lastName: {
                 defaultValue: '',
                 label: 'Last name',
-                showLabel: true,
                 validators: [ Validators.required ]
             },
             email: {
                 defaultValue: '',
                 validators: [ Validators.email, Validators.required ],
                 label: 'Email',
-                showLabel: true,
             }
         })
         this.checkoutFormGroup = this.checkoutForm.formGroup

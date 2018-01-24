@@ -8,8 +8,8 @@ import { Order } from '@time/common/models/api-models/order'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
 import {
     StripeCreateProductsOrSkusResponse,
-} from '@time/common/models/api-responses/stripe-create-products-or-skus.response'
-import { IStripeCreateProductsOrSkusData } from '@time/common/models/api-responses/stripe-create-products-or-skus.response'
+} from '@time/common/models/api-responses/stripe/stripe-create-products-or-skus.response'
+import { StripeCreateProductsOrSkusResponseBody } from '@time/common/models/api-responses/stripe/stripe-create-products-or-skus.response.body'
 import { Currency } from '@time/common/models/enums/currency'
 import { ProductService } from '../product.service'
 
@@ -29,8 +29,8 @@ export class StripeProductService {
         @inject(Types.ProductService) private productService: ProductService,
     ) {}
 
-    private createProductsOrSkus<T extends StripeNode.products.IProduct|StripeNode.skus.ISku>(which: 'products'|'skus', products: Product[], order: Order): Promise<IStripeCreateProductsOrSkusData<StripeNode.products.IProduct|StripeNode.skus.ISku>> {
-        return new Promise<IStripeCreateProductsOrSkusData<StripeNode.products.IProduct|StripeNode.skus.ISku>>(async (resolve, reject) => {
+    private createProductsOrSkus<T extends StripeNode.products.IProduct|StripeNode.skus.ISku>(which: 'products'|'skus', products: Product[], order: Order): Promise<StripeCreateProductsOrSkusResponseBody<StripeNode.products.IProduct|StripeNode.skus.ISku>> {
+        return new Promise<StripeCreateProductsOrSkusResponseBody<StripeNode.products.IProduct|StripeNode.skus.ISku>>(async (resolve, reject) => {
             const productsToAdd = []
             let outOfStock = false
 
@@ -121,7 +121,7 @@ export class StripeProductService {
 
                 try {
                     const updatedProductsResponse = await this.productService.update(idsToUpdate, { enteredIntoStripe: true })
-                    const updatedProducts = updatedProductsResponse.data
+                    const updatedProducts = updatedProductsResponse.body
                     resolve({
                         products: updatedProducts,
                         stripeProductsOrSkus,
@@ -201,7 +201,7 @@ export class StripeProductService {
         return new Promise<StripeCreateProductsOrSkusResponse<StripeNode.products.IProduct>>(async (resolve, reject) => {
             try {
                 const createStripeProductsResponseData = await this.createProductsOrSkus<StripeNode.products.IProduct>('products', products, null)
-                resolve(new StripeCreateProductsOrSkusResponse<StripeNode.products.IProduct>(<IStripeCreateProductsOrSkusData<StripeNode.products.IProduct>>createStripeProductsResponseData))
+                resolve(new StripeCreateProductsOrSkusResponse<StripeNode.products.IProduct>(<StripeCreateProductsOrSkusResponseBody<StripeNode.products.IProduct>>createStripeProductsResponseData))
             }
             catch (error) {
                 reject(error)
@@ -219,7 +219,7 @@ export class StripeProductService {
         return new Promise<StripeCreateProductsOrSkusResponse<StripeNode.skus.ISku>>(async (resolve, reject) => {
             try {
                 const createStripeProductsResponseData = await this.createProductsOrSkus<StripeNode.skus.ISku>('products', products, order)
-                resolve(new StripeCreateProductsOrSkusResponse<StripeNode.skus.ISku>(<IStripeCreateProductsOrSkusData<StripeNode.skus.ISku>>createStripeProductsResponseData))
+                resolve(new StripeCreateProductsOrSkusResponse<StripeNode.skus.ISku>(<StripeCreateProductsOrSkusResponseBody<StripeNode.skus.ISku>>createStripeProductsResponseData))
             }
             catch (error) {
                 reject(error)
@@ -251,7 +251,7 @@ export class StripeProductService {
                             stockQuantity: newStockQuantity,
                             totalSales: newTotalSales,
                         })
-                        const updatedProduct = updatedProductResponse.data
+                        const updatedProduct = updatedProductResponse.body
                         resolve(updatedProduct)
                     }
                     catch (errorResponse) {

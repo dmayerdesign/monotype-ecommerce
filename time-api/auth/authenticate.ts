@@ -18,7 +18,7 @@ export class Authenticate {
     private static dbClient = new DbClient<User>()
     private static userService = new UserService()
 
-    // If the user is logged in, call `next()`. Else, send an error response
+    // If the user is logged in, call `next()`. Else, send an error response.
 
     public static isAuthenticated(req: Request, res: Response, next: NextFunction): void {
         const token = req.cookies[Cookies.jwt]
@@ -54,7 +54,7 @@ export class Authenticate {
 
     }
 
-    // If the user has the specified role, call `next()`. Else, send an error response
+    // If the user has the specified role, call `next()`. Else, send an error response.
 
     public static isAuthorized(role: number): (req: Request, res: Response, next: NextFunction) => void {
         return (req: Request, res: Response, next: NextFunction) => {

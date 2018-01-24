@@ -5,13 +5,4 @@
 <button (click)="doAModalThing()">Show modal</button>
 <button (click)="doAToastThing()">Show toast</button>
 
-<div>
-  <!-- <pre>
-    <code *ngFor="let product of products$ | async">{{product.name}}</code>
-  </pre> -->
-  <div *ngFor="let product of products">
-    <p><strong>{{product.name}}</strong></p>
-  </div>
-</div>
-
 <router-outlet></router-outlet>
