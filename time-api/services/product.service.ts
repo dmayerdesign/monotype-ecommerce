@@ -4,16 +4,18 @@ import * as mongoose from 'mongoose'
 
 import { Crud, HttpStatus } from '@time/common/constants'
 import { Types } from '@time/common/constants/inversify'
-import { IMongooseModel } from '@time/common/lib/goosetype'
-import { Price } from '@time/common/models/api-models/price'
+import { MongooseModel } from '@time/common/lib/goosetype'
+import { AttributeModel } from '@time/common/models/api-models/attribute'
+import { AttributeValueModel } from '@time/common/models/api-models/attribute-value'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
+import { TaxonomyTermModel } from '@time/common/models/api-models/taxonomy-term'
 import { GetProductsFromIdsRequest, GetProductsRequest } from '@time/common/models/api-requests/get-products.request'
 import { ListFromQueryRequest } from '@time/common/models/api-requests/list.request'
 import { ApiErrorResponse } from '@time/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@time/common/models/api-responses/api.response'
 import { GetProductDetailResponseBody } from '@time/common/models/api-responses/product-detail/get-product-detail.response.body'
 import { Currency } from '@time/common/models/enums/currency'
-import { IPrice } from '@time/common/models/interfaces/api/price'
+import { Price } from '@time/common/models/interfaces/api/price'
 import { DbClient } from '../data-access/db-client'
 import { ProductSearchHelper } from '../helpers/product-search.helper'
 import { CrudService } from './crud.service'
@@ -68,14 +70,22 @@ export class ProductService extends CrudService<Product> {
             try {
                 const product = await this.dbClient.findOne(ProductModel, { slug }, [
                     {
+                        path: 'taxonomyTerms',
+                        model: TaxonomyTermModel,
+                    },
+                    {
                         path: 'variableAttributes',
-                        model: 'Attribute'
+                        model: AttributeModel,
+                    },
+                    {
+                        path: 'variableAttributeValues',
+                        model: AttributeValueModel,
                     },
                     {
                         path: 'variations',
                         populate: {
                             path: 'attributeValues',
-                            model: 'AttributeValue'
+                            model: AttributeValueModel,
                         }
                     }
                 ])
@@ -266,7 +276,7 @@ export class ProductService extends CrudService<Product> {
         }
     }
 
-    public determinePrice(product: Product): IPrice {
+    public determinePrice(product: Product): Price {
         if (product.isOnSale && product.salePrice) {
             return product.salePrice
         }

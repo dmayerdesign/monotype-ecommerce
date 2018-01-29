@@ -1,6 +1,6 @@
 import { ToastType } from '../../enums/toast-type'
 
-export interface IToast {
+export interface Toast {
     type: ToastType
     message: string
     timeout: number

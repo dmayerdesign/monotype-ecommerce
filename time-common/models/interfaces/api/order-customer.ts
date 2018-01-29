@@ -1,11 +1,11 @@
-import { IAddress } from './address'
+import { Address } from './address'
 
-export interface IOrderCustomer {
+export interface OrderCustomer {
     userId: string
     stripeCustomerId: string
     email: string
     lastName: string
     firstName: string
-    shippingAddress: IAddress
-    billingAddress: IAddress
+    shippingAddress: Address
+    billingAddress: Address
 }

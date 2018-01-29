@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs/Subscription'
 import 'rxjs/add/operator/delay'
 
 import { AppConfig } from '@time/app-config'
-import { IToast } from '../../../../models/interfaces/ui/toast'
+import { Toast } from '../../../../models/interfaces/ui/toast'
 import { timeout } from '../../utils/timeout'
 
 @Component({
@@ -31,10 +31,10 @@ import { timeout } from '../../utils/timeout'
     styleUrls: [ './time-toast.component.scss' ],
 })
 export class TimeToastComponent implements OnInit, OnDestroy {
-    @Input() public toast$: Observable<IToast>
+    @Input() public toasts: Observable<Toast>
 
-    public queue: IToast[] = []
-    public toast: IToast
+    public queue: Toast[] = []
+    public toast: Toast
     public toastSubscription: Subscription
     public isShowing = false
     public isFadedIn = false
@@ -49,8 +49,8 @@ export class TimeToastComponent implements OnInit, OnDestroy {
     constructor() { }
 
     public ngOnInit(): void {
-        if (this.toast$) {
-            this.toastSubscription = this.toast$.subscribe(toast => {
+        if (this.toasts) {
+            this.toastSubscription = this.toasts.subscribe(toast => {
                 this.queueToast(toast)
                 this.showToast()
             })
@@ -65,7 +65,7 @@ export class TimeToastComponent implements OnInit, OnDestroy {
         })
     }
 
-    private queueToast(toast: IToast) {
+    private queueToast(toast: Toast) {
         this.queue.push(toast)
     }
 

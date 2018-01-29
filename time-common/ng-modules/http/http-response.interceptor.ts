@@ -39,19 +39,19 @@ export class TimeHttpResponseInterceptor implements HttpInterceptor {
         return Observable.of(request)
             .switchMap((req) => next.handle(req))
             .catch((errorResponse) => {
-                console.log('[TimeHttpResponseInterceptor#intercept] Error response', errorResponse)
+                // console.log('[TimeHttpResponseInterceptor#intercept] Error response', errorResponse)
                 const error = new SimpleError(errorResponse)
 
-                // If the error is a 401, pipe it through the `sessionInvalid$` stream.
+                // If the error is a 401, pipe it through the `sessionInvalids` stream.
 
                 if (error.status === HttpStatus.CLIENT_ERROR_unauthorized) {
-                    this.timeHttpService.sessionInvalid$.next(error)
+                    this.timeHttpService.sessionInvalids.next(error)
                 }
 
-                // Else, if the error is coming from a blacklisted endpoint, pipe it through the generic `error$` stream.
+                // Else, if the error is coming from a blacklisted endpoint, pipe it through the generic `errors` stream.
 
                 else if (!isBlacklistedFromErrorFlash()) {
-                    this.timeHttpService.error$.next(error)
+                    this.timeHttpService.errors.next(error)
                 }
 
                 return Observable.throw(error)

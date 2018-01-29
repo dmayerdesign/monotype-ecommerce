@@ -4,7 +4,7 @@ import { AppConfig as ProdConfig } from '@time/common/config/app-config.prod'
 import { AppConfig as StagingConfig } from '@time/common/config/app-config.staging'
 import { environment as env } from '@time/environment'
 
-export interface IEnvironment {
+export interface Environment {
     production?: boolean
     staging?: boolean
     development?: boolean
@@ -26,13 +26,13 @@ if (process.env && process.env.ENVIRONMENT) {
     }
 }
 else if (env) {
-    if ((<IEnvironment>env).production) {
+    if ((<Environment>env).production) {
         AppConfig = ProdConfig
     }
-    else if ((<IEnvironment>env).staging) {
+    else if ((<Environment>env).staging) {
         AppConfig = StagingConfig
     }
-    else if ((<IEnvironment>env).development) {
+    else if ((<Environment>env).development) {
         AppConfig = DevConfig
     }
 }

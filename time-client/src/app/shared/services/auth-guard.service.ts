@@ -23,7 +23,7 @@ export class AuthGuardService implements CanActivate, CanActivateChild {
     ) {}
 
     public canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-        return this.userService.user$
+        return this.userService.users
             .map(user => {
                 if (user) {
                     return true

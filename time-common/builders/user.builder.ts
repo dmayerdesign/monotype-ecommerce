@@ -1,4 +1,4 @@
-import { IAddress } from '../models/interfaces/api/address'
+import { Address } from '../models/interfaces/api/address'
 
 export class UserBuilder {
   public email: string
@@ -12,7 +12,7 @@ export class UserBuilder {
     large: string;
     thumbnail: string;
   }
-  public address?: IAddress
+  public address?: Address
   public phoneNumber?: string
 
   public profile?: {

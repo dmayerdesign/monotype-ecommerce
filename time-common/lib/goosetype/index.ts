@@ -5,7 +5,7 @@ export {
     post,
     plugin,
     MongooseDocument,
-    IMongooseModel,
+    MongooseModel,
     MongooseSchemaOptions,
     Ref
 } from './goosetype'

@@ -4,6 +4,9 @@ export class Copy {
         generic: 'Oops! Something went wrong. Please refresh the page and try again.',
         invalidPassword: 'Wrong password. Try again.',
 
+        // OrganizationService
+        findOrganizationError: 'Failed to look up the organization.',
+
         // OrderService
         findOrderError: 'Failed to look up the order.',
         itemOutOfStockError: 'Oh no — one of your chosen items is out of stock!',

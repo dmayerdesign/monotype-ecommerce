@@ -6,7 +6,7 @@ import { LocalStorageKeys } from '@time/common/constants/local-storage-keys'
 import { Cart } from '@time/common/models/api-models/cart'
 import { Price } from '@time/common/models/api-models/price'
 import { Product } from '@time/common/models/api-models/product'
-import { ICartProduct } from '@time/common/models/interfaces/ui/cart-product'
+import { CartProduct } from '@time/common/models/interfaces/ui/cart-product'
 import { ProductService } from '../../shop/services/product.service'
 import { OrganizationService } from './organization.service'
 import { UserService } from './user.service'
@@ -24,8 +24,8 @@ export class CartService {
         discounts: [],
     }
     private cart: Cart
-    private cartSubject = new ReplaySubject<Cart>(1)
-    public cart$ = this.cartSubject.asObservable()
+    private cartPump = new ReplaySubject<Cart>(1)
+    public carts = this.cartPump.asObservable()
 
     constructor(
         private util: UtilService,
@@ -34,7 +34,7 @@ export class CartService {
         private userService: UserService,
     ) {
         this.cart = { ...this.initialState }
-        this.orgService.organization$.subscribe(org => {
+        this.orgService.organizations.subscribe(org => {
             this.init()
         })
     }
@@ -44,8 +44,8 @@ export class CartService {
         if (cart) {
             this.populateAndStream(cart)
         }
-        this.userService.user$.subscribe(user => {
-            if (user) {
+        this.userService.users.subscribe((user) => {
+            if (user && user.cart && user.cart.items) {
                 if (user.cart.items.length || user.cart.discounts.length) {
                     this.populateAndStream(user.cart)
                 }
@@ -57,7 +57,7 @@ export class CartService {
         const newCart = { ...this.cart }
         this.previousState = { ...this.cart }
 
-        this.productService.getOne$.subscribe(product => {
+        this.productService.getOneSource.subscribe(product => {
             const amtToAdd: number = product.stockQuantity >= quantity ? quantity : product.stockQuantity
             for (let i = 0; i < amtToAdd; i++) {
                 newCart.items.push(product)
@@ -77,12 +77,12 @@ export class CartService {
                     newCart.items = products
                     newCart.displayItems = this.getDisplayItems(products)
                     this.cart = newCart
-                    this.cartSubject.next(this.cart)
+                    this.cartPump.next(this.cart)
                 })
         }
         else {
             this.cart = newCart
-            this.cartSubject.next(this.cart)
+            this.cartPump.next(this.cart)
         }
     }
 
@@ -108,8 +108,8 @@ export class CartService {
         return this.getSubTotal(items) * this.orgService.organization.retailSettings.salesTaxPercentage / 100
     }
 
-    private getDisplayItems(items: Product[]): ICartProduct[] {
-        const displayItems: ICartProduct[] = []
+    private getDisplayItems(items: Product[]): CartProduct[] {
+        const displayItems: CartProduct[] = []
 
         items.forEach(item => {
             const duplicateItemIndex = displayItems.findIndex(displayItem => displayItem.product._id === item._id)

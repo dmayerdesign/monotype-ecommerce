@@ -5,6 +5,6 @@ import { SimpleError } from './http.models'
 
 @Injectable()
 export class TimeHttpService {
-    public error$ = new ReplaySubject<SimpleError>()
-    public sessionInvalid$ = new ReplaySubject<SimpleError>()
+    public errors = new ReplaySubject<SimpleError>()
+    public sessionInvalids = new ReplaySubject<SimpleError>()
 }

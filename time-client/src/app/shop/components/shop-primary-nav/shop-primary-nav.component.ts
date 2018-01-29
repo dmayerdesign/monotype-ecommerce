@@ -20,8 +20,8 @@ export class ShopPrimaryNavComponent implements OnInit {
     ) { }
 
     public ngOnInit(): void {
-        this.userService.user$.subscribe((user) => this.user = user)
-        this.organizationService.organization$.subscribe((organization) => this.organization = organization)
+        this.userService.users.subscribe((user) => this.user = user)
+        this.organizationService.organizations.subscribe((organization) => this.organization = organization)
     }
 
 }

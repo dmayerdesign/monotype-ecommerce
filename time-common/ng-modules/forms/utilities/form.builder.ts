@@ -1,12 +1,12 @@
 import { FormBuilder, FormGroup } from '@angular/forms'
 
-import { ITimeFormFieldOptions } from '../models/form-field-options'
-import { ITimeFormGroupOptions } from '../models/form-group-options'
+import { TimeFormFieldOptions } from '../models/form-field-options'
+import { TimeFormGroupOptions } from '../models/form-group-options'
 
 export class TimeFormBuilder {
     public _formGroup: FormGroup
 
-    constructor(private formBuilder: FormBuilder, private options: ITimeFormGroupOptions) {
+    constructor(private formBuilder: FormBuilder, private options: TimeFormGroupOptions) {
         this.init()
     }
 
@@ -15,14 +15,16 @@ export class TimeFormBuilder {
             const formGroupOptions = {}
 
             for (const option in this.options) {
-                formGroupOptions[option] = [ this.options[option].defaultValue, ...this.options[option].validators ]
+                const defaultValue = this.options[option].defaultValue || ''
+                const validators = this.options[option].validators || []
+                formGroupOptions[option] = [ defaultValue, validators ]
             }
 
             this._formGroup = this.formBuilder.group(formGroupOptions)
         }
     }
 
-    public getOptions(field: string): ITimeFormFieldOptions {
+    public getOptions(field: string): TimeFormFieldOptions {
         return {
             label: this.options[field].label,
             control: this._formGroup.get(field),

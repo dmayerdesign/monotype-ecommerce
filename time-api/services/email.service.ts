@@ -6,7 +6,7 @@ const mailgun = require('mailgun-js')({ apiKey: process.env.MAILGUN_API_KEY, dom
 import { AppConfig } from '@time/app-config'
 import { EmailBuilder } from '@time/common/builders/email.builder'
 import { Types } from '@time/common/constants/inversify'
-import { IEmailOptions, IEmailServiceOptions, IOrderEmailOptions } from '@time/common/models/interfaces/api/email-options'
+import { EmailOptions, EmailServiceOptions, OrderEmailOptions } from '@time/common/models/interfaces/api/email-options'
 import { OrderHelper } from '../helpers/order.helper'
 
 const receipt = require('@time/common/emails/templates/receipt')
@@ -25,9 +25,9 @@ export class EmailService {
     /**
      * Send an email
      *
-     * @param {IEmailOptions} options
+     * @param {EmailOptions} options
      */
-    public sendEmail(options: IEmailOptions): Promise<any> {
+    public sendEmail(options: EmailOptions): Promise<any> {
         return new Promise<any>((resolve, reject) => {
 
             const mailOptions: any = {
@@ -55,9 +55,9 @@ export class EmailService {
     /**
      * Send a receipt for an order
      *
-     * @param {IOrderEmailOptions} options
+     * @param {OrderEmailOptions} options
      */
-    public sendReceipt(options: IOrderEmailOptions): void {
+    public sendReceipt(options: OrderEmailOptions): void {
         const emailBuilder = new EmailBuilder()
             .setOptions({
                 ...options,
@@ -72,9 +72,9 @@ export class EmailService {
     /**
      * Send a shipping notification
      *
-     * @param {IOrderEmailOptions} options
+     * @param {OrderEmailOptions} options
      */
-    public sendShippingNotification(options: IOrderEmailOptions) {
+    public sendShippingNotification(options: OrderEmailOptions) {
         const emailBuilder = new EmailBuilder()
             .setOptions({
                 ...options,
@@ -96,7 +96,7 @@ export class EmailService {
      * @param {User} options.user
      * @param {string} options.verificationCode
      */
-    public sendEmailVerification(options: IEmailServiceOptions) {
+    public sendEmailVerification(options: EmailServiceOptions) {
         const emailBuilder = new EmailBuilder()
             .setOptions({
                 ...options,
@@ -114,7 +114,7 @@ export class EmailService {
      * @param {Error} error
      */
     public reportError(error: Error) {
-        const options: IEmailOptions = {
+        const options: EmailOptions = {
             toEmail: AppConfig.developer_email,
             fromName: AppConfig.brand_name,
             fromEmail: AppConfig.organization_email,

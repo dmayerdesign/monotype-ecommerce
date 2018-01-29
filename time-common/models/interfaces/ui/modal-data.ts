@@ -1,6 +1,8 @@
+import { TemplateRef } from '@angular/core'
+
 import { ModalType } from '../../enums/modal-type'
 
-export interface IModalData {
+export interface ModalData {
     title: string
     type: ModalType
     form?: {
@@ -17,4 +19,6 @@ export interface IModalData {
         }
         onSubmit?(args?: any): void
     }
+    content: TemplateRef<any>
+    context: object
 }

@@ -42,13 +42,15 @@ export class UtilService {
     }
 
     public getFromLocalStorage(key: string): object|string|undefined {
-        const item = localStorage.getItem(key)
-        if (item && item.length) {
-            if (item.charAt(0) === '[' || item.charAt(0) === '{') {
-                return JSON.parse(item)
-            }
-            else {
-                return item
+        if (window && window.localStorage) {
+            const item = window.localStorage.getItem(key)
+            if (item && item.length) {
+                if (item.charAt(0) === '[' || item.charAt(0) === '{') {
+                    return JSON.parse(item)
+                }
+                else {
+                    return item
+                }
             }
         }
         return undefined

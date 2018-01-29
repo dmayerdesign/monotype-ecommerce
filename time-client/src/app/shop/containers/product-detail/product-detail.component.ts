@@ -50,7 +50,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         this.getDetailSubscription = this.activatedRoute.params
             .switchMap((params: { slug: string }) => {
                 setTimeout(() => this.productService.getDetail(params.slug))
-                return this.productService.getDetail$
+                return this.productService.getDetails
             })
             .subscribe((responseBody) => {
                 this.parentOrStandalone = responseBody

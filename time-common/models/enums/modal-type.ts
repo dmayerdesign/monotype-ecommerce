@@ -1,5 +1,6 @@
 export enum ModalType {
     Banner = 'banner',
     Form = 'form',
-    Alert = 'alert'
+    Alert = 'alert',
+    Default = 'default',
 }

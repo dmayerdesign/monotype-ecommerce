@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse, HttpEvent, HttpParams } from '@angular/c
 import { Observable } from 'rxjs/Observable'
 import { Subject } from 'rxjs/Subject'
 
-import { HttpStatus } from '../../constants/http'
+import { HttpStatus } from '../../constants/http-status'
 import { ListFromIdsRequest, ListRequest } from '../../models/api-requests/list.request'
 
 export class SimpleError {
@@ -22,45 +22,45 @@ export abstract class RestService<T> {
     public getRequestType? = ListRequest
     public getSomeRequestType? = ListFromIdsRequest
 
-    protected getSubject = new Subject<T[]>()
-    protected getOneSubject = new Subject<T>()
-    protected createSubject = new Subject<T>()
-    protected updateSubject = new Subject<T>()
-    protected deleteSubject = new Subject<T>()
+    protected getPump = new Subject<T[]>()
+    protected getOnePump = new Subject<T>()
+    protected createPump = new Subject<T>()
+    protected updatePump = new Subject<T>()
+    protected deletePump = new Subject<T>()
 
-    protected getErrorSubject = new Subject<SimpleError>()
-    protected getOneErrorSubject = new Subject<SimpleError>()
-    protected createErrorSubject = new Subject<SimpleError>()
-    protected updateErrorSubject = new Subject<SimpleError>()
-    protected deleteErrorSubject = new Subject<SimpleError>()
+    protected getErrorPump = new Subject<SimpleError>()
+    protected getOneErrorPump = new Subject<SimpleError>()
+    protected createErrorPump = new Subject<SimpleError>()
+    protected updateErrorPump = new Subject<SimpleError>()
+    protected deleteErrorPump = new Subject<SimpleError>()
 
     public data: T[]
-    public get$: Observable<T[]>
-    public getOne$: Observable<T>
-    public create$: Observable<T>
-    public update$: Observable<T>
-    public delete$: Observable<T>
+    public getSource: Observable<T[]>
+    public getOneSource: Observable<T>
+    public createSource: Observable<T>
+    public updateSource: Observable<T>
+    public deleteSource: Observable<T>
 
-    public getError$: Observable<SimpleError>
-    public getOneError$: Observable<SimpleError>
-    public createError$: Observable<SimpleError>
-    public updateError$: Observable<SimpleError>
-    public deleteError$: Observable<SimpleError>
+    public getErrorSource: Observable<SimpleError>
+    public getOneErrorSource: Observable<SimpleError>
+    public createErrorSource: Observable<SimpleError>
+    public updateErrorSource: Observable<SimpleError>
+    public deleteErrorSource: Observable<SimpleError>
 
     constructor(protected http: HttpClient) {
-        this.get$ = this.getSubject.asObservable()
-        this.getOne$ = this.getOneSubject.asObservable()
-        this.create$ = this.createSubject.asObservable()
-        this.update$ = this.updateSubject.asObservable()
-        this.delete$ = this.deleteSubject.asObservable()
+        this.getSource = this.getPump.asObservable()
+        this.getOneSource = this.getOnePump.asObservable()
+        this.createSource = this.createPump.asObservable()
+        this.updateSource = this.updatePump.asObservable()
+        this.deleteSource = this.deletePump.asObservable()
 
-        this.getError$ = this.getErrorSubject.asObservable()
-        this.getOneError$ = this.getOneErrorSubject.asObservable()
-        this.createError$ = this.createErrorSubject.asObservable()
-        this.updateError$ = this.updateErrorSubject.asObservable()
-        this.deleteError$ = this.deleteErrorSubject.asObservable()
+        this.getErrorSource = this.getErrorPump.asObservable()
+        this.getOneErrorSource = this.getOneErrorPump.asObservable()
+        this.createErrorSource = this.createErrorPump.asObservable()
+        this.updateErrorSource = this.updateErrorPump.asObservable()
+        this.deleteErrorSource = this.deleteErrorPump.asObservable()
 
-        this.get$.subscribe(data => {
+        this.getSource.subscribe(data => {
             this.data = data
         })
     }
@@ -72,8 +72,8 @@ export abstract class RestService<T> {
 
         this.http.get<T[]>(this.endpoint, { params })
             .subscribe(
-                (docs) => this.getSubject.next(docs),
-                (error: SimpleError) => this.getErrorSubject.next(error),
+                (docs) => this.getPump.next(docs),
+                (error: SimpleError) => this.getErrorPump.next(error),
             )
     }
 
@@ -89,8 +89,8 @@ export abstract class RestService<T> {
     public getOne(id: string): void {
         this.http.get<T>(`${this.endpoint}/${id}`)
             .subscribe(
-                (doc) => this.getOneSubject.next(doc),
-                (error: SimpleError) => this.getOneErrorSubject.next(error),
+                (doc) => this.getOnePump.next(doc),
+                (error: SimpleError) => this.getOneErrorPump.next(error),
             )
     }
 

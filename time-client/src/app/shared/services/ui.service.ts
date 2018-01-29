@@ -4,23 +4,33 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Subject } from 'rxjs/Subject'
 
 import { ErrorMessage } from '@time/common/constants/error-message'
+import { HttpStatus } from '@time/common/constants/http-status'
 import { ToastType } from '@time/common/models/enums/toast-type'
-import { IModalData } from '@time/common/models/interfaces/ui/modal-data'
-import { IToast } from '@time/common/models/interfaces/ui/toast'
+import { ModalData } from '@time/common/models/interfaces/ui/modal-data'
+import { Toast } from '@time/common/models/interfaces/ui/toast'
 import { SimpleError, TimeHttpService } from '@time/common/ng-modules/http'
 
 @Injectable()
 export class UiService {
-    public loading$ = new BehaviorSubject<boolean>(true)
-    public flash$ = new Subject<IToast>()
-    public modal$ = new Subject<IModalData>()
+    public loadings = new BehaviorSubject<boolean>(true)
+    public flashes = new Subject<Toast>()
+    public modals = new Subject<ModalData>()
 
     constructor(
         private titleService: Title,
         private timeHttpService: TimeHttpService,
     ) {
-        this.timeHttpService.error$.subscribe(error => {
-            this.flashError(error)
+        this.timeHttpService.errors.subscribe((error) => {
+            const isClientError = Object.keys(HttpStatus)
+                    .filter((httpStatusKey) => HttpStatus[httpStatusKey] >= 400 && HttpStatus[httpStatusKey] < 500)
+                    .some((httpStatusKey) => error.status === HttpStatus[httpStatusKey])
+
+            if (isClientError) {
+                this.flashWarning(error)
+            }
+            else {
+                this.flashError(error)
+            }
         })
     }
 
@@ -43,12 +53,12 @@ export class UiService {
      * @memberof UiService
      */
     public flash(message: string, type: ToastType = ToastType.Info, timeout: number = 5500) {
-        const data: IToast = {
+        const data: Toast = {
             type,
             message,
             timeout,
         }
-        this.flash$.next(data)
+        this.flashes.next(data)
     }
 
     /**
@@ -62,12 +72,22 @@ export class UiService {
     }
 
     /**
-     * Display a modal.
+	 * Display a warning as a flash message.
      *
-     * @param {IModalData} data
+     * @param {SimpleError} error
      * @memberof UiService
      */
-    public showModal(data: IModalData) {
-        this.modal$.next(data)
+    public flashWarning(error: SimpleError) {
+        this.flash(error.message || ErrorMessage.ServerWarning, ToastType.Warning)
+    }
+
+    /**
+     * Display a modal.
+     *
+     * @param {ModalData} data
+     * @memberof UiService
+     */
+    public showModal(data: ModalData) {
+        this.modals.next(data)
     }
 }

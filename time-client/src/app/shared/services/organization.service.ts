@@ -11,10 +11,10 @@ import { SimpleError } from '@time/common/ng-modules/http'
 @Injectable()
 export class OrganizationService {
     public organization: Organization
-    private organizationSubject = new ReplaySubject<Organization>(1)
-    public organization$ = this.organizationSubject.asObservable()
-    private organizationErrorSubject = new Subject<SimpleError>()
-    public organizationError$ = this.organizationErrorSubject.asObservable()
+    private organizationPump = new ReplaySubject<Organization>(1)
+    public organizations = this.organizationPump.asObservable()
+    private organizationErrorPump = new Subject<SimpleError>()
+    public organizationErrors = this.organizationErrorPump.asObservable()
 
     constructor (
         private http: HttpClient,
@@ -27,9 +27,9 @@ export class OrganizationService {
             .subscribe(
                 organization => {
                     this.organization = organization
-                    this.organizationSubject.next(organization)
+                    this.organizationPump.next(organization)
                 },
-                (error: SimpleError) => this.organizationErrorSubject.next(error),
+                (error: SimpleError) => this.organizationErrorPump.next(error),
             )
     }
 }

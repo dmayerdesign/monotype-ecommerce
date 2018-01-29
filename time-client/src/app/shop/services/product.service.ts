@@ -16,17 +16,17 @@ export class ProductService extends RestService<Product> {
     public endpoint = ApiEndpoints.Products
     public getSomeRequestType = GetProductsFromIdsRequest
 
-    public getDetail$: Observable<GetProductDetailResponseBody>
-    public getDetailError$: Observable<SimpleError>
-    private getDetailSubject = new Subject<GetProductDetailResponseBody>()
-    private getDetailErrorSubject = new Subject<SimpleError>()
+    private getDetailPump = new Subject<GetProductDetailResponseBody>()
+    private getDetailErrorPump = new Subject<SimpleError>()
+    public getDetails: Observable<GetProductDetailResponseBody>
+    public getDetailErrors: Observable<SimpleError>
 
     constructor (
         protected http: HttpClient,
     ) {
         super(http)
-        this.getDetail$ = this.getDetailSubject.asObservable()
-        this.getDetailError$ = this.getDetailErrorSubject.asObservable()
+        this.getDetails = this.getDetailPump.asObservable()
+        this.getDetailErrors = this.getDetailErrorPump.asObservable()
     }
 
     public get(request = new GetProductsRequest()): void {
@@ -36,8 +36,8 @@ export class ProductService extends RestService<Product> {
     public getDetail(slug: string): void {
         this.http.get<GetProductDetailResponseBody>(`${this.endpoint}/${slug}/detail`)
             .subscribe(
-                (responseBody) => this.getDetailSubject.next(responseBody),
-                (error: SimpleError) => this.getDetailErrorSubject.next(error),
+                (responseBody) => this.getDetailPump.next(responseBody),
+                (error: SimpleError) => this.getDetailErrorPump.next(error),
             )
     }
 

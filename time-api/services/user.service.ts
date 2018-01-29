@@ -9,7 +9,7 @@ import { Types } from '@time/common/constants/inversify'
 import { User, UserModel } from '@time/common/models/api-models/user'
 import { ApiErrorResponse } from '@time/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@time/common/models/api-responses/api.response'
-import { ILogin } from '@time/common/models/interfaces/api/login'
+import { Login } from '@time/common/models/interfaces/api/login'
 import { DbClient } from '../data-access/db-client'
 
 @injectable()
@@ -74,7 +74,7 @@ export class UserService {
         })
     }
 
-    public login(credentials: ILogin, res: Response): Promise<void> {
+    public login(credentials: Login, res: Response): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             try {
 

@@ -15,7 +15,7 @@ import 'rxjs/add/observable/fromEvent'
 
 import { Copy } from '@time/common/constants/copy'
 import { AutoUnsubscribe } from '@time/common/lib/auto-unsubscribe/auto-unsubscribe.decorator'
-import { ITimeFormFieldOptions } from '../../models/form-field-options'
+import { TimeFormFieldOptions } from '../../models/form-field-options'
 
 @AutoUnsubscribe()
 @Component({
@@ -44,7 +44,7 @@ import { ITimeFormFieldOptions } from '../../models/form-field-options'
 })
 export class TimeFormFieldComponent implements OnInit, OnDestroy, AfterContentInit {
 
-    @Input() public options: ITimeFormFieldOptions
+    @Input() public options: TimeFormFieldOptions
     @Input() public customErrorMessage: TemplateRef<any>
     @ContentChild('input', { read: ElementRef }) public input: ElementRef
 

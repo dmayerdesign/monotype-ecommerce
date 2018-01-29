@@ -17,7 +17,11 @@ import { ApiController } from './api.controller'
 @controller(ApiEndpoints.Organization)
 export class OrganizationController extends ApiController implements interfaces.Controller {
 
-    @inject(Types.OrganizationService) private organizationService: OrganizationService
+    constructor(
+        @inject(Types.OrganizationService) private organizationService: OrganizationService,
+    ) {
+        super()
+    }
 
     @httpGet('/')
     public get(
