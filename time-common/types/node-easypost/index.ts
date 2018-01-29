@@ -127,7 +127,7 @@
             public readonly est_delivery_days?: number /* This field is deprecated and should be ignored. */
         }
 
-        export class Insurance extends TimestampedResource<"Insurance"> {
+        export class Insurance extends TimestampedResource<'Insurance'> {
             public readonly mode: string /*	"test" or "production" */
             public readonly reference: string /* The unique reference for this Insurance, if any */
             public readonly amount: string /* USD value of insured goods with sub-cent precision */
@@ -143,7 +143,7 @@
             public readonly messages: string[] /* The list of errors encountered during attempted purchase of the insurance */
         }
 
-        export interface IShipmentOptions {
+        export interface ShipmentOptions {
             additional_handling: boolean /* Setting this option to true, will add an additional handling charge. */
             address_validation_level: string /* Setting this option to "0", will allow the minimum amount of address information to pass the validation check. Only for USPS postage. */
             alcohol: boolean /* Set this option to true if your shipment contains alcohol. */
@@ -180,7 +180,7 @@
             print_custom_1_code: string /* Specify the type of print_custom_1. */
         }
 
-        export interface INewShipment {
+        export interface NewShipment {
             reference?: string
             to_address?: Address
             from_address?: Address
@@ -215,7 +215,7 @@
             public selected_rate: Rate
             public postage_label: any /* PostageLabel */
             public messages?: any[] /* Message[] */
-            public options?: IShipmentOptions
+            public options?: ShipmentOptions
             public is_return?: boolean
             public tracking_code?: string
             public usps_zone?: string
@@ -232,7 +232,7 @@
             public lowestRate: () => Rate
             public save: () => Promise<Shipment>
 
-            constructor(s?: INewShipment) {
+            constructor(s?: NewShipment) {
                 super()
             }
         }

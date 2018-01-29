@@ -5,14 +5,14 @@ import * as mongoose from 'mongoose'
 import { Document, Error, Model, Types } from 'mongoose'
 
 import { ErrorMessage } from '@time/common/constants/error-message'
-import { prop, IMongooseModel, MongooseDocument } from '@time/common/lib/goosetype'
+import { prop, MongooseDocument, MongooseModel } from '@time/common/lib/goosetype'
 import { SchemaError } from '@time/common/models/types/errors'
 import { ListFromIdsRequest, ListFromQueryRequest, ListFromSearchRequest, ListRequest } from '../../time-common/models/api-requests/list.request'
 
-interface IPopulateOptions {
+interface PopulateOptions {
     path: string
-    model?: string
-    populate?: IPopulateOptions
+    model?: MongooseModel<any>
+    populate?: PopulateOptions
 }
 
 /**
@@ -25,7 +25,7 @@ interface IPopulateOptions {
 @injectable()
 export class DbClient<T extends MongooseDocument<T>> {
 
-    private loadOrStream<T>(model: IMongooseModel, request: ListFromQueryRequest, res: Response): Promise<T[]> {
+    private loadOrStream<T extends MongooseDocument<T> = T>(model: MongooseModel, request: ListFromQueryRequest, res: Response): Promise<T[]> {
         const {
             skip,
             limit,
@@ -78,7 +78,7 @@ export class DbClient<T extends MongooseDocument<T>> {
      * @param {object} query - The database query
      * @param {boolean} res - Pass the express `Response` if the set of documents should be streamed rather than loaded into memory
      */
-    public findQuery<T>(model: IMongooseModel<T>, requestObject: ListFromQueryRequest, res?: Response): Promise<T[]> {
+    public findQuery<T extends MongooseDocument<T> = T>(model: MongooseModel<T>, requestObject: ListFromQueryRequest, res?: Response): Promise<T[]> {
         const request = new ListFromQueryRequest(requestObject)
         return this.loadOrStream<T>(model, request, res)
     }
@@ -86,11 +86,11 @@ export class DbClient<T extends MongooseDocument<T>> {
     /**
      * Find some documents
      *
-     * @param {IMongooseModel<T>} model The Mongoose `Model` representing the collection containing the document
+     * @param {MongooseModel<T>} model The Mongoose `Model` representing the collection containing the document
      * @param {ListRequest} request
      * @memberof DbClient
      */
-    public find<T>(model: IMongooseModel<T>, requestObject: ListRequest, res?: Response): Promise<T[]> {
+    public find<T extends MongooseDocument<T> = T>(model: MongooseModel<T>, requestObject: ListRequest, res?: Response): Promise<T[]> {
         const request = new ListFromQueryRequest({
             ...requestObject,
             query: {},
@@ -101,11 +101,11 @@ export class DbClient<T extends MongooseDocument<T>> {
     /**
      * Find some documents using a search string
      *
-     * @param {IMongooseModel<T>} model The Mongoose `Model` representing the collection containing the document
+     * @param {MongooseModel<T>} model The Mongoose `Model` representing the collection containing the document
      * @param {ListRequest} request
      * @memberof DbClient
      */
-    public findWithSearch<T>(model: IMongooseModel<T>, { search, searchFields, skip, limit, sortBy, sortDirection }: ListFromSearchRequest, res?: Response): Promise<T[]> {
+    public findWithSearch<T extends MongooseDocument<T> = T>(model: MongooseModel<T>, { search, searchFields, skip, limit, sortBy, sortDirection }: ListFromSearchRequest, res?: Response): Promise<T[]> {
         return new Promise<T[]>(async (resolve, reject) => {
             try {
                 const searchQuery = { $and: [] }
@@ -143,11 +143,11 @@ export class DbClient<T extends MongooseDocument<T>> {
     /**
      * Find some documents using an array of `ObjectId`s
      *
-     * @param {IMongooseModel<T>} model The Mongoose `Model` representing the collection containing the document
+     * @param {MongooseModel<T>} model The Mongoose `Model` representing the collection containing the document
      * @param {string[]} ids An array of `ObjectId`s
      * @memberof DbClient
      */
-    public findIds<T>(model: IMongooseModel<T>, request: ListFromIdsRequest): Promise<T[]> {
+    public findIds<T extends MongooseDocument<T> = T>(model: MongooseModel<T>, request: ListFromIdsRequest): Promise<T[]> {
         return new Promise<T[]>(async (resolve, reject) => {
             try {
                 const documents = await model.find({
@@ -164,11 +164,11 @@ export class DbClient<T extends MongooseDocument<T>> {
     /**
      * Find a document. Optionally, perform a series of Mongoose `populate`s.
      *
-     * @param {IMongooseModel<T>} model The Mongoose `Model` representing the collection containing the document
+     * @param {MongooseModel<T>} model The Mongoose `Model` representing the collection containing the document
      * @param {object} query The query passed to `Model.findOne`
      * @memberof DbClient
      */
-    public findOne(model: IMongooseModel<T>, query: object, populateOptionsArr?: IPopulateOptions[]): Promise<T> {
+    public findOne<T extends MongooseDocument<T> = T>(model: MongooseModel<T>, query: object, populateOptionsArr?: PopulateOptions[]): Promise<T> {
         return new Promise<T>(async (resolve, reject) => {
             try {
                 const findQuery = model.findOne(query)
@@ -192,11 +192,11 @@ export class DbClient<T extends MongooseDocument<T>> {
     /**
      * Find a document by `id`
      *
-     * @param {IMongooseModel<T>} model The Mongoose `Model` representing the collection containing the document
+     * @param {MongooseModel<T>} model The Mongoose `Model` representing the collection containing the document
      * @param {string} id The id passed to `Model.findById`
      * @memberof DbClient
      */
-    public findById(model: IMongooseModel<T>, id: string): Promise<T> {
+    public findById<T extends MongooseDocument<T> = T>(model: MongooseModel<T>, id: string): Promise<T> {
         return new Promise<T>(async (resolve, reject) => {
             let document: T
             let documentResult: any
@@ -221,7 +221,7 @@ export class DbClient<T extends MongooseDocument<T>> {
      * @param {boolean} addToArrays Set to `false` if fields should be replaced in the same way as other fields, using a MongoDB `$set`. Defaults to `true`, meaning that fields containing arrays are treated as additions to the existing array using MongoDB's `$addToSet` operator
      * @memberof DbClient
      */
-    public update(model: IMongooseModel<T>, ids: (string|Types.ObjectId)[], update: object, addToArrays = true): Promise<T[]> {
+    public update<T extends MongooseDocument<T> = T>(model: MongooseModel<T>, ids: (string|Types.ObjectId)[], update: object, addToArrays = true): Promise<T[]> {
         return new Promise<T[]>(async (resolve, reject) => {
             let documents: T[]
 
@@ -269,7 +269,7 @@ export class DbClient<T extends MongooseDocument<T>> {
      * @param {boolean} concatArrays Set to `true` if fields containing arrays should be treated as additions to the existing array. Defaults to `false`, meaning that arrays are replaced in the same way as other fields
      * @memberof DbClient
      */
-    public updateById(model: IMongooseModel<T>, id: string|Types.ObjectId, update: Object, concatArrays = true): Promise<T> {
+    public updateById<T extends MongooseDocument<T> = T>(model: MongooseModel<T>, id: string|Types.ObjectId, update: Object, concatArrays = true): Promise<T> {
         return new Promise<T>(async (resolve, reject) => {
             let document: T
             try {
@@ -320,12 +320,12 @@ export class DbClient<T extends MongooseDocument<T>> {
     /**
      * Create several documents using Model#create.
      *
-     * @param {IMongooseModel<T>} model
+     * @param {MongooseModel<T>} model
      * @param {T[]} docs
      * @returns {Promise<T[]>}
      * @memberof DbClient
      */
-    public create(model: IMongooseModel<T>, docs: T[]): Promise<T[]> {
+    public create<T extends MongooseDocument<T> = T>(model: MongooseModel<T>, docs: T[]): Promise<T[]> {
         return new Promise<T[]>(async (resolve, reject) => {
             try {
                 const newDocs = await model.create(docs)
@@ -343,7 +343,7 @@ export class DbClient<T extends MongooseDocument<T>> {
         })
     }
 
-    public delete(model: IMongooseModel<T>, id: string): Promise<void> {
+    public delete<T extends MongooseDocument<T> = T>(model: MongooseModel<T>, id: string): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             try {
                 await model.findByIdAndRemove(id).exec()

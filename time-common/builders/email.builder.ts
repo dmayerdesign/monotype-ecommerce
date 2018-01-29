@@ -1,11 +1,11 @@
 import { AppConfig } from '../../app-config'
 import { Order } from '../models/api-models/order'
 import { Organization } from '../models/api-models/organization'
-import { IEmailOptions, IEmailStyleOptions, IOrderEmailOptions } from '../models/interfaces/api/email-options'
+import { EmailOptions, EmailStyleOptions, OrderEmailOptions } from '../models/interfaces/api/email-options'
 
 export class EmailBuilder {
 
-    private _options: IEmailOptions = {
+    private _options: EmailOptions = {
         fromEmail: AppConfig.organization_email,
         fromName: AppConfig.brand_name,
         toEmail: null,
@@ -16,7 +16,7 @@ export class EmailBuilder {
 
     private html: string
 
-    private styles: IEmailStyleOptions = {
+    private styles: EmailStyleOptions = {
         mastheadBgColor: '#00b0ff',
         accentColor: '#ff3c7c',
         fontFamily: 'Montserrat',
@@ -30,7 +30,7 @@ export class EmailBuilder {
 
     private customData: any = {}
 
-    public setOptions(options?: IOrderEmailOptions): this {
+    public setOptions(options?: OrderEmailOptions): this {
         if (options) {
             // Email options
             if (typeof options.fromEmail !== 'undefined') this._options.fromEmail = options.fromEmail
@@ -52,7 +52,7 @@ export class EmailBuilder {
         return this
     }
 
-    public setHtml(pugModule: (options: IEmailOptions) => string): this {
+    public setHtml(pugModule: (options: EmailOptions) => string): this {
         this.html = pugModule(this.createEmailOptions)
         return this
     }
@@ -66,7 +66,7 @@ export class EmailBuilder {
         }
     }
 
-    public get sendEmailOptions(): IEmailOptions {
+    public get sendEmailOptions(): EmailOptions {
         return {
             ...this._options,
             html: this.html,

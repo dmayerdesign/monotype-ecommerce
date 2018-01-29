@@ -1,16 +1,16 @@
 import { Document } from 'mongoose'
 
 import { Product } from '../../api-models/product'
-import { ICartProduct } from '../ui/cart-product'
+import { CartProduct } from '../ui/cart-product'
 
-export interface ICart {
+export interface Cart {
     count: number
     items: Product[]
-    displayItems?: ICartProduct[],
+    displayItems?: CartProduct[],
     subTotal: number
     total: number
     discounts: string[]
 }
 
-export interface ICartDocument extends ICart, Document { }
+export interface CartDocument extends Cart, Document { }
 

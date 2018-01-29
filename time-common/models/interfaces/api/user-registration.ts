@@ -1,4 +1,4 @@
-export interface IUserRegistration {
+export interface UserRegistration {
     email: string
     password: string
     passwordConfirmation: string

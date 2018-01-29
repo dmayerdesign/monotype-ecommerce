@@ -3,9 +3,9 @@ import { Document } from 'mongoose'
 import { Cart } from '../../api-models/cart'
 import { Image } from '../../api-models/image'
 import { Order } from '../../api-models/order'
-import { IAddress } from './address'
+import { Address } from './address'
 
-export interface IUser extends Document {
+export interface User extends Document {
   email: string
   emailIsVerified?: boolean
   emailVerificationToken?: string
@@ -19,7 +19,7 @@ export interface IUser extends Document {
   lastName: string
   firstName: string
   avatar: Image
-  address: IAddress
+  address: Address
   phoneNumber: string
 
   orders: (string|Order)[]

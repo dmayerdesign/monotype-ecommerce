@@ -7,7 +7,7 @@ import { Organization } from '@time/common/models/api-models/organization'
 import { Product } from '@time/common/models/api-models/product'
 import { User } from '@time/common/models/api-models/user'
 import { Currency } from '@time/common/models/enums/currency'
-import { IPrice } from '@time/common/models/interfaces/api/price'
+import { Price } from '@time/common/models/interfaces/api/price'
 import { TimeFormBuilderService } from '@time/common/ng-modules/forms/services/form-builder.service'
 import { TimeFormBuilder } from '@time/common/ng-modules/forms/utilities/form.builder'
 import { CartService, OrganizationService, UserService, UtilService } from '../../../shared/services'
@@ -53,23 +53,23 @@ export class CheckoutComponent implements OnInit {
 
         this.checkoutForm = this.timeFormBuilder.create({
             firstName: {
-                defaultValue: '',
                 label: 'First name',
+                defaultValue: '',
             },
             lastName: {
-                defaultValue: '',
                 label: 'Last name',
+                defaultValue: '',
                 validators: [ Validators.required ]
             },
             email: {
+                label: 'Email',
                 defaultValue: '',
                 validators: [ Validators.email, Validators.required ],
-                label: 'Email',
             }
         })
         this.checkoutFormGroup = this.checkoutForm.formGroup
 
-        this.cartService.cart$.subscribe(cart => {
+        this.cartService.carts.subscribe(cart => {
             this.cart = cart
             this.populateOrder()
         })
@@ -105,7 +105,7 @@ export class CheckoutComponent implements OnInit {
     public populateOrder() {
         this.order = new OrderBuilder(this.cart.items.map(item => (<Product>item)._id))
 
-        this.organizationService.organization$.subscribe(organization => {
+        this.organizationService.organizations.subscribe(organization => {
             this.organization = organization
 
             this.order.taxPercent =
@@ -115,8 +115,8 @@ export class CheckoutComponent implements OnInit {
 
             this.order.shippingCost =
                 !this.order.shippingCost && this.organization.retailSettings.shippingFlatRate
-                ? this.organization.retailSettings.shippingFlatRate as IPrice
-                : { amount: 0, currency: Currency.USD } as IPrice
+                ? this.organization.retailSettings.shippingFlatRate as Price
+                : { amount: 0, currency: Currency.USD } as Price
 
             if (!this.order.shippingCost && this.organization.retailSettings.shippingFlatRate)
             this.order.shippingCost = this.organization.retailSettings.shippingFlatRate

@@ -1,18 +1,13 @@
-import {
-    Component,
-    Input,
-    OnDestroy,
-    OnInit,
-    Output,
-} from '@angular/core'
+import { Component, ElementRef, Input, OnDestroy, OnInit, Output, Renderer2, ViewChild } from '@angular/core'
 import { AbstractControl, FormBuilder, FormGroup } from '@angular/forms'
 import { Observable } from 'rxjs/Observable'
 import { Subscription } from 'rxjs/Subscription'
 import { Copy } from '../../../../constants'
 
 import { AppConfig } from '@time/app-config'
+import { AutoUnsubscribe } from '../../../../lib/auto-unsubscribe/auto-unsubscribe.decorator'
 import { ModalType } from '../../../../models/enums/modal-type'
-import { IModalData } from '../../../../models/interfaces/ui/modal-data'
+import { ModalData } from '../../../../models/interfaces/ui/modal-data'
 import { platform } from '../../utils/platform'
 import { timeout } from '../../utils/timeout'
 
@@ -20,33 +15,32 @@ import { timeout } from '../../utils/timeout'
     selector: 'time-modal',
     template: `
         <div *ngIf="isShowing && data"
-             class="modal-container"
-             [ngClass]="[getModalContainerClass()]">
+             #modal
+             class="modal"
+             tabindex="-1"
+             [ngClass]="[
+                getModalContainerClass(),
+                getModalShowingClass()
+             ]">
             <div class="modal-darken"
                  [ngStyle]="{'opacity': isFadedIn ? 1 : 0}"
-                 (click)="cancel()"></div>
-            <div class="modal-inner-wrapper">
-                <div class="modal-inner"
+                 (click)="cancel()">
+            </div>
+            <div class="modal-dialog" role="document">
+                <div class="modal-content"
                      [ngStyle]="{'opacity': isFadedIn ? 1 : 0}">
 
-                    <header class="modal-title-bar"
+                    <header class="modal-header"
                             *ngIf="data.type !== 'banner'">
-                        <h2>{{ data.title }}</h2>
-                        <button (click)="cancel()" class="blank-btn modal-close-btn">
+                        <h2 class="modal-title">{{ data.title }}</h2>
+                        <button (click)="cancel()" class="close">
                             <img alt="close modal" [src]="appConfig.client_url + '/images/x-dark.svg'">
                         </button>
                     </header>
 
-                    <div class="modal-content">
+                    <div class="modal-body">
 
-                        <div *ngIf="isAForm()">
-                            <form [formGroup]="formGroup"
-                                  (submit)="data.form.onSubmit($event)">
-                                <!-- Loop through controls and create inputs -->
-                            </form>
-                        </div>
-
-                        <div *ngIf="isABanner()">
+                        <ng-container *ngIf="isBanner()">
                             <h1>{{ data.title }}</h1>
                             <p class="banner-subtitle">
                                 {{ data.banner.subtitle }}
@@ -54,11 +48,16 @@ import { timeout } from '../../utils/timeout'
                             <button (click)="data.banner.cta.onClick($event)">
                                 {{ data.banner.cta.text }}
                             </button>
-                        </div>
+                        </ng-container>
+
+                        <ng-container *ngIf="hasCustomTemplate()">
+                            <ng-container *ngTemplateOutlet="data.content; context: data.context">
+                            </ng-container>
+                        </ng-container>
 
                     </div>
 
-                    <footer class="modal-actions"
+                    <footer class="modal-footer"
                          *ngIf="data.type !== modalType.Banner">
                         <button (click)="cancel()" class="btn-cancel modal-cancel">
                             {{ data.cancelText || defaultCancelText }}
@@ -72,10 +71,14 @@ import { timeout } from '../../utils/timeout'
         </div>
     `,
 })
+@AutoUnsubscribe()
 export class TimeModalComponent implements OnInit, OnDestroy {
-    @Input() public data$: Observable<IModalData>
+    @Input() public datas: Observable<ModalData>
     @Input() public closeCallback?: () => void
-    public data: IModalData = null
+
+    @ViewChild('modal', { read: ElementRef }) public modal: ElementRef
+
+    public data: ModalData = null
     public defaultCancelText = Copy.Actions.cancel
     public isShowing = false
     public isFadedIn = false
@@ -85,55 +88,46 @@ export class TimeModalComponent implements OnInit, OnDestroy {
     private isTransitioning = false
     private modalInner: HTMLElement
 
-    public subscriptions = {
-        data: undefined,
-        initFadeInTimer: undefined,
-        endFadeInTimer: undefined,
-        endFadeOutTimer: undefined,
-    }
+    private dataSub: Subscription
+    private initFadeInTimerSub: Subscription
+    private endFadeInTimerSub: Subscription
+    private endFadeOutTimerSub: Subscription
 
     constructor(
-        private formBuilder: FormBuilder
+        private formBuilder: FormBuilder,
+        private renderer: Renderer2,
     ) {}
 
     public ngOnInit(): void {
-        this.subscriptions.data = this.data$.subscribe((data) => {
+        this.dataSub = this.datas.subscribe((data) => {
             this.show(data)
         })
     }
 
-    public ngOnDestroy() {
-        Object.keys(this.subscriptions).forEach(key => {
-            if (this.subscriptions[key]) {
-                (this.subscriptions[key] as Subscription).unsubscribe()
-            }
-        })
-    }
+    public ngOnDestroy(): void { }
 
-    private show(data: IModalData) {
+    private show(data: ModalData): void {
         if (this.isTransitioning) return
         this.isTransitioning = true
         this.data = data
 
         if (this.data) {
-            if (this.isAForm()) {
-                this.createFormGroup()
-            }
-
             this.isShowing = true
-            this.subscriptions.initFadeInTimer = timeout(10).subscribe(() => {
+            this.initFadeInTimerSub = timeout(10).subscribe(() => {
                 if (platform.isBrowser()) {
                     this.updateYPos(window.scrollY)
                 }
-                this.isFadedIn = true
+                this.isFadedIn = true;
+                // DOM access.
+                (this.modal.nativeElement as HTMLElement).focus()
             })
-            this.subscriptions.endFadeInTimer = timeout(400).subscribe(() => {
+            this.endFadeInTimerSub = timeout(400).subscribe(() => {
                 this.isTransitioning = false
             })
         }
         else {
             this.isFadedIn = false
-            this.subscriptions.endFadeOutTimer = timeout(400).subscribe(() => {
+            this.endFadeOutTimerSub = timeout(400).subscribe(() => {
                 this.isShowing = false
                 this.isTransitioning = false
                 if (this.closeCallback) {
@@ -143,13 +137,13 @@ export class TimeModalComponent implements OnInit, OnDestroy {
         }
     }
 
-    public updateYPos(scrollTop: number) {
+    public updateYPos(scrollTop: number): void {
         this.modalInner = <HTMLElement>document.querySelector('.showing .modal-inner-wrapper')
         if (!this.modalInner) return
         this.modalInner.style.top = (scrollTop / 10 + 11).toString() + 'rem'
     }
 
-    public cancel() {
+    public cancel(): void {
         this.show(null)
     }
 
@@ -157,17 +151,20 @@ export class TimeModalComponent implements OnInit, OnDestroy {
         return 'modal-' + this.data.type + '-container'
     }
 
+    public getModalShowingClass(): string {
+        if (this.isShowing && this.data) {
+            return 'show'
+        }
+        return ''
+    }
+
     // Identifiers.
 
-    public isABanner() {
+    public isBanner(): boolean {
         return this.data.type === this.modalType.Banner && !!this.data.banner
     }
 
-    public isAForm() {
-        return this.data.type === this.modalType.Form && !!this.data.form && !!this.data.form.formObject
-    }
-
-    private createFormGroup() {
-        this.formGroup = this.formBuilder.group(this.data.form.formObject)
+    public hasCustomTemplate(): boolean {
+        return !!this.data.content && !!this.data.context
     }
 }

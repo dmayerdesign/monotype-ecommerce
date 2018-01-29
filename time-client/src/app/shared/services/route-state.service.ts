@@ -9,7 +9,7 @@ import 'rxjs/add/operator/switchMap'
 export class RouteStateService {
 
     public previousUrl: string
-    public routerEvents$: Observable<any>
+    public routerEventsSource: Observable<any>
 
     constructor(
         private router: Router,

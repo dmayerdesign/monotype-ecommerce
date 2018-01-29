@@ -2,7 +2,7 @@ import { model, DocumentToObjectOptions, ModelPopulateOptions, ModelUpdateOption
 import * as findOrCreate from 'mongoose-findorcreate'
 import 'reflect-metadata'
 
-import { camelCase, ArrayPropOptions, IMongooseDocument, IMongooseModel, ModelBuilder, MongooseSchemaOptions, PropOptions, Ref } from './goosetype-model-builder'
+import { camelCase, ArrayPropOptions, ModelBuilder, MongooseModel, MongooseSchemaOptions, PropOptions, Ref } from './goosetype-model-builder'
 
 const modelBuilder = new ModelBuilder()
 
@@ -256,20 +256,20 @@ export abstract class MongooseDocument<T = any> {
         return schema
     }
 
-    private composeModelForInstance?(schemaOptions?: SchemaOptions): IMongooseModel<this> {
+    private composeModelForInstance?(schemaOptions?: SchemaOptions): MongooseModel<this> {
         const target = this
         // if (!!target.constructor.name.match(/^taxonomy$/i)) {
         //     console.log('[composeModelForInstance]: Instance of', target.constructor.name)
         //     console.log('\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n')
         //     console.log({ ...(this as any).prototype })
         // }
-        type T = this & IMongooseDocument
+        type T = this & MongooseDocument
         const schema = this.composeSchemaForInstance(schemaOptions)
         // if (!!target.constructor.name.match(/^taxonomy$/i)) {
         //     console.log('[composeModelForInstance]: Schema for', target.constructor.name)
         //     console.log({...(schema as object)})
         // }
-        return model(target.constructor.name, schema) as IMongooseModel<this>
+        return model(target.constructor.name, schema) as MongooseModel<this>
     }
 
     public getSchema?(schemaOptions?: SchemaOptions): Schema {
@@ -277,7 +277,7 @@ export abstract class MongooseDocument<T = any> {
         return schema
     }
 
-    public getModel?(schemaOptions?: SchemaOptions): IMongooseModel<this> {
+    public getModel?(schemaOptions?: SchemaOptions): MongooseModel<this> {
         const model = this.composeModelForInstance(schemaOptions)
         // if (!!this.constructor.name.match(/^taxonomy$/i)) {
         //     console.log('[getModel]: Schema for', this.constructor.name)
@@ -287,5 +287,5 @@ export abstract class MongooseDocument<T = any> {
     }
 }
 
-export { IMongooseModel, MongooseSchemaOptions, Ref }
+export { MongooseModel, MongooseSchemaOptions, Ref }
 

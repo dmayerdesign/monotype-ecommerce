@@ -1,6 +1,6 @@
 import { Currency } from '../../enums/currency'
 
-export interface IPrice {
+export interface Price {
     amount: number
     currency: Currency | string
 }

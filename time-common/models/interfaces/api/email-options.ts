@@ -1,14 +1,14 @@
 import { Order } from '../../api-models/order'
 import { Organization } from '../../api-models/organization'
 
-export interface IEmailStyleOptions {
+export interface EmailStyleOptions {
     mastheadBgColor: string
     accentColor: string
     fontFamily: string
     innerBgColor: string
 }
 
-export interface IEmailServiceOptions {
+export interface EmailServiceOptions {
     fromName?: string
     fromEmail?: string
     toName?: string
@@ -20,7 +20,7 @@ export interface IEmailServiceOptions {
     organization?: Organization
 }
 
-export interface IEmailOptions {
+export interface EmailOptions {
     fromName: string
     fromEmail: string
     toName?: string
@@ -32,6 +32,6 @@ export interface IEmailOptions {
     organization?: Organization
 }
 
-export interface IOrderEmailOptions extends IEmailServiceOptions {
+export interface OrderEmailOptions extends EmailServiceOptions {
     order?: Order
 }

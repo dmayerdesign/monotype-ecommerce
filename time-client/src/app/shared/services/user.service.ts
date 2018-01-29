@@ -6,8 +6,8 @@ import { ReplaySubject } from 'rxjs/ReplaySubject'
 
 import { ApiEndpoints } from '@time/common/constants/api-endpoints'
 import { User } from '@time/common/models/api-models/user'
-import { ILogin } from '@time/common/models/interfaces/api/login'
-import { IUserRegistration } from '@time/common/models/interfaces/api/user-registration'
+import { Login } from '@time/common/models/interfaces/api/login'
+import { UserRegistration } from '@time/common/models/interfaces/api/user-registration'
 import { TimeHttpService } from '@time/common/ng-modules/http'
 import { AppRoutes } from '../../constants/app-routes'
 
@@ -15,7 +15,7 @@ import { AppRoutes } from '../../constants/app-routes'
 export class UserService {
     private _user: User
     private userSubject = new ReplaySubject<User>(1)
-    public user$: Observable<User>
+    public users: Observable<User>
 
     constructor (
         private http: HttpClient,
@@ -23,11 +23,11 @@ export class UserService {
         private route: ActivatedRoute,
         private router: Router,
     ) {
-        this.user$ = this.userSubject.asObservable()
-        this.user$.subscribe(user => {
+        this.users = this.userSubject.asObservable()
+        this.users.subscribe(user => {
             this._user = user
         })
-        this.timeHttpService.sessionInvalid$.subscribe(err => {
+        this.timeHttpService.sessionInvalids.subscribe(err => {
             this.clearSession()
         })
         this.getUser()
@@ -45,14 +45,14 @@ export class UserService {
         this.userSubject.next(user)
     }
 
-    public signup(userInfo: IUserRegistration) {
+    public signup(userInfo: UserRegistration) {
         this.http.post(`${ApiEndpoints.User}/register`, userInfo)
             .subscribe((user: User) => {
                 this.refreshSession(user)
             })
     }
 
-    public login(credentials: ILogin) {
+    public login(credentials: Login) {
         this.http.post(`${ApiEndpoints.User}/login`, credentials)
             .subscribe((userData: User) => {
                 this.refreshSession(userData)

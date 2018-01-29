@@ -32,13 +32,13 @@ export interface BasePropOptions {
     index?: boolean
 }
 
-export interface IMongooseDocument<T = any> extends mongoose.Document {
+export interface MongooseDocument<T = any> extends mongoose.Document {
     _id: string
     createdAt?: any
     updatedAt?: any
 }
 
-export interface IMongooseModel<T = any> extends mongoose.Model<T & (IMongooseDocument | mongoose.Document)> {
+export interface MongooseModel<T = any> extends mongoose.Model<T & (MongooseDocument | mongoose.Document)> {
     findOrCreate: (query: object) => Promise<{ doc: T; created: boolean }>
 }
 
@@ -70,7 +70,7 @@ export interface PropTypeArgs {
     options: PropOptions & ArrayPropOptions
     propType: PropType
     key: string
-    target: IMongooseModel<any>
+    target: MongooseModel<any>
 }
 
 export type PropType = 'array' | 'object'

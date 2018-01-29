@@ -1,7 +1,8 @@
 @import 'settings';
+@import 'elements/buttons';
 
-.modal-container {
-	.modal-darken {
+.modal {
+	&-darken {
 		position: fixed;
 		    top: 0;
 		    left: 0;
@@ -16,17 +17,17 @@
 	    opacity: 0;
 	    @include transition(opacity 0.4s ease-out);
 	}
-	.modal-inner-wrapper {
+
+	&-dialog {
 	    position: absolute;
 		    top: $navHeight + 4rem;
 		    left: 50%;
 		    z-index: 111;
 	    width: 46rem;
 	    margin-left: -23rem;
-	    // @include transition(top 0.3s ease-in-out);
 	}
 
-	.modal-inner {
+	&-content {
 		background: #fff;
 	    border-radius: 0.1rem;
 	    box-shadow: 0 0.2rem 0.4rem rgba(0,0,0,0.2);
@@ -35,11 +36,11 @@
 	}
 
 	&.showing .modal-darken,
-	&.showing .modal-inner {
+	&.showing .modal-content {
 		@include transition(opacity 0.3s ease-out);
 	}
 
-	.modal-title-bar {
+	.modal-header {
 		background: $offWhiteBlue;
 		padding: 1.3rem 2rem;
 
@@ -50,7 +51,8 @@
 			letter-spacing: 0;
 		}
 
-		.modal-close-btn {
+		.close {
+			@extend .btn-blank;
 			width: 2.1rem;
 			height: 2.1rem;
 			padding: 0.2rem;
@@ -60,14 +62,14 @@
 		}
 	}
 
-	.modal-content {
+	.modal-body {
 		padding: 1.3rem 2rem 2rem;
 	}
 }
 
 @media only screen and (max-width: 767px) {
-	.modal-container {
-		.modal-inner-wrapper {
+	.modal {
+		&-dialog {
 		    width: 30rem;
 		    margin-left: -15rem;
 		}

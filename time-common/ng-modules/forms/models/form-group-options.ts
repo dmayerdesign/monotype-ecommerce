@@ -1,7 +1,7 @@
-import { ITimeFormFieldOptions } from './form-field-options'
+import { TimeFormFieldOptions } from './form-field-options'
 
-export interface ITimeFormGroupOptions {
-    [key: string]: ITimeFormFieldOptions & {
+export interface TimeFormGroupOptions {
+    [key: string]: TimeFormFieldOptions & {
         defaultValue?: string
         validators?: any[]
     }

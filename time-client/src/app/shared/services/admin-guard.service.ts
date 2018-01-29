@@ -24,7 +24,7 @@ export class AdminGuardService implements CanActivate, CanActivateChild {
     ) {}
 
     public canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-        return this.userService.user$
+        return this.userService.users
             .map(user => {
                 if (user && user.role === UserRole.Admin) {
                     console.log('User is admin')

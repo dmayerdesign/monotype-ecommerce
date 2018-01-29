@@ -3,14 +3,14 @@ import { Document } from 'mongoose'
 
 import { AppConfig } from '@time/app-config'
 import { Types } from '@time/common/constants/inversify'
-import { IMongooseModel } from '@time/common/lib/goosetype'
+import { MongooseModel } from '@time/common/lib/goosetype'
 import { Attribute, AttributeModel } from '@time/common/models/api-models/attribute'
 import { AttributeValue, AttributeValueModel } from '@time/common/models/api-models/attribute-value'
 import { Price } from '@time/common/models/api-models/price'
 import { Product, ProductModel } from '@time/common/models/api-models/product'
 import { Taxonomy, TaxonomyModel } from '@time/common/models/api-models/taxonomy'
 import { TaxonomyTerm, TaxonomyTermModel } from '@time/common/models/api-models/taxonomy-term'
-import { ListFromQueryRequest } from '@time/common/models/api-requests/list.request'
+import { ListFromIdsRequest, ListFromQueryRequest } from '@time/common/models/api-requests/list.request'
 import { ApiErrorResponse } from '@time/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@time/common/models/api-responses/api.response'
 import { Currency } from '@time/common/models/enums/currency'
@@ -28,8 +28,8 @@ export class WoocommerceMigrationService {
             const newProducts = []
 
             async function createProducts() {
-                let product: any
-                for (product of productsJSON) {
+                for (const product of productsJSON) {
+                    console.log('Creating product:', product.SKU)
                     const newProduct: Product = { ...product }
 
                     const variableAttributeIds: string[] = []
@@ -57,7 +57,11 @@ export class WoocommerceMigrationService {
                                 if (typeof product[key] === 'string') {
                                     if (product.class === 'Variable' && product[key].indexOf('|') > -1) {
                                         const value = product[key]
-                                        const variableAttributeValueSlugs = product[key].split('|').map(val => theKey + '-' + val.replace(/\s/g, '-').toLowerCase())
+                                        const variableAttributeValueSlugs = product[key]
+                                            .split('|')
+                                            .map((val) => {
+                                                return theKey + '-' + val.replace(/\s/g, '-').replace(/[\(\)]/g, '').toLowerCase()
+                                            })
                                         const variableAttributeValueValues = product[key].split('|')
                                         const variableAttributeSlug = theKey
                                         try {
@@ -65,6 +69,7 @@ export class WoocommerceMigrationService {
                                                 slug: variableAttributeSlug
                                             })
                                             const variableAttribute = variableAttributeResponse.doc
+                                            variableAttributeIds.push(variableAttribute._id)
                                             for (const variableAttributeValueSlug of variableAttributeValueSlugs) {
                                                 try {
                                                     const variableAttributeValueResponse = await AttributeValueModel.findOrCreate({
@@ -174,6 +179,8 @@ export class WoocommerceMigrationService {
                                     const taxonomy = taxonomyResponse.doc
 
                                     taxonomyTermSlugs.forEach((taxonomyTermSlug) => {
+                                        console.log('Taxonomy term promise')
+                                        console.log(taxonomy._id, taxonomyTermSlug)
                                         taxonomyTermPromises.push(TaxonomyTermModel.findOrCreate({
                                             taxonomy: taxonomy._id,
                                             slug: taxonomyTermSlug
@@ -292,74 +299,6 @@ export class WoocommerceMigrationService {
                     newProduct.taxonomyTerms = taxonomyTermIds
 
                     delete (<any>newProduct).featuredImage
-
-                    /**
-                     * Add images
-                     */
-                    if (!newProduct.isParent) {
-                        let isDisc: boolean
-                        let attributeValues: AttributeValue[]
-                        let imageBaseUrl = `${AppConfig.cloudfront_url}/product-images/`
-
-                        if (newProduct.taxonomyTermSlugs) {
-                            newProduct.taxonomyTermSlugs.forEach(term => {
-                                if (term.indexOf('brand') === 0) {
-                                    if (term.indexOf('MVP') > -1) {
-                                        imageBaseUrl += 'mvp-'
-                                    }
-                                    if (term.indexOf('Axiom') > -1) {
-                                        imageBaseUrl += 'axiom-'
-                                    }
-                                    if (term.indexOf('Discraft') > -1) {
-                                        imageBaseUrl += 'discraft-'
-                                    }
-                                }
-                            })
-                        }
-
-                        try {
-                            attributeValues = await this.dbClient.find(AttributeValueModel, { _id: { $in: newProduct.attributeValues } }) as AttributeValue[]
-                            isDisc = attributeValues && attributeValues.some((attrValue) => attrValue.slug === 'productType-disc')
-                        }
-                        catch (error) {
-                            reject(new ApiErrorResponse(error))
-                            return
-                        }
-
-                        if (newProduct.parentSku && newProduct.isVariation) imageBaseUrl += `${newProduct.parentSku.toLowerCase()}-`
-                        else if (newProduct.sku) imageBaseUrl += `${newProduct.sku.toLowerCase()}-`
-
-                        if (isDisc) {
-                            for (const attributeValueId of newProduct.attributeValues) {
-                                const attributeValue = new AttributeValueModel(attributeValues.find(val => val._id === attributeValueId)) as AttributeValue
-                                if (attributeValue && attributeValue.slug.indexOf('plastic') > -1) {
-                                    imageBaseUrl += `${attributeValue.value.toLowerCase()}-`
-                                }
-                            }
-                            imageBaseUrl += newProduct.netWeight.toString().replace('.', '')
-                        } else {
-                            for (const attributeValueId of newProduct.attributeValues) {
-                                const attributeValue = attributeValues.find(val => val._id === attributeValueId)
-                                if (attributeValue && attributeValue.slug.indexOf('color') > -1) {
-                                    imageBaseUrl += `${attributeValue.value.toLowerCase()}-`
-                                }
-                            }
-                        }
-
-                        newProduct.featuredImages = []
-                        newProduct.largeImages = []
-                        newProduct.images = []
-                        newProduct.thumbnails = []
-
-                        newProduct.featuredImages.push(imageBaseUrl + '-medium.png')
-                        newProduct.largeImages.push(imageBaseUrl + '-large.png')
-                        newProduct.thumbnails.push(imageBaseUrl + '-thumbnail.png')
-                    } else {
-                        newProduct.featuredImages = []
-                        newProduct.largeImages = []
-                        newProduct.images = []
-                        newProduct.thumbnails = []
-                    }
                     delete (<any>newProduct).thumbnail
 
                     newProducts.push(newProduct)
@@ -374,41 +313,122 @@ export class WoocommerceMigrationService {
                 return
             }
 
-            newProducts.forEach((product, index, products) => {
-                let variations = []
-                if (product.isParent) {
-                    variations = products.filter(p => product.sku === p.parentSku)
-                    variations.forEach(pv => {
-                        products[index].images = products[index].images.concat(pv.images)
-                        products[index].featuredImages = products[index].featuredImages.concat(pv.featuredImages)
-                        products[index].largeImages = products[index].largeImages.concat(pv.largeImages)
-                        products[index].thumbnails = products[index].thumbnails.concat(pv.thumbnails)
-                    })
-                }
-
-                // [!]
-                // One-off exceptions
-                const sku = product.sku
-                if (sku === 'METEOR_GLOZ_1769') {
-                    if (newProducts.find((newProduct) => newProduct.sku === 'METEOR_GLOZ_1769')) {
-                        products[index].sku = 'METEOR_GLOZ_1769_2'
-                    }
-                }
-            })
-
             /*************
              * The switch
              ******* -> */
             try {
-                const allProducts = await this.dbClient.create(ProductModel, newProducts)
-
+                console.log('Creating products')
+                const allProducts = await this.dbClient.create<Product>(ProductModel, newProducts)
                 const parentProducts = allProducts.filter((p) => p.isParent)
 
+                // Populate the `variations` array.
                 for (let i = 0; i < parentProducts.length; i++) {
                     const parentProduct = parentProducts[i]
                     const variations = allProducts.filter((p) => p.parentSku === parentProduct.sku)
                     parentProduct.variations = variations.map((v) => v._id)
                     await parentProduct.save()
+                }
+
+                for (let i = 0; i < allProducts.length; i++) {
+                    const product = allProducts[i]
+                    if (!product.isParent) {
+                        let isDisc: boolean
+                        let attributeValues: AttributeValue[]
+                        let taxonomyTerms: TaxonomyTerm[]
+                        let imageBaseUrl = `${AppConfig.cloudfront_url}/product-images/`
+
+                        if (product.taxonomyTermSlugs) {
+                            product.taxonomyTermSlugs.forEach(term => {
+                                if (term.indexOf('brand') === 0) {
+                                    if (term.match(/mvp/ig)) {
+                                        imageBaseUrl += 'mvp-'
+                                    }
+                                    if (term.match(/axiom/ig)) {
+                                        imageBaseUrl += 'axiom-'
+                                    }
+                                    if (term.match(/discraft/ig)) {
+                                        imageBaseUrl += 'discraft-'
+                                    }
+                                }
+                            })
+                        }
+
+                        try {
+                            attributeValues = await this.dbClient.findIds(AttributeValueModel, new ListFromIdsRequest({ ids: product.attributeValues })) as AttributeValue[]
+                            taxonomyTerms = await this.dbClient.findIds(TaxonomyTermModel, new ListFromIdsRequest({ ids: product.taxonomyTerms }))
+                            isDisc = taxonomyTerms && taxonomyTerms.some((taxTerm) => taxTerm.slug === 'productType-discs')
+
+                            console.log('Is disc?')
+                            console.log(product.taxonomyTerms)
+                            console.log(taxonomyTerms)
+                        }
+                        catch (error) {
+                            reject(new ApiErrorResponse(error))
+                            return
+                        }
+
+                        if (product.parentSku && product.isVariation) imageBaseUrl += `${product.parentSku.toLowerCase()}-`
+                        else if (product.sku) imageBaseUrl += `${product.sku.toLowerCase()}-`
+
+                        if (isDisc) {
+                            console.log('Loop through attribute values')
+                            attributeValues.forEach((attributeValue) => {
+                                if (attributeValue && attributeValue.slug.indexOf('plastic') > -1) {
+                                    console.log('Add plastic to filename', imageBaseUrl, attributeValue)
+                                    imageBaseUrl += `${attributeValue.value.toLowerCase()}-`
+                                }
+                            })
+                            if (product.netWeight) {
+                                imageBaseUrl += product.netWeight.toString().replace('.', '')
+                            }
+                        } else {
+                            attributeValues.forEach((attributeValue) => {
+                                if (attributeValue && attributeValue.slug.indexOf('color') > -1) {
+                                    imageBaseUrl += `${attributeValue.value.toLowerCase()}-`
+                                }
+                            })
+                        }
+
+                        imageBaseUrl.replace(/--/g, '-')
+
+                        product.featuredImages = []
+                        product.largeImages = []
+                        product.images = []
+                        product.thumbnails = []
+
+                        product.featuredImages.push(imageBaseUrl + '-medium.png')
+                        product.largeImages.push(imageBaseUrl + '-large.png')
+                        product.thumbnails.push(imageBaseUrl + '-thumbnail.png')
+                    } else {
+                        product.featuredImages = []
+                        product.largeImages = []
+                        product.images = []
+                        product.thumbnails = []
+                    }
+
+
+                    let variations = []
+                    if (product.isParent) {
+                        variations = allProducts.filter(p => product.sku === p.parentSku)
+                        variations.forEach((pv) => {
+                            product.images = product.images.concat(pv.images)
+                            product.featuredImages = product.featuredImages.concat(pv.featuredImages)
+                            product.largeImages = product.largeImages.concat(pv.largeImages)
+                            product.thumbnails = product.thumbnails.concat(pv.thumbnails)
+                        })
+                    }
+
+                    // !!!!!!!!!!!!!!!!!!
+                    // One-off exceptions
+                    // !!!!!!!!!!!!!!!!!!
+                    const sku = product.sku
+                    if (sku === 'METEOR_GLOZ_1769') {
+                        if (newProducts.find((newProduct) => newProduct.sku === 'METEOR_GLOZ_1769')) {
+                            product.sku = 'METEOR_GLOZ_1769_2'
+                        }
+                    }
+
+                    await product.save()
                 }
 
                 resolve(new ApiResponse(allProducts))

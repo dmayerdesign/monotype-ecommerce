@@ -3,8 +3,8 @@ import { injectable } from 'inversify'
 import { Error } from 'mongoose'
 
 import { ErrorMessage } from '@time/common/constants/error-message'
-import { HttpStatus } from '@time/common/constants/http'
-import { IMongooseModel, MongooseDocument } from '@time/common/lib/goosetype'
+import { HttpStatus } from '@time/common/constants/http-status'
+import { MongooseDocument, MongooseModel } from '@time/common/lib/goosetype'
 import { ListFromIdsRequest, ListFromQueryRequest, ListRequest } from '@time/common/models/api-requests/list.request'
 import { ApiErrorResponse } from '@time/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@time/common/models/api-responses/api.response'
@@ -13,7 +13,7 @@ import { DbClient } from '../data-access/db-client'
 @injectable()
 export abstract class CrudService<T extends MongooseDocument> {
 
-    protected abstract model: IMongooseModel<T>
+    protected abstract model: MongooseModel<T>
     protected abstract dbClient: DbClient<T>
 
     protected listRequestType = ListRequest

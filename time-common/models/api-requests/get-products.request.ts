@@ -1,6 +1,6 @@
 import { ListFromIdsRequest, ListFromSearchRequest } from './list.request'
 
-export interface IGetProductsFilter {
+export interface GetProductsFilter {
     type: 'property'|'attribute'|'taxonomy'
     key: string
     values?: any[]
@@ -8,7 +8,7 @@ export interface IGetProductsFilter {
 }
 
 export class GetProductsRequest extends ListFromSearchRequest {
-    public filters?: IGetProductsFilter[]
+    public filters?: GetProductsFilter[]
 
     constructor(request?: GetProductsRequest) {
         super(request)

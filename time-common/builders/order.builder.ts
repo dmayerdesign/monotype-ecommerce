@@ -1,13 +1,14 @@
-import { OrderStatus } from '../models/enums/order-status'
-import { IOrder } from '../models/interfaces/api/order'
-import { IOrderCustomer } from '../models/interfaces/api/order-customer'
-import { IPrice } from '../models/interfaces/api/price'
+import {} from 'stripe'
 
-export class OrderBuilder implements IOrder {
+import { OrderStatus } from '../models/enums/order-status'
+import { OrderCustomer } from '../models/interfaces/api/order-customer'
+import { Price } from '../models/interfaces/api/price'
+
+export class OrderBuilder {
     public discounts: string[]
-    public total: IPrice
+    public total: Price
     public taxPercent: number
-    public shippingCost: IPrice
+    public shippingCost: Price
     public shippingRates: any[]
     public selectedShippingRate: any
     public shippingInsuranceAmt: number
@@ -24,7 +25,7 @@ export class OrderBuilder implements IOrder {
     public stripeSource: string
     public stripeToken: string
     public stripeTokenObject: StripeNode.tokens.ICardToken
-    public customer: IOrderCustomer
+    public customer: OrderCustomer
 
     constructor(public items: string[]) {
         this.status = OrderStatus.Pending
