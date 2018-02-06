@@ -1,23 +1,28 @@
 @import url('https://fonts.googleapis.com/css?family=Montserrat:300,400,500,700');
 @import url('https://fonts.googleapis.com/css?family=Roboto:300,400,400i,500,500i,700');
-@import './settings';
+@import url('https://fonts.googleapis.com/css?family=Rock+Salt');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import 'variables';
+@import 'mixins/typography';
 
-@mixin Roboto() {
-  font-family: 'Roboto', Helvetica, sans-serif !important;
+.roboto {
+  @include Roboto;
 }
-
-@mixin Montserrat() {
-  font-family: 'Montserrat', Helvetica, sans-serif !important;
+.montserrat {
+  @include Montserrat;
+}
+.rock-salt {
+  @include Rock-Salt;
 }
 
 h1, h2, h3, h4, .h1, .h2, .h3, .h4 {
   letter-spacing: 0;
-  color: $textColor;
+  color: $text-gray;
   font-weight: normal;
   line-height: 1.1;
 }
 
-h1, h2, h3, h4, .lg-btn, .md-btn, .h1, .h2, .h3, .h4 {
+h1, h2, h3, h4, .h1, .h2, .h3, .h4 {
   @include Montserrat;
 }
 
@@ -31,7 +36,6 @@ h2, .h2 {
   letter-spacing: 0;
 }
 
-
 h1, .h1 { font-size: 5rem; }
 h2, .h2 { font-size: 4rem; }
 h3, .h3 { font-size: 2.8rem; margin: 2.6rem 0 1.4rem; }
@@ -40,18 +44,11 @@ h5, .h5 { font-size: 1.6rem; }
 
 ul, ol, p, label, .label, dd, dt {
   font-size: 1.4rem;
-  color: $textColor;
+  color: $text-gray;
 }
 
 dt {
 	font-weight: 500;
-}
-
-.roboto {
-  @include Roboto;
-}
-.montserrat {
-  @include Montserrat;
 }
 
 .text-right, .align-right {
@@ -70,11 +67,11 @@ dt {
 
 label, .label, span {
   @include Roboto;
-	color: $textColor;
+	color: $text-gray;
 }
 
 p, .dark, dd {
-	color: $textColorDark;
+	color: $text-dark-gray;
 }
 
 dd {
@@ -86,34 +83,28 @@ dd {
   font-weight: 500;
 }
 
-/** Colors **/
-.text-light { color: $textColorLight !important; }
-.text { color: $textColor !important; }
-.text-dark { color: $textColorDark !important; }
+// Colors
+
+.text-light { color: $text-light-gray !important; }
+.text { color: $text-gray !important; }
+.text-dark { color: $text-dark-gray !important; }
 .white, .text-white { color: #fff !important; }
-.off-white, .text-off-white { color: $offWhite !important; }
+.off-white, .text-off-white { color: $gray-100 !important; }
 .text-orange, .text-accent, .text-action { color: $orange !important; }
 .text-primary { color: $primary !important; }
 .text-red { color: $red !important; }
-.text-white { color: #fff !important; }
+.text-white { color: $white !important; }
 .text-green { color: $green !important; }
-.text-bright-green { color: $brightGreen !important; }
-/** Weights **/
+
+// Weights
+
 .weight-normal, .normal-weight { font-weight: normal !important; }
 .weight-light { font-weight: 300 !important; }
 .weight-medium { font-weight: 500 !important; }
 .weight-bold { font-weight: bold !important; }
 
-/** Shadows **/
+// Shadows
+
 .text-shadow { text-shadow: 0rem 0.2rem 0.2rem rgba(0,0,0,0.1) }
 .text-shadow-light { text-shadow: 0rem 0.2rem 0.2rem rgba(60,60,60,0.1) }
 
-/** Quirks **/
-.shift-comma {
-  position: relative;
-  left: -0.25em;
-}
-.mydp .mydpicon {
-  font-family: mydatepicker !important;
-  color: $textColor !important;
-}

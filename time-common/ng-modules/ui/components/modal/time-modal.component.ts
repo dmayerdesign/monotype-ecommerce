@@ -8,6 +8,7 @@ import { AppConfig } from '@time/app-config'
 import { AutoUnsubscribe } from '../../../../lib/auto-unsubscribe/auto-unsubscribe.decorator'
 import { ModalType } from '../../../../models/enums/modal-type'
 import { ModalData } from '../../../../models/interfaces/ui/modal-data'
+import { WindowRefService } from '../../services/window-ref.service'
 import { platform } from '../../utils/platform'
 import { timeout } from '../../utils/timeout'
 
@@ -28,7 +29,10 @@ import { timeout } from '../../utils/timeout'
             </div>
             <div class="modal-dialog" role="document">
                 <div class="modal-content"
-                     [ngStyle]="{'opacity': isFadedIn ? 1 : 0}">
+                     [ngStyle]="{
+                         'opacity': isFadedIn ? 1 : 0,
+                         'top': scrollYWhenOpened
+                     }">
 
                     <header class="modal-header"
                             *ngIf="data.type !== 'banner'">
@@ -70,6 +74,7 @@ import { timeout } from '../../utils/timeout'
             </div>
         </div>
     `,
+    styleUrls: [ './time-modal.component.scss' ]
 })
 @AutoUnsubscribe()
 export class TimeModalComponent implements OnInit, OnDestroy {
@@ -85,6 +90,7 @@ export class TimeModalComponent implements OnInit, OnDestroy {
     public appConfig = AppConfig
     public modalType = ModalType
     public formGroup: FormGroup
+    public scrollYWhenOpened = 0
     private isTransitioning = false
     private modalInner: HTMLElement
 
@@ -96,6 +102,7 @@ export class TimeModalComponent implements OnInit, OnDestroy {
     constructor(
         private formBuilder: FormBuilder,
         private renderer: Renderer2,
+        private windowRef: WindowRefService,
     ) {}
 
     public ngOnInit(): void {
@@ -113,6 +120,7 @@ export class TimeModalComponent implements OnInit, OnDestroy {
 
         if (this.data) {
             this.isShowing = true
+            this.scrollYWhenOpened = this.windowRef.scrollPositionY
             this.initFadeInTimerSub = timeout(10).subscribe(() => {
                 if (platform.isBrowser()) {
                     this.updateYPos(window.scrollY)
@@ -120,6 +128,7 @@ export class TimeModalComponent implements OnInit, OnDestroy {
                 this.isFadedIn = true;
                 // DOM access.
                 (this.modal.nativeElement as HTMLElement).focus()
+                console.log('Show')
             })
             this.endFadeInTimerSub = timeout(400).subscribe(() => {
                 this.isTransitioning = false
@@ -128,6 +137,7 @@ export class TimeModalComponent implements OnInit, OnDestroy {
         else {
             this.isFadedIn = false
             this.endFadeOutTimerSub = timeout(400).subscribe(() => {
+                console.log('Hide')
                 this.isShowing = false
                 this.isTransitioning = false
                 if (this.closeCallback) {

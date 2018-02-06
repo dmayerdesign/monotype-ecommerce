@@ -1,7 +1,10 @@
 <time-shop-primary-nav></time-shop-primary-nav>
 
-<button (click)="doAModalThing()">Show modal</button>
-<!-- <button (click)="doAToastThing()">Show toast</button> -->
+<button class="btn btn-primary" (click)="doAModalThing()">Show modal</button>
+<button class="btn btn-secondary" (click)="doAToastThing()">Show toast</button>
+<time-signup></time-signup>
+<time-login></time-login>
+<button (click)="userService.logout()">Log out</button>
 
 <router-outlet></router-outlet>
 

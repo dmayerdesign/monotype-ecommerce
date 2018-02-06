@@ -1,8 +1,8 @@
 export class ShopRoutes {
-    public static readonly Shop = 'shop'
-    public static readonly About = 'about'
-    public static readonly Cart = 'cart'
-    public static readonly Checkout = 'checkout'
-    public static readonly ProductDetail = 'product/:id'
-    public static readonly Taxonomy = 'for/:slug'
+    public static readonly shop = 'shop'
+    public static readonly about = 'about'
+    public static readonly cart = 'cart'
+    public static readonly checkout = 'checkout'
+    public static readonly productDetail = 'product/:id'
+    public static readonly taxonomy = 'for/:slug'
 }

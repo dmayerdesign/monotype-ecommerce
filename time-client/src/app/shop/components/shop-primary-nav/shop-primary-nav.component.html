@@ -1,9 +1,86 @@
-<nav>
-  <p>{{ organization?.name }}</p>
-  <time-signup></time-signup>
-  <time-login></time-login>
-  <button (click)="userService.logout()">Log out</button>
-  
-  <p *ngIf="user">Welcome, {{ user.firstName }}</p>
-  <a [routerLink]="['/shop', 'checkout']">Checkout</a>
+<nav class="navbar navbar-toggleable-md navbar-dark"
+     [ngStyle]="{ backgroundColor: organization?.branding?.colors?.primary }">
+
+    <div class="container">
+        <a class="navbar-brand"
+           [routerLink]="routerLinks.shop"
+           [attr.title]="organization?.name">
+
+            <img id="navbar-logo"
+                 [attr.alt]="organization?.name"
+                 [src]="organization?.branding?.logo">
+        </a>
+        
+        <ng-container *ngIf="uiService.mediaBreakpointAbove('sm')">
+            <ng-container *ngTemplateOutlet="navbarCollapse"></ng-container>
+        </ng-container>
+    </div>
+
+    <ng-container *ngIf="uiService.mediaBreakpointBelow('md')">
+        <ng-container *ngTemplateOutlet="navbarCollapse"></ng-container>
+    </ng-container>
+
+    <button class="navbar-toggler navbar-toggler-right btn-blank"
+            type="button"
+            aria-label="Toggle navigation"
+            [attr.aria-controls]="navbarId"
+            [attr.aria-expanded]="fullScreenNavIsExpanded"
+            (click)="toggleFullScreenNav()">
+
+        <i class="material-icons">
+            {{ fullScreenNavIsExpanded ? 'close' : 'menu' }}
+        </i>
+
+    </button>
 </nav>
+
+
+<ng-template #navbarCollapse>
+    <div class="navbar-collapse"
+         [id]="navbarId"
+         [ngClass]="{
+             'expanded': fullScreenNavIsExpanded,
+             'collapsed': !fullScreenNavIsExpanded
+         }">
+
+        <ul id="left-nav"
+            class="navbar-nav">
+
+            <li *ngFor="let item of leftNavigation"
+                class="nav-item"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: true }">
+
+                <a #routerLink
+                   class="nav-link"
+                   [routerLink]="item.routerLink">
+
+                    {{ item.text }}
+
+                    <span *ngIf="routerLink.isActive" class="sr-only">(current)</span>
+                </a>
+            </li>
+        </ul>
+
+        <ul id="right-nav"
+            class="navbar-nav">
+
+            <li *ngFor="let item of rightNavigation"
+                class="nav-item"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: true }">
+
+                <a #routerLink
+                   class="nav-link"
+                   [routerLink]="item.routerLink">
+
+                    {{ item.text }}
+                    
+                    <span *ngIf="routerLink.isActive"
+                          class="sr-only">(current)</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</ng-template>
+

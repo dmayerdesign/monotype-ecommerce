@@ -4,8 +4,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 import { ServerModule } from '@angular/platform-server'
 import { RouterModule } from '@angular/router'
 
-import { AppComponent } from './app.component'
 import { AppModule } from './app.module'
+import { AppServerComponent } from './app.server.component'
 import { AppServerRoutingModule } from './app.server.routing.module'
 import { BlogModule } from './blog/blog.module'
 import { SharedModule } from './shared/shared.module'
@@ -23,8 +23,8 @@ import { ShopModule } from './shop/shop.module'
         ServerModule,
     ],
     declarations: [
-        AppComponent,
+        AppServerComponent,
     ],
-    bootstrap: [ AppComponent ],
+    bootstrap: [ AppServerComponent ],
 })
 export class AppServerModule { }

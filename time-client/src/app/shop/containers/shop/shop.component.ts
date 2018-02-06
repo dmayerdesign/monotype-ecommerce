@@ -46,22 +46,22 @@ export class ShopComponent implements OnInit, AfterViewInit {
 
     constructor(
         private productService: ProductService,
-        private userService: UserService,
-        private ui: UiService,
+        public userService: UserService,
+        public ui: UiService,
         private timeFormBuilder: TimeFormBuilderService
     ) { }
 
     public ngOnInit(): void {
-        this.productService.get()
-        this.productService.getSource.subscribe((data) => console.log(data))
+        // this.productService.get()
+        // this.productService.getSource.subscribe((data) => console.log(data))
     }
 
-    public ngAfterViewInit() {
+    public ngAfterViewInit(): void {
         this.products = this.productService.getSource
         this.productService.getErrorSource.subscribe(err => console.log('Error in shop component', err))
     }
 
-    public doAModalThing() {
+    public doAModalThing(): void {
         this.ui.showModal({
             title: 'Shop great deals',
             type: ModalType.Default,
@@ -78,7 +78,7 @@ export class ShopComponent implements OnInit, AfterViewInit {
         })
     }
 
-    public doAToastThing() {
+    public doAToastThing(): void {
         this.ui.flash('Hello!')
     }
 

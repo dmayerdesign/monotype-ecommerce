@@ -1,3 +1,11 @@
-@import 'vendor';
+@import 'variables';
+@import './styles/vendor';
+@import 'accessibility';
+@import 'typography';
+
+@import 'elements/buttons';
 @import 'elements/modal';
-@import 'elements/tooltip';
+
+html {
+    font-size: 10px;
+}

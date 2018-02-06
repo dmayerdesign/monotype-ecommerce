@@ -1,0 +1,81 @@
+// Animations
+
+@keyframes fade-in-up {
+    0% {
+        transform: translateY(8px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0px);
+        opacity: 1;
+    }
+}
+
+@keyframes fade-in-right {
+    0% {
+        transform: translateX(-0.8rem);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fade-out-right {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(0.8rem);
+        opacity: 0;
+    }
+}
+
+@keyframes fade-in-left {
+    0% {
+        transform: translateX(0.8rem);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fade-out-left {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-0.8rem);
+        opacity: 0;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@mixin fade-in-up($duration) {
+    animation: fade-in-up $duration cubic-bezier(0,0.6,0.4,1);
+}
+@mixin fade-in-right($duration) {
+    animation: fade-in-right $duration cubic-bezier(0,0.6,0.4,1);
+}
+@mixin fade-out-right($duration) {
+    animation: fade-out-right $duration cubic-bezier(0,0.6,0.4,1);
+}
+@mixin fade-in-left($duration) {
+    animation: fade-in-left $duration cubic-bezier(0,0.6,0.4,1);
+}
+@mixin fade-out-left($duration) {
+    animation: fade-out-left $duration cubic-bezier(0,0.6,0.4,1);
+}

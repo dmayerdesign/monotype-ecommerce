@@ -1,14 +1,18 @@
 import { Injectable } from '@angular/core'
 import { Title } from '@angular/platform-browser'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
+import { Observable } from 'rxjs/Observable'
 import { Subject } from 'rxjs/Subject'
 
+import { InjectionTokens } from '@time/common/constants/angular/injection-tokens'
 import { ErrorMessage } from '@time/common/constants/error-message'
 import { HttpStatus } from '@time/common/constants/http-status'
+import { BootstrapBreakpoint } from '@time/common/models/enums/bootstrap-breakpoint'
 import { ToastType } from '@time/common/models/enums/toast-type'
 import { ModalData } from '@time/common/models/interfaces/ui/modal-data'
 import { Toast } from '@time/common/models/interfaces/ui/toast'
 import { SimpleError, TimeHttpService } from '@time/common/ng-modules/http'
+import { WindowRefService } from '@time/common/ng-modules/ui/services/window-ref.service'
 
 @Injectable()
 export class UiService {
@@ -19,6 +23,7 @@ export class UiService {
     constructor(
         private titleService: Title,
         private timeHttpService: TimeHttpService,
+        private windowRef: WindowRefService,
     ) {
         this.timeHttpService.errors.subscribe((error) => {
             const isClientError = Object.keys(HttpStatus)
@@ -89,5 +94,19 @@ export class UiService {
      */
     public showModal(data: ModalData) {
         this.modals.next(data)
+    }
+
+    private mediaBreakpoint(breakpoint: 'xs'|'sm'|'md'|'lg'|'xl', dir: 'above'|'below'): boolean {
+        return dir === 'above'
+            ? this.windowRef.width >= BootstrapBreakpoint[breakpoint + 'Max']
+            : this.windowRef.width < BootstrapBreakpoint[breakpoint + 'Min']
+    }
+
+    public mediaBreakpointBelow(breakpoint: 'xs'|'sm'|'md'|'lg'|'xl'): boolean {
+        return this.mediaBreakpoint(breakpoint, 'below')
+    }
+
+    public mediaBreakpointAbove(breakpoint: 'xs'|'sm'|'md'|'lg'|'xl'): boolean {
+        return this.mediaBreakpoint(breakpoint, 'above')
     }
 }

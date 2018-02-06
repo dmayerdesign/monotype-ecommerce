@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common'
-import { NgModule } from '@angular/core'
+import { ModuleWithProviders, NgModule } from '@angular/core'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { ClickOutsideModule } from 'ng-click-outside'
 
@@ -10,6 +10,10 @@ import { TimeTooltipComponent } from './components/tooltip/time-tooltip.componen
 import { FocusOnDirective } from './directives/focus-on.directive'
 
 import { TruncatePipe } from './pipes/truncate.pipe'
+
+import { WindowRefService } from './services/window-ref.service'
+
+import { InjectionTokens } from '../../constants/angular/injection-tokens'
 
 @NgModule({
     imports: [
@@ -35,4 +39,13 @@ import { TruncatePipe } from './pipes/truncate.pipe'
         TruncatePipe,
     ],
 })
-export class TimeUiModule { }
+export class TimeUiModule {
+    public static forRoot(): ModuleWithProviders {
+        return {
+            ngModule: TimeUiModule,
+            providers: [
+                WindowRefService
+            ]
+        }
+    }
+}

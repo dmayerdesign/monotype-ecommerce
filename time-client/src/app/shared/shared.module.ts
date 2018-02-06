@@ -30,7 +30,7 @@ import { UtilService } from './services/util.service'
     imports: [
         TimeFormsModule,
         TimeHttpModule.forRoot(),
-        TimeUiModule,
+        TimeUiModule.forRoot(),
     ],
     declarations: [
         SiteLocatorComponent,

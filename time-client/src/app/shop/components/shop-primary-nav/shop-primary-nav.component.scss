@@ -1,0 +1,148 @@
+@import '../../../../styles/variables';
+@import '../../../../styles/vendor-helpers';
+@import '../../../../styles/mixins/typography';
+
+.container {
+    position: relative;
+}
+
+.navbar {
+    position: static;
+    height: $navbar-height;
+    color: $white;
+
+    .container {
+        position: relative;
+        z-index: $zindex-sticky;
+        height: $navbar-height;
+    }
+
+    &-toggler {
+        position: absolute;
+        top: 2.3rem;
+        left: 1.4rem;
+        z-index: $zindex-sticky + 1;
+        padding: 0;
+        height: $navbar-toggler-height;
+        line-height: $navbar-toggler-height;
+        outline: none !important;
+
+        i {
+            height: $navbar-toggler-height;
+            line-height: $navbar-toggler-height;
+            color: $cyan;
+        }
+
+        &:hover {
+            i {
+                color: darken($cyan, 4%);
+            }
+        }
+
+        &[aria-expanded='true'] i {
+            color: $white;
+        }
+    }
+
+    &-brand {
+        margin-right: 5rem;
+
+        #navbar-logo {
+            width: 10.8rem;
+        }
+    }
+
+    &-collapse {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-basis: 0;
+        
+        > ul {
+            display: flex;
+            align-items: flex-start;
+            flex-basis: 50%;
+            margin: 0;
+
+            .nav-item {
+                @include Montserrat;
+                text-transform: uppercase;
+            }
+        }
+
+        #right-nav {
+            align-items: flex-end;
+            text-align: right;
+        }
+    }
+}
+
+// Desktop (horizontal nav)
+
+@include media-breakpoint-up(md) {
+    .navbar-toggleable-md {
+        .navbar-toggler {
+            display: none;
+        }
+    }
+}
+
+// Mobile (fullscreen nav)
+
+@include media-breakpoint-down(sm) {
+    .navbar {
+        .container {
+            justify-content: center;
+        }
+
+        &-collapse {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: $zindex-sticky;
+            width: 100%;
+            height: $navbar-height;
+
+            &.expanded {
+                display: block;
+                height: 100%;
+                padding-top: $navbar-height;
+
+                &::before {
+                    content: ' ';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    z-index: 1080;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 50, 70, 0.9);
+                }
+
+                > ul {
+                    display: block;
+                    position: relative;
+                    z-index: 1080;
+                    background: transparent;
+                    text-align: center !important;
+
+                    .nav-item {
+                        display: block;
+                        width: 100%;
+                        font-size: 2rem;
+                    }
+                }
+            }
+
+            &.collapsed {
+                > ul {
+                    display: none;
+                }
+            }
+        }
+
+        &-brand {
+            margin: 0;
+        }
+    }
+}

@@ -170,6 +170,7 @@ export class DbClient<T extends MongooseDocument<T>> {
      */
     public findOne<T extends MongooseDocument<T> = T>(model: MongooseModel<T>, query: object, populateOptionsArr?: PopulateOptions[]): Promise<T> {
         return new Promise<T>(async (resolve, reject) => {
+            let notFound = false
             try {
                 const findQuery = model.findOne(query)
 
@@ -180,11 +181,22 @@ export class DbClient<T extends MongooseDocument<T>> {
                 }
 
                 const documentResult = await findQuery.exec()
-                const document = documentResult._doc
-                resolve(document)
+                if (documentResult) {
+                    const document = documentResult._doc
+                    resolve(document)
+                }
+                else {
+                    notFound = true
+                    throw new Error('Document not found.')
+                }
             }
             catch (error) {
-                reject(error)
+                if (notFound) {
+                    resolve(null)
+                }
+                else {
+                    reject(error)
+                }
             }
         })
     }
@@ -198,13 +210,15 @@ export class DbClient<T extends MongooseDocument<T>> {
      */
     public findById<T extends MongooseDocument<T> = T>(model: MongooseModel<T>, id: string): Promise<T> {
         return new Promise<T>(async (resolve, reject) => {
-            let document: T
-            let documentResult: any
-
             try {
-                documentResult = await model.findById(id).exec()
-                document = documentResult._doc
-                resolve(document)
+                const documentResult: any = await model.findById(id).exec()
+                if (documentResult) {
+                    const document: T = documentResult._doc
+                    resolve(document)
+                }
+                else {
+                    throw new Error('Document not found.')
+                }
             }
             catch (error) {
                 reject(error)
