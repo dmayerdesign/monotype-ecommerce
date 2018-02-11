@@ -1,7 +1,8 @@
 import { Inject, Injectable } from '@angular/core'
 import { DOCUMENT } from '@angular/platform-browser'
 
-import { UtilService } from './util.service'
+import { platform } from '@time/common/ng-modules/ui/utils/platform'
+import { UiService } from './ui.service'
 
 @Injectable()
 export class SeoService {
@@ -11,10 +12,10 @@ export class SeoService {
     private robots: HTMLElement
 
     constructor(
-        private util: UtilService,
+        private ui: UiService,
         @Inject(DOCUMENT) private DOM: any,
     ) {
-        if (!this.util.isServerApp()) {
+        if (platform.isBrowser()) {
             this.headElement = this.DOM.querySelector('head')
         }
         else {
@@ -26,11 +27,11 @@ export class SeoService {
     }
 
     public getTitle(): string {
-        return this.util.getTitle()
+        return this.ui.getTitle()
     }
 
     public setTitle(newTitle: string) {
-        this.util.setTitle(newTitle)
+        this.ui.setTitle(newTitle)
     }
 
     public getMetaDescription(): string {
@@ -55,7 +56,7 @@ export class SeoService {
      * @returns {HTMLElement}
      */
     private getOrCreateMetaElement(name: string): HTMLElement {
-        if (!this.util.isServerApp()) {
+        if (platform.isBrowser()) {
             let el: HTMLElement
             el = this.DOM.querySelector('meta[name=' + name + ']')
             if (el == null) {

@@ -34,7 +34,6 @@
     </button>
 </nav>
 
-
 <ng-template #navbarCollapse>
     <div class="navbar-collapse"
          [id]="navbarId"
@@ -46,40 +45,17 @@
         <ul id="left-nav"
             class="navbar-nav">
 
-            <li *ngFor="let item of leftNavigation"
-                class="nav-item"
-                routerLinkActive="active"
-                [routerLinkActiveOptions]="{ exact: true }">
-
-                <a #routerLink
-                   class="nav-link"
-                   [routerLink]="item.routerLink">
-
-                    {{ item.text }}
-
-                    <span *ngIf="routerLink.isActive" class="sr-only">(current)</span>
-                </a>
-            </li>
+            <time-nav-item
+                [items]="leftNavigation">
+            </time-nav-item>
         </ul>
 
         <ul id="right-nav"
             class="navbar-nav">
 
-            <li *ngFor="let item of rightNavigation"
-                class="nav-item"
-                routerLinkActive="active"
-                [routerLinkActiveOptions]="{ exact: true }">
-
-                <a #routerLink
-                   class="nav-link"
-                   [routerLink]="item.routerLink">
-
-                    {{ item.text }}
-                    
-                    <span *ngIf="routerLink.isActive"
-                          class="sr-only">(current)</span>
-                </a>
-            </li>
+            <time-nav-item
+                [items]="rightNavigation">
+            </time-nav-item>
         </ul>
     </div>
 </ng-template>

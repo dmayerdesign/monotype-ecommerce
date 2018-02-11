@@ -57,22 +57,34 @@
         justify-content: space-between;
         align-items: center;
         flex-basis: 0;
-        
-        > ul {
-            display: flex;
-            align-items: flex-start;
-            flex-basis: 50%;
-            margin: 0;
+    }
 
-            .nav-item {
-                @include Montserrat;
-                text-transform: uppercase;
-            }
-        }
+    &-nav {
+        display: flex;
+        align-items: flex-start;
+        flex-basis: 50%;
+        margin: 0;
 
-        #right-nav {
+        &#right-nav {
             align-items: flex-end;
             text-align: right;
+        }
+    }
+}
+
+.nav {
+    &-item {
+        @include Montserrat;
+        text-transform: uppercase;
+    }
+
+    &-link {
+        font-size: 1rem;
+        line-height: $navbar-height;
+
+        &-text {
+            color: inherit;
+            line-height: 1.2rem;
         }
     }
 }
@@ -96,14 +108,13 @@
         }
 
         &-collapse {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: $zindex-sticky;
-            width: 100%;
-            height: $navbar-height;
-
+            
             &.expanded {
+                position: absolute;
+                top: 0;
+                left: 0;
+                z-index: $zindex-sticky;
+                width: 100%;
                 display: block;
                 height: 100%;
                 padding-top: $navbar-height;
@@ -116,7 +127,7 @@
                     z-index: 1080;
                     width: 100%;
                     height: 100%;
-                    background: rgba(0, 50, 70, 0.9);
+                    background: rgba(0, 147, 205, 0.95);
                 }
 
                 > ul {
@@ -135,6 +146,8 @@
             }
 
             &.collapsed {
+                display: none;
+
                 > ul {
                     display: none;
                 }

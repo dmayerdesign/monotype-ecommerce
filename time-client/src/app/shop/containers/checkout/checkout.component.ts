@@ -7,13 +7,13 @@ import { Organization } from '@time/common/models/api-models/organization'
 import { Product } from '@time/common/models/api-models/product'
 import { User } from '@time/common/models/api-models/user'
 import { Currency } from '@time/common/models/enums/currency'
+import { OrderStatus } from '@time/common/models/enums/order-status'
 import { Price } from '@time/common/models/interfaces/api/price'
 import { TimeFormBuilderService } from '@time/common/ng-modules/forms/services/form-builder.service'
 import { TimeFormBuilder } from '@time/common/ng-modules/forms/utilities/form.builder'
-import { CartService, OrganizationService, UserService, UtilService } from '../../../shared/services'
+import { platform } from '@time/common/ng-modules/ui/utils/platform'
+import { CartService, OrganizationService, UiService, UserService } from '../../../shared/services'
 import { CheckoutService } from '../../services/checkout.service'
-
-let stripe
 
 @Component({
     selector: 'checkout',
@@ -21,25 +21,35 @@ let stripe
 })
 export class CheckoutComponent implements OnInit {
 
-    public checkoutFormGroup: FormGroup
-    public checkoutForm: TimeFormBuilder
-
+    // The cast of crazy characters.
     private user: User
     // private stripeCustomer: any
     private order: OrderBuilder
     private organization: Organization
-    // private displayOrder: Product[]
     private cart: Cart
+
+    // They're on a quest to COLLECT PAYMENT on an order.
+    public checkoutFormGroup: FormGroup
+    public checkoutForm: TimeFormBuilder
+    public isReadyForPayment = false //
+    private orderProcessing: boolean //
+    private orderSucceeded: boolean //
+    private orderFailed: boolean //
+
+    // They need some sort of armored vehicle via which to
+    // transport the treasure once they've acquired it. They
+    // find one, paint a racing stripe on it, and call it
+    // STRIPE.
+    private stripe: any
     private elements: any
     private card: any
     // private savedCard: any
     private cards: any[]
-    // private processingOrder: boolean
-    // private orderSucceeded: boolean
-    // private orderFailed: boolean
+
+
 
     constructor(
-        private util: UtilService,
+        private ui: UiService,
         private cartService: CartService,
         private checkoutService: CheckoutService,
         private organizationService: OrganizationService,
@@ -49,7 +59,7 @@ export class CheckoutComponent implements OnInit {
     ) {}
 
     public ngOnInit(): void {
-        this.util.setTitle('Checkout')
+        this.ui.setTitle('Checkout')
 
         this.checkoutForm = this.timeFormBuilder.create({
             firstName: {
@@ -74,18 +84,14 @@ export class CheckoutComponent implements OnInit {
             this.populateOrder()
         })
 
-        try {
-            stripe = (window as any).Stripe(this.checkoutService.stripeKey)
+        if (platform.isBrowser()) {
+            this.stripe = (window as any).Stripe(this.checkoutService.stripeKey)
             setTimeout(() => this.initStripeForm())
-        }
-        catch (error) { // If running on the server, the above will throw an error -- catch the error.
-            console.log(error)
-            return
         }
     }
 
     public initStripeForm() {
-        this.elements = stripe.elements()
+        this.elements = this.stripe.elements()
 		// Create an instance of the card Element.
         this.card = this.elements.create('card', {})
 
@@ -166,11 +172,13 @@ export class CheckoutComponent implements OnInit {
         })
     }
 
-    public submitOrder() {
-        // if (!this.order) return
-        // if (!this.order || !this.order.products || !this.order.products.length) {
-        //     return this.util.handleError("Your order doesn't have anything in it!")
-        // }
+    public submit() {
+        if (!this.order) return
+        console.log(this.checkoutFormGroup)
+        if (this.order.status !== OrderStatus.PreSubmitInvalid) return
+
+
+
 
         /*** Validations ***/
         /*

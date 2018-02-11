@@ -52,8 +52,7 @@ export class ShopComponent implements OnInit, AfterViewInit {
     ) { }
 
     public ngOnInit(): void {
-        // this.productService.get()
-        // this.productService.getSource.subscribe((data) => console.log(data))
+        this.ui.setTitle('Shop')
     }
 
     public ngAfterViewInit(): void {

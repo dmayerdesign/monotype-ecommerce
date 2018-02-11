@@ -31,7 +31,7 @@
 
     </form>
 
-    <form id="payment-form">
+    <form id="payment-form" [hidden]="!isReadyForPayment">
         <div class="form-group">
             <label for="card-element">
                 Credit or debit card
@@ -45,7 +45,8 @@
             <div id="card-errors"></div>
         </div>
 
-        <button (click)="submitOrder()">Submit Payment</button>
+        <button [disabled]
+                (click)="submit()">Submit Payment</button>
     </form>
 
     <!--

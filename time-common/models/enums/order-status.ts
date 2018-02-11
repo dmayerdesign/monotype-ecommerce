@@ -1,4 +1,6 @@
 export enum OrderStatus {
+    PreSubmitInvalid = 'Invalid',
+    PreSubmitValid = 'Valid',
     Pending = 'Pending',
     Paid = 'Paid',
     Shipped = 'Shipped',

@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core'
-import { Title } from '@angular/platform-browser'
 import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
 import { Subject } from 'rxjs/Subject'
@@ -13,32 +12,13 @@ import { AppConfig } from '@time/app-config'
 @Injectable()
 export class UtilService {
 
-    constructor(
-        private titleService: Title,
-    ) {}
-
-    public setTitle(title: string) {
-        this.titleService.setTitle(title + ' | ' + AppConfig.brand_name)
-    }
-
-    public getTitle(): string {
-        return this.titleService.getTitle()
-    }
+    constructor() {}
 
     public timeout(timeout: number): Observable<any> {
         const subject = new ReplaySubject(1)
         const observable = subject.asObservable().delay(timeout)
         subject.next(0)
         return observable
-    }
-
-    public isServerApp(): boolean {
-        if (typeof window === 'undefined') {
-            return true
-        }
-        else {
-            return false
-        }
     }
 
     public getFromLocalStorage(key: string): object|string|undefined {

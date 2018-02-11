@@ -45,8 +45,18 @@ export class UiService {
      * @param {string} title
      * @memberof UiService
      */
-    public setTitle(title: string) {
+    public setTitle(title: string): void {
         this.titleService.setTitle(title)
+    }
+
+    /**
+     * Get the document title.
+     *
+     * @returns {string}
+     * @memberof UiService
+     */
+    public getTitle(): string {
+        return this.titleService.getTitle()
     }
 
 	/**
