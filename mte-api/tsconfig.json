@@ -1,0 +1,27 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "target": "es2015",
+    "baseUrl": ".",
+    "paths": {
+      "@angular/*": [ "../node_modules/@angular/*" ],
+      "@mte/common/*": [ "../mte-common/*" ],
+      "@mte/app-config": [ "../app-config.ts" ],
+      "@mte/environment": [ "../mte-client/src/environments/environment" ],
+      "mongoose": [ "../node_modules/@types/mongoose" ],
+      "stripe": [ "../node_modules/@types/stripe-node" ]
+    },
+    "typeRoots": [
+      "../mte-common/types",
+      "../node_modules/@types"
+    ]
+  },
+  "outDir": "../dist/server",
+  "files": [
+    "./server.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist/"
+  ]
+}

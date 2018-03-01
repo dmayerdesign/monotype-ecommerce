@@ -1,2 +1,2 @@
-# time
-Truly isomorphic MEAN e-commerce. It's time.
+# monotype-ecommerce
+E-commerce, written in TypeScript.

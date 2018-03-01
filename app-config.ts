@@ -1,8 +1,8 @@
 require('dotenv').config()
-import { AppConfig as DevConfig } from '@time/common/config/app-config.dev'
-import { AppConfig as ProdConfig } from '@time/common/config/app-config.prod'
-import { AppConfig as StagingConfig } from '@time/common/config/app-config.staging'
-import { environment as env } from '@time/environment'
+import { AppConfig as DevConfig } from '@mte/common/config/app-config.dev'
+import { AppConfig as ProdConfig } from '@mte/common/config/app-config.prod'
+import { AppConfig as StagingConfig } from '@mte/common/config/app-config.staging'
+import { environment as env } from '@mte/environment'
 
 export interface Environment {
     production?: boolean

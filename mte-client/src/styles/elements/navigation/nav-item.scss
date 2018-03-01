@@ -1,0 +1,114 @@
+@import 'vendor-helpers';
+@import 'mixins/typography';
+@import 'variables';
+
+.nav {
+    &-item {
+        position: relative;
+        text-transform: uppercase;
+
+        &.dropdown {
+            > .nav-link {
+                padding-right: 2.8rem;
+            }
+        }
+
+        #left-nav &:first-child {
+            .nav-link {
+                border-left: none !important;
+            }
+        }
+
+        .dropdown-menu {
+            display: block;
+            position: absolute;
+            width: 100%;
+            min-width: 12rem;
+            padding: 0 0 1rem;
+            margin: 0;
+            background: $primary;
+            border-radius: 0;
+            border: none;
+            border-top: 0.6rem solid $primary-dark;
+        }
+
+        i {
+            position: absolute;
+            top: 0;
+            right: 0;
+            cursor: default;
+            padding-right: 0.8rem;
+            height: $navbar-height;
+            line-height: $navbar-height;
+            font-size: 1.8rem;
+            vertical-align: middle;
+            color: $white;
+            transition: transform 200ms ease-in-out;
+
+            &.expanded {
+                transform: rotate(45deg);
+            }
+        }
+    }
+
+    &-item > &-link {
+        font-size: 1rem;
+        line-height: $navbar-height;
+        padding: 0 1.5rem;
+
+        &:hover {
+            background: $primary-dark;
+        }
+
+        .dropdown-menu & {
+            line-height: $navbar-height / 2;
+        }
+
+        #left-nav > & {
+            border-left: 0.1rem solid $primary-dark;
+        }
+    }
+
+    &-link-text {
+        @include Montserrat;
+        display: inline-block;
+        color: $white;
+        line-height: 1.2rem;
+        font-weight: bold;
+        vertical-align: middle;
+    }
+}
+
+@include media-breakpoint-down(sm) {
+    .nav {
+        &-item {
+            display: block;
+            width: 100%;
+            font-size: 2rem;
+            z-index: 1090;
+
+            &.dropdown {
+                > .nav-link {
+                    padding-right: 0;
+                }
+            }
+
+            i {
+                padding: 0 1.5rem;
+                height: 5.5rem;
+                line-height: 5.5rem;
+            }
+
+            .dropdown-menu {
+                background: transparent;
+                text-align: center;
+                border-top: none;
+            }
+        }
+
+        &-item > &-link {
+            padding: 0;
+            line-height: 5.5rem;
+        }
+    }
+}
