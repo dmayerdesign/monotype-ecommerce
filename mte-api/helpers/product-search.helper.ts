@@ -1,4 +1,5 @@
 import { injectable } from 'inversify'
+import { cloneDeep } from 'lodash'
 
 import { GetProductsFilter } from '@mte/common/models/api-requests/get-products.request'
 import { MongoHelper } from './mongo.helper'
@@ -7,7 +8,7 @@ import { MongoHelper } from './mongo.helper'
 export class ProductSearchHelper {
 
     public propertyFilter(filter: GetProductsFilter, query: MongoHelper.AndOperation): MongoHelper.AndOperation {
-        const newQuery = { ...query }
+        const newQuery = cloneDeep(query)
 
         if (filter.values && filter.values.length) {
             const propertyVOs = filter.values.map(val => {
@@ -31,7 +32,7 @@ export class ProductSearchHelper {
     }
 
     public attributeKeyValueFilter(filter: GetProductsFilter, query: MongoHelper.AndOperation): MongoHelper.AndOperation {
-        const newQuery = { ...query }
+        const newQuery = cloneDeep(query)
         let attributeVOs = []
 
         if (filter.values && filter.values.length) {
@@ -98,7 +99,7 @@ export class ProductSearchHelper {
     }
 
     public attributeValueFilter(filter: GetProductsFilter, query: MongoHelper.AndOperation): MongoHelper.AndOperation {
-        const newQuery = { ...query }
+        const newQuery = cloneDeep(query)
         let attributeValueIds = []
 
         if (filter.values && filter.values.length) {
@@ -126,7 +127,7 @@ export class ProductSearchHelper {
 
     // Reminder: parents and variations must share the same taxonomy terms.
     public taxonomyFilter(filter: GetProductsFilter, query: MongoHelper.AndOperation): MongoHelper.AndOperation {
-        const newQuery = { ...query }
+        const newQuery = cloneDeep(query)
 
         if (filter.values && filter.values.length) {
             newQuery.$and.push({

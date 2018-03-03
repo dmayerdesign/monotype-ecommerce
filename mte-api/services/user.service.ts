@@ -113,11 +113,11 @@ export class UserService {
         })
     }
 
-    public logout(res: Response) {
+    public logout(res: Response): void {
         res.clearCookie(Cookies.jwt).json({})
     }
 
-    public refreshSession(req: Request, res: Response) {
+    public refreshSession(req: Request, res: Response): void {
         const payload = this.cleanUser((req as any).user)
 
         console.log('Refresh session:')
@@ -131,7 +131,7 @@ export class UserService {
     public updateUser(id: string, update: any): Promise<ApiResponse<User>> {
         return new Promise<ApiResponse<User>>(async (resolve, reject) => {
             try {
-                const { _doc } = await UserModel.findByIdAndUpdate(id, update, { new: true })
+                const { _doc } = await this.dbClient.updateById(UserModel, id, update)
                 const user = _doc
                 resolve(new ApiResponse(user))
             }
@@ -141,10 +141,10 @@ export class UserService {
         })
     }
 
-    public deleteUser(id: string) {
-        return new Promise<ApiResponse<any>>(async (resolve, reject) => {
+    public deleteUser(id: string): Promise<ApiResponse<null>> {
+        return new Promise<ApiResponse<null>>(async (resolve, reject) => {
             try {
-                await UserModel.findByIdAndRemove(id)
+                await this.dbClient.delete(UserModel, id)
                 resolve(new ApiResponse(null, HttpStatus.SUCCESS_NO_CONTENT))
             }
             catch (error) {
@@ -153,7 +153,7 @@ export class UserService {
         })
     }
 
-    public verifyEmail(token: string) {
+    public verifyEmail(token: string): Promise<ApiResponse<User>> {
         return new Promise<ApiResponse<User>>(async (resolve, reject) => {
             try {
                 const user = await this.dbClient.findOne(UserModel, { emailVerificationToken: token })

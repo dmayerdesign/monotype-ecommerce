@@ -225,7 +225,7 @@ export class ProductService extends CrudService<Product> {
     public create(products: Product[]): Promise<ApiResponse<Product[]>> {
         return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
             try {
-                const newProducts = await ProductModel.create(products) as Product[]
+                const newProducts = await this.dbClient.create(ProductModel, products) as Product[]
                 resolve(new ApiResponse(newProducts))
             }
             catch (error) {
@@ -237,7 +237,7 @@ export class ProductService extends CrudService<Product> {
     public deleteOne(id: string): Promise<ApiResponse<any>> {
         return new Promise<ApiResponse<any>>(async (resolve, reject) => {
             try {
-                await ProductModel.findByIdAndRemove(id)
+                await this.dbClient.delete(ProductModel, id)
                 resolve(new ApiResponse({}, HttpStatus.SUCCESS_NO_CONTENT))
             }
             catch (error) {

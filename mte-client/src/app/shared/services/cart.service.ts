@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core'
+import { cloneDeep } from 'lodash'
 import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
 
@@ -33,7 +34,7 @@ export class CartService {
         private orgService: OrganizationService,
         private userService: UserService,
     ) {
-        this.cart = { ...this.initialState }
+        this.cart = cloneDeep(this.initialState)
         this.orgService.organizations.subscribe(org => {
             this.init()
         })
@@ -54,8 +55,8 @@ export class CartService {
     }
 
     public add(slug: string, quantity = 1): void {
-        const newCart = { ...this.cart }
-        this.previousState = { ...this.cart }
+        const newCart = _.cloneDeep(this.cart)
+        this.previousState = _.cloneDeep(this.cart)
 
         this.productService.getOneSource.subscribe(product => {
             const amtToAdd: number = product.stockQuantity >= quantity ? quantity : product.stockQuantity
@@ -87,8 +88,8 @@ export class CartService {
     }
 
     public remove(slug: string): void {
-        const newCart = { ...this.cart }
-        this.previousState = { ...this.cart }
+        const newCart = _.cloneDeep(this.cart)
+        this.previousState = _.cloneDeep(this.cart)
         newCart.items.splice(newCart.items.findIndex((i: Product) => i.slug === slug), 1)
 
         this.populateAndStream(newCart)

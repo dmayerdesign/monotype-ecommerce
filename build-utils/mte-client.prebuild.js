@@ -9,6 +9,8 @@ const appConfigDest = path.resolve(__dirname, '../mte-client/src/app-config.ts')
 
 console.log('Copying common files...')
 
+// Copy files from mte-common to mte-client/src/common.
+
 try {
     rimraf.sync(commonDest)
     fs.copySync(commonSrc, commonDest)

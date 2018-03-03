@@ -76,4 +76,12 @@ container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsAdminControlle
 container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsController).whenTargetNamed(Tags.ProductsController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(UserController).whenTargetNamed(Tags.UserController)
 
-export { container }
+// Helper function for injecting into functions.
+function bind(func: (...args: any[]) => any, dependencies: (string|symbol)[]): (...args: any[]) => any {
+    const injections = dependencies.map((dependency) => {
+        return container.get(dependency)
+    })
+    return func.bind(func, ...injections)
+}
+
+export { container, bind }

@@ -30,6 +30,7 @@ export interface BasePropOptions {
     default?: any
     unique?: boolean
     index?: boolean
+    type?: string | Function | Object | mongoose.Schema.Types.ObjectId
 }
 
 export interface MongooseDocument extends mongoose.Document {
@@ -171,7 +172,7 @@ export class ModelBuilder {
                             ? enumKeys.slice(0, enumKeys.length / 2)
                             : enumKeys.map((enumKey) => theEnum[enumKey])
                     }
-                    schemaProperty[option] = enumArr
+                    schemaProperty.enum = enumArr
                 }
                 else {
                     schemaProperty[option] = options[option]
@@ -198,10 +199,10 @@ export class ModelBuilder {
             type = Reflect.getMetadata('design:type', target, key)
 
             if (options) {
-                if ((options as SchemaTypeOptions).type) {
-                    type = (options as SchemaTypeOptions).type
+                if (options.type) {
+                    type = options.type
                 }
-                if ((options as SchemaTypeOptions).ref) {
+                if (options.ref) {
                     type = mongoose.Schema.Types.ObjectId
                 }
             }

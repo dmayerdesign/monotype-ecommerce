@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify'
+import { cloneDeep } from 'lodash'
 import { Document } from 'mongoose'
 
 import { AppConfig } from '@mte/app-config'
@@ -30,7 +31,7 @@ export class WoocommerceMigrationService {
             async function createProducts() {
                 for (const product of productsJSON) {
                     console.log('Creating product:', product.SKU)
-                    const newProduct: Product = { ...product }
+                    const newProduct: Product = cloneDeep(product)
 
                     const variableAttributeIds: string[] = []
                     const variableAttributeValueIds: string[] = []
