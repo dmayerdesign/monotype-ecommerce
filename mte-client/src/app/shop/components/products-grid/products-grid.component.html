@@ -1,0 +1,17 @@
+<div class="grid">
+    <div class="row">
+        <ng-container *ngFor="let product of products | async">
+            <div [ngClass]="getProductContainerClasses()">
+
+                <mte-product-image
+                    [src]="productService.getThumbnail(product.featuredImages[0])"
+                    [alt]="product.name"
+                    [hasMagnifier]="true">
+                </mte-product-image>
+
+                <h2>{{ product.name }}</h2>
+
+            </div>
+        </ng-container>
+    </div>
+</div>

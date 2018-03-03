@@ -17,6 +17,6 @@ import { Container } from 'inversify'
 import { interfaces, TYPE } from 'inversify-express-utils'
 import { makeLoggerMiddleware } from 'inversify-logger-middleware'
 
-import { Tags, Types } from '@time/common/constants/inversify'
-import { MongooseDocument } from '@time/common/lib/goosetype'
+import { Tags, Types } from '@mte/common/constants/inversify'
+import { MongooseDocument } from '@mte/common/lib/goosetype'
 

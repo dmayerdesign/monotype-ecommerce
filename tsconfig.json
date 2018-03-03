@@ -4,9 +4,9 @@
     "paths": {
       "@angular/*": [ "./node_modules/@angular/*" ],
       "rxjs/*": [ "./node_modules/rxjs/*" ],
-      "@time/common/*": [ "./time-common/*" ],
-      "@time/app-config": [ "./app-config.ts" ],
-      "@time/environment": [ "./time-client/src/environments/environment.ts" ],
+      "@mte/common/*": [ "./mte-common/*" ],
+      "@mte/app-config": [ "./app-config.ts" ],
+      "@mte/environment": [ "./mte-client/src/environments/environment.ts" ],
       "stripe": [ "./node_modules/@types/stripe-node", "./node_modules/stripe" ]
     },
     "module": "commonjs",
@@ -18,7 +18,7 @@
     ],
     "types": [ "node" ],
     "typeRoots": [
-      "./time-common/types",
+      "./mte-common/types",
       "./node_modules/@types"
     ],
     "noImplicitAny": false,

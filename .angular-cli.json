@@ -1,12 +1,12 @@
 {
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "project": {
-    "name": "time"
+    "name": "mte"
   },
   "apps": [
     {
-      "name": "time-client",
-      "root": "time-client/src",
+      "name": "mte-client",
+      "root": "mte-client/src",
       "outDir": "./dist/public",
       "assets": [
         "assets",
@@ -18,9 +18,8 @@
       "test": "test.ts",
       "tsconfig": "../tsconfig.app.json",
       "testTsconfig": "../tsconfig.spec.json",
-      "prefix": "time",
+      "prefix": "mte",
       "styles": [
-        "../../node_modules/bootstrap/dist/css/bootstrap.min.css",
         "styles.scss"
       ],
       "stylePreprocessorOptions": {
@@ -37,9 +36,9 @@
       }
     },
     {
-      "name": "time-client-universal",
+      "name": "mte-client-universal",
       "platform": "server",
-      "root": "time-client/src",
+      "root": "mte-client/src",
       "outDir": "./dist/server-app",
       "assets": [
         "assets",
@@ -50,41 +49,8 @@
       "test": "test.ts",
       "tsconfig": "../tsconfig.server.json",
       "testTsconfig": "../tsconfig.spec.json",
-      "prefix": "time",
+      "prefix": "mte",
       "styles": [
-        "../../node_modules/bootstrap/dist/css/bootstrap.min.css",
-        "styles.scss"
-      ],
-      "stylePreprocessorOptions": {
-        "includePaths": [
-          "styles"
-        ]
-      },
-      "scripts": [],
-      "environmentSource": "environments/environment.ts",
-      "environments": {
-        "dev": "environments/environment.ts",
-        "staging": "environments/environment.staging.ts",
-        "prod": "environments/environment.prod.ts"
-      }
-    },
-    {
-      "name": "time-admin",
-      "root": "time-admin/src",
-      "outDir": "./dist/admin",
-      "assets": [
-        "assets",
-        "favicon.ico"
-      ],
-      "index": "index.html",
-      "main": "main.ts",
-      "polyfills": "polyfills.ts",
-      "test": "test.ts",
-      "tsconfig": "../tsconfig.app.json",
-      "testTsconfig": "../tsconfig.spec.json",
-      "prefix": "time",
-      "styles": [
-        "../../node_modules/bootstrap/dist/css/bootstrap.min.css",
         "styles.scss"
       ],
       "stylePreprocessorOptions": {
@@ -103,26 +69,26 @@
   ],
   "e2e": {
     "protractor": {
-      "config": "./time-client/protractor.conf.js"
+      "config": "./mte-client/protractor.conf.js"
     }
   },
   "lint": [
     {
-      "project": "time-client/src/tsconfig.app.json",
+      "project": "mte-client/src/tsconfig.app.json",
       "exclude": "**/node_modules/**"
     },
     {
-      "project": "time-client/src/tsconfig.spec.json",
+      "project": "mte-client/src/tsconfig.spec.json",
       "exclude": "**/node_modules/**"
     },
     {
-      "project": "time-client/e2e/tsconfig.e2e.json",
+      "project": "mte-client/e2e/tsconfig.e2e.json",
       "exclude": "**/node_modules/**"
     }
   ],
   "test": {
     "karma": {
-      "config": "./time-client/karma.conf.js"
+      "config": "./mte-client/karma.conf.js"
     }
   },
   "defaults": {

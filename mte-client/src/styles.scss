@@ -1,0 +1,12 @@
+@import 'variables';
+@import './styles/vendor';
+@import 'accessibility';
+@import 'typography';
+
+@import 'elements/buttons';
+@import 'elements/modal';
+@import 'elements/navigation/nav-item';
+
+html {
+    font-size: 10px;
+}

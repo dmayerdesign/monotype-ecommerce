@@ -1,0 +1,3 @@
+@mixin linear-gradient($from-color, $to-color, $angle: 45deg) {
+    background: linear-gradient($angle, $from-color 0%, $to-color 100%);
+}

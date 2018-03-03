@@ -1,0 +1,32 @@
+@import 'vendor-helpers';
+@import 'variables';
+@import './buttons';
+
+.modal {
+    &-darken {
+        margin-top: -$navbar-height;
+        padding-bottom: $navbar-height;
+        @include transition(opacity 0.4s cubic-bezier(0, 0.5, 0.5, 1));
+    }
+
+    &-content {
+        @include transition(opacity 0.4s cubic-bezier(0, 0.5, 0.5, 1));
+    }
+
+    &-dialog {
+        top: $navbar-height + 4rem;
+    }
+
+    &-header {
+        background: $gray-200;
+
+        .close {
+            @extend .btn-blank;
+        }
+    }
+
+    &.showing .modal-darken,
+	&.showing .modal-content {
+		@include transition(opacity 0.3s ease-out);
+	}
+}
