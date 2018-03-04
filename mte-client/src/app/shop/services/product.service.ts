@@ -49,10 +49,4 @@ export class ProductService extends RestService<Product> {
             return product.price
         }
     }
-
-    public getThumbnail(imageUrl: string): string {
-        return imageUrl
-            .replace('-medium.', '-thumbnail.')
-            .replace('-large.', '-thumbnail.')
-    }
 }

@@ -202,14 +202,14 @@ export class WoocommerceMigrationService {
                                 }
                             }
                             if (key === 'netWeight') {
-                                newProduct[key] = (<any>newProduct[key]).replace(/g/g, '')
-                                if ( (<any>newProduct[key]).indexOf('|') > -1 ) {
+                                newProduct[key] = (newProduct[key] as any).replace(/g/g, '')
+                                if ( (newProduct[key] as any).indexOf('|') > -1 ) {
                                     delete newProduct[key]
                                 }
                             }
                             if (key === 'price') {
                                 if ( newProduct[key].toString().indexOf('-') > -1 ) {
-                                    const priceRangeTotals = (<any>newProduct[key]).split('-')
+                                    const priceRangeTotals = (newProduct[key] as any).split('-')
                                     newProduct.priceRange = [
                                         {
                                             amount: 0,
@@ -233,7 +233,7 @@ export class WoocommerceMigrationService {
                             }
                             if (key === 'salePrice') {
                                 if ( newProduct.salePrice.toString().indexOf('-') > -1 ) {
-                                    const salePriceRangeTotals = (<any>newProduct[key]).split('-')
+                                    const salePriceRangeTotals = (newProduct[key] as any).split('-')
                                     newProduct.salePriceRange = [
                                         {
                                             amount: 0,
@@ -357,7 +357,7 @@ export class WoocommerceMigrationService {
                         let isDisc: boolean
                         let attributeValues: AttributeValue[]
                         let taxonomyTerms: TaxonomyTerm[]
-                        let imageBaseUrl = `${AppConfig.cloudfront_url}/development/`
+                        let imageBaseUrl = `${AppConfig.cloudfront_url}/production/product-images/`
 
                         if (product.taxonomyTermSlugs) {
                             product.taxonomyTermSlugs.forEach(term => {
@@ -385,8 +385,8 @@ export class WoocommerceMigrationService {
                             return
                         }
 
-                        if (product.parentSku && product.isVariation) imageBaseUrl += `${product.parentSku.toLowerCase()}-`
-                        else if (product.sku) imageBaseUrl += `${product.sku.toLowerCase()}-`
+                        const name = product.name.substr(0, product.name.indexOf(' -'))
+                        imageBaseUrl += `${name.toLowerCase().replace(/\W/g, '-')}-`
 
                         if (isDisc) {
                             console.log('Loop through attribute values')
@@ -395,7 +395,7 @@ export class WoocommerceMigrationService {
                                     console.log('Add plastic to filename', imageBaseUrl, attributeValue)
                                     const plasticStr = attributeValue.value
                                         .toLowerCase()
-                                        .replace(/\s/g, '')
+                                        .replace(/\W/g, '')
 
                                     imageBaseUrl += `${plasticStr}-`
                                 }
@@ -417,10 +417,9 @@ export class WoocommerceMigrationService {
 
                         imageBaseUrl.replace(/--/g, '-')
 
-                        product.featuredImages.push(imageBaseUrl + '-medium.png')
-                        // Right now there are no 'large' images
-                        // product.largeImages.push(imageBaseUrl + '-large.png')
                         product.thumbnails.push(imageBaseUrl + '-thumbnail.png')
+                        product.featuredImages.push(imageBaseUrl + '-medium.png')
+                        product.largeImages.push(imageBaseUrl + '-large.png')
                     }
 
                     await product.save()

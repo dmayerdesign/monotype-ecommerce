@@ -16,11 +16,11 @@ import { RouterModule } from '@angular/router'
                 path: 'shop',
                 loadChildren: './shop/shop.module#ShopModule'
             },
-            // {
-            //     path: '**',
-            //     redirectTo: '/shop',
-            //     pathMatch: 'full'
-            // },
+            {
+                path: '**',
+                redirectTo: '/shop',
+                pathMatch: 'full'
+            },
         ]),
     ],
     exports: [ RouterModule ],

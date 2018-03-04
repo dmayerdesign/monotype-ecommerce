@@ -28,7 +28,7 @@ export class ProductsComponent implements OnInit {
 
     public getLeftSidebarClasses(): string[] {
         const identifiers = [ 'products-left-sidebar' ]
-        const bootstrapLayoutClasses = [ 'col-lg-3', 'col-sm-12' ]
+        const bootstrapLayoutClasses = [ 'col-lg-4', 'col-sm-12' ]
         return [
             ...bootstrapLayoutClasses,
             ...identifiers,
@@ -37,7 +37,7 @@ export class ProductsComponent implements OnInit {
 
     public getGridContainerClasses(): string[] {
         const identifiers = [ 'products-grid-container' ]
-        const bootstrapLayoutClasses = [ 'col-lg-9', 'col-sm-12' ]
+        const bootstrapLayoutClasses = [ 'col-lg-8', 'col-sm-12' ]
         return [
             ...bootstrapLayoutClasses,
             ...identifiers,

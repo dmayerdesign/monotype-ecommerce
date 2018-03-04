@@ -1,5 +1,6 @@
 import { NgForOfContext } from '@angular/common'
 import { Component, ContentChild, Input, TemplateRef } from '@angular/core'
+import { ImageHelper } from '@mte/common/helpers/image.helper'
 import { Product } from '@mte/common/models/api-models/product'
 import { Observable } from 'rxjs/Observable'
 import { ProductService } from '../../services'
@@ -11,6 +12,8 @@ import { ProductService } from '../../services'
 })
 export class ProductsGridComponent {
     @Input() public products: Observable<Product[]>
+
+    public imageHelper = ImageHelper
 
     constructor(
         public productService: ProductService

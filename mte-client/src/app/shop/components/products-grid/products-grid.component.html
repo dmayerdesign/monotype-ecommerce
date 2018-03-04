@@ -4,9 +4,8 @@
             <div [ngClass]="getProductContainerClasses()">
 
                 <mte-product-image
-                    [src]="productService.getThumbnail(product.featuredImages[0])"
-                    [alt]="product.name"
-                    [hasMagnifier]="true">
+                    [src]="imageHelper.getThumbnailImage(product.featuredImages[0])"
+                    [alt]="product.name">
                 </mte-product-image>
 
                 <h2>{{ product.name }}</h2>

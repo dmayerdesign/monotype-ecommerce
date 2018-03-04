@@ -55,8 +55,8 @@ export class CartService {
     }
 
     public add(slug: string, quantity = 1): void {
-        const newCart = _.cloneDeep(this.cart)
-        this.previousState = _.cloneDeep(this.cart)
+        const newCart = cloneDeep(this.cart)
+        this.previousState = cloneDeep(this.cart)
 
         this.productService.getOneSource.subscribe(product => {
             const amtToAdd: number = product.stockQuantity >= quantity ? quantity : product.stockQuantity
@@ -88,8 +88,8 @@ export class CartService {
     }
 
     public remove(slug: string): void {
-        const newCart = _.cloneDeep(this.cart)
-        this.previousState = _.cloneDeep(this.cart)
+        const newCart = cloneDeep(this.cart)
+        this.previousState = cloneDeep(this.cart)
         newCart.items.splice(newCart.items.findIndex((i: Product) => i.slug === slug), 1)
 
         this.populateAndStream(newCart)

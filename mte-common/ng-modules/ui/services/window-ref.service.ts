@@ -16,6 +16,9 @@ export class WindowRefService {
     public height: number
     public heights: Observable<number>
     private heightPump: BehaviorSubject<number>
+    public htmlFontSizePx: number
+    public htmlFontSizePxs: Observable<number>
+    private htmlFontSizePxPump: BehaviorSubject<number>
 
     constructor() {
         if (this._window) {
@@ -25,16 +28,20 @@ export class WindowRefService {
             this.widths = this.widthPump.asObservable()
             this.heightPump = new BehaviorSubject(this._window.innerHeight)
             this.heights = this.heightPump.asObservable()
+            this.htmlFontSizePxPump = new BehaviorSubject(this.getHtmlFontSizeInPx())
+            this.htmlFontSizePxs = this.htmlFontSizePxPump.asObservable()
         }
         else {
             this.scrollPositionYs = Observable.of(0)
             this.widths = Observable.of(1280)
             this.heights = Observable.of(720)
+            this.htmlFontSizePxs = Observable.of(10)
         }
 
         this.scrollPositionYs.subscribe((x) => this.scrollPositionY = x)
         this.widths.subscribe((x) => this.width = x)
         this.heights.subscribe((x) => this.height = x)
+        this.htmlFontSizePxs.subscribe((x) => this.htmlFontSizePx = x)
 
         if (this._window) {
             Observable
@@ -45,14 +52,23 @@ export class WindowRefService {
             Observable
                 .fromEvent(this._window, 'resize')
                 .map(() => this._window.innerWidth)
-                .subscribe((x) => this.widthPump.next(x))
+                .subscribe((x) => {
+                    this.widthPump.next(x)
+                    this.htmlFontSizePxPump.next(this.getHtmlFontSizeInPx())
+                })
 
             Observable
                 .fromEvent(this._window, 'resize')
                 .map(() => this._window.innerHeight)
                 .subscribe((x) => this.heightPump.next(x))
-
         }
+    }
+
+    private getHtmlFontSizeInPx(): number {
+        if (this._window && this._window.document.getElementsByTagName('html')[0]) {
+            return parseFloat(this._window.getComputedStyle(this._window.document.getElementsByTagName('html')[0], null).getPropertyValue('font-size'))
+        }
+        else return 10
     }
 
     private mediaBreakpoint(breakpoint: 'xs'|'sm'|'md'|'lg'|'xl', dir: 'above'|'below'): boolean {
