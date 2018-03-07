@@ -1,3 +1,4 @@
+import { TemplateRef } from '@angular/core'
 import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 
 /**
@@ -12,6 +13,9 @@ export class NavigationItem extends MongooseDocument {
     @prop() public isTopLevel? = true
     @arrayProp({ items: String }) public routerLink: string[]
     @arrayProp({ itemsRef: NavigationItem }) public children: Ref<NavigationItem>[]
+
+    public template: TemplateRef<any>
+    public context: any
 }
 
 export const NavigationItemModel = new NavigationItem().getModel()

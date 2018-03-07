@@ -1,0 +1,65 @@
+@keyframes inner-ripple {
+    0% {
+        opacity: 0;
+    }
+    30% {
+        opacity: 0.1;
+    }
+    60% {
+        opacity: 0;
+    }
+}
+
+@keyframes outer-ripple {
+    0% {
+        opacity: 0;
+        transform: scale(0);
+    }
+    50% {
+        opacity: 0.1;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
+}
+
+.ripple {
+    pointer-events: none;
+    position: absolute;
+    z-index: 2000;
+    top: 0;
+    left: 0;
+    width: 5rem;
+    height: 5rem;
+    margin-left: -2.5rem;
+    margin-top: -2.5rem;
+    
+    .inner-ripple, .outer-ripple {
+        pointer-events: none;
+        border-radius: 10rem;
+        display: block;
+        position: absolute;
+        opacity: 0;
+        animation-duration: 0.7s;
+        animation-timing-function: cubic-bezier(.4,.13,0,.62);
+        background: rgba(228, 230, 232, 1);
+        transform-origin: center;
+    }
+    
+    .inner-ripple {
+        top: 1.7rem;
+        left: 1.7rem;
+        width: 1.6rem;
+        height: 1.6rem;
+        animation-name: inner-ripple;
+        animation-timing-function: cubic-bezier(.4,.13,0,.62);
+    }
+    
+    .outer-ripple {
+        width: 5rem;
+        height: 5rem;
+        animation-name: outer-ripple;
+    }
+}
+

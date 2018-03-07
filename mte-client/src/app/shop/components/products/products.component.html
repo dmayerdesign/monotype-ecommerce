@@ -4,7 +4,7 @@
 
     <div class="row">
         <!-- Left sidebar -->
-        <ng-container *ngIf="layoutIsLgAboves() | async">
+        <ng-container *ngIf="layoutIsMdAboves() | async">
             <ng-container *ngTemplateOutlet="leftSidebar"></ng-container>
         </ng-container>
 
@@ -15,7 +15,7 @@
         </div>
         
         <!-- Left sidebar - collapsible -->
-        <div *ngIf="layoutIsNotLgAboves() | async"
+        <div *ngIf="layoutIsNotMdAboves() | async"
              class="products-left-sidebar-dropdown-container">
             <ng-container *ngTemplateOutlet="leftSidebar"></ng-container>
         </div>

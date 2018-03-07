@@ -1,8 +1,8 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
-import { Subscription } from 'rxjs/Subscription'
 import 'rxjs/add/operator/delay'
+import 'rxjs/add/operator/takeWhile'
 
 import { AppConfig } from '@mte/app-config'
 import { Toast } from '../../../../models/interfaces/ui/toast'
@@ -31,11 +31,12 @@ import { timeout } from '../../utils/timeout'
     styleUrls: [ './mte-toast.component.scss' ],
 })
 export class MteToastComponent implements OnInit, OnDestroy {
+    private isAlive = false
+
     @Input() public toasts: Observable<Toast>
 
     public queue: Toast[] = []
     public toast: Toast
-    public toastSubscription: Subscription
     public isShowing = false
     public isFadedIn = false
     public _config = AppConfig
@@ -49,20 +50,19 @@ export class MteToastComponent implements OnInit, OnDestroy {
     constructor() { }
 
     public ngOnInit(): void {
+        this.isAlive = true
         if (this.toasts) {
-            this.toastSubscription = this.toasts.subscribe(toast => {
-                this.queueToast(toast)
-                this.showToast()
-            })
+            this.toasts
+                .takeWhile(() => this.isAlive)
+                .subscribe(toast => {
+                    this.queueToast(toast)
+                    this.showToast()
+                })
         }
     }
 
     public ngOnDestroy() {
-        Object.keys(this.subscriptions).forEach(key => {
-            if (this.subscriptions[key] as Subscription) {
-                this.subscriptions[key].unsubscribe()
-            }
-        })
+        this.isAlive = false
     }
 
     private queueToast(toast: Toast) {

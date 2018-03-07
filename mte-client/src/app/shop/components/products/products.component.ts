@@ -44,11 +44,11 @@ export class ProductsComponent implements OnInit {
         ]
     }
 
-    public layoutIsLgAboves(): Observable<boolean> {
-        return this.windowRef.mediaBreakpointAboves('lg')
+    public layoutIsMdAboves(): Observable<boolean> {
+        return this.windowRef.mediaBreakpointAboves('md')
     }
 
-    public layoutIsNotLgAboves(): Observable<boolean> {
-        return this.windowRef.mediaBreakpointAboves('lg').map((x) => !x)
+    public layoutIsNotMdAboves(): Observable<boolean> {
+        return this.windowRef.mediaBreakpointAboves('md').map((x) => !x)
     }
 }

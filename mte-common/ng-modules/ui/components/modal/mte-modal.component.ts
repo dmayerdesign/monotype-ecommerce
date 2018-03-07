@@ -5,7 +5,6 @@ import { Subscription } from 'rxjs/Subscription'
 import { Copy } from '../../../../constants'
 
 import { AppConfig } from '@mte/app-config'
-import { AutoUnsubscribe } from '../../../../lib/auto-unsubscribe/auto-unsubscribe.decorator'
 import { ModalType } from '../../../../models/enums/modal-type'
 import { ModalData } from '../../../../models/interfaces/ui/modal-data'
 import { WindowRefService } from '../../services/window-ref.service'
@@ -76,7 +75,6 @@ import { timeout } from '../../utils/timeout'
     `,
     styleUrls: [ './mte-modal.component.scss' ]
 })
-@AutoUnsubscribe()
 export class MteModalComponent implements OnInit, OnDestroy {
     @Input() public datas: Observable<ModalData>
     @Input() public closeCallback?: () => void

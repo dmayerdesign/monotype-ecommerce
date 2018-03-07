@@ -10,14 +10,12 @@ import {
 } from '@angular/core'
 import { FormControl } from '@angular/forms'
 import { Observable } from 'rxjs/Observable'
-import { Subscription } from 'rxjs/Subscription'
 import 'rxjs/add/observable/fromEvent'
+import 'rxjs/add/operator/takeWhile'
 
 import { Copy } from '@mte/common/constants/copy'
-import { AutoUnsubscribe } from '@mte/common/lib/auto-unsubscribe/auto-unsubscribe.decorator'
 import { MteFormFieldOptions } from '../../models/form-field-options'
 
-@AutoUnsubscribe()
 @Component({
     selector: 'mte-form-field',
     template: `
@@ -43,6 +41,7 @@ import { MteFormFieldOptions } from '../../models/form-field-options'
     `,
 })
 export class MteFormFieldComponent implements OnInit, OnDestroy, AfterContentInit {
+    private isAlive = false
 
     @Input() public options: MteFormFieldOptions
     @Input() public customErrorMessage: TemplateRef<any>
@@ -50,10 +49,6 @@ export class MteFormFieldComponent implements OnInit, OnDestroy, AfterContentIni
 
     public element: ElementRef
     public errorMessage: string
-    public formGroupSubscription: Subscription
-    public formControlSubscription: Subscription
-    public inputBlurSubscription: Subscription
-    public inputFocusSubscription: Subscription
     private parentValue: object = null
     private value: string = null
     public hasBlurred = false
@@ -66,6 +61,7 @@ export class MteFormFieldComponent implements OnInit, OnDestroy, AfterContentIni
     ]
 
     public ngOnInit(): void {
+        this.isAlive = true
         const { control, errorMessages } = this.options
 
         if (!errorMessages) {
@@ -73,13 +69,17 @@ export class MteFormFieldComponent implements OnInit, OnDestroy, AfterContentIni
         }
 
         if (control) {
-            this.formControlSubscription = control.valueChanges.subscribe((value) => {
-                this.value = value
-            })
+            control.valueChanges
+                .takeWhile(() => this.isAlive)
+                .subscribe((value) => {
+                    this.value = value
+                })
 
-            this.formGroupSubscription = control.parent.valueChanges.subscribe((value) => {
-                this.parentValue = value
-            })
+            control.parent.valueChanges
+                .takeWhile(() => this.isAlive)
+                .subscribe((value) => {
+                    this.parentValue = value
+                })
         }
     }
 
@@ -88,17 +88,23 @@ export class MteFormFieldComponent implements OnInit, OnDestroy, AfterContentIni
             this.element = this.input
         }
 
-        this.inputBlurSubscription = Observable.fromEvent(this.element.nativeElement, 'blur').subscribe(() => {
-            this.isFocused = false
-            this.hasBlurred = true
-        })
+        Observable.fromEvent(this.element.nativeElement, 'blur')
+            .takeWhile(() => this.isAlive)
+            .subscribe(() => {
+                this.isFocused = false
+                this.hasBlurred = true
+            })
 
-        this.inputFocusSubscription = Observable.fromEvent(this.element.nativeElement, 'focus').subscribe(() => {
-            this.isFocused = true
-        })
+        Observable.fromEvent(this.element.nativeElement, 'focus')
+            .takeWhile(() => this.isAlive)
+            .subscribe(() => {
+                this.isFocused = true
+            })
     }
 
-    public ngOnDestroy(): void { }
+    public ngOnDestroy(): void {
+        this.isAlive = false
+    }
 
     public getLabelClassName(): string {
         const classNames: string[] = []

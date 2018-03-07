@@ -5,11 +5,12 @@ import { Product } from './product'
 
 export class Cart extends MongooseDocument {
     public displayItems: CartProduct[]
-    @prop() public count: number
+
+    @prop() public count?: number
     @arrayProp({ itemsRef: Product }) public items: Ref<Product>[]
     @prop() public subTotal: number
     @prop() public total: number
-    @arrayProp({ itemsRef: Discount }) public discounts: Ref<Discount>[]
+    @arrayProp({ itemsRef: Discount }) public discounts?: Ref<Discount>[]
 }
 
 new Cart().getSchema()

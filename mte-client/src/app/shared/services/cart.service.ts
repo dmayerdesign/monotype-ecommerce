@@ -7,6 +7,7 @@ import { LocalStorageKeys } from '@mte/common/constants/local-storage-keys'
 import { Cart } from '@mte/common/models/api-models/cart'
 import { Price } from '@mte/common/models/api-models/price'
 import { Product } from '@mte/common/models/api-models/product'
+import { Currency } from '@mte/common/models/enums/currency'
 import { CartProduct } from '@mte/common/models/interfaces/ui/cart-product'
 import { ProductService } from '../../shop/services/product.service'
 import { OrganizationService } from './organization.service'
@@ -41,6 +42,22 @@ export class CartService {
     }
 
     public init(): void {
+
+        // FOR TESTING
+            this.populateAndStream({
+                items: [ { price: { amount: 5 } }, { price: { amount: 5 } } ] as Product[],
+                displayItems: [],
+                price: {
+                    amount: 10,
+                    currency: Currency.USD
+                },
+                count: 2,
+                subTotal: 10,
+                total: 10,
+                discounts: []
+            } as Cart, false)
+        //
+
         const cart = <Cart>this.util.getFromLocalStorage(LocalStorageKeys.Cart)
         if (cart) {
             this.populateAndStream(cart)

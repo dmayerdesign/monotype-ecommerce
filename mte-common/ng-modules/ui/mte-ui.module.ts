@@ -6,6 +6,7 @@ import { ClickOutsideModule } from 'ng-click-outside'
 
 import { MteModalComponent } from './components/modal/mte-modal.component'
 import { MteNavigationListComponent } from './components/navigation/mte-navigation-list.component'
+import { MteRippleComponent } from './components/ripple/ripple.component'
 import { MteToastComponent } from './components/toast/mte-toast.component'
 import { MteTooltipComponent } from './components/tooltip/mte-tooltip.component'
 
@@ -28,6 +29,7 @@ import { InjectionTokens } from '../../constants/angular/injection-tokens'
     declarations: [
         MteModalComponent,
         MteNavigationListComponent,
+        MteRippleComponent,
         MteToastComponent,
         MteTooltipComponent,
         FocusOnDirective,
@@ -38,6 +40,7 @@ import { InjectionTokens } from '../../constants/angular/injection-tokens'
         ClickOutsideModule,
         MteModalComponent,
         MteNavigationListComponent,
+        MteRippleComponent,
         MteToastComponent,
         MteTooltipComponent,
         FocusOnDirective,

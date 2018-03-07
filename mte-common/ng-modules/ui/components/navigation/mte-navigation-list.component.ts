@@ -34,7 +34,10 @@ export interface NavigationListContext {
                        class="nav-link"
                        [routerLink]="item.routerLink">
 
-                        <span class="nav-link-text">{{ item.text }}</span>
+                        <span *ngIf="item.text && !item.template" class="nav-link-text">{{ item.text }}</span>
+                        <ng-container *ngIf="item.template">
+                            <ng-container *ngTemplateOutlet="item.template; context: item.context"></ng-container>
+                        </ng-container>
                         <span *ngIf="routerLink.isActive" class="sr-only">(current)</span>
                     </a>
 
@@ -43,6 +46,9 @@ export interface NavigationListContext {
                        href="javascript:void(0)">
 
                         <span class="nav-link-text">{{ item.text }}</span>
+                        <ng-container *ngIf="item.template">
+                            <ng-container *ngTemplateOutlet="item.template; context: item.context"></ng-container>
+                        </ng-container>
                     </a>
 
                     <i *ngIf="shouldShowDownArrow(item)"

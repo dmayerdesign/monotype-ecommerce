@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router'
 
+import { ShopRoutePaths } from './constants/shop-route-paths'
 import { CartComponent } from './containers/cart/cart.component'
 import { CheckoutComponent } from './containers/checkout/checkout.component'
 import { ProductDetailComponent } from './containers/product-detail/product-detail.component'
@@ -8,23 +9,23 @@ import { TaxonomyComponent } from './containers/taxonomy/taxonomy.component'
 
 export const shopRoutes: Routes = [
     {
-        path: 'all',
+        path: ShopRoutePaths.shopAll,
         component: ShopAllComponent,
     },
     {
-        path: 'for/:taxonomy/:value',
+        path: ShopRoutePaths.taxonomy,
         component: TaxonomyComponent,
     },
     {
-        path: 'product/:slug',
+        path: ShopRoutePaths.productDetail,
         component: ProductDetailComponent,
     },
     {
-        path: 'cart',
+        path: ShopRoutePaths.cart,
         component: CartComponent,
     },
     {
-        path: 'checkout',
+        path: ShopRoutePaths.checkout,
         component: CheckoutComponent,
     },
 ]

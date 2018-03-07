@@ -1,10 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core'
 import { FormGroup } from '@angular/forms'
 import { ActivatedRoute } from '@angular/router'
-import { Subscription } from 'rxjs/Subscription'
 import 'rxjs/add/operator/switchMap'
+import 'rxjs/add/operator/takeWhile'
 
-import { AutoUnsubscribe } from '@mte/common/lib/auto-unsubscribe'
 import { Attribute } from '@mte/common/models/api-models/attribute'
 import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
 import { Product } from '@mte/common/models/api-models/product'
@@ -19,9 +18,8 @@ import { ProductService } from '../../services/product.service'
     templateUrl: './product-detail.component.html',
     styleUrls: ['./product-detail.component.scss']
 })
-@AutoUnsubscribe()
 export class ProductDetailComponent implements OnInit, OnDestroy {
-    public getDetailSubscription: Subscription
+    private isAlive = false
 
     // This represents the product that is displayed when the view
     // is loaded.
@@ -47,11 +45,13 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     ) { console.log(this) }
 
     public ngOnInit(): void {
-        this.getDetailSubscription = this.activatedRoute.params
+        this.isAlive = true
+        this.activatedRoute.params
             .switchMap((params: { slug: string }) => {
                 setTimeout(() => this.productService.getDetail(params.slug))
                 return this.productService.getDetails
             })
+            .takeWhile(() => this.isAlive)
             .subscribe((responseBody) => {
                 this.parentOrStandalone = responseBody
                 this.variations = this.parentOrStandalone.variations as Product[]
@@ -64,7 +64,9 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
             })
     }
 
-    public ngOnDestroy(): void { }
+    public ngOnDestroy(): void {
+        this.isAlive = false
+    }
 
     public addToCart(): void {
         if (!this.selectedProduct) return

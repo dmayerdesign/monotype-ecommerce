@@ -51,3 +51,8 @@
     </div>
 </ng-template>
 
+<ng-template #basket let-d="discs" let-c="cartLength">
+    <img [src]="appConfig.client_url + '/images/basket-white-' + d + '.png'"
+         [attr.alt]="'Your cart (' + c + ')'"/>
+</ng-template>
+
