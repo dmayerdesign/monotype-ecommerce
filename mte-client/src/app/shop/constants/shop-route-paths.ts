@@ -1,4 +1,5 @@
 export class ShopRoutePaths {
+    public static readonly home = ''
     public static readonly shop = 'shop'
     public static readonly shopAll = 'all'
     public static readonly about = 'about'

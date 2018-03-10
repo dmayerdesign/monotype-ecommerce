@@ -1,3 +1,7 @@
+$outer-width: 8rem;
+$inner-width: 2rem;
+$inner-offset: ($outer-width - $inner-width) / 2;
+
 @keyframes inner-ripple {
     0% {
         opacity: 0;
@@ -30,10 +34,10 @@
     z-index: 2000;
     top: 0;
     left: 0;
-    width: 5rem;
-    height: 5rem;
-    margin-left: -2.5rem;
-    margin-top: -2.5rem;
+    width: $outer-width;
+    height: $outer-width;
+    margin-left: -($outer-width / 2);
+    margin-top: -($outer-width / 2);
     
     .inner-ripple, .outer-ripple {
         pointer-events: none;
@@ -43,22 +47,22 @@
         opacity: 0;
         animation-duration: 0.7s;
         animation-timing-function: cubic-bezier(.4,.13,0,.62);
-        background: rgba(228, 230, 232, 1);
+        background: rgba(255, 255, 255, 0.7);
         transform-origin: center;
     }
     
     .inner-ripple {
-        top: 1.7rem;
-        left: 1.7rem;
-        width: 1.6rem;
-        height: 1.6rem;
+        top: $inner-offset;
+        left: $inner-offset;
+        width: $inner-width;
+        height: $inner-width;
         animation-name: inner-ripple;
         animation-timing-function: cubic-bezier(.4,.13,0,.62);
     }
     
     .outer-ripple {
-        width: 5rem;
-        height: 5rem;
+        width: $outer-width;
+        height: $outer-width;
         animation-name: outer-ripple;
     }
 }

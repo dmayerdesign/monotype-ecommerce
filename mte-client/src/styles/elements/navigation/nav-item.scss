@@ -7,6 +7,12 @@
         position: relative;
         text-transform: uppercase;
 
+        &, a, span, img, i {
+            &::selection {
+                background-color: transparent;
+            }
+        }
+
         > img,
         > i,
         > div,

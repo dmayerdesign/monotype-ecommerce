@@ -16,6 +16,6 @@ import { shopRoutes } from './shop.routes'
             },
         ]),
     ],
-    exports: [RouterModule],
+    exports: [ RouterModule ],
 })
 export class ShopRoutingModule {}

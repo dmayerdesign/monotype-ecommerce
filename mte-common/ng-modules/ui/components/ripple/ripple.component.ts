@@ -4,11 +4,11 @@ import { platform } from '../../utils/platform'
 @Component({
     selector: 'mte-ripple',
     template: `
-    <div class="ripple" *ngFor="let ripple of ripples"
-        [ngStyle]="ripple.style">
-        <div class="inner-ripple"></div>
-        <div class="outer-ripple"></div>
-    </div>
+        <div class="ripple" *ngFor="let ripple of ripples"
+            [ngStyle]="ripple.style">
+            <div class="inner-ripple"></div>
+            <div class="outer-ripple"></div>
+        </div>
     `,
     styleUrls: [ './ripple.component.scss' ],
 })

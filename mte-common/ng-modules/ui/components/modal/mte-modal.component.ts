@@ -173,6 +173,6 @@ export class MteModalComponent implements OnInit, OnDestroy {
     }
 
     public hasCustomTemplate(): boolean {
-        return !!this.data.content && !!this.data.context
+        return !!this.data.template && !!this.data.context
     }
 }
