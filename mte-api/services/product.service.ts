@@ -7,7 +7,9 @@ import { Types } from '@mte/common/constants/inversify'
 import { MongooseModel } from '@mte/common/lib/goosetype'
 import { AttributeModel } from '@mte/common/models/api-models/attribute'
 import { AttributeValueModel } from '@mte/common/models/api-models/attribute-value'
+import { Organization } from '@mte/common/models/api-models/organization'
 import { Product, ProductModel } from '@mte/common/models/api-models/product'
+import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
 import { TaxonomyTermModel } from '@mte/common/models/api-models/taxonomy-term'
 import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { ListFromQueryRequest } from '@mte/common/models/api-requests/list.request'
@@ -19,6 +21,7 @@ import { Price } from '@mte/common/models/interfaces/api/price'
 import { DbClient } from '../data-access/db-client'
 import { ProductSearchHelper } from '../helpers/product-search.helper'
 import { CrudService } from './crud.service'
+import { OrganizationService } from './organization.service'
 
 /**
  * Methods for querying the `products` collection
@@ -37,6 +40,7 @@ export class ProductService extends CrudService<Product> {
     constructor(
         @inject(Types.DbClient) protected dbClient: DbClient<Product>,
         @inject(Types.ProductSearchHelper) private productSearchHelper: ProductSearchHelper,
+        @inject(Types.OrganizationService) private organizationService: OrganizationService
     ) {
         super()
     }
@@ -106,98 +110,120 @@ export class ProductService extends CrudService<Product> {
      * @param {express.Response} [res] The express Response; pass this in if you want the documents fetched as a stream and piped into the response
      */
     public getProducts(body: GetProductsRequest, res?: Response): Promise<ApiResponse<Product[]>>|void {
-        const {
-            limit,
-            skip,
-            search,
-            filters,
-            sortBy,
-            sortDirection,
-        } = new GetProductsRequest(body)
-        const searchRegExp = search ? new RegExp(search, 'gi') : undefined
-        let searchNameAndDesc: {
-            [key: string]: { $regex: RegExp }
-        }[] = []
-        let allQuery: any
-        let searchQuery: { $and: object[] }
-        let query: any
+        return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
+            const {
+                limit,
+                skip,
+                search,
+                filters,
+                sortBy,
+                sortDirection,
+            } = new GetProductsRequest(body)
+            let taxonomyTermIdsToSearch: string[]
+            const searchRegExp = search ? new RegExp(search, 'gi') : undefined
+            const searchOr: {
+                $or: {
+                    [key: string]: { $regex: RegExp } | { $in: string[] }
+                }[]
+            } = { $or: [] }
+            let allQuery: any
+            let searchQuery: { $and: object[] }
+            let query: any
 
-        // If it's a search or filter, create a basic `$and` query for parent and standalone products.
+            // If it's a search or filter, create a basic `$and` query for parent and standalone products.
 
-        if (search || filters) {
-            searchQuery = {
-                $and: [
-                    { isVariation: { $ne: true } },
-                ],
+            if (search || filters) {
+                searchQuery = {
+                    $and: [
+                        { isVariation: { $ne: true } },
+                    ],
+                }
             }
-        }
 
-        // Else, display parent and standalone products unfiltered.
+            // Else, display parent and standalone products unfiltered.
 
-        else {
-            allQuery = { isVariation: { $ne: true } }
-        }
+            else {
+                allQuery = { isVariation: { $ne: true } }
+            }
 
-        // If there's a search, create a regex for name and description.
+            // If there's a search:
+            if (searchRegExp) {
+                // Find taxonomy terms from the taxonomies defined by the organization as searchable.
+                let organization: Organization
 
-        if (searchRegExp) {
-            searchNameAndDesc = [
-                { name: { $regex: searchRegExp } },
-                { description: { $regex: searchRegExp } },
-            ]
-            searchQuery.$and = searchQuery.$and.concat(searchNameAndDesc)
-        }
-
-        // If there are filters, convert each filter to MongoDB query syntax and add it to `searchQuery.$and`.
-
-        if (filters) {
-            filters.forEach((filter) => {
-
-                const isPropertyFilter: boolean = filter.type === 'property' ? true : false
-                const isAttrFilter: boolean = filter.type === 'attribute' ? true : false
-                const isTaxFilter: boolean = filter.type === 'taxonomy' ? true : false
-
-                // Property Filter.
-
-                if (isPropertyFilter) {
-                    searchQuery = this.productSearchHelper.propertyFilter(filter, searchQuery)
+                try {
+                    organization = (await this.organizationService.getOrganization()).body
+                    const searchableTaxonomiesQuery = {
+                        taxonomy: { $in: organization.searchableTaxonomies },
+                        name: { $regex: searchRegExp },
+                        slug: { $regex: searchRegExp },
+                    }
+                    taxonomyTermIdsToSearch = (await this.dbClient.findQuery<TaxonomyTerm>(TaxonomyTermModel, new ListFromQueryRequest({ query: searchableTaxonomiesQuery })))
+                        .map((taxonomyTerm) => taxonomyTerm._id)
+                }
+                catch (error) {
+                    reject(error)
                 }
 
-                // Attribute Key/Value Filter - performs an `$elemMatch` on `Product.attributeValues`.
+                // Add the regex queries for name, description, and taxonomy.
+                searchOr.$or.push({ name: { $regex: searchRegExp } })
+                searchOr.$or.push({ description: { $regex: searchRegExp } })
+                searchOr.$or.push({ taxonomyTerms: { $in: taxonomyTermIdsToSearch } })
 
-                if (isAttrFilter && filter.key) {
-                    searchQuery = this.productSearchHelper.attributeKeyValueFilter(filter, searchQuery)
-                }
+                searchQuery.$and.push(searchOr)
+            }
 
-                // Attribute Value Filter - performs an `$elemMatch` on `Product.attributeValues`.
+            // If there are filters, convert each filter to MongoDB query syntax and add it to `searchQuery.$and`.
 
-                if (isAttrFilter && !filter.key) {
-                    searchQuery = this.productSearchHelper.attributeValueFilter(filter, searchQuery)
-                }
+            if (filters) {
+                filters.forEach((filter) => {
 
-                // Taxonomy Filter - performs an `$elemMatch` on `Product.taxonomies`.
+                    const isPropertyFilter: boolean = filter.type === 'property' ? true : false
+                    const isAttrFilter: boolean = filter.type === 'attribute' ? true : false
+                    const isTaxFilter: boolean = filter.type === 'taxonomy' ? true : false
 
-                if (isTaxFilter) {
-                    searchQuery = this.productSearchHelper.taxonomyFilter(filter, searchQuery)
-                }
+                    // Property Filter.
+
+                    if (isPropertyFilter) {
+                        searchQuery = this.productSearchHelper.propertyFilter(filter, searchQuery)
+                    }
+
+                    // Attribute Key/Value Filter - performs an `$elemMatch` on `Product.attributeValues`.
+
+                    if (isAttrFilter && filter.key) {
+                        searchQuery = this.productSearchHelper.attributeKeyValueFilter(filter, searchQuery)
+                    }
+
+                    // Attribute Value Filter - performs an `$elemMatch` on `Product.attributeValues`.
+
+                    if (isAttrFilter && !filter.key) {
+                        searchQuery = this.productSearchHelper.attributeValueFilter(filter, searchQuery)
+                    }
+
+                    // Taxonomy Filter - performs an `$elemMatch` on `Product.taxonomies`.
+
+                    if (isTaxFilter) {
+                        searchQuery = this.productSearchHelper.taxonomyFilter(filter, searchQuery)
+                    }
+                })
+            }
+
+            query = allQuery || searchQuery
+
+            const listFromQueryRequest = new ListFromQueryRequest({
+                limit,
+                skip,
+                sortBy,
+                sortDirection,
+                query
             })
-        }
 
-        query = allQuery || searchQuery
-
-        const listFromQueryRequest = new ListFromQueryRequest({
-            limit,
-            skip,
-            sortBy,
-            sortDirection,
-            query
-        })
-
-        if (res) {
-            this.dbClient.findQuery(ProductModel, listFromQueryRequest, res)
-        }
-        else {
-            return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
+            if (res) {
+                // Stream the products.
+                this.dbClient.findQuery(ProductModel, listFromQueryRequest, res)
+                resolve()
+            }
+            else {
                 // Retrieve the products normally, loading them into memory.
                 try {
                     const products = await this.dbClient.findQuery(ProductModel, listFromQueryRequest)
@@ -206,8 +232,8 @@ export class ProductService extends CrudService<Product> {
                 catch (error) {
                     reject(new ApiErrorResponse(error))
                 }
-            })
-        }
+            }
+        })
     }
 
     public createOne(product: Product): Promise<ApiResponse<Product>> {

@@ -59,9 +59,11 @@ export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
     }
 
     public ngAfterViewInit(): void {
-        this.router.events
-            .filter((event) => event instanceof NavigationStart)
-            .subscribe(() => this.toggleFullScreenNav(false))
+        if (this.router.events && typeof this.router.events.filter === 'function') {
+            this.router.events
+                .filter((event) => event instanceof NavigationStart)
+                .subscribe(() => this.toggleFullScreenNav(false))
+        }
 
         // Intentionally violating the one-way data flow rule.
         setTimeout(() => {

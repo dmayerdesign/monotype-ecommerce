@@ -3,20 +3,15 @@ import { Routes } from '@angular/router'
 import { ShopRoutePaths } from './constants/shop-route-paths'
 import { CartComponent } from './containers/cart/cart.component'
 import { CheckoutComponent } from './containers/checkout/checkout.component'
-import { HomeComponent } from './containers/home/home.component'
 import { ProductDetailComponent } from './containers/product-detail/product-detail.component'
+import { ProductsByTermComponent } from './containers/products-by-term/products-by-term.component'
 import { ShopAllComponent } from './containers/shop-all/shop-all.component'
-import { TaxonomyComponent } from './containers/taxonomy/taxonomy.component'
+import { ShopHomeComponent } from './containers/shop-home/shop-home.component'
 
 export const shopRoutes: Routes = [
     {
-        path: '**',
-        redirectTo: '',
-        pathMatch: 'full',
-    },
-    {
         path: ShopRoutePaths.home,
-        component: HomeComponent,
+        component: ShopHomeComponent,
     },
     {
         path: ShopRoutePaths.shopAll,
@@ -24,7 +19,7 @@ export const shopRoutes: Routes = [
     },
     {
         path: ShopRoutePaths.taxonomy,
-        component: TaxonomyComponent,
+        component: ProductsByTermComponent,
     },
     {
         path: ShopRoutePaths.productDetail,

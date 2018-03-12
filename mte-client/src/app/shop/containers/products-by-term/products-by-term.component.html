@@ -4,14 +4,9 @@
 <div class="products container">
 
     <div class="row">
-        <!-- Left sidebar -->
-        <ng-container *ngIf="layoutIsMdAboves() | async">
-            <ng-container *ngTemplateOutlet="leftSidebar"></ng-container>
-        </ng-container>
 
         <!-- Products grid -->
         <div [ngClass]="getGridContainerClasses()">
-            <h1>{{ title }}</h1>
             <mte-products-grid [products]="products"></mte-products-grid>
         </div>
 

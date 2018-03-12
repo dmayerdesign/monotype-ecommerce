@@ -19,8 +19,8 @@ export class ListRequest {
 }
 
 export class ListFromSearchRequest extends ListRequest {
-    public search: string
-    public searchFields: string[]
+    public search?: string
+    public searchFields?: string[]
 
     constructor(request?: ListFromSearchRequest) {
         super(request)

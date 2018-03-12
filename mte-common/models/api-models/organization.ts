@@ -1,6 +1,8 @@
-import { prop, MongooseDocument, MongooseSchemaOptions } from '../../lib/goosetype'
+import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions } from '../../lib/goosetype'
+import { Ref } from '../../lib/goosetype/goosetype'
 import { OrganizationBranding } from './organization-branding'
 import { OrganizationRetailSettings } from './organization-retail-settings'
+import { Taxonomy } from './taxonomy'
 import { UiContent } from './ui-content'
 
 export class Organization extends MongooseDocument {
@@ -9,6 +11,7 @@ export class Organization extends MongooseDocument {
     @prop() public branding: OrganizationBranding
     @prop() public storeUiContent: UiContent
     @prop() public blogUiContent?: UiContent
+    @arrayProp({ itemsRef: Taxonomy }) public searchableTaxonomies?: Ref<Taxonomy>[]
 }
 export const OrganizationModel = new Organization().getModel(MongooseSchemaOptions.timestamped)
 
