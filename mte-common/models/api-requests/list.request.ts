@@ -43,7 +43,7 @@ export class ListFromIdsRequest<T = any> extends ListRequest {
 }
 
 export class ListFromQueryRequest extends ListRequest {
-    public query: object
+    public query: object = {}
 
     constructor(request?: ListFromQueryRequest) {
         super(request)

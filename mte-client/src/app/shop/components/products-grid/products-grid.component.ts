@@ -3,7 +3,7 @@ import { Component, ContentChild, Input, TemplateRef } from '@angular/core'
 import { ImageHelper } from '@mte/common/helpers/image.helper'
 import { Product } from '@mte/common/models/api-models/product'
 import { Observable } from 'rxjs/Observable'
-import { ProductService } from '../../services'
+import { ProductService } from '../../services/product.service'
 
 @Component({
     selector: 'mte-products-grid',

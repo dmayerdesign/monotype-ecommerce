@@ -2,7 +2,6 @@ import { Request, Response } from 'express'
 import { inject, injectable } from 'inversify'
 import {
     controller,
-    httpDelete,
     httpGet,
     interfaces,
     queryParam,
@@ -14,15 +13,18 @@ import {
 import { AppConfig } from '@mte/app-config'
 import { ApiEndpoints, Types } from '@mte/common/constants'
 import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
-import { ProductService, WoocommerceMigrationService } from '../services'
+import { ProductService } from '../services/product.service'
+import { WoocommerceMigrationService } from '../services/woocommerce-migration.service'
 import { ApiController } from './api.controller'
 
 @injectable()
 @controller(ApiEndpoints.Products)
 export class ProductsController extends ApiController implements interfaces.Controller {
 
-    @inject(Types.ProductService) private productService: ProductService
-    @inject(Types.WoocommerceMigrationService) private wms: WoocommerceMigrationService
+    constructor(
+        @inject(Types.ProductService) private productService: ProductService,
+        @inject(Types.WoocommerceMigrationService) private wms: WoocommerceMigrationService,
+    ) { super() }
 
     @httpGet('/')
     public get(
@@ -31,7 +33,7 @@ export class ProductsController extends ApiController implements interfaces.Cont
         @response() res: Response,
     ): void {
         const parsedQuery: GetProductsRequest | GetProductsFromIdsRequest = request
-            ? <GetProductsRequest | GetProductsFromIdsRequest>JSON.parse(request)
+            ? JSON.parse(request)
             : new GetProductsRequest()
 
         if ((parsedQuery as GetProductsFromIdsRequest).ids) {

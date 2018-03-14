@@ -18,6 +18,8 @@ export class Types {
     public static StripeOrderActionsService = Symbol('StripeOrderActionsService')
     public static StripeOrderService = Symbol('StripeOrderService')
     public static StripeProductService = Symbol('StripeProductService')
+    public static TaxonomyService = Symbol('TaxonomyService')
+    public static TaxonomyTermService = Symbol('TaxonomyTermService')
     public static TimerService = Symbol('TimerService')
     public static UserService = Symbol('UserService')
     public static WoocommerceMigrationService = Symbol('WoocommerceMigrationService')

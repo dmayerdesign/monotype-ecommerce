@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router'
 import 'rxjs/add/operator/switchMap'
 import 'rxjs/add/operator/takeWhile'
 
+import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Attribute } from '@mte/common/models/api-models/attribute'
 import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
 import { Product } from '@mte/common/models/api-models/product'
@@ -18,6 +19,7 @@ import { ProductService } from '../../services/product.service'
     templateUrl: './product-detail.component.html',
     styleUrls: ['./product-detail.component.scss']
 })
+@Heartbeat()
 export class ProductDetailComponent implements OnInit, OnDestroy {
     private isAlive = false
 
@@ -45,7 +47,6 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     ) { console.log(this) }
 
     public ngOnInit(): void {
-        this.isAlive = true
         this.activatedRoute.params
             .switchMap((params: { slug: string }) => {
                 setTimeout(() => this.productService.getDetail(params.slug))
@@ -64,9 +65,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
             })
     }
 
-    public ngOnDestroy(): void {
-        this.isAlive = false
-    }
+    public ngOnDestroy(): void { }
 
     public addToCart(): void {
         if (!this.selectedProduct) return

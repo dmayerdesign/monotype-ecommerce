@@ -5,6 +5,7 @@ import 'rxjs/add/operator/delay'
 import 'rxjs/add/operator/takeWhile'
 
 import { AppConfig } from '@mte/app-config'
+import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Toast } from '../../../../models/interfaces/ui/toast'
 import { timeout } from '../../utils/timeout'
 
@@ -30,6 +31,7 @@ import { timeout } from '../../utils/timeout'
     `,
     styleUrls: [ './mte-toast.component.scss' ],
 })
+@Heartbeat()
 export class MteToastComponent implements OnInit, OnDestroy {
     private isAlive = false
 
@@ -50,7 +52,6 @@ export class MteToastComponent implements OnInit, OnDestroy {
     constructor() { }
 
     public ngOnInit(): void {
-        this.isAlive = true
         if (this.toasts) {
             this.toasts
                 .takeWhile(() => this.isAlive)
@@ -61,9 +62,7 @@ export class MteToastComponent implements OnInit, OnDestroy {
         }
     }
 
-    public ngOnDestroy() {
-        this.isAlive = false
-    }
+    public ngOnDestroy() { }
 
     private queueToast(toast: Toast) {
         this.queue.push(toast)

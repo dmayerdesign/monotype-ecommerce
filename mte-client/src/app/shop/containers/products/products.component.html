@@ -1,4 +1,6 @@
-<div class="banner"></div>
+<div class="banner" *ngIf="taxonomyTerms | async">
+    <img [attr.src]="(taxonomyTerms | async)?.pageSettings?.banner">
+</div>
 
 <div class="products container">
 
@@ -10,7 +12,7 @@
 
         <!-- Products grid -->
         <div [ngClass]="getGridContainerClasses()">
-            <mte-products-grid [products]="products"></mte-products-grid>
+            <mte-products-grid [products]="productss"></mte-products-grid>
         </div>
         
         <!-- Left sidebar - collapsible -->

@@ -1,5 +1,6 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core'
 import { ImageHelper } from '@mte/common/helpers/image.helper'
+import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { BootstrapBreakpoint } from '@mte/common/models/enums/bootstrap-breakpoint'
 import { WindowRefService } from '@mte/common/ng-modules/ui/services/window-ref.service'
 import { Observable } from 'rxjs/Observable'
@@ -37,6 +38,7 @@ import 'rxjs/add/operator/takeWhile'
     styleUrls: ['./product-image.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
+@Heartbeat()
 export class ProductImageComponent implements AfterViewInit, OnInit, OnDestroy {
     private isAlive = false
 
@@ -60,7 +62,6 @@ export class ProductImageComponent implements AfterViewInit, OnInit, OnDestroy {
     ) {}
 
     public ngOnInit(): void {
-        this.isAlive = true
         this.breakpointHasBeenHits(this.windowRefService.widths.pairwise())
             .takeWhile(() => this.isAlive)
             .subscribe(() => {
@@ -73,9 +74,7 @@ export class ProductImageComponent implements AfterViewInit, OnInit, OnDestroy {
         this.changeDetectorRef.detectChanges()
     }
 
-    public ngOnDestroy(): void {
-        this.isAlive = false
-    }
+    public ngOnDestroy(): void { }
 
     public updateImageSize(): void {
         this.changeDetectorRef.markForCheck()

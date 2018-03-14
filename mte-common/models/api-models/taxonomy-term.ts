@@ -9,7 +9,7 @@ import { Taxonomy } from './taxonomy'
 @plugin(findOrCreate)
 export class TaxonomyTerm extends MongooseDocument {
     @prop({ ref: Taxonomy }) public taxonomy: Ref<Taxonomy>
-    @prop() public name: string
+    @prop() public singularName: string
     @prop() public pluralName: string
     @prop() public slug: string
     @prop() public description: string

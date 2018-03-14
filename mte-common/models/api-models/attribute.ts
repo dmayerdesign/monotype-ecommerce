@@ -5,7 +5,7 @@ import * as goosetype from '../../lib/goosetype'
 
 @plugin(findOrCreate)
 export class Attribute extends MongooseDocument {
-    @prop() public name: string
+    @prop() public singularName: string
     @prop() public pluralName: string
     @prop() public slug: string
     @prop() public description: string

@@ -3,5 +3,6 @@ export class ApiEndpoints {
     public static readonly Orders = '/api/orders'
     public static readonly Products = '/api/products'
     public static readonly ProductsAdmin = '/api/products-admin'
+    public static readonly TaxonomyTerms = '/api/taxonomy-terms'
     public static readonly User = '/api/user'
 }

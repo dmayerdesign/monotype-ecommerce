@@ -11,7 +11,7 @@ import { Organization } from '@mte/common/models/api-models/organization'
 import { Product, ProductModel } from '@mte/common/models/api-models/product'
 import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
 import { TaxonomyTermModel } from '@mte/common/models/api-models/taxonomy-term'
-import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
+import { GetProductsFilterType, GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { ListFromQueryRequest } from '@mte/common/models/api-requests/list.request'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
@@ -178,9 +178,9 @@ export class ProductService extends CrudService<Product> {
             if (filters) {
                 filters.forEach((filter) => {
 
-                    const isPropertyFilter: boolean = filter.type === 'property' ? true : false
-                    const isAttrFilter: boolean = filter.type === 'attribute' ? true : false
-                    const isTaxFilter: boolean = filter.type === 'taxonomy' ? true : false
+                    const isPropertyFilter: boolean = filter.type === GetProductsFilterType.Property ? true : false
+                    const isAttrFilter: boolean = filter.type === GetProductsFilterType.Attribute ? true : false
+                    const isTaxFilter: boolean = filter.type === GetProductsFilterType.Taxonomy ? true : false
 
                     // Property Filter.
 

@@ -24,12 +24,14 @@ export abstract class RestService<T> {
 
     protected getPump = new Subject<T[]>()
     protected getOnePump = new Subject<T>()
+    protected getOneSlugPump = new Subject<T>()
     protected createPump = new Subject<T>()
     protected updatePump = new Subject<T>()
     protected deletePump = new Subject<T>()
 
     protected getErrorPump = new Subject<SimpleError>()
     protected getOneErrorPump = new Subject<SimpleError>()
+    protected getOneSlugErrorPump = new Subject<SimpleError>()
     protected createErrorPump = new Subject<SimpleError>()
     protected updateErrorPump = new Subject<SimpleError>()
     protected deleteErrorPump = new Subject<SimpleError>()
@@ -37,12 +39,14 @@ export abstract class RestService<T> {
     public data: T[]
     public getSource: Observable<T[]>
     public getOneSource: Observable<T>
+    public getOneSlugSource: Observable<T>
     public createSource: Observable<T>
     public updateSource: Observable<T>
     public deleteSource: Observable<T>
 
     public getErrorSource: Observable<SimpleError>
     public getOneErrorSource: Observable<SimpleError>
+    public getOneSlugErrorSource: Observable<SimpleError>
     public createErrorSource: Observable<SimpleError>
     public updateErrorSource: Observable<SimpleError>
     public deleteErrorSource: Observable<SimpleError>
@@ -50,12 +54,14 @@ export abstract class RestService<T> {
     constructor(protected http: HttpClient) {
         this.getSource = this.getPump.asObservable()
         this.getOneSource = this.getOnePump.asObservable()
+        this.getOneSlugSource = this.getOneSlugPump.asObservable()
         this.createSource = this.createPump.asObservable()
         this.updateSource = this.updatePump.asObservable()
         this.deleteSource = this.deletePump.asObservable()
 
         this.getErrorSource = this.getErrorPump.asObservable()
         this.getOneErrorSource = this.getOneErrorPump.asObservable()
+        this.getOneSlugErrorSource = this.getOneSlugErrorPump.asObservable()
         this.createErrorSource = this.createErrorPump.asObservable()
         this.updateErrorSource = this.updateErrorPump.asObservable()
         this.deleteErrorSource = this.deleteErrorPump.asObservable()

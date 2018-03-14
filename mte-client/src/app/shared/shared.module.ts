@@ -14,7 +14,8 @@ import { SignupComponent } from './components/signup/signup.component'
 import { SiteLocatorComponent } from './components/site-locator/site-locator.component'
 
 // Services.
-import { ProductService } from '../shop/services/index'
+import { ProductService } from '../shop/services/product.service'
+import { TaxonomyTermService } from '../shop/services/taxonomy-term.service'
 import { AdminGuardService } from './services/admin-guard.service'
 import { AuthGuardService } from './services/auth-guard.service'
 import { CartService } from './services/cart.service'
@@ -57,6 +58,7 @@ export class SharedModule {
                 GAnalyticsService,
                 OrganizationService,
                 ProductService,
+                TaxonomyTermService,
                 RouteStateService,
                 SeoService,
                 UiService,

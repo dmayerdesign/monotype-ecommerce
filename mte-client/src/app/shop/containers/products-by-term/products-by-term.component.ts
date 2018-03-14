@@ -1,7 +1,8 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
+import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Product } from '@mte/common/models/api-models/product'
-import { GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
+import { GetProductsFilterType, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
 import 'rxjs/add/operator/takeWhile'
@@ -12,6 +13,7 @@ import { ProductService } from '../../services'
     templateUrl: './products-by-term.component.html',
     styleUrls: ['./products-by-term.component.scss']
 })
+@Heartbeat()
 export class ProductsByTermComponent implements OnInit, OnDestroy {
     private isAlive = false
     public products: Observable<Product[]>
@@ -22,8 +24,6 @@ export class ProductsByTermComponent implements OnInit, OnDestroy {
     ) { }
 
     public ngOnInit(): void {
-        this.isAlive = true
-
         this.activatedRoute.paramMap
             .takeWhile(() => this.isAlive)
             .subscribe((paramMap) => {
@@ -36,7 +36,7 @@ export class ProductsByTermComponent implements OnInit, OnDestroy {
                 this.productService.get(new GetProductsRequest({
                     filters: [
                         {
-                            type: 'taxonomy',
+                            type: GetProductsFilterType.Taxonomy,
                             key: taxonomySlug,
                             values: [ taxonomyTermSlug ]
                         }
@@ -45,9 +45,7 @@ export class ProductsByTermComponent implements OnInit, OnDestroy {
             })
     }
 
-    public ngOnDestroy(): void {
-        this.isAlive = false
-    }
+    public ngOnDestroy(): void { }
 
     public getGridContainerClasses(): string[] {
         const identifiers = [ 'products-grid-container' ]

@@ -14,6 +14,7 @@ import 'rxjs/add/observable/fromEvent'
 import 'rxjs/add/operator/takeWhile'
 
 import { Copy } from '@mte/common/constants/copy'
+import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { MteFormFieldOptions } from '../../models/form-field-options'
 
 @Component({
@@ -40,6 +41,7 @@ import { MteFormFieldOptions } from '../../models/form-field-options'
         </div>
     `,
 })
+@Heartbeat()
 export class MteFormFieldComponent implements OnInit, OnDestroy, AfterContentInit {
     private isAlive = false
 
@@ -61,7 +63,6 @@ export class MteFormFieldComponent implements OnInit, OnDestroy, AfterContentIni
     ]
 
     public ngOnInit(): void {
-        this.isAlive = true
         const { control, errorMessages } = this.options
 
         if (!errorMessages) {
@@ -102,9 +103,7 @@ export class MteFormFieldComponent implements OnInit, OnDestroy, AfterContentIni
             })
     }
 
-    public ngOnDestroy(): void {
-        this.isAlive = false
-    }
+    public ngOnDestroy(): void { }
 
     public getLabelClassName(): string {
         const classNames: string[] = []
