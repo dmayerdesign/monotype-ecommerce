@@ -11,12 +11,12 @@
                  [src]="organization?.branding?.logo">
         </a>
         
-        <ng-container *ngIf="windowRefService.mediaBreakpointAbove('sm')">
+        <ng-container *ngIf="windowRefService.mediaBreakpointAbove(bootstrapBreakpointKey.Sm)">
             <ng-container *ngTemplateOutlet="navbarCollapse"></ng-container>
         </ng-container>
     </div>
 
-    <ng-container *ngIf="windowRefService.mediaBreakpointBelow('md')">
+    <ng-container *ngIf="windowRefService.mediaBreakpointBelow(bootstrapBreakpointKey.Md)">
         <ng-container *ngTemplateOutlet="navbarCollapse"></ng-container>
     </ng-container>
 

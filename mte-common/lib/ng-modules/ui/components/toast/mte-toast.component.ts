@@ -1,12 +1,10 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
-import 'rxjs/add/operator/delay'
-import 'rxjs/add/operator/takeWhile'
 
 import { AppConfig } from '@mte/app-config'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
-import { Toast } from '../../../../models/interfaces/ui/toast'
+import { Toast } from '../../../../../models/interfaces/ui/toast'
 import { timeout } from '../../utils/timeout'
 
 @Component({

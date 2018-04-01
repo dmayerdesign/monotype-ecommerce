@@ -6,8 +6,6 @@ import {
     Router,
     RouterStateSnapshot,
 } from '@angular/router'
-import { Observable } from 'rxjs/Observable'
-import 'rxjs/add/operator/take'
 
 import { UserRole } from '@mte/common/models/enums/user-role'
 import { AppRoutes } from '../../constants/app-routes'

@@ -19,3 +19,8 @@ export class NavigationItem extends MongooseDocument {
 }
 
 export const NavigationItemModel = new NavigationItem().getModel()
+
+export class CreateNavigationItemError extends Error { }
+export class FindNavigationItemError extends Error { }
+export class UpdateNavigationItemError extends Error { }
+export class DeleteNavigationItemError extends Error { }

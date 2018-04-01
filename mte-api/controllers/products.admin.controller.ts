@@ -19,7 +19,7 @@ import { WoocommerceMigrationService } from '../services/woocommerce-migration.s
 import { ApiController } from './api.controller'
 
 @injectable()
-@controller(ApiEndpoints.ProductsAdmin, Types.isOwner)
+@controller(ApiEndpoints.ProductsAdmin/*, Types.isOwner*/)
 export class ProductsAdminController extends ApiController implements interfaces.Controller {
 
     constructor(

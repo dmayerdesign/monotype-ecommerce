@@ -1,11 +1,9 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core'
 import { ImageHelper } from '@mte/common/helpers/image.helper'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
+import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
 import { BootstrapBreakpoint } from '@mte/common/models/enums/bootstrap-breakpoint'
-import { WindowRefService } from '@mte/common/ng-modules/ui/services/window-ref.service'
 import { Observable } from 'rxjs/Observable'
-import 'rxjs/add/operator/pairwise'
-import 'rxjs/add/operator/takeWhile'
 
 @Component({
     selector: 'mte-product-image',

@@ -8,6 +8,7 @@ export class Types {
     public static EasypostService = Symbol('EasypostService')
     public static EmailService = Symbol('EmailService')
     public static ErrorService = Symbol('ErrorService')
+    public static InstagramService = Symbol('InstagramService')
     public static ModelBuilder = Symbol('ModelBuilder')
     public static OrganizationService = Symbol('OrganizationService')
     public static OrderHelper = Symbol('OrderHelper')

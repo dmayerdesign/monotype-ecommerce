@@ -2,10 +2,6 @@ import { Injectable } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
 import { Subject } from 'rxjs/Subject'
-import 'rxjs/add/observable/throw'
-import 'rxjs/add/operator/catch'
-import 'rxjs/add/operator/delay'
-import 'rxjs/add/operator/map'
 
 @Injectable()
 export class UtilService {
@@ -32,6 +28,18 @@ export class UtilService {
             }
         }
         return undefined
+    }
+
+    public saveToLocalStorage(key: string, payload: any): void {
+        if (window && window.localStorage) {
+            window.localStorage.setItem(key, payload)
+        }
+    }
+
+    public removeFromLocalStorage(key: string): void {
+        if (window && window.localStorage) {
+            window.localStorage.removeItem(key)
+        }
     }
 
     public gToOz(pK: number): number {

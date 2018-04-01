@@ -5,7 +5,6 @@ import { Product } from '@mte/common/models/api-models/product'
 import { GetProductsFilterType, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
-import 'rxjs/add/operator/takeWhile'
 import { ProductService } from '../../services'
 
 @Component({

@@ -2,8 +2,8 @@ import { HttpClient, HttpErrorResponse, HttpEvent, HttpParams } from '@angular/c
 import { Observable } from 'rxjs/Observable'
 import { Subject } from 'rxjs/Subject'
 
-import { HttpStatus } from '../../constants/http-status'
-import { ListFromIdsRequest, ListRequest } from '../../models/api-requests/list.request'
+import { HttpStatus } from '../../../constants/http-status'
+import { ListFromIdsRequest, ListRequest } from '../../../models/api-requests/list.request'
 
 export class SimpleError {
     public message: string

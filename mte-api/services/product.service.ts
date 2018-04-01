@@ -176,7 +176,12 @@ export class ProductService extends CrudService<Product> {
             // If there are filters, convert each filter to MongoDB query syntax and add it to `searchQuery.$and`.
 
             if (filters) {
-                filters.forEach((filter) => {
+                for (let i = 0; i < filters.length; i++) {
+                    const filter = filters[i]
+
+                    if (!filter.values || !filter.values.length) {
+                        continue
+                    }
 
                     const isPropertyFilter: boolean = filter.type === GetProductsFilterType.Property ? true : false
                     const isAttrFilter: boolean = filter.type === GetProductsFilterType.Attribute ? true : false
@@ -194,18 +199,20 @@ export class ProductService extends CrudService<Product> {
                         searchQuery = this.productSearchHelper.attributeKeyValueFilter(filter, searchQuery)
                     }
 
-                    // Attribute Value Filter - performs an `$elemMatch` on `Product.attributeValues`.
+                    // Attribute Value Filter - performs an `$or` query on `Product.attributeValues`.
 
                     if (isAttrFilter && !filter.key) {
                         searchQuery = this.productSearchHelper.attributeValueFilter(filter, searchQuery)
                     }
 
-                    // Taxonomy Filter - performs an `$elemMatch` on `Product.taxonomies`.
+                    // Taxonomy Filter - performs an `$or` query on `Product.taxonomyTerms`.
 
                     if (isTaxFilter) {
-                        searchQuery = this.productSearchHelper.taxonomyFilter(filter, searchQuery)
+                        const taxonomyTerms = await this.dbClient.findQuery<TaxonomyTerm>(TaxonomyTermModel, { query: { slug: { $in: filter.values } } })
+                        const taxonomyTermIds = taxonomyTerms ? taxonomyTerms.map((term) => term._id) : []
+                        searchQuery = this.productSearchHelper.taxonomyTermFilter(taxonomyTermIds, searchQuery)
                     }
-                })
+                }
             }
 
             query = allQuery || searchQuery

@@ -10,8 +10,6 @@ import {
 } from '@angular/core'
 import { FormControl } from '@angular/forms'
 import { Observable } from 'rxjs/Observable'
-import 'rxjs/add/observable/fromEvent'
-import 'rxjs/add/operator/takeWhile'
 
 import { Copy } from '@mte/common/constants/copy'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'

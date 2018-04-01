@@ -3,10 +3,11 @@ import { NavigationStart, Router } from '@angular/router'
 
 import { AppConfig } from '@mte/app-config'
 import { NavigationBuilder } from '@mte/common/builders/navigation.builder'
+import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
 import { NavigationItem } from '@mte/common/models/api-models/navigation-item'
 import { Organization } from '@mte/common/models/api-models/organization'
 import { User } from '@mte/common/models/api-models/user'
-import { WindowRefService } from '@mte/common/ng-modules/ui/services/window-ref.service'
+import { BootstrapBreakpointKey } from '@mte/common/models/enums/bootstrap-breakpoint-key'
 import { CartService } from '../../../shared/services/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { UiService } from '../../../shared/services/ui.service'
@@ -34,6 +35,7 @@ export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
     public rightNavigation: NavigationItem[] = []
     private navigationBuilder = new NavigationBuilder()
     public appConfig = AppConfig
+    public bootstrapBreakpointKey = BootstrapBreakpointKey
 
     constructor(
         public userService: UserService,

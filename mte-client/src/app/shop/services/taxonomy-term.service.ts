@@ -3,10 +3,10 @@ import { Injectable } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
 
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
+import { SimpleError } from '@mte/common/lib/ng-modules/http'
+import { RestService } from '@mte/common/lib/ng-modules/http/http.models'
 import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
 import { GetTaxonomyTermsFromIdsRequest, GetTaxonomyTermsRequest } from '@mte/common/models/api-requests/get-taxonomy-terms.request'
-import { SimpleError } from '@mte/common/ng-modules/http'
-import { RestService } from '@mte/common/ng-modules/http/http.models'
 import { Subject } from 'rxjs/Subject'
 
 @Injectable()

@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify'
-import { cloneDeep } from 'lodash'
+import { cloneDeep, kebabCase } from 'lodash'
 import { Document } from 'mongoose'
 
 import { AppConfig } from '@mte/app-config'
@@ -7,6 +7,7 @@ import { Types } from '@mte/common/constants/inversify'
 import { MongooseModel } from '@mte/common/lib/goosetype'
 import { Attribute, AttributeModel } from '@mte/common/models/api-models/attribute'
 import { AttributeValue, AttributeValueModel } from '@mte/common/models/api-models/attribute-value'
+import { Image } from '@mte/common/models/api-models/image'
 import { Price } from '@mte/common/models/api-models/price'
 import { Product, ProductModel } from '@mte/common/models/api-models/product'
 import { Taxonomy, TaxonomyModel } from '@mte/common/models/api-models/taxonomy'
@@ -52,7 +53,6 @@ export class WoocommerceMigrationService {
 
                     for (const key of Object.keys(product)) {
                         if (typeof newProduct[key] !== 'undefined' && newProduct[key] !== undefined && newProduct[key] !== '') {
-
                             if (key.indexOf('attributes.') > -1) {
                                 const theKey = key.replace('attributes.', '')
                                 if (typeof product[key] === 'string') {
@@ -171,9 +171,9 @@ export class WoocommerceMigrationService {
                             }
                             if (key.indexOf('taxonomies.') > -1) {
                                 const taxonomyTermPromises: Promise<{ doc: TaxonomyTerm }>[] = []
-                                const taxonomySlug = key.replace('taxonomies.', '')
+                                const taxonomySlug = kebabCase(key.replace('taxonomies.', ''))
                                 const taxonomyTermSlugs = product[key].split('|').map((originalTaxonomyTermSlug) => {
-                                    return key.replace('taxonomies.', '') + '-' + originalTaxonomyTermSlug.replace(/\s/g, '-').toLowerCase()
+                                    return kebabCase(key.replace('taxonomies.', '') + '-' + originalTaxonomyTermSlug.replace(/\s/g, '-').toLowerCase())
                                 })
                                 try {
                                     const taxonomyResponse = await TaxonomyModel.findOrCreate({ slug: taxonomySlug })
@@ -182,10 +182,28 @@ export class WoocommerceMigrationService {
                                     taxonomyTermSlugs.forEach((taxonomyTermSlug) => {
                                         console.log('Taxonomy term promise')
                                         console.log(taxonomy._id, taxonomyTermSlug)
-                                        taxonomyTermPromises.push(TaxonomyTermModel.findOrCreate({
-                                            taxonomy: taxonomy._id,
-                                            slug: taxonomyTermSlug
-                                        }))
+
+                                        // [ EXCEPTION ]
+                                        if (taxonomyTermSlug === 'disc-type-mid-ranges') {
+                                            taxonomyTermPromises.push(TaxonomyTermModel.findOrCreate({
+                                                taxonomy: taxonomy._id,
+                                                slug: taxonomyTermSlug,
+                                                name: 'Mid-range',
+                                                pluralName: 'Mid-ranges',
+                                                pageSettings: {
+                                                    banner: '/page-images/mid-ranges-banner.jpg',
+                                                    bannerOverlay: '/page-images/disc-type-mid-ranges.png',
+                                                },
+                                                singularName: 'Mid-range',
+                                            }))
+                                        }
+                                        ////
+                                        else {
+                                            taxonomyTermPromises.push(TaxonomyTermModel.findOrCreate({
+                                                taxonomy: taxonomy._id,
+                                                slug: taxonomyTermSlug
+                                            }))
+                                        }
                                     })
 
                                     const taxonomyTermsResponse = await Promise.all(taxonomyTermPromises)
@@ -271,10 +289,17 @@ export class WoocommerceMigrationService {
                                 }
                             }
 
+                            if (key === 'name') {
+                                newProduct.name = newProduct.name.replace(/ŠÜ¢/g, ' -')
+                            }
+
                             if (key === 'description') {
                                 if (newProduct.description) {
                                     newProduct.description = newProduct.description.replace(/http:\/\/stage\.hyzershop\.com\/product/g, '/shop/product')
+                                    newProduct.description = newProduct.description.replace(/https:\/\/hyzershop\.com\/product/g, '/shop/product')
+                                    newProduct.description = newProduct.description.replace(/https:\/\/www\.hyzershop\.com\/product/g, '/shop/product')
                                     newProduct.description = newProduct.description.replace(/Š—È/g, '\'')
+                                    newProduct.description = newProduct.description.replace(/ŠÜ¢/g, ' –')
                                     newProduct.description = newProduct.description.replace('<div class="longdescription">', '\n')
                                     newProduct.description = newProduct.description.replace('</div>', '')
                                 }
@@ -295,7 +320,7 @@ export class WoocommerceMigrationService {
                     }
 
                     // !!!!!!!!!!!!!!!!!!
-                    // One-off exceptions
+                    // [ EXCEPTION ]
                     // !!!!!!!!!!!!!!!!!!
 
                     const sku = newProduct.sku
@@ -312,6 +337,7 @@ export class WoocommerceMigrationService {
                     newProduct.attributeValues = attributeValueIds
                     newProduct.taxonomyTerms = taxonomyTermIds
 
+                    delete (<any>newProduct).images
                     delete (<any>newProduct).featuredImage
                     delete (<any>newProduct).thumbnail
 
@@ -349,15 +375,13 @@ export class WoocommerceMigrationService {
                 for (let i = 0; i < allProducts.length; i++) {
                     const product = allProducts[i]
                     product.featuredImages = []
-                    product.largeImages = []
                     product.images = []
-                    product.thumbnails = []
 
                     if (!product.isParent) {
                         let isDisc: boolean
                         let attributeValues: AttributeValue[]
                         let taxonomyTerms: TaxonomyTerm[]
-                        let imageBaseUrl = `${AppConfig.cloudfront_url}/production/product-images/`
+                        let imageBaseUrl = `/product-images/`
 
                         if (product.taxonomyTermSlugs) {
                             product.taxonomyTermSlugs.forEach(term => {
@@ -378,7 +402,7 @@ export class WoocommerceMigrationService {
                         try {
                             attributeValues = await this.dbClient.findIds(AttributeValueModel, new ListFromIdsRequest({ ids: product.attributeValues })) as AttributeValue[]
                             taxonomyTerms = await this.dbClient.findIds(TaxonomyTermModel, new ListFromIdsRequest({ ids: product.taxonomyTerms }))
-                            isDisc = taxonomyTerms && taxonomyTerms.some((taxTerm) => taxTerm.slug === 'productType-discs')
+                            isDisc = taxonomyTerms && taxonomyTerms.some((taxTerm) => taxTerm.slug === 'product-type-discs')
                         }
                         catch (error) {
                             reject(new ApiErrorResponse(error))
@@ -415,11 +439,34 @@ export class WoocommerceMigrationService {
                             })
                         }
 
-                        imageBaseUrl.replace(/--/g, '-')
+                        // Populate images for non-disc products.
 
-                        product.thumbnails.push(imageBaseUrl + '-thumbnail.png')
-                        product.featuredImages.push(imageBaseUrl + '-medium.png')
-                        product.largeImages.push(imageBaseUrl + '-large.png')
+                        imageBaseUrl.replace(/\-\-/g, '-')
+                        imageBaseUrl.replace(/\-$/, '-')
+                        if (product.sku === 'DISCRAFTSTARTER') {
+                            imageBaseUrl = '/product-images/discraft-disc-golf-set'
+                        }
+                        if (product.sku === 'DISCRAFTDELUXE') {
+                            imageBaseUrl = '/product-images/discraft-deluxe-disc-golf-set'
+                        }
+                        if (product.sku === 'BLACKHOLE_PRO') {
+                            imageBaseUrl = '/product-images/discraft-deluxe-disc-golf-set'
+                        }
+                        if (product.sku === 'BLACKHOLE_PRECISION') {
+                            imageBaseUrl = '/product-images/discraft-deluxe-disc-golf-set'
+                        }
+                        if (product.sku === 'BLACKHOLE_PRACTICE') {
+                            imageBaseUrl = '/product-images/discraft-deluxe-disc-golf-set'
+                        }
+
+                        const productImage: Image = {
+                            large: imageBaseUrl + '-large.png',
+                            medium: imageBaseUrl + '-medium.png',
+                            thumbnail: imageBaseUrl + '-thumbnail.png',
+                        }
+
+                        product.featuredImages.push(productImage)
+                        product.images.push(productImage)
                     }
 
                     await product.save()
@@ -433,10 +480,8 @@ export class WoocommerceMigrationService {
                     if (product.isParent) {
                         variations = allProducts.filter(p => product.sku === p.parentSku)
                         variations.forEach((pv) => {
-                            product.images = product.images.concat(pv.images)
                             product.featuredImages = product.featuredImages.concat(pv.featuredImages)
-                            product.largeImages = product.largeImages.concat(pv.largeImages)
-                            product.thumbnails = product.thumbnails.concat(pv.thumbnails)
+                            product.images = product.images.concat(pv.images)
                         })
                     }
 

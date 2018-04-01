@@ -3,12 +3,12 @@ import { Injectable } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
 
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
+import { SimpleError } from '@mte/common/lib/ng-modules/http'
+import { RestService } from '@mte/common/lib/ng-modules/http/http.models'
 import { Price } from '@mte/common/models/api-models/price'
 import { Product } from '@mte/common/models/api-models/product'
 import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { GetProductDetailResponseBody } from '@mte/common/models/api-responses/product-detail/get-product-detail.response.body'
-import { SimpleError } from '@mte/common/ng-modules/http'
-import { RestService } from '@mte/common/ng-modules/http/http.models'
 import { Subject } from 'rxjs/Subject'
 
 @Injectable()

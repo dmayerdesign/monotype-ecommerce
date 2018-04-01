@@ -14,15 +14,15 @@ export class TaxonomyTerm extends MongooseDocument {
     @prop() public slug: string
     @prop() public description: string
 
-    // Tree properties
+    // Tree properties.
     @prop({ ref: TaxonomyTerm }) public parent: Ref<TaxonomyTerm>
     @arrayProp({ itemsRef: TaxonomyTerm }) public children: Ref<TaxonomyTerm>[]
 
-    // Defaults
+    // Defaults.
     @arrayProp({ itemsRef: Attribute }) public defaultAttributes: Ref<Attribute>[]
     @arrayProp({ itemsRef: AttributeValue }) public defaultAttributeValues: Ref<AttributeValue>[]
 
-    // Page settings
+    // Page settings.
     @prop() public pageSettings: PageSettings
     @prop({ ref: Taxonomy }) public archiveGroupsTaxonomy: Ref<Taxonomy>
     @arrayProp({ itemsRef: TaxonomyTerm }) public archiveTermGroups: Ref<TaxonomyTerm>[]

@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@angular/core'
 import { DOCUMENT } from '@angular/platform-browser'
 
-import { platform } from '@mte/common/ng-modules/ui/utils/platform'
+import { platform } from '@mte/common/lib/ng-modules/ui/utils/platform'
 import { UiService } from './ui.service'
 
 @Injectable()

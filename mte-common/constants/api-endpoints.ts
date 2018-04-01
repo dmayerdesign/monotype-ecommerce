@@ -1,4 +1,5 @@
 export class ApiEndpoints {
+    public static readonly Instagram = '/api/instagram'
     public static readonly Organization = '/api/organization'
     public static readonly Orders = '/api/orders'
     public static readonly Products = '/api/products'

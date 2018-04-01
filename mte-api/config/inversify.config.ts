@@ -6,6 +6,7 @@ import { Tags, Types } from '@mte/common/constants/inversify'
 import { MongooseDocument } from '@mte/common/lib/goosetype'
 import { Authenticate } from '../auth/authenticate'
 import { AppController } from '../controllers/app.controller'
+import { InstagramController } from '../controllers/instagram.controller'
 import { OrganizationController } from '../controllers/organization.controller'
 import { ProductsAdminController } from '../controllers/products.admin.controller'
 import { ProductsController } from '../controllers/products.controller'
@@ -20,6 +21,7 @@ import { DiscountService } from '../services/discount.service'
 import { EasypostService } from '../services/easypost.service'
 import { EmailService } from '../services/email.service'
 import { ErrorService } from '../services/error.service'
+import { InstagramService } from '../services/instagram.service'
 import { OrderService } from '../services/order.service'
 import { OrganizationService } from '../services/organization.service'
 import { ProductService } from '../services/product.service'
@@ -55,6 +57,7 @@ container.bind<CrudService<Discount>>(Types.DiscountService).to(DiscountService)
 container.bind<EasypostService>(Types.EasypostService).to(EasypostService)
 container.bind<EmailService>(Types.EmailService).to(EmailService)
 container.bind<ErrorService>(Types.ErrorService).to(ErrorService)
+container.bind<InstagramService>(Types.InstagramService).to(InstagramService)
 container.bind<OrderHelper>(Types.OrderHelper).to(OrderHelper)
 container.bind<CrudService<Order>>(Types.OrderService).to(OrderService)
 container.bind<CrudService<Organization>>(Types.OrganizationService).to(OrganizationService)
@@ -76,6 +79,7 @@ container.bind(Types.isOwner).toConstantValue(Authenticate.isAuthorized(1))
 
 // Controllers.
 container.bind<interfaces.Controller>(TYPE.Controller).to(AppController).whenTargetNamed(Tags.AppController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(InstagramController).whenTargetNamed(Tags.InstagramController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(OrganizationController).whenTargetNamed(Tags.OrganizationController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsAdminController).whenTargetNamed(Tags.ProductsAdminController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsController).whenTargetNamed(Tags.ProductsController)

@@ -7,7 +7,7 @@ import {
 import { Injectable } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
 
-import { AppConfig } from '../../../app-config'
+import { AppConfig } from '../../../../app-config'
 
 @Injectable()
 export class MteHttpRequestInterceptor implements HttpInterceptor {

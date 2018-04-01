@@ -7,11 +7,11 @@ import { Subject } from 'rxjs/Subject'
 import { InjectionTokens } from '@mte/common/constants/angular/injection-tokens'
 import { ErrorMessage } from '@mte/common/constants/error-message'
 import { HttpStatus } from '@mte/common/constants/http-status'
+import { MteHttpService, SimpleError } from '@mte/common/lib/ng-modules/http'
+import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
 import { ToastType } from '@mte/common/models/enums/toast-type'
 import { ModalData } from '@mte/common/models/interfaces/ui/modal-data'
 import { Toast } from '@mte/common/models/interfaces/ui/toast'
-import { MteHttpService, SimpleError } from '@mte/common/ng-modules/http'
-import { WindowRefService } from '@mte/common/ng-modules/ui/services/window-ref.service'
 
 @Injectable()
 export class UiService {

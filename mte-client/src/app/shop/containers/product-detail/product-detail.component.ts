@@ -1,8 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core'
 import { FormGroup } from '@angular/forms'
 import { ActivatedRoute } from '@angular/router'
-import 'rxjs/add/operator/switchMap'
-import 'rxjs/add/operator/takeWhile'
 
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Attribute } from '@mte/common/models/api-models/attribute'

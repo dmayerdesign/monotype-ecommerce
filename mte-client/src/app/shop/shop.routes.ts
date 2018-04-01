@@ -18,8 +18,8 @@ export const shopRoutes: Routes = [
         component: ShopAllComponent,
     },
     {
-        path: ShopRoutePaths.taxonomy,
-        component: ProductsByTermComponent,
+        path: ShopRoutePaths.productsByTaxonomy,
+        component: ShopAllComponent,
     },
     {
         path: ShopRoutePaths.productDetail,

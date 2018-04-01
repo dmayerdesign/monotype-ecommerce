@@ -272,8 +272,17 @@ export abstract class MongooseDocument {
     }
 
     public getSchema?(schemaOptions?: SchemaOptions): Schema {
-        const schema = this.composeSchemaForInstance(schemaOptions)
-        return schema
+        return this.composeSchemaForInstance(schemaOptions)
+    }
+
+    public getSchemaWithGetters?(schemaOptions?: SchemaOptions): Schema {
+        return this.composeSchemaForInstance({
+            ...schemaOptions,
+            ...{
+                toObject: { getters: true },
+                toJSON: { getters: true }
+            }
+        })
     }
 
     public getModel?(schemaOptions?: SchemaOptions): MongooseModel<this> {

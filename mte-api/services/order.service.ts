@@ -16,11 +16,9 @@ export class OrderService extends CrudService<Order> {
     constructor(
         @inject(Types.DbClient) protected dbClient: DbClient<Order>,
         @inject(Types.StripeOrderService) private stripeOrderService: StripeOrderService,
-    ) {
-        super()
-    }
+    ) { super() }
 
-    public execute(newOrder: Order) {
+    public execute(newOrder: Order): Promise<StripeSubmitOrderResponse> {
         return new Promise<StripeSubmitOrderResponse>(async (resolve, reject) => {
             try {
                 const stripeSubmitOrderResponse = await this.stripeOrderService.submitOrder(newOrder)

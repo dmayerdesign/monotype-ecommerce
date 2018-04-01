@@ -10,6 +10,9 @@ import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.res
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
 import { DbClient } from '../data-access/db-client'
 
+/**
+ * Base class for API services requiring CRUD functionality.
+ */
 @injectable()
 export abstract class CrudService<T extends MongooseDocument> {
 

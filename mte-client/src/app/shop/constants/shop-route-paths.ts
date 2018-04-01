@@ -6,5 +6,5 @@ export class ShopRoutePaths {
     public static readonly cart = 'cart'
     public static readonly checkout = 'checkout'
     public static readonly productDetail = 'product/:slug'
-    public static readonly taxonomy = 'by/:taxonomySlug/:termSlug'
+    public static readonly productsByTaxonomy = 'for/:taxonomySlug/:partialTermSlug'
 }

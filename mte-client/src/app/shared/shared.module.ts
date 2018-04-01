@@ -4,9 +4,9 @@ import { ModuleWithProviders, NgModule } from '@angular/core'
 import { HttpSettings } from './config/http.settings'
 
 // Feature modules.
-import { MteFormsModule } from '@mte/common/ng-modules/forms'
-import { HttpInjectionTokens, MteHttpModule } from '@mte/common/ng-modules/http'
-import { MteUiModule } from '@mte/common/ng-modules/ui'
+import { MteFormsModule } from '@mte/common/lib/ng-modules/forms'
+import { HttpInjectionTokens, MteHttpModule } from '@mte/common/lib/ng-modules/http'
+import { MteUiModule } from '@mte/common/lib/ng-modules/ui'
 
 // Components.
 import { LoginComponent } from './components/login/login.component'

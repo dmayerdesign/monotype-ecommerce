@@ -1,9 +1,7 @@
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
-import 'rxjs/add/observable/fromEvent'
-import 'rxjs/add/observable/of'
-import 'rxjs/add/operator/mergeMap'
-import { BootstrapBreakpoint } from '../../../models/enums/bootstrap-breakpoint'
+import { BootstrapBreakpoint } from '../../../../models/enums/bootstrap-breakpoint'
+import { BootstrapBreakpointKey } from '../../../../models/enums/bootstrap-breakpoint-key'
 
 export class WindowRefService {
     private _window = typeof window !== 'undefined' ? window : null
@@ -71,21 +69,21 @@ export class WindowRefService {
         else return 10
     }
 
-    private mediaBreakpoint(breakpoint: 'xs'|'sm'|'md'|'lg'|'xl', dir: 'above'|'below'): boolean {
+    private mediaBreakpoint(breakpoint: BootstrapBreakpointKey, dir: 'above'|'below'): boolean {
         return dir === 'above'
             ? this.width >= BootstrapBreakpoint[breakpoint + 'Max']
             : this.width < BootstrapBreakpoint[breakpoint + 'Min']
     }
 
-    public mediaBreakpointBelow(breakpoint: 'xs'|'sm'|'md'|'lg'|'xl'): boolean {
+    public mediaBreakpointBelow(breakpoint: BootstrapBreakpointKey): boolean {
         return this.mediaBreakpoint(breakpoint, 'below')
     }
 
-    public mediaBreakpointAbove(breakpoint: 'xs'|'sm'|'md'|'lg'|'xl'): boolean {
+    public mediaBreakpointAbove(breakpoint: BootstrapBreakpointKey): boolean {
         return this.mediaBreakpoint(breakpoint, 'above')
     }
 
-    public mediaBreakpoints(breakpoint: 'xs'|'sm'|'md'|'lg'|'xl', dir: 'above'|'below'): Observable<boolean> {
+    public mediaBreakpoints(breakpoint: BootstrapBreakpointKey, dir: 'above'|'below'): Observable<boolean> {
         return this.widths
             .map((width) => dir === 'above'
                 ? width >= BootstrapBreakpoint[breakpoint + 'Max']
@@ -93,11 +91,11 @@ export class WindowRefService {
             )
     }
 
-    public mediaBreakpointBelows(breakpoint: 'xs'|'sm'|'md'|'lg'|'xl'): Observable<boolean> {
+    public mediaBreakpointBelows(breakpoint: BootstrapBreakpointKey): Observable<boolean> {
         return this.mediaBreakpoints(breakpoint, 'below')
     }
 
-    public mediaBreakpointAboves(breakpoint: 'xs'|'sm'|'md'|'lg'|'xl'): Observable<boolean> {
+    public mediaBreakpointAboves(breakpoint: BootstrapBreakpointKey): Observable<boolean> {
         return this.mediaBreakpoints(breakpoint, 'above')
     }
 }

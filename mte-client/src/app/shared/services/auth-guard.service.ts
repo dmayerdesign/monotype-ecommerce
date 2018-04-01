@@ -7,7 +7,6 @@ import {
     RouterStateSnapshot,
 } from '@angular/router'
 import { Observable } from 'rxjs/Observable'
-import 'rxjs/add/operator/take'
 
 import { AppRoutes } from '../../constants/app-routes'
 import { RouteStateService } from './route-state.service'

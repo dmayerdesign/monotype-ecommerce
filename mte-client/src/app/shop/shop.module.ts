@@ -44,7 +44,8 @@ import { CheckoutService } from './services/checkout.service'
 import { SharedModule } from '../shared/shared.module'
 
 //      Routing modules.
-import { ShopRoutingModule } from './shop.routing.module'
+import { ShopRoutingModule } from './shop.routing.module';
+import { TopNavComponent } from './components/top-nav/top-nav.component'
 
 // Now all we need to do is configure the entire "shop" module, piece by piece.
 @NgModule({
@@ -68,6 +69,7 @@ import { ShopRoutingModule } from './shop.routing.module'
         ShopAllComponent,
         ProductImageComponent,
         ShopHomeComponent,
+        TopNavComponent,
     ],
     // and we want to share some things with other modules, in case somebody wants to
     // import us,

@@ -4,12 +4,15 @@ import { ActivatedRoute, Router } from '@angular/router'
 import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
 
+import { LocalStorageKeys } from '@mte/common/constants'
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
+import { MteHttpService } from '@mte/common/lib/ng-modules/http'
+import { Cart } from '@mte/common/models/api-models/cart'
 import { User } from '@mte/common/models/api-models/user'
 import { Login } from '@mte/common/models/interfaces/api/login'
 import { UserRegistration } from '@mte/common/models/interfaces/api/user-registration'
-import { MteHttpService } from '@mte/common/ng-modules/http'
 import { AppRoutes } from '../../constants/app-routes'
+import { UtilService } from './util.service'
 
 @Injectable()
 export class UserService {
@@ -22,6 +25,7 @@ export class UserService {
         private mteHttpService: MteHttpService,
         private route: ActivatedRoute,
         private router: Router,
+        private utilService: UtilService
     ) {
         this.users = this.userSubject.asObservable()
         this.users.subscribe(user => {
@@ -33,39 +37,39 @@ export class UserService {
         this.getUser()
     }
 
-    public get user() {
+    public get user(): User {
         return this._user
     }
 
-    private clearSession() {
+    private clearSession(): void {
         this.userSubject.next(null)
     }
 
-    private refreshSession(user: User) {
+    private refreshSession(user: User): void {
         this.userSubject.next(user)
     }
 
-    public signup(userInfo: UserRegistration) {
+    public signup(userInfo: UserRegistration): void {
         this.http.post(`${ApiEndpoints.User}/register`, userInfo)
             .subscribe((user: User) => {
                 this.refreshSession(user)
             })
     }
 
-    public login(credentials: Login) {
+    public login(credentials: Login): void {
         this.http.post(`${ApiEndpoints.User}/login`, credentials)
             .subscribe((userData: User) => {
                 this.refreshSession(userData)
             })
     }
 
-    public getUser() {
+    public getUser(): void {
         this.http.get(`${ApiEndpoints.User}/get-user`).subscribe((userData: User) => {
             this.refreshSession(userData)
         })
     }
 
-    public logout() {
+    public logout(): void {
         this.http.post(`${ApiEndpoints.User}/logout`, {})
             .subscribe(successResponse => {
                 this.clearSession()
@@ -76,7 +80,15 @@ export class UserService {
             })
     }
 
-    public verifyEmail(token: string) {
+    public updateCart(cart: Cart): void {
+        if (this.user) {
+            this.http.post(`${ApiEndpoints.User}/update-cart`, cart)
+        } else {
+            this.utilService.saveToLocalStorage(LocalStorageKeys.Cart, cart)
+        }
+    }
+
+    public verifyEmail(token: string): Observable<User> {
         return this.http.get<User>(`${ApiEndpoints.User}/verify-email/${token}`)
     }
 }

@@ -1,15 +1,12 @@
 import { Injectable } from '@angular/core'
 import { ActivatedRoute, NavigationStart, Router } from '@angular/router'
 import { Observable } from 'rxjs/Observable'
-import 'rxjs/add/observable/of'
-import 'rxjs/add/operator/filter'
-import 'rxjs/add/operator/switchMap'
+import { filter } from 'rxjs/operators'
 
 @Injectable()
 export class RouteStateService {
 
     public previousUrl: string
-    public routerEventsSource: Observable<any>
 
     constructor(
         private router: Router,
@@ -19,9 +16,8 @@ export class RouteStateService {
     }
 
     public init() {
-        Observable.of(null)
-            .switchMap(x => this.router.events)
-            .filter(e => e instanceof NavigationStart)
+        this.router.events
+            .pipe(filter(e => e instanceof NavigationStart))
             .subscribe(e => {
                 if (this.route.snapshot.firstChild
                     && this.route.snapshot.firstChild.url
@@ -30,6 +26,8 @@ export class RouteStateService {
                 } else {
                     this.previousUrl = '/'
                 }
+
+                console.log(this.previousUrl)
             })
     }
 

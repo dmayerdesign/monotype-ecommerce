@@ -44,28 +44,28 @@ export class CartService {
     public init(): void {
 
         // FOR TESTING
-            this.populateAndStream({
-                items: [ { price: { amount: 5 } }, { price: { amount: 5 } } ] as Product[],
-                displayItems: [],
-                price: {
-                    amount: 10,
-                    currency: Currency.USD
-                },
-                count: 2,
-                subTotal: 10,
-                total: 10,
-                discounts: []
-            } as Cart, false)
+            // this.updateAndStream({
+            //     items: [ { price: { amount: 5 } }, { price: { amount: 5 } } ] as Product[],
+            //     displayItems: [],
+            //     price: {
+            //         amount: 10,
+            //         currency: Currency.USD
+            //     },
+            //     count: 2,
+            //     subTotal: 10,
+            //     total: 10,
+            //     discounts: []
+            // } as Cart, false)
         //
 
-        const cart = <Cart>this.util.getFromLocalStorage(LocalStorageKeys.Cart)
+        const cart = this.util.getFromLocalStorage(LocalStorageKeys.Cart) as Cart
         if (cart) {
-            this.populateAndStream(cart)
+            this.updateAndStream(cart)
         }
         this.userService.users.subscribe((user) => {
             if (user && user.cart && user.cart.items) {
                 if (user.cart.items.length || user.cart.discounts.length) {
-                    this.populateAndStream(user.cart)
+                    this.updateAndStream(user.cart)
                 }
             }
         })
@@ -81,12 +81,18 @@ export class CartService {
                 newCart.items.push(product)
             }
 
-            this.populateAndStream(newCart)
+            this.updateAndStream(newCart)
         })
         this.productService.getOne(slug)
     }
 
-    private populateAndStream(newCart: Cart, refreshProducts = true): void {
+    private updateAndStream(newCart: Cart, refreshProducts = true): void {
+        const saveAndStream = (cart) => {
+            this.userService.updateCart(this.cart)
+            this.cart = cart
+            this.cartPump.next(this.cart)
+        }
+
         newCart.subTotal = this.getSubTotal(<Product[]>newCart.items)
         newCart.total = this.getTotal(<Product[]>newCart.items)
         if (refreshProducts) {
@@ -94,13 +100,11 @@ export class CartService {
                 .subscribe(products => {
                     newCart.items = products
                     newCart.displayItems = this.getDisplayItems(products)
-                    this.cart = newCart
-                    this.cartPump.next(this.cart)
+                    saveAndStream(newCart)
                 })
         }
         else {
-            this.cart = newCart
-            this.cartPump.next(this.cart)
+            saveAndStream(newCart)
         }
     }
 
@@ -109,7 +113,7 @@ export class CartService {
         this.previousState = cloneDeep(this.cart)
         newCart.items.splice(newCart.items.findIndex((i: Product) => i.slug === slug), 1)
 
-        this.populateAndStream(newCart)
+        this.updateAndStream(newCart)
     }
 
     private getSubTotal(items: Product[]): number {

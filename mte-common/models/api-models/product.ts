@@ -1,10 +1,12 @@
 import * as mongooseDelete from 'mongoose-delete'
 import { arrayProp, plugin, pre, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 
+import { ImageHelper } from '../../helpers/image.helper'
 import { ProductClass } from '../enums/product-class'
 import { Attribute } from './attribute'
 import { AttributeValue } from './attribute-value'
 import { Dimensions } from './dimensions'
+import { Image } from './image'
 import { Price } from './price'
 import { TaxonomyTerm } from './taxonomy-term'
 import { Units } from './units'
@@ -36,10 +38,8 @@ export class Product extends MongooseDocument {
     @prop() public name: string
     @prop() public slug: string
     @prop() public description: string
-    @arrayProp({ items: String }) public featuredImages: string[]
-    @arrayProp({ items: String }) public images: string[]
-    @arrayProp({ items: String }) public largeImages: string[]
-    @arrayProp({ items: String }) public thumbnails: string[]
+    @arrayProp({ items: Image }) public featuredImages: Image[]
+    @arrayProp({ items: Image }) public images: Image[]
 
 	/* Technical */
     @prop({ unique: true }) public sku: string
