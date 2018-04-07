@@ -5,8 +5,8 @@ import * as mongoose from 'mongoose'
 import { Crud, HttpStatus } from '@mte/common/constants'
 import { Types } from '@mte/common/constants/inversify'
 import { MongooseModel } from '@mte/common/lib/goosetype'
-import { AttributeModel } from '@mte/common/models/api-models/attribute'
-import { AttributeValueModel } from '@mte/common/models/api-models/attribute-value'
+import { Attribute, AttributeModel } from '@mte/common/models/api-models/attribute'
+import { AttributeValue, AttributeValueModel } from '@mte/common/models/api-models/attribute-value'
 import { Organization } from '@mte/common/models/api-models/organization'
 import { Product, ProductModel } from '@mte/common/models/api-models/product'
 import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
@@ -15,7 +15,8 @@ import { GetProductsFilterType, GetProductsFromIdsRequest, GetProductsRequest } 
 import { ListFromQueryRequest } from '@mte/common/models/api-requests/list.request'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
-import { GetProductDetailResponseBody } from '@mte/common/models/api-responses/product-detail/get-product-detail.response.body'
+import { GetAttributeSelectOptionsResponseBody } from '@mte/common/models/api-responses/get-attribute-select-options/get-attribute-select-options.response.body'
+import { GetProductDetailResponseBody } from '@mte/common/models/api-responses/get-product-detail/get-product-detail.response.body'
 import { Currency } from '@mte/common/models/enums/currency'
 import { Price } from '@mte/common/models/interfaces/api/price'
 import { DbClient } from '../data-access/db-client'
@@ -69,7 +70,7 @@ export class ProductService extends CrudService<Product> {
      * @param {string} slug The `slug` of the product to be retrieved
      * @return {Promise<GetProductDetailResponseBody>}
      */
-    public getDetail(slug: string): Promise<ApiResponse<GetProductDetailResponseBody>> {
+    public getProductDetail(slug: string): Promise<ApiResponse<GetProductDetailResponseBody>> {
         return new Promise<ApiResponse<GetProductDetailResponseBody>>(async (resolve, reject) => {
             try {
                 const product = await this.dbClient.findOne(ProductModel, { slug }, [
@@ -90,8 +91,8 @@ export class ProductService extends CrudService<Product> {
                         populate: {
                             path: 'attributeValues',
                             model: AttributeValueModel,
-                        }
-                    }
+                        },
+                    },
                 ])
 
                 resolve(new ApiResponse(product))
@@ -300,6 +301,59 @@ export class ProductService extends CrudService<Product> {
         })
     }
 
+    public getAttributeSelectOptions(slug: string): Promise<ApiResponse<GetAttributeSelectOptionsResponseBody>> {
+        const attributeSelections: GetAttributeSelectOptionsResponseBody = []
+
+        function getSelectOptions(attr: Attribute): AttributeValue[] {
+            const selection = attributeSelections.find((s) => s.attribute._id === attr._id)
+            if (selection) {
+                return selection.attributeValues as AttributeValue[]
+            }
+            else {
+                return undefined
+            }
+        }
+
+        function setSelectOptions(attribute: Attribute, attributeValues: AttributeValue[]): void {
+            const existingSelections = getSelectOptions(attribute)
+            if (existingSelections) {
+                attributeSelections.splice(attributeSelections.findIndex((x) => x.attribute._id === attribute._id), 1, { attribute, attributeValues })
+            }
+            else {
+                attributeSelections.push({ attribute, attributeValues })
+            }
+        }
+
+        return new Promise<ApiResponse<GetAttributeSelectOptionsResponseBody>>(async (resolve, reject) => {
+            const productDetailResponse = await this.getProductDetail(slug)
+            const product = productDetailResponse.body
+            if (!product || !product.variations) {
+                reject(new ApiErrorResponse(new Error('No selection data was found for ' + slug + '.'), HttpStatus.CLIENT_ERROR_NOT_FOUND))
+                return
+            }
+            product.variations.forEach((variation: Product) => {
+                if (variation.attributeValues) {
+                    variation.attributeValues
+                        .filter((variationAttributeValue: AttributeValue) =>
+                            !!product.variableAttributeValues.find((x: AttributeValue) => x._id === variationAttributeValue._id))
+                        .forEach((variationAttributeValue: AttributeValue) => {
+                            const parentAttribute = product.variableAttributes.find((attr: Attribute) => attr._id === variationAttributeValue.attribute)
+                            if (!getSelectOptions(parentAttribute as Attribute)) {
+                                setSelectOptions(parentAttribute as Attribute, [])
+                            }
+                            setSelectOptions(parentAttribute as Attribute, [
+                                ...getSelectOptions(parentAttribute as Attribute),
+                                variationAttributeValue
+                            ])
+                        })
+                }
+            })
+            resolve(new ApiResponse(attributeSelections))
+        })
+    }
+
+    // Helpers.
+
     public getPrice(product: Product): Price {
         if (product.isOnSale) {
             return product.salePrice
@@ -321,4 +375,5 @@ export class ProductService extends CrudService<Product> {
             currency: Currency.USD,
         }
     }
+
 }

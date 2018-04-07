@@ -5,6 +5,7 @@ import { Product } from '@mte/common/models/api-models/product'
 import { GetProductsFilterType, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
+import { takeWhile } from 'rxjs/operators/takeWhile'
 import { ProductService } from '../../services'
 
 @Component({
@@ -24,7 +25,7 @@ export class ProductsByTermComponent implements OnInit, OnDestroy {
 
     public ngOnInit(): void {
         this.activatedRoute.paramMap
-            .takeWhile(() => this.isAlive)
+            .pipe(takeWhile(() => this.isAlive))
             .subscribe((paramMap) => {
                 const taxonomySlug = paramMap.get('taxonomySlug')
                 const taxonomyTermSlug = paramMap.get('taxonomyTermSlug')

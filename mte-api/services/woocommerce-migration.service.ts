@@ -360,6 +360,7 @@ export class WoocommerceMigrationService {
                 console.log('Creating products')
                 const allProducts = await this.dbClient.create<Product>(ProductModel, newProducts)
                 const parentProducts = allProducts.filter((p) => p.isParent)
+                const variationProducts = allProducts.filter((p) => p.isVariation)
 
                 // Populate the `variations` array.
 
@@ -486,6 +487,37 @@ export class WoocommerceMigrationService {
                     }
 
                     await product.save()
+                }
+
+                // Populate parent products with variation attributes and attribute values.
+
+                for (let i = 0; i < variationProducts.length; i++) {
+                    const variation = variationProducts[i]
+                    const parent = parentProducts.find((p) => p.sku === variation.parentSku)
+                    if (!parent.variableAttributes) {
+                        parent.variableAttributes = []
+                    }
+                    if (!parent.variableAttributeValues) {
+                        parent.variableAttributeValues = []
+                    }
+
+                    variation.variableAttributes.forEach((attrId) => {
+                        if (!parent.variableAttributes.find((parentAttrId) => parentAttrId === attrId)) {
+                            parent.variableAttributes.push(attrId)
+                        }
+                    })
+
+                    variation.variableAttributeValues.forEach((attrValueId) => {
+                        if (!parent.variableAttributeValues.find((parentAttrValueId) => parentAttrValueId === attrValueId)) {
+                            parent.variableAttributeValues.push(attrValueId)
+                        }
+                    })
+
+                    variation.variableAttributes = []
+                    variation.variableAttributeValues = []
+
+                    await variation.save()
+                    await parent.save()
                 }
 
                 resolve(new ApiResponse(allProducts))

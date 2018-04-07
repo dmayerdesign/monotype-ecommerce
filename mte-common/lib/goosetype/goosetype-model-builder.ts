@@ -213,10 +213,6 @@ export class ModelBuilder {
             schemaProperty.type = this.getTypeOrSchema(type)
         }
 
-        if (target.constructor.name.match(/uicontent/i)) {
-            console.log(target.constructor.name, JSON.stringify(schemaProperty))
-        }
-
         schema[key] = schemaProperty
     }
 }

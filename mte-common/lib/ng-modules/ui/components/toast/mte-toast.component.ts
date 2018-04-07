@@ -1,6 +1,7 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
+import { takeWhile } from 'rxjs/operators/takeWhile'
 
 import { AppConfig } from '@mte/app-config'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
@@ -52,7 +53,7 @@ export class MteToastComponent implements OnInit, OnDestroy {
     public ngOnInit(): void {
         if (this.toasts) {
             this.toasts
-                .takeWhile(() => this.isAlive)
+                .pipe(takeWhile(() => this.isAlive))
                 .subscribe(toast => {
                     this.queueToast(toast)
                     this.showToast()

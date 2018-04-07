@@ -4,6 +4,7 @@ import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
 import { BootstrapBreakpoint } from '@mte/common/models/enums/bootstrap-breakpoint'
 import { Observable } from 'rxjs/Observable'
+import { map, pairwise, takeWhile } from 'rxjs/operators'
 
 @Component({
     selector: 'mte-product-image',
@@ -33,7 +34,7 @@ import { Observable } from 'rxjs/Observable'
             </div>
         <div>
     `,
-    styleUrls: ['./product-image.component.scss'],
+    styleUrls: [ './product-image.component.scss' ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 @Heartbeat()
@@ -53,15 +54,18 @@ export class ProductImageComponent implements AfterViewInit, OnInit, OnDestroy {
     private magnifiedTranslateYEm = 0
     private magnifiedWidthEms = 80
     private magnifiedHeightEms = 80
+    public addMagnifierSmoothing = false
 
     constructor(
         private windowRefService: WindowRefService,
         private changeDetectorRef: ChangeDetectorRef
     ) {}
 
+    // Lifecycle methods.
+
     public ngOnInit(): void {
-        this.breakpointHasBeenHits(this.windowRefService.widths.pairwise())
-            .takeWhile(() => this.isAlive)
+        this.breakpointHasBeenHits(this.windowRefService.widths.pipe(pairwise()))
+            .pipe(takeWhile(() => this.isAlive))
             .subscribe(() => {
                 if (this.productImageElement) this.updateImageSize()
             })
@@ -74,14 +78,19 @@ export class ProductImageComponent implements AfterViewInit, OnInit, OnDestroy {
 
     public ngOnDestroy(): void { }
 
+    // Init methods.
+
     public updateImageSize(): void {
         this.changeDetectorRef.markForCheck()
         this.imageWidthPx = this.productImageElement.nativeElement.offsetWidth
         this.imageHeightPx = this.calculateHeight()
         this.src = this.imageWidthPx < 250
             ? ImageHelper.getThumbnailImage(this.src)
+            : this.imageWidthPx < 500 ? ImageHelper.getMediumImage(this.src)
             : ImageHelper.getLargeImage(this.src)
     }
+
+    // Template bindings.
 
     public getStyles(): object {
         return {
@@ -103,6 +112,7 @@ export class ProductImageComponent implements AfterViewInit, OnInit, OnDestroy {
             transform: `translate(${this.getMagnifiedTranslate()})`,
             width: this.magnifiedWidthEms + 'em',
             height: this.magnifiedHeightEms + 'em',
+            transition: this.addMagnifierSmoothing ? 'transform 100ms ease-out' : 'none',
         }
     }
 
@@ -112,21 +122,7 @@ export class ProductImageComponent implements AfterViewInit, OnInit, OnDestroy {
         ]
     }
 
-    public isMagnified(): boolean {
-        return this.hasMagnifier && this.mouseIsOver
-    }
-
-    public breakpointHasBeenHits(obs: Observable<number[]>): Observable<boolean> {
-        return obs.map(([prevWidth, currentWidth]) =>
-            Object.keys(BootstrapBreakpoint)
-                .filter((x) => !isNaN(parseFloat(x)))
-                .map((x) => parseFloat(x))
-                .some((breakpoint) =>
-                    (prevWidth > breakpoint && currentWidth <= breakpoint)
-                    || (prevWidth <= breakpoint && currentWidth > breakpoint)
-                )
-        )
-    }
+    // Styling methods.
 
     public getMagnifiedTranslate(): string {
         return `${this.magnifiedTranslateXEm}em, ${this.magnifiedTranslateYEm}em`
@@ -148,23 +144,47 @@ export class ProductImageComponent implements AfterViewInit, OnInit, OnDestroy {
         return (this.imageWidthPx / this.widthToHeightRatio)
     }
 
+    // Booleans.
+
+    public isMagnified(): boolean {
+        return this.hasMagnifier && this.mouseIsOver
+    }
+
+    public breakpointHasBeenHits(obs: Observable<number[]>): Observable<boolean> {
+        return obs.pipe(map(([prevWidth, currentWidth]) =>
+            Object.keys(BootstrapBreakpoint)
+                .filter((x) => !isNaN(parseFloat(x)))
+                .map((x) => parseFloat(x))
+                .some((breakpoint) =>
+                    (prevWidth > breakpoint && currentWidth <= breakpoint)
+                    || (prevWidth <= breakpoint && currentWidth > breakpoint)
+                )
+        ))
+    }
+
+    // Event handlers.
+
     public handleMouseEnter(): void {
         this.mouseIsOver = true
+        setTimeout(() => (this.addMagnifierSmoothing = true), 50)
     }
 
     public handleMouseLeave(): void {
         this.mouseIsOver = false
         this.magnifiedTranslateXEm = 0
         this.magnifiedTranslateYEm = 0
+        this.addMagnifierSmoothing = false
     }
 
     public handleMouseMove(event: MouseEvent): void {
-        const xRatio = this.magnifiedWidthEms / this.imageWidthPx
-        const yRatio = this.magnifiedHeightEms / this.imageHeightPx
+        const magnifiedWidthPx = this.magnifiedWidthEms * 10
+        const magnifiedHeightPx = this.magnifiedHeightEms * 10
+        const widthDelta = magnifiedWidthPx - this.imageWidthPx
+        const heightDelta = magnifiedHeightPx - this.imageHeightPx
         const mouseX = event.offsetX
         const mouseY = event.offsetY
 
-        this.magnifiedTranslateXEm = -((xRatio * mouseX) + (this.imageWidthPx / 2) / 10)
-        this.magnifiedTranslateYEm = -((yRatio * mouseY) + (this.imageHeightPx / 2) / 10)
+        this.magnifiedTranslateXEm = (mouseX / this.imageWidthPx) * widthDelta * -0.1
+        this.magnifiedTranslateYEm = (mouseY / this.imageHeightPx) * heightDelta * -0.1
     }
 }

@@ -1,5 +1,6 @@
 import { AfterViewInit, Component, OnInit, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core'
 import { NavigationStart, Router } from '@angular/router'
+import { filter } from 'rxjs/operators/filter'
 
 import { AppConfig } from '@mte/app-config'
 import { NavigationBuilder } from '@mte/common/builders/navigation.builder'
@@ -61,9 +62,9 @@ export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
     }
 
     public ngAfterViewInit(): void {
-        if (this.router.events && typeof this.router.events.filter === 'function') {
+        if (this.router.events) {
             this.router.events
-                .filter((event) => event instanceof NavigationStart)
+                .pipe(filter((event) => event instanceof NavigationStart))
                 .subscribe(() => this.toggleFullScreenNav(false))
         }
 

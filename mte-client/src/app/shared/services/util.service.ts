@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
 import { Subject } from 'rxjs/Subject'
+import { delay } from 'rxjs/operators/delay'
 
 @Injectable()
 export class UtilService {
@@ -10,7 +11,7 @@ export class UtilService {
 
     public timeout(timeout: number): Observable<any> {
         const subject = new ReplaySubject(1)
-        const observable = subject.asObservable().delay(timeout)
+        const observable = subject.asObservable().pipe(delay(timeout))
         subject.next(0)
         return observable
     }

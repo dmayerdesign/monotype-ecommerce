@@ -6,6 +6,9 @@ import {
 } from '@angular/common/http'
 import { Inject, Injectable } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
+import { of } from 'rxjs/observable/of'
+import { _throw } from 'rxjs/observable/throw'
+import { catchError, switchMap } from 'rxjs/operators'
 
 import { HttpStatus } from '../../../constants'
 import { HttpInjectionTokens } from './http.injection-tokens'
@@ -31,25 +34,27 @@ export class MteHttpResponseInterceptor implements HttpInterceptor {
                 })
         }
 
-        return Observable.of(request)
-            .switchMap((req) => next.handle(req))
-            .catch((errorResponse) => {
-                // console.log('[MteHttpResponseInterceptor#intercept] Error response', errorResponse)
-                const error = new SimpleError(errorResponse)
+        return of(request)
+            .pipe(
+                switchMap((req) => next.handle(req)),
+                catchError((errorResponse) => {
+                    // console.log('[MteHttpResponseInterceptor#intercept] Error response', errorResponse)
+                    const error = new SimpleError(errorResponse)
 
-                // If the error is a 401, pipe it through the `sessionInvalids` stream.
+                    // If the error is a 401, pipe it through the `sessionInvalids` stream.
 
-                if (error.status === HttpStatus.CLIENT_ERROR_UNAUTHORIZED) {
-                    this.mteHttpService.sessionInvalids.next(error)
-                }
+                    if (error.status === HttpStatus.CLIENT_ERROR_UNAUTHORIZED) {
+                        this.mteHttpService.sessionInvalids.next(error)
+                    }
 
-                // Else, if the error is coming from a blacklisted endpoint, pipe it through the generic `errors` stream.
+                    // Else, if the error is coming from a blacklisted endpoint, pipe it through the generic `errors` stream.
 
-                else if (!isBlacklistedFromErrorFlash()) {
-                    this.mteHttpService.errors.next(error)
-                }
+                    else if (!isBlacklistedFromErrorFlash()) {
+                        this.mteHttpService.errors.next(error)
+                    }
 
-                return Observable.throw(error)
-            })
+                    return _throw(error)
+                })
+            )
     }
 }

@@ -126,7 +126,6 @@ export class MteModalComponent implements OnInit, OnDestroy {
                 this.isFadedIn = true;
                 // DOM access.
                 (this.modal.nativeElement as HTMLElement).focus()
-                console.log('Show')
             })
             this.endFadeInTimerSub = timeout(400).subscribe(() => {
                 this.isTransitioning = false
@@ -135,7 +134,6 @@ export class MteModalComponent implements OnInit, OnDestroy {
         else {
             this.isFadedIn = false
             this.endFadeOutTimerSub = timeout(400).subscribe(() => {
-                console.log('Hide')
                 this.isShowing = false
                 this.isTransitioning = false
                 if (this.closeCallback) {

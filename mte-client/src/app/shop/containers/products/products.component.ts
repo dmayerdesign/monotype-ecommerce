@@ -9,6 +9,7 @@ import { BootstrapBreakpointKey } from '@mte/common/models/enums/bootstrap-break
 import { cloneDeep } from 'lodash'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
+import { map, takeWhile } from 'rxjs/operators'
 import { ShopRouterLinks } from '../../constants/shop-router-links'
 import { ProductService } from '../../services'
 import { TaxonomyTermService } from '../../services/taxonomy-term.service'
@@ -44,7 +45,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
         if (route.paramMap.get('taxonomySlug')) {
             this.activatedRoute.paramMap
-                .takeWhile(() => this.isAlive)
+                .pipe(takeWhile(() => this.isAlive))
                 .subscribe((paramMap) => {
                     const taxonomySlug = paramMap.get('taxonomySlug')
                     const partialTermSlug = paramMap.get('partialTermSlug')
@@ -57,7 +58,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
                         }]
                     })
 
-                    console.log('Executing request for taxonomy term', request)
                     this.executeRequest(request)
                 })
         }
@@ -66,11 +66,10 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
         else {
             this.activatedRoute.queryParamMap
-                .takeWhile(() => this.isAlive)
+                .pipe(takeWhile(() => this.isAlive))
                 .subscribe((queryParamMap) => {
                     const requestStr = queryParamMap.get('request')
                     const request = !!requestStr ? JSON.parse(requestStr) as GetProductsRequest : {}
-                    console.log('Executing request for query param', request)
                     this.executeRequest(request)
                 })
         }
@@ -100,7 +99,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
         // Get the taxonomy term if one is found in the request.
         if (requestedTaxonomyTermSlug) {
             this.taxonomyTermService.getOneSource
-                .takeWhile(() => this.isAlive)
+                .pipe(takeWhile(() => this.isAlive))
                 .subscribe((term) => this.taxonomyTerm = term)
             this.taxonomyTermService.getOne(requestedTaxonomyTermSlug)
         }
@@ -143,7 +142,8 @@ export class ProductsComponent implements OnInit, OnDestroy {
         return this.windowRef.mediaBreakpointAboves(BootstrapBreakpointKey.Md)
     }
     public layoutIsNotMdAboves(): Observable<boolean> {
-        return this.windowRef.mediaBreakpointAboves(BootstrapBreakpointKey.Md).map((x) => !x)
+        return this.windowRef.mediaBreakpointAboves(BootstrapBreakpointKey.Md)
+            .pipe(map((x) => !x))
     }
 
     // Event handlers.

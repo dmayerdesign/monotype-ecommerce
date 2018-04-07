@@ -1,4 +1,7 @@
-<router-outlet></router-outlet>
-<mte-modal [datas]="ui.modals"></mte-modal>
-<mte-toast [toasts]="ui.flashes"></mte-toast>
-<mte-ripple></mte-ripple>
+<div id="app-wrapper"
+     [ngStyle]="getBackgroundStyle()">
+    <router-outlet></router-outlet>
+    <mte-modal [datas]="ui.modals"></mte-modal>
+    <mte-toast [toasts]="ui.flashes"></mte-toast>
+    <mte-ripple></mte-ripple>
+</div>

@@ -1,5 +1,8 @@
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
+import { fromEvent } from 'rxjs/observable/fromEvent'
+import { of } from 'rxjs/observable/of'
+import { map } from 'rxjs/operators/map'
 import { BootstrapBreakpoint } from '../../../../models/enums/bootstrap-breakpoint'
 import { BootstrapBreakpointKey } from '../../../../models/enums/bootstrap-breakpoint-key'
 
@@ -30,10 +33,10 @@ export class WindowRefService {
             this.htmlFontSizePxs = this.htmlFontSizePxPump.asObservable()
         }
         else {
-            this.scrollPositionYs = Observable.of(0)
-            this.widths = Observable.of(1280)
-            this.heights = Observable.of(720)
-            this.htmlFontSizePxs = Observable.of(10)
+            this.scrollPositionYs = of(0)
+            this.widths = of(1280)
+            this.heights = of(720)
+            this.htmlFontSizePxs = of(10)
         }
 
         this.scrollPositionYs.subscribe((x) => this.scrollPositionY = x)
@@ -42,22 +45,19 @@ export class WindowRefService {
         this.htmlFontSizePxs.subscribe((x) => this.htmlFontSizePx = x)
 
         if (this._window) {
-            Observable
-                .fromEvent(this._window, 'scroll')
-                .map(() => this._window.scrollY)
+            fromEvent(this._window, 'scroll')
+                .pipe(map(() => this._window.scrollY))
                 .subscribe((x) => this.scrollPositionYPump.next(x))
 
-            Observable
-                .fromEvent(this._window, 'resize')
-                .map(() => this._window.innerWidth)
+            fromEvent(this._window, 'resize')
+                .pipe(map(() => this._window.innerWidth))
                 .subscribe((x) => {
                     this.widthPump.next(x)
                     this.htmlFontSizePxPump.next(this.getHtmlFontSizeInPx())
                 })
 
-            Observable
-                .fromEvent(this._window, 'resize')
-                .map(() => this._window.innerHeight)
+            fromEvent(this._window, 'resize')
+                .pipe(map(() => this._window.innerHeight))
                 .subscribe((x) => this.heightPump.next(x))
         }
     }
@@ -84,11 +84,12 @@ export class WindowRefService {
     }
 
     public mediaBreakpoints(breakpoint: BootstrapBreakpointKey, dir: 'above'|'below'): Observable<boolean> {
-        return this.widths
-            .map((width) => dir === 'above'
+        return this.widths.pipe(
+            map((width) => dir === 'above'
                 ? width >= BootstrapBreakpoint[breakpoint + 'Max']
                 : width < BootstrapBreakpoint[breakpoint + 'Min']
             )
+        )
     }
 
     public mediaBreakpointBelows(breakpoint: BootstrapBreakpointKey): Observable<boolean> {

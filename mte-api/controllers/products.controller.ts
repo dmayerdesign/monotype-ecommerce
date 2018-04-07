@@ -73,6 +73,21 @@ export class ProductsController extends ApiController implements interfaces.Cont
         @requestParam('slug') slug: string,
         @response() res: Response,
     ): void {
-        this.handleApiResponse(this.productService.getDetail(slug), res)
+        this.handleApiResponse(this.productService.getProductDetail(slug), res)
+    }
+
+    /**
+     * Get select
+     *
+     * @param {string} slug
+     * @param {Response} res
+     * @memberof ProductsController
+     */
+    @httpGet('/:slug/detail/attribute-selection')
+    public getAttributeSelectionData(
+        @requestParam('slug') slug: string,
+        @response() res: Response,
+    ): void {
+        this.handleApiResponse(this.productService.getAttributeSelectOptions(slug), res)
     }
 }

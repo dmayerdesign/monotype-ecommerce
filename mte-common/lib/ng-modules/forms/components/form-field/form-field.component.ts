@@ -10,6 +10,8 @@ import {
 } from '@angular/core'
 import { FormControl } from '@angular/forms'
 import { Observable } from 'rxjs/Observable'
+import { fromEvent } from 'rxjs/observable/fromEvent'
+import { takeWhile } from 'rxjs/operators'
 
 import { Copy } from '@mte/common/constants/copy'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
@@ -68,14 +70,12 @@ export class MteFormFieldComponent implements OnInit, OnDestroy, AfterContentIni
         }
 
         if (control) {
-            control.valueChanges
-                .takeWhile(() => this.isAlive)
+            control.valueChanges.pipe(takeWhile(() => this.isAlive))
                 .subscribe((value) => {
                     this.value = value
                 })
 
-            control.parent.valueChanges
-                .takeWhile(() => this.isAlive)
+            control.parent.valueChanges.pipe(takeWhile(() => this.isAlive))
                 .subscribe((value) => {
                     this.parentValue = value
                 })
@@ -87,15 +87,15 @@ export class MteFormFieldComponent implements OnInit, OnDestroy, AfterContentIni
             this.element = this.input
         }
 
-        Observable.fromEvent(this.element.nativeElement, 'blur')
-            .takeWhile(() => this.isAlive)
+        fromEvent(this.element.nativeElement, 'blur')
+            .pipe(takeWhile(() => this.isAlive))
             .subscribe(() => {
                 this.isFocused = false
                 this.hasBlurred = true
             })
 
-        Observable.fromEvent(this.element.nativeElement, 'focus')
-            .takeWhile(() => this.isAlive)
+        fromEvent(this.element.nativeElement, 'focus')
+            .pipe(takeWhile(() => this.isAlive))
             .subscribe(() => {
                 this.isFocused = true
             })
