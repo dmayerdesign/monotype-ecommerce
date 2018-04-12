@@ -126,14 +126,13 @@ export class ProductSearchHelper {
     }
 
     // Reminder: parents and variations must share the same taxonomy terms.
-    public taxonomyFilter(filter: GetProductsFilter, query: MongoHelper.AndOperation): MongoHelper.AndOperation {
+    public taxonomyTermFilter(ids: string[], query: MongoHelper.AndOperation): MongoHelper.AndOperation {
         const newQuery = cloneDeep(query)
 
-        if (filter.values && filter.values.length) {
+        if (ids && ids.length) {
             newQuery.$and.push({
                 $or: [
-                    { taxonomyTerms: filter.values },
-                    { taxonomyTermSlugs: filter.values },
+                    { taxonomyTerms: { $in: ids } },
                 ],
             })
         }

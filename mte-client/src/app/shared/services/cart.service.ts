@@ -7,6 +7,7 @@ import { LocalStorageKeys } from '@mte/common/constants/local-storage-keys'
 import { Cart } from '@mte/common/models/api-models/cart'
 import { Price } from '@mte/common/models/api-models/price'
 import { Product } from '@mte/common/models/api-models/product'
+import { Currency } from '@mte/common/models/enums/currency'
 import { CartProduct } from '@mte/common/models/interfaces/ui/cart-product'
 import { ProductService } from '../../shop/services/product.service'
 import { OrganizationService } from './organization.service'
@@ -41,22 +42,38 @@ export class CartService {
     }
 
     public init(): void {
-        const cart = <Cart>this.util.getFromLocalStorage(LocalStorageKeys.Cart)
+
+        // FOR TESTING
+            // this.updateAndStream({
+            //     items: [ { price: { amount: 5 } }, { price: { amount: 5 } } ] as Product[],
+            //     displayItems: [],
+            //     price: {
+            //         amount: 10,
+            //         currency: Currency.USD
+            //     },
+            //     count: 2,
+            //     subTotal: 10,
+            //     total: 10,
+            //     discounts: []
+            // } as Cart, false)
+        //
+
+        const cart = this.util.getFromLocalStorage(LocalStorageKeys.Cart) as Cart
         if (cart) {
-            this.populateAndStream(cart)
+            this.updateAndStream(cart)
         }
         this.userService.users.subscribe((user) => {
             if (user && user.cart && user.cart.items) {
                 if (user.cart.items.length || user.cart.discounts.length) {
-                    this.populateAndStream(user.cart)
+                    this.updateAndStream(user.cart)
                 }
             }
         })
     }
 
     public add(slug: string, quantity = 1): void {
-        const newCart = _.cloneDeep(this.cart)
-        this.previousState = _.cloneDeep(this.cart)
+        const newCart = cloneDeep(this.cart)
+        this.previousState = cloneDeep(this.cart)
 
         this.productService.getOneSource.subscribe(product => {
             const amtToAdd: number = product.stockQuantity >= quantity ? quantity : product.stockQuantity
@@ -64,12 +81,18 @@ export class CartService {
                 newCart.items.push(product)
             }
 
-            this.populateAndStream(newCart)
+            this.updateAndStream(newCart)
         })
         this.productService.getOne(slug)
     }
 
-    private populateAndStream(newCart: Cart, refreshProducts = true): void {
+    private updateAndStream(newCart: Cart, refreshProducts = true): void {
+        const saveAndStream = (cart) => {
+            this.userService.updateCart(this.cart)
+            this.cart = cart
+            this.cartPump.next(this.cart)
+        }
+
         newCart.subTotal = this.getSubTotal(<Product[]>newCart.items)
         newCart.total = this.getTotal(<Product[]>newCart.items)
         if (refreshProducts) {
@@ -77,22 +100,20 @@ export class CartService {
                 .subscribe(products => {
                     newCart.items = products
                     newCart.displayItems = this.getDisplayItems(products)
-                    this.cart = newCart
-                    this.cartPump.next(this.cart)
+                    saveAndStream(newCart)
                 })
         }
         else {
-            this.cart = newCart
-            this.cartPump.next(this.cart)
+            saveAndStream(newCart)
         }
     }
 
     public remove(slug: string): void {
-        const newCart = _.cloneDeep(this.cart)
-        this.previousState = _.cloneDeep(this.cart)
+        const newCart = cloneDeep(this.cart)
+        this.previousState = cloneDeep(this.cart)
         newCart.items.splice(newCart.items.findIndex((i: Product) => i.slug === slug), 1)
 
-        this.populateAndStream(newCart)
+        this.updateAndStream(newCart)
     }
 
     private getSubTotal(items: Product[]): number {

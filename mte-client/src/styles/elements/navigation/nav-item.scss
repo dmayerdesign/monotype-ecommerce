@@ -7,6 +7,27 @@
         position: relative;
         text-transform: uppercase;
 
+        &, a, span, img, i {
+            &::selection {
+                background-color: transparent;
+            }
+        }
+
+        > img,
+        > i,
+        > div,
+        > span {
+            height: $navbar-height;
+            line-height: $navbar-height;
+            vertical-align: middle;
+            color: $white;
+        }
+
+        img {
+            padding: 1.5rem 0;
+            height: $navbar-height;
+        }
+
         &.dropdown {
             > .nav-link {
                 padding-right: 2.8rem;
@@ -38,12 +59,8 @@
             right: 0;
             cursor: default;
             padding-right: 0.8rem;
-            height: $navbar-height;
-            line-height: $navbar-height;
-            font-size: 1.8rem;
-            vertical-align: middle;
-            color: $white;
             transition: transform 200ms ease-in-out;
+            font-size: 1.8rem;
 
             &.expanded {
                 transform: rotate(45deg);

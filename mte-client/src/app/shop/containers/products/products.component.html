@@ -1,0 +1,92 @@
+<div class="banner" *ngIf="taxonomyTerm?.pageSettings?.banner">
+    <mte-responsive-image
+        [src]="taxonomyTerm.pageSettings.banner"
+        [height]="'30rem'"
+        [alt]="taxonomyTerm.pluralName"
+        [overlaySrc]="taxonomyTerm.pageSettings.bannerOverlay"
+        [overlayHeight]="'9.3rem'"
+        [overlayAlt]="taxonomyTerm.pluralName">
+    </mte-responsive-image>
+</div>
+
+<ng-container *ngIf="isOneColLayout()">
+    <div class="sub-banner">Some info here</div>
+
+    <div class="products container">
+    
+        <div class="row">
+    
+            <!-- Products grid -->
+            <div [ngClass]="getGridContainerFullWidthClasses()">
+                <mte-products-grid [products]="products"></mte-products-grid>
+            </div>
+    
+        </div>
+    
+    </div>
+</ng-container>
+
+<ng-container *ngIf="isTwoColLayout()">
+    <div class="products container">
+    
+        <div class="row">
+            <!-- Left sidebar -->
+            <ng-container *ngIf="layoutIsMdAboves() | async">
+                <ng-container *ngTemplateOutlet="leftSidebar"></ng-container>
+            </ng-container>
+    
+            <!-- Products grid -->
+            <div [ngClass]="getGridContainerWithSidebarClasses()">
+                <mte-products-grid [products]="productss"
+                    (productClick)="handleProductClick($event)">
+                </mte-products-grid>
+            </div>
+            
+            <!-- Left sidebar - collapsible -->
+            <div *ngIf="layoutIsNotMdAboves() | async"
+                 class="products-left-sidebar-dropdown-container">
+                <ng-container *ngTemplateOutlet="leftSidebar"></ng-container>
+            </div>
+        </div>
+    
+    </div>
+    
+    <ng-template #leftSidebar>
+        <div [attr.aria-expanded]="leftSidebarIsExpandeds | async"
+             [ngClass]="getLeftSidebarClasses()">
+            
+            <h2>Narrow it down</h2>
+    
+            <div class="products-left-sidebar-filters">
+    
+                <div class="price-range-filter">
+                    Price range
+                </div>
+    
+                <div class="product-type-filter">
+                    Product type
+                </div>
+    
+                <div class="disc-type-filter">
+                    Disc type
+                </div>
+    
+                <div class="manufacturers-filter">
+                    Manufacturers
+                </div>
+    
+                <div class="stabilities-filter">
+                    Stabilities
+                </div>
+    
+                <div class="colors-filter">
+                    Colors
+                </div>
+    
+                <button>Clear filters</button>
+    
+            </div>
+    
+        </div>
+    </ng-template>
+</ng-container>

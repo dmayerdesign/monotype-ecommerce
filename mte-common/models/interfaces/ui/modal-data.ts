@@ -19,6 +19,6 @@ export interface ModalData {
         }
         onSubmit?(args?: any): void
     }
-    content: TemplateRef<any>
+    template: TemplateRef<any>
     context: object
 }

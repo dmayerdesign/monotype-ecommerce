@@ -1,6 +1,9 @@
-import { ShopRoutes } from './shop-routes'
+import { ShopRoutePaths } from './shop-route-paths'
 
 export class ShopRouterLinks {
-    public static readonly checkout = `/${ShopRoutes.shop}/${ShopRoutes.checkout}`
-    public static readonly shop = `/${ShopRoutes.shop}`
+    public static readonly checkout = `/${ShopRoutePaths.shop}/${ShopRoutePaths.checkout}`
+    public static readonly cart = `/${ShopRoutePaths.shop}/${ShopRoutePaths.cart}`
+    public static readonly shopHome = `/${ShopRoutePaths.shop}`
+    public static readonly shopAll = `/${ShopRoutePaths.shop}/${ShopRoutePaths.shopAll}`
+    public static readonly productDetail = (slug: string) => `/${ShopRoutePaths.shop}/${ShopRoutePaths.productDetail.replace(':slug', slug)}`
 }

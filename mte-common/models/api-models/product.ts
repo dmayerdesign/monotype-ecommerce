@@ -1,10 +1,12 @@
 import * as mongooseDelete from 'mongoose-delete'
 import { arrayProp, plugin, pre, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 
+import { ImageHelper } from '../../helpers/image.helper'
 import { ProductClass } from '../enums/product-class'
 import { Attribute } from './attribute'
 import { AttributeValue } from './attribute-value'
 import { Dimensions } from './dimensions'
+import { Image } from './image'
 import { Price } from './price'
 import { TaxonomyTerm } from './taxonomy-term'
 import { Units } from './units'
@@ -32,55 +34,54 @@ import { Units } from './units'
 })
 @plugin(mongooseDelete)
 export class Product extends MongooseDocument {
-	/* Aesthetic */
+	// Aesthetic.
     @prop() public name: string
     @prop() public slug: string
     @prop() public description: string
-    @arrayProp({ items: String }) public featuredImages: string[]
-    @arrayProp({ items: String }) public images: string[]
-    @arrayProp({ items: String }) public largeImages: string[]
-    @arrayProp({ items: String }) public thumbnails: string[]
+    @arrayProp({ items: Image }) public featuredImages: Image[]
+    @arrayProp({ items: Image }) public images: Image[]
 
-	/* Technical */
+	// Organizational.
     @prop({ unique: true }) public sku: string
+    @prop({ enum: ProductClass }) public class: ProductClass
+    @prop() public isStandalone: boolean
+    @prop() public isParent: boolean
+
+    // Financial.
     @prop() public price: Price
     @arrayProp({ items: Price }) public priceRange: Price[]
-
     @prop() public salePrice: Price
     @arrayProp({ items: Price }) public salePriceRange: Price[]
     @prop() public isOnSale: boolean
-    @prop({ enum: ProductClass }) public class: ProductClass
-    @prop() public isStandalone: boolean
-    @prop() public isParent: boolean 				                // Defines an abstract parent for a variable product
-    @arrayProp({ items: String }) public variationSkus: string[] 	// Array of product SKUs
+    @arrayProp({ items: String }) public variationSkus: string[]
     @arrayProp({ itemsRef: Product }) public variations: Ref<Product>[]
-    @prop() public isVariation: boolean 			                // Defines a product variation with a parent product
-    @prop() public isDefaultVariation: boolean 	                    // Defines the default product variation
-    @prop() public parentSku: string				                // The SKU of the parent product
+    @prop() public isVariation: boolean
+    @prop() public isDefaultVariation: boolean
+    @prop() public parentSku: string
     @prop({ ref: Product }) public parent: Ref<Product>
 
-	/* Attributes */
-	/* own attributes */
+	// Attributes.
+	// - Own attributes.
     @arrayProp({ itemsRef: AttributeValue }) public attributeValues: Ref<AttributeValue>[]
     @arrayProp({ items: String }) public attributeValueSlugs: string[]
-	/* variation attributes */
+	// - Variation attributes.
     @arrayProp({ itemsRef: Attribute }) public variableAttributes: Ref<Attribute>[] // Attribute IDs
     @arrayProp({ itemsRef: AttributeValue }) public variableAttributeValues: Ref<AttributeValue>[]
 
-	/* Taxonomy */
+	// Taxonomy.
     @arrayProp({ itemsRef: TaxonomyTerm }) public taxonomyTerms: Ref<TaxonomyTerm>[]
     @arrayProp({ items: String }) public taxonomyTermSlugs: string[]
 
-	/* Shipping */
+	// Shipping.
     @prop() public units: Units
     @prop() public dimensions: Dimensions
     @prop() public shippingWeight: number
     @prop() public netWeight: number
 
-	/* Additional tax */
+	// Additional tax.
     @prop() public additionalTax: number
 
-	/* Sales */
+	// Sales.
     @prop() public stockQuantity: number
     @prop() public totalSales: number
     @prop() public isEnteredIntoStripe: boolean

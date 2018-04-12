@@ -19,8 +19,8 @@ export class ListRequest {
 }
 
 export class ListFromSearchRequest extends ListRequest {
-    public search: string
-    public searchFields: string[]
+    public search?: string
+    public searchFields?: string[]
 
     constructor(request?: ListFromSearchRequest) {
         super(request)
@@ -43,7 +43,7 @@ export class ListFromIdsRequest<T = any> extends ListRequest {
 }
 
 export class ListFromQueryRequest extends ListRequest {
-    public query: object
+    public query: object = {}
 
     constructor(request?: ListFromQueryRequest) {
         super(request)

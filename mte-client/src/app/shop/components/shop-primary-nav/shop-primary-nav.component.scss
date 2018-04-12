@@ -41,6 +41,11 @@
     &-brand {
         margin-right: 5rem;
 
+        &::selection,
+        img::selection {
+            background-color: transparent;
+        }
+
         #navbar-logo {
             width: 10.8rem;
         }

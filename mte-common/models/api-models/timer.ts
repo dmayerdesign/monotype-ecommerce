@@ -10,3 +10,10 @@ export class Timer extends MongooseDocument {
 }
 
 export const TimerModel = new Timer().getModel(MongooseSchemaOptions.timestamped)
+
+// Errors.
+
+export class CreateTimerError extends Error { }
+export class FindTimerError extends Error { }
+export class UpdateTimerError extends Error { }
+export class DeleteTimerError extends Error { }

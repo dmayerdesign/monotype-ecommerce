@@ -14,15 +14,18 @@ import {
 import { ApiEndpoints, Types } from '@mte/common/constants'
 import { Product } from '@mte/common/models/api-models/product'
 import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
-import { ProductService, WoocommerceMigrationService } from '../services'
+import { ProductService } from '../services/product.service'
+import { WoocommerceMigrationService } from '../services/woocommerce-migration.service'
 import { ApiController } from './api.controller'
 
 @injectable()
 @controller(ApiEndpoints.ProductsAdmin/*, Types.isOwner*/)
 export class ProductsAdminController extends ApiController implements interfaces.Controller {
 
-    @inject(Types.ProductService) private productService: ProductService
-    @inject(Types.WoocommerceMigrationService) private wms: WoocommerceMigrationService
+    constructor(
+        @inject(Types.ProductService) private productService: ProductService,
+        @inject(Types.WoocommerceMigrationService) private wms: WoocommerceMigrationService,
+    ) { super() }
 
     @httpGet('/get-by-slug/:slug')
     public getOneBySlug(

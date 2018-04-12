@@ -43,7 +43,5 @@ Thumbs.db
 Icon
 
 # build files
-mte-client/src/common
-mte-client/src/app-config.ts
-mte-admin/src/common
-mte-admin/src/app-config.ts
+mte-client/src/mte_modules/common
+mte-client/src/mte_modules/app-config.ts

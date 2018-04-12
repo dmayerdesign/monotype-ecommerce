@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify'
 import { Document } from 'mongoose'
-import * as rp from 'request-promise'
+import * as rp from 'request-promise-native'
 
 import { Types } from '@mte/common/constants/inversify'
 import { Timer, TimerModel } from '@mte/common/models/api-models/timer'
@@ -23,7 +23,7 @@ export class TimerService {
     public async restartAll() {
         let timers: Timer[]
         const requests = []
-        let requestPromises: Promise<any>[] = []
+        let requestPromises: rp.RequestPromise[] = []
 
         // Find all existing Timers.
 

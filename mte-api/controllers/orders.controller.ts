@@ -26,7 +26,9 @@ import { ApiController } from './api.controller'
 @controller(ApiEndpoints.Orders)
 export class OrdersController extends ApiController implements interfaces.Controller {
 
-    @inject(Types.OrderService) private orderService: OrderService
+    constructor(
+        @inject(Types.OrderService) private orderService: OrderService,
+    ) { super() }
 
     @httpGet('/')
     public get(

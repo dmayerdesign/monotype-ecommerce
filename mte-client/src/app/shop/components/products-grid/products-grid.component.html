@@ -1,12 +1,12 @@
 <div class="grid">
     <div class="row">
         <ng-container *ngFor="let product of products | async">
-            <div [ngClass]="getProductContainerClasses()">
+            <div [ngClass]="getProductContainerClasses()"
+                 (click)="productClick.emit(product)">
 
                 <mte-product-image
-                    [src]="productService.getThumbnail(product.featuredImages[0])"
-                    [alt]="product.name"
-                    [hasMagnifier]="true">
+                    [src]="product.featuredImages[0]?.thumbnail"
+                    [alt]="product.name">
                 </mte-product-image>
 
                 <h2>{{ product.name }}</h2>

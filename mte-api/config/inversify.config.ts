@@ -6,9 +6,11 @@ import { Tags, Types } from '@mte/common/constants/inversify'
 import { MongooseDocument } from '@mte/common/lib/goosetype'
 import { Authenticate } from '../auth/authenticate'
 import { AppController } from '../controllers/app.controller'
+import { InstagramController } from '../controllers/instagram.controller'
 import { OrganizationController } from '../controllers/organization.controller'
 import { ProductsAdminController } from '../controllers/products.admin.controller'
 import { ProductsController } from '../controllers/products.controller'
+import { TaxonomyTermsController } from '../controllers/taxonomy-terms.controller'
 import { UserController } from '../controllers/user.controller'
 import { DbClient } from '../data-access/db-client'
 import { isDev } from '../helpers/env.helper'
@@ -19,6 +21,7 @@ import { DiscountService } from '../services/discount.service'
 import { EasypostService } from '../services/easypost.service'
 import { EmailService } from '../services/email.service'
 import { ErrorService } from '../services/error.service'
+import { InstagramService } from '../services/instagram.service'
 import { OrderService } from '../services/order.service'
 import { OrganizationService } from '../services/organization.service'
 import { ProductService } from '../services/product.service'
@@ -26,6 +29,8 @@ import { StripeCustomerService } from '../services/stripe/stripe-customer.servic
 import { StripeOrderActionsService } from '../services/stripe/stripe-order-actions.service'
 import { StripeOrderService } from '../services/stripe/stripe-order.service'
 import { StripeProductService } from '../services/stripe/stripe-product.service'
+import { TaxonomyTermService } from '../services/taxonomy-term.service'
+import { TaxonomyService } from '../services/taxonomy.service'
 import { TimerService } from '../services/timer.service'
 import { UserService } from '../services/user.service'
 import { WoocommerceMigrationService } from '../services/woocommerce-migration.service'
@@ -52,6 +57,7 @@ container.bind<CrudService<Discount>>(Types.DiscountService).to(DiscountService)
 container.bind<EasypostService>(Types.EasypostService).to(EasypostService)
 container.bind<EmailService>(Types.EmailService).to(EmailService)
 container.bind<ErrorService>(Types.ErrorService).to(ErrorService)
+container.bind<InstagramService>(Types.InstagramService).to(InstagramService)
 container.bind<OrderHelper>(Types.OrderHelper).to(OrderHelper)
 container.bind<CrudService<Order>>(Types.OrderService).to(OrderService)
 container.bind<CrudService<Organization>>(Types.OrganizationService).to(OrganizationService)
@@ -61,6 +67,8 @@ container.bind<StripeCustomerService>(Types.StripeCustomerService).to(StripeCust
 container.bind<StripeOrderActionsService>(Types.StripeOrderActionsService).to(StripeOrderActionsService)
 container.bind<StripeOrderService>(Types.StripeOrderService).to(StripeOrderService)
 container.bind<StripeProductService>(Types.StripeProductService).to(StripeProductService)
+container.bind<TaxonomyService>(Types.TaxonomyService).to(TaxonomyService)
+container.bind<TaxonomyTermService>(Types.TaxonomyTermService).to(TaxonomyTermService)
 container.bind<TimerService>(Types.TimerService).to(TimerService)
 container.bind<UserService>(Types.UserService).to(UserService)
 container.bind<WoocommerceMigrationService>(Types.WoocommerceMigrationService).to(WoocommerceMigrationService)
@@ -71,9 +79,11 @@ container.bind(Types.isOwner).toConstantValue(Authenticate.isAuthorized(1))
 
 // Controllers.
 container.bind<interfaces.Controller>(TYPE.Controller).to(AppController).whenTargetNamed(Tags.AppController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(InstagramController).whenTargetNamed(Tags.InstagramController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(OrganizationController).whenTargetNamed(Tags.OrganizationController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsAdminController).whenTargetNamed(Tags.ProductsAdminController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsController).whenTargetNamed(Tags.ProductsController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(TaxonomyTermsController).whenTargetNamed(Tags.TaxonomyTermsController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(UserController).whenTargetNamed(Tags.UserController)
 
 // Helper function for injecting into functions.

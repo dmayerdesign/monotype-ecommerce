@@ -6,8 +6,7 @@ import {
     Router,
     RouterStateSnapshot,
 } from '@angular/router'
-import { Observable } from 'rxjs/Observable'
-import 'rxjs/add/operator/take'
+import { map } from 'rxjs/operators/map'
 
 import { UserRole } from '@mte/common/models/enums/user-role'
 import { AppRoutes } from '../../constants/app-routes'
@@ -24,10 +23,10 @@ export class AdminGuardService implements CanActivate, CanActivateChild {
     ) {}
 
     public canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-        return this.userService.users
-            .map(user => {
+        return this.userService.users.pipe(
+            map(user => {
                 if (user && user.role === UserRole.Admin) {
-                    console.log('User is admin')
+                    console.log('\'Sup, admin!')
                     return true
                 }
                 else {
@@ -36,6 +35,7 @@ export class AdminGuardService implements CanActivate, CanActivateChild {
                     return false
                 }
             })
+        )
     }
 
     public canActivateChild(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {

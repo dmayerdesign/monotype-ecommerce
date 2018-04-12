@@ -19,9 +19,7 @@ export class OrganizationController extends ApiController implements interfaces.
 
     constructor(
         @inject(Types.OrganizationService) private organizationService: OrganizationService,
-    ) {
-        super()
-    }
+    ) { super() }
 
     @httpGet('/')
     public get(

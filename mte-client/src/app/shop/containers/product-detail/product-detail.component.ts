@@ -1,99 +1,184 @@
 import { Component, OnDestroy, OnInit } from '@angular/core'
 import { FormGroup } from '@angular/forms'
 import { ActivatedRoute } from '@angular/router'
-import { Subscription } from 'rxjs/Subscription'
-import 'rxjs/add/operator/switchMap'
+import { switchMap, takeWhile } from 'rxjs/operators'
 
-import { AutoUnsubscribe } from '@mte/common/lib/auto-unsubscribe'
+import { ProductHelper } from '@mte/common/helpers/product.helper'
+import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Attribute } from '@mte/common/models/api-models/attribute'
 import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
 import { Product } from '@mte/common/models/api-models/product'
+import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
+import { GetAttributeSelectOptionsResponseBody } from '@mte/common/models/api-responses/get-attribute-select-options/get-attribute-select-options.response.body'
 import { CartService } from '../../../shared/services/cart.service'
 import { ProductService } from '../../services/product.service'
 
-// TODO:
-// - Set 'max' on number input for `quantity` equal to the number of standalones/variations in stock
-
 @Component({
     selector: 'mte-product-detail',
-    templateUrl: './product-detail.component.html',
+    template: `
+    <div *ngIf="selectedProduct"
+         [ngClass]="productDetailContainerClassList">
+
+        <div class="product-detail-main row">
+            <div [ngClass]="productDetailImagesClassList">
+                <mte-product-image
+                    [src]="getMainImage()"
+                    [hasMagnifier]="true">
+                </mte-product-image>
+            </div>
+            <div [ngClass]="productDetailInfoClassList">
+                <span class="product-detail-info-brand">{{ brand?.singularName }}</span>
+                <mte-form-field [options]="{
+                        label: 'Quantity'
+                    }">
+                    <input #input
+                        id="add-to-cart-form--quantity-to-add"
+                        type="number"
+                        [disabled]="!selectedProduct"
+                        [attr.max]="quantityInputMax"
+                        [attr.min]="0"
+                        [(ngModel)]="quantityToAdd">
+                </mte-form-field>
+            </div>
+        </div>
+    </div>
+    `,
     styleUrls: ['./product-detail.component.scss']
 })
-@AutoUnsubscribe()
+@Heartbeat()
 export class ProductDetailComponent implements OnInit, OnDestroy {
-    public getDetailSubscription: Subscription
-
-    // This represents the product that is displayed when the view
-    // is loaded.
+    private isAlive = false
+    /**
+     * Represents the product that is displayed when the view
+     * is loaded.
+     */
     public parentOrStandalone: Product
-
-    // This represents any variations associated with the product,
-    // if the product is a Parent.
+    /**
+     * Represents any variations associated with the product,
+     * if the product is a Parent.
+     */
     public variations: Product[]
-
-    // This represents the product that will be added to the cart.
-    // Should be `null` if no product is ready to be added, e.g. if
-    // a variation has yet to be selected.
+    /**
+     * Represents the product that will be added to the cart.
+     */
     public selectedProduct: Product
+    public quantityToAdd = 1
+    public attributeSelections: GetAttributeSelectOptionsResponseBody = []
 
-    public quantityToAdd: number
+    // Template bindings.
 
-    public variableAttributeOptions: { [key: string]: any[] } = {}
+    public productDetailImagesClassList = [
+        'product-detail-images',
+        'col-sm-4',
+        'pl-0',
+        'pr-5',
+    ]
+    public productDetailInfoClassList = [
+        'product-detail-info',
+        'col-sm-8',
+    ]
+    public productDetailContainerClassList = [
+        'product-detail',
+        'container',
+        'pt-5',
+    ]
 
     constructor(
         private activatedRoute: ActivatedRoute,
         private cartService: CartService,
         private productService: ProductService,
-    ) { console.log(this) }
+    ) {
+        console.log(this)
+    }
+
+    // Lifecycle methods.
 
     public ngOnInit(): void {
-        this.getDetailSubscription = this.activatedRoute.params
-            .switchMap((params: { slug: string }) => {
-                setTimeout(() => this.productService.getDetail(params.slug))
-                return this.productService.getDetails
-            })
+        this.activatedRoute.params
+            .pipe(
+                switchMap((params: { slug: string }) => {
+                    setTimeout(() => this.productService.getDetail(params.slug))
+                    return this.productService.getDetails
+                }),
+                takeWhile(() => this.isAlive)
+            )
             .subscribe((responseBody) => {
                 this.parentOrStandalone = responseBody
                 this.variations = this.parentOrStandalone.variations as Product[]
-                if (!this.hasVariations()) {
-                    this.selectedProduct = this.parentOrStandalone
-                }
-                this.populateAttributeSelections()
-
-                console.log(this.parentOrStandalone)
+                this.populateAttributeSelectOptions()
+                this.populateSelectedProduct()
             })
     }
 
     public ngOnDestroy(): void { }
 
-    public addToCart(): void {
-        if (!this.selectedProduct) return
-        this.cartService.add(this.selectedProduct.slug, this.quantityToAdd)
-    }
+    // Init methods.
 
-    private populateAttributeSelections(): void {
+    private populateAttributeSelectOptions(): void {
+
+        // But only if it's a variable product, of course.
         if (!this.hasVariations() || !this.parentOrStandalone.variableAttributes) return
 
-        this.parentOrStandalone.variableAttributes.forEach((variableAttribute: Attribute) => {
-            this.variableAttributeOptions[variableAttribute.slug] = [] as any[]
+        this.productService.getAttributeSelectOptionss.subscribe((attributeSelectionData) => {
+            this.attributeSelections = attributeSelectionData
         })
-
-        this.variations.forEach((variation) => {
-            if (variation.attributeValues) {
-                variation.attributeValues.forEach((variationAttributeValue: AttributeValue) => {
-                    if (this.variableAttributeOptions[(variationAttributeValue.attribute as Attribute).slug]) {
-                        this.variableAttributeOptions[(variationAttributeValue.attribute as Attribute).slug].push(
-                            variationAttributeValue
-                        )
-                    }
-                })
-            }
-        })
-
-        console.log('[ProductDetailComponent] Attribute selection:', this.variableAttributeOptions)
+        this.productService.getAttributeSelectOptions(this.parentOrStandalone.slug)
     }
+
+    private populateSelectedProduct(): void {
+
+        // If it's variable, set the default variation as the selected product.
+        if (this.hasVariations()) {
+            this.selectedProduct = this.variations.find((p) => p.isDefaultVariation)
+
+            // If there's no default variation, just choose the first one.
+            if (!this.selectedProduct) {
+                this.selectedProduct = this.variations[0]
+            }
+        }
+        else {
+            this.selectedProduct = this.parentOrStandalone
+        }
+    }
+
+    public getMainImage(): string {
+        if (this.selectedProduct) {
+            if (this.selectedProduct.featuredImages[0]) {
+                return this.selectedProduct.featuredImages[0].medium
+            } else {
+                return this.selectedProduct.images[0].medium
+            }
+        } else {
+            if (this.parentOrStandalone.featuredImages[0]) {
+                return this.parentOrStandalone.featuredImages[0].medium
+            } else {
+                return this.parentOrStandalone.images[0].medium
+            }
+        }
+    }
+
+    // Template bindings.
+
+    public get brand(): TaxonomyTerm {
+        return ProductHelper.getBrand(this.parentOrStandalone)
+    }
+
+    public get quantityInputMax(): number {
+        return this.selectedProduct && typeof this.selectedProduct.stockQuantity !== 'undefined'
+            ? this.selectedProduct.stockQuantity
+            : 1
+    }
+
+    // Booleans.
 
     private hasVariations(): boolean {
         return this.variations != null && this.variations.length > 0
+    }
+
+    // Interactions.
+
+    public addToCart(): void {
+        if (!this.selectedProduct) return
+        this.cartService.add(this.selectedProduct.slug, this.quantityToAdd)
     }
 }

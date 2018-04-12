@@ -27,6 +27,7 @@ export type RequiredType = boolean | [boolean, string] | string | Func | [Func, 
 export interface BasePropOptions {
     required?: RequiredType
     enum?: string[] | object
+    get?: (value?: any) => any
     default?: any
     unique?: boolean
     index?: boolean
@@ -143,7 +144,7 @@ export class ModelBuilder {
     public baseProp(propTypeArgs: PropTypeArgs) {
         const { target, key, propType, options } = propTypeArgs
         let schema: mongoose.SchemaDefinition = this.schemaDefinitions[camelCase((target.constructor as any).name)]
-        let schemaProperty: mongoose.SchemaTypeOpts<any> | mongoose.Schema | mongoose.SchemaType = {}
+        let schemaProperty: mongoose.SchemaTypeOpts<any> = {}
         let type
 
         const nonPropertyOptions = [
@@ -156,28 +157,30 @@ export class ModelBuilder {
         }
 
         // Might need a second glance.
-        for (const option in options) {
-            if (options.hasOwnProperty(option) && nonPropertyOptions.indexOf(option) === -1) {
-                if (option === 'enum') {
-                    const theEnum = options[option]
-                    let enumArr: string[] = []
-                    let enumKeys: string[]
-                    if (Array.isArray(theEnum)) {
-                        enumArr = theEnum as string[]
+        if (options) {
+            Object.keys(options)
+                .filter((option) => nonPropertyOptions.indexOf(option) === -1)
+                .forEach((option) => {
+                    if (option === 'enum') {
+                        const theEnum = options[option]
+                        let enumArr: string[] = []
+                        let enumKeys: string[]
+                        if (Array.isArray(theEnum)) {
+                            enumArr = theEnum as string[]
+                        }
+                        // If the enum value is not an array, assume it's an actual `enum`.
+                        else {
+                            enumKeys = Object.keys(theEnum)
+                            enumArr = !isNaN(parseInt(enumKeys[0], 10))
+                                ? enumKeys.slice(0, enumKeys.length / 2)
+                                : enumKeys.map((enumKey) => theEnum[enumKey])
+                        }
+                        schemaProperty.enum = enumArr
                     }
-                    // If the enum value is not an array, assume it's an actual `enum`.
                     else {
-                        enumKeys = Object.keys(theEnum)
-                        enumArr = !isNaN(parseInt(enumKeys[0], 10))
-                            ? enumKeys.slice(0, enumKeys.length / 2)
-                            : enumKeys.map((enumKey) => theEnum[enumKey])
+                        schemaProperty[option] = options[option]
                     }
-                    schemaProperty.enum = enumArr
-                }
-                else {
-                    schemaProperty[option] = options[option]
-                }
-            }
+                })
         }
 
         if (propType === 'array') {
@@ -208,10 +211,6 @@ export class ModelBuilder {
             }
 
             schemaProperty.type = this.getTypeOrSchema(type)
-        }
-
-        if (target.constructor.name.match(/uicontent/i)) {
-            console.log(target.constructor.name, JSON.stringify(schemaProperty))
         }
 
         schema[key] = schemaProperty

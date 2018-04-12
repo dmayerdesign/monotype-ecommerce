@@ -1,7 +1,13 @@
 import { ListFromIdsRequest, ListFromSearchRequest } from './list.request'
 
+export enum GetProductsFilterType {
+    Property = 'property',
+    Attribute = 'attribute',
+    Taxonomy = 'taxonomy',
+}
+
 export interface GetProductsFilter {
-    type: 'property'|'attribute'|'taxonomy'
+    type: GetProductsFilterType
     key: string
     values?: any[]
     range?: number[]

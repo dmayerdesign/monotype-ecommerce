@@ -7,3 +7,8 @@ export class Revision extends MongooseDocument {
 }
 
 export const RevisionModel = new Revision().getModel(MongooseSchemaOptions.timestamped)
+
+export class CreateRevisionError extends Error { }
+export class FindRevisionError extends Error { }
+export class UpdateRevisionError extends Error { }
+export class DeleteRevisionError extends Error { }

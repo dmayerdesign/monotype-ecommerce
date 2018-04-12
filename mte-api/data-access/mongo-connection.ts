@@ -6,7 +6,7 @@ import { isDev } from '../helpers/env.helper'
 if (isDev()) mongoose.set('debug', true)
 
 export function connect(): Promise<void> { // I believe this is technically a `MongooseThenable`, not an actual Promise.
-    return mongoose.connect(process.env.MONGODB_URI || process.env.MONGOLAB_URI, {
+    return mongoose.connect(process.env.MONGODB_URI, {
         useMongoClient: true,
         autoIndex: isDev() ? true : false,
     } as any)

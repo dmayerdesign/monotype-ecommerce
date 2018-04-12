@@ -5,8 +5,8 @@ import { ReplaySubject } from 'rxjs/ReplaySubject'
 import { Subject } from 'rxjs/Subject'
 
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
+import { SimpleError } from '@mte/common/lib/ng-modules/http'
 import { Organization } from '@mte/common/models/api-models/organization'
-import { SimpleError } from '@mte/common/ng-modules/http'
 
 @Injectable()
 export class OrganizationService {

@@ -29,6 +29,7 @@ module.exports = {
 	name: 'server',
 	target: 'node',
 	externals,
+	devtool: 'source-map',
 	entry: path.resolve(__dirname, '../server.ts'),
 	output: {
 			path: path.resolve(__dirname, '../../dist/'),
