@@ -33,3 +33,10 @@ export class User extends MongooseDocument {
 }
 
 export const UserModel = new User().getModel(MongooseSchemaOptions.timestamped)
+
+// Errors.
+
+export class CreateUserError extends Error { }
+export class FindUserError extends Error { }
+export class UpdateUserError extends Error { }
+export class DeleteUserError extends Error { }

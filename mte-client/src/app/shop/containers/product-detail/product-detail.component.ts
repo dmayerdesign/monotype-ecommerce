@@ -17,16 +17,16 @@ import { ProductService } from '../../services/product.service'
     selector: 'mte-product-detail',
     template: `
     <div *ngIf="selectedProduct"
-         class="product-detail container">
+         [ngClass]="productDetailContainerClassList">
 
-        <div class="product-detail-main">
-            <div class="product-detail-images">
+        <div class="product-detail-main row">
+            <div [ngClass]="productDetailImagesClassList">
                 <mte-product-image
                     [src]="getMainImage()"
                     [hasMagnifier]="true">
                 </mte-product-image>
             </div>
-            <div class="product-detail-info">
+            <div [ngClass]="productDetailInfoClassList">
                 <span class="product-detail-info-brand">{{ brand?.singularName }}</span>
                 <mte-form-field [options]="{
                         label: 'Quantity'
@@ -34,7 +34,9 @@ import { ProductService } from '../../services/product.service'
                     <input #input
                         id="add-to-cart-form--quantity-to-add"
                         type="number"
-                        [attr.max]="(selectedProduct ? selectedProduct.stockQuantity : 1)"
+                        [disabled]="!selectedProduct"
+                        [attr.max]="quantityInputMax"
+                        [attr.min]="0"
                         [(ngModel)]="quantityToAdd">
                 </mte-form-field>
             </div>
@@ -46,27 +48,40 @@ import { ProductService } from '../../services/product.service'
 @Heartbeat()
 export class ProductDetailComponent implements OnInit, OnDestroy {
     private isAlive = false
-
     /**
      * Represents the product that is displayed when the view
      * is loaded.
      */
     public parentOrStandalone: Product
-
     /**
      * Represents any variations associated with the product,
      * if the product is a Parent.
      */
     public variations: Product[]
-
     /**
      * Represents the product that will be added to the cart.
      */
     public selectedProduct: Product
-
-    public quantityToAdd: number
-
+    public quantityToAdd = 1
     public attributeSelections: GetAttributeSelectOptionsResponseBody = []
+
+    // Template bindings.
+
+    public productDetailImagesClassList = [
+        'product-detail-images',
+        'col-sm-4',
+        'pl-0',
+        'pr-5',
+    ]
+    public productDetailInfoClassList = [
+        'product-detail-info',
+        'col-sm-8',
+    ]
+    public productDetailContainerClassList = [
+        'product-detail',
+        'container',
+        'pt-5',
+    ]
 
     constructor(
         private activatedRoute: ActivatedRoute,
@@ -146,6 +161,12 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
     public get brand(): TaxonomyTerm {
         return ProductHelper.getBrand(this.parentOrStandalone)
+    }
+
+    public get quantityInputMax(): number {
+        return this.selectedProduct && typeof this.selectedProduct.stockQuantity !== 'undefined'
+            ? this.selectedProduct.stockQuantity
+            : 1
     }
 
     // Booleans.

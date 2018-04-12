@@ -24,7 +24,7 @@ import { ShopRouterLinks } from '../../constants/shop-router-links'
 export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
     @ViewChild('basket', { read: TemplateRef }) private basketTemplate: TemplateRef<{ discs: number | string, cartLength: number }>
     public basketTemplateContext = {
-        discs: this.getBasketImageId(),
+        cartIcon: null,
         cartLength: 0,
     }
     public user: User
@@ -54,10 +54,10 @@ export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
                 this.organization.storeUiContent.primaryNavigation
                     .filter((item: NavigationItem) => item.isTopLevel) as NavigationItem[]
             )
+            this.basketTemplateContext.cartIcon = this.getShoppingCartIcon()
         })
         this.cartService.carts.subscribe((cart) => {
             this.basketTemplateContext.cartLength = cart.items ? cart.items.length : 0
-            this.basketTemplateContext.discs = this.getBasketImageId()
         })
     }
 
@@ -91,16 +91,26 @@ export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
         }
     }
 
-    public getBasketImageId(): string | number {
-        if (this.basketTemplateContext) {
-            return this.basketTemplateContext.cartLength && this.basketTemplateContext.cartLength < 4
-                ? this.basketTemplateContext.cartLength
-                : !this.basketTemplateContext.cartLength
-                ? 'empty'
-                : 4
+    public getShoppingCartIcon(): string {
+        const getIconSuffix = () => {
+            if (this.basketTemplateContext) {
+                return this.basketTemplateContext.cartLength && this.basketTemplateContext.cartLength < 4
+                    ? this.basketTemplateContext.cartLength
+                    : !this.basketTemplateContext.cartLength
+                    ? 'empty'
+                    : 'full'
+            }
+            else {
+                return 'empty'
+            }
+        }
+
+        if (this.organization && this.organization.globalStyles && this.organization.globalStyles.shoppingCartIcons) {
+            return this.organization.globalStyles.shoppingCartIcons[getIconSuffix()]
         }
         else {
-            return 'empty'
+            return ''
         }
+
     }
 }

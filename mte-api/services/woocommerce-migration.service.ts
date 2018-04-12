@@ -61,7 +61,7 @@ export class WoocommerceMigrationService {
                                         const variableAttributeValueSlugs = product[key]
                                             .split('|')
                                             .map((val) => {
-                                                return theKey + '-' + val.replace(/\s/g, '-').replace(/[\(\)]/g, '').toLowerCase()
+                                                return kebabCase(theKey + '-' + val.replace(/\s/g, '-').replace(/[\(\)]/g, '').toLowerCase())
                                             })
                                         const variableAttributeValueValues = product[key].split('|')
                                         const variableAttributeSlug = theKey
@@ -93,7 +93,7 @@ export class WoocommerceMigrationService {
                                     }
                                     else {
                                         const value = product[key]
-                                        const attributeValueSlug = theKey + '-' + product[key].replace(/\s/g, '-').toLowerCase()
+                                        const attributeValueSlug = kebabCase(theKey + '-' + product[key].replace(/\s/g, '-').replace(/[\(\)]/g, '').toLowerCase())
                                         const attributeSlug = theKey
                                         try {
                                             const attributeResponse = await AttributeModel.findOrCreate({

@@ -29,3 +29,8 @@ export class TaxonomyTerm extends MongooseDocument {
 }
 
 export const TaxonomyTermModel = new TaxonomyTerm().getModel()
+
+export class CreateTaxonomyTermError extends Error { }
+export class FindTaxonomyTermError extends Error { }
+export class UpdateTaxonomyTermError extends Error { }
+export class DeleteTaxonomyTermError extends Error { }

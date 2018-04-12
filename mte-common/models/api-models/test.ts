@@ -5,3 +5,8 @@ export class Test extends MongooseDocument {
 }
 
 export const TestModel = new Test().getModel()
+
+export class CreateTestError extends Error { }
+export class FindTestError extends Error { }
+export class UpdateTestError extends Error { }
+export class DeleteTestError extends Error { }

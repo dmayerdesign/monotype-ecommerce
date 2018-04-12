@@ -10,3 +10,8 @@ export class Taxonomy extends MongooseDocument {
 }
 
 export const TaxonomyModel = new Taxonomy().getModel()
+
+export class CreateTaxonomyError extends Error { }
+export class FindTaxonomyError extends Error { }
+export class UpdateTaxonomyError extends Error { }
+export class DeleteTaxonomyError extends Error { }
