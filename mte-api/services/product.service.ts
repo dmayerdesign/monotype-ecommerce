@@ -9,8 +9,9 @@ import { Attribute, AttributeModel } from '@mte/common/models/api-models/attribu
 import { AttributeValue, AttributeValueModel } from '@mte/common/models/api-models/attribute-value'
 import { Organization } from '@mte/common/models/api-models/organization'
 import { Product, ProductModel } from '@mte/common/models/api-models/product'
-import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
+import { TaxonomyModel } from '@mte/common/models/api-models/taxonomy'
 import { TaxonomyTermModel } from '@mte/common/models/api-models/taxonomy-term'
+import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
 import { GetProductsFilterType, GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { ListFromQueryRequest } from '@mte/common/models/api-requests/list.request'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
@@ -77,6 +78,10 @@ export class ProductService extends CrudService<Product> {
                     {
                         path: 'taxonomyTerms',
                         model: TaxonomyTermModel,
+                        populate: {
+                            path: 'taxonomy',
+                            model: TaxonomyModel,
+                        }
                     },
                     {
                         path: 'variableAttributes',

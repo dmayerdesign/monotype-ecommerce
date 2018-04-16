@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify'
-import { cloneDeep, kebabCase } from 'lodash'
+import { capitalize, cloneDeep, kebabCase } from 'lodash'
 import { Document } from 'mongoose'
 
 import { AppConfig } from '@mte/app-config'
@@ -37,6 +37,7 @@ export class WoocommerceMigrationService {
                     const variableAttributeIds: string[] = []
                     const variableAttributeValueIds: string[] = []
                     const attributeValueIds: string[] = []
+                    const simpleAttributeValues: { attribute: string, value: any }[] = []
                     const taxonomyTermIds: string[] = []
 
                     const flightStats: {
@@ -119,6 +120,17 @@ export class WoocommerceMigrationService {
                                 if (theKey === 'fade' || theKey === 'glide' || theKey === 'turn' || theKey === 'speed') {
                                     flightStats[theKey] = product[key]
 
+                                    // Add speed/glide/turn/fade Attribute.
+
+                                    const speedGlideTurnFadeAttributeResponse = await AttributeModel.findOrCreate({ slug: theKey })
+                                    const speedGlideTurnFadeAttribute = speedGlideTurnFadeAttributeResponse.doc
+                                    simpleAttributeValues.push({
+                                        attribute: speedGlideTurnFadeAttribute._id,
+                                        value: flightStats[theKey]
+                                    })
+
+                                    // Add stability AttributeValue and TaxonomyTerm
+
                                     const stability = function(stabilityStats): 'overstable'|'stable'|'understable' {
                                         if ( stabilityStats.fade + stabilityStats.turn >= 3 ) {
                                             return 'overstable'
@@ -131,7 +143,7 @@ export class WoocommerceMigrationService {
                                         }
                                     }
 
-                                    if (Object.keys(flightStats).every(statKey => flightStats[statKey] !== undefined)) {
+                                    if (Object.keys(flightStats).every(statKey => !!flightStats[statKey])) {
                                         try {
                                             const stabilityValue = stability(flightStats)
                                             const attributeSlug = 'stability'
@@ -175,14 +187,12 @@ export class WoocommerceMigrationService {
                                 const taxonomyTermSlugs = product[key].split('|').map((originalTaxonomyTermSlug) => {
                                     return kebabCase(key.replace('taxonomies.', '') + '-' + originalTaxonomyTermSlug.replace(/\s/g, '-').toLowerCase())
                                 })
+
                                 try {
                                     const taxonomyResponse = await TaxonomyModel.findOrCreate({ slug: taxonomySlug })
                                     const taxonomy = taxonomyResponse.doc
 
                                     taxonomyTermSlugs.forEach((taxonomyTermSlug) => {
-                                        console.log('Taxonomy term promise')
-                                        console.log(taxonomy._id, taxonomyTermSlug)
-
                                         // [ EXCEPTION ]
                                         if (taxonomyTermSlug === 'disc-type-mid-ranges') {
                                             taxonomyTermPromises.push(TaxonomyTermModel.findOrCreate({
@@ -197,7 +207,7 @@ export class WoocommerceMigrationService {
                                                 singularName: 'Mid-range',
                                             }))
                                         }
-                                        ////
+                                        // [ /EXCEPTION ]
                                         else {
                                             taxonomyTermPromises.push(TaxonomyTermModel.findOrCreate({
                                                 taxonomy: taxonomy._id,
@@ -210,8 +220,8 @@ export class WoocommerceMigrationService {
                                     const taxonomyTerms = taxonomyTermsResponse.map((taxonomyTermResponse) => taxonomyTermResponse.doc)
 
                                     taxonomyTerms.forEach((taxonomyTerm) => taxonomyTermIds.push(taxonomyTerm._id))
-
                                     newProduct.taxonomyTermSlugs = taxonomyTermSlugs
+
                                     delete newProduct[key]
                                 }
                                 catch (error) {
@@ -329,12 +339,16 @@ export class WoocommerceMigrationService {
                             newProduct.sku = 'METEOR_GLOZ_1769_2'
                         }
                     }
+                    if (!!sku.match(/HORNET_/)) {
+                        newProduct.parentSku = 'HORNET'
+                    }
 
                     /////////////////////
 
                     newProduct.variableAttributes = variableAttributeIds
                     newProduct.variableAttributeValues = variableAttributeValueIds
                     newProduct.attributeValues = attributeValueIds
+                    newProduct.simpleAttributeValues = simpleAttributeValues
                     newProduct.taxonomyTerms = taxonomyTermIds
 
                     delete (<any>newProduct).images
@@ -494,6 +508,11 @@ export class WoocommerceMigrationService {
                 for (let i = 0; i < variationProducts.length; i++) {
                     const variation = variationProducts[i]
                     const parent = parentProducts.find((p) => p.sku === variation.parentSku)
+
+                    if (!parent) {
+                        throw new Error(`Could not find a parent for the product variation: ${JSON.stringify(variation)}`)
+                    }
+
                     if (!parent.variableAttributes) {
                         parent.variableAttributes = []
                     }
@@ -519,6 +538,8 @@ export class WoocommerceMigrationService {
                     await variation.save()
                     await parent.save()
                 }
+
+                // Crawl Infinite Discs
 
                 resolve(new ApiResponse(allProducts))
             }

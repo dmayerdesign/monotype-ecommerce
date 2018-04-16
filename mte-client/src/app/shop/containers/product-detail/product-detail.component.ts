@@ -3,10 +3,12 @@ import { FormGroup } from '@angular/forms'
 import { ActivatedRoute } from '@angular/router'
 import { switchMap, takeWhile } from 'rxjs/operators'
 
+import { CustomRegionsHelper } from '@mte/common/helpers/custom-regions.helper'
 import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Attribute } from '@mte/common/models/api-models/attribute'
 import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
+import { CustomRegions } from '@mte/common/models/api-models/custom-regions'
 import { Product } from '@mte/common/models/api-models/product'
 import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
 import { GetAttributeSelectOptionsResponseBody } from '@mte/common/models/api-responses/get-attribute-select-options/get-attribute-select-options.response.body'
@@ -27,7 +29,20 @@ import { ProductService } from '../../services/product.service'
                 </mte-product-image>
             </div>
             <div [ngClass]="productDetailInfoClassList">
-                <span class="product-detail-info-brand">{{ brand?.singularName }}</span>
+                <header>
+                    <span class="product-detail-info--brand">{{ brandName }}</span>
+                    <h1 class="product-detail-info--name">{{ productName }}</h1>
+
+                    <!-- Custom regions -->
+                    <span *ngFor="let region of customRegions.productDetailInfoHeader; let i = index"
+                        [ngClass]="[
+                            ('product-detail-info--header-custom-region' + i),
+                            (region.className || '')
+                        ]">
+                        {{ customRegionsHelper.getCustomRegionTextValueFromArrayProperty(region, parentOrStandalone) }}
+                    </span>
+                </header>
+
                 <mte-form-field [options]="{
                         label: 'Quantity'
                     }">
@@ -65,7 +80,19 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     public quantityToAdd = 1
     public attributeSelections: GetAttributeSelectOptionsResponseBody = []
 
-    // Template bindings.
+    // Custom regions. TODO: Get these from the database.
+
+    public customRegions: CustomRegions = {
+        productDetailInfoHeader: [{
+            apiModel: 'Product',
+            dataArrayProperty: 'taxonomyTerms',
+            pathToDataArrayPropertyLookupKey: 'taxonomy.slug',
+            dataArrayPropertyLookupValue: 'disc-type',
+            pathToDataPropertyValue: 'singularName',
+        }],
+    }
+
+    // CSS classes.
 
     public productDetailImagesClassList = [
         'product-detail-images',
@@ -82,6 +109,10 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         'container',
         'pt-5',
     ]
+
+    // Helpers.
+
+    public customRegionsHelper = CustomRegionsHelper
 
     constructor(
         private activatedRoute: ActivatedRoute,
@@ -159,8 +190,13 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
     // Template bindings.
 
-    public get brand(): TaxonomyTerm {
-        return ProductHelper.getBrand(this.parentOrStandalone)
+    public get brandName(): string {
+        const brand = ProductHelper.getBrand(this.parentOrStandalone)
+        return brand ? brand.singularName : ''
+    }
+
+    public get productName(): string {
+        return this.parentOrStandalone.name
     }
 
     public get quantityInputMax(): number {

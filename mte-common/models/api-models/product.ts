@@ -8,6 +8,7 @@ import { AttributeValue } from './attribute-value'
 import { Dimensions } from './dimensions'
 import { Image } from './image'
 import { Price } from './price'
+import { SimpleAttributeValue } from './simple-attribute-value'
 import { TaxonomyTerm } from './taxonomy-term'
 import { Units } from './units'
 
@@ -63,9 +64,9 @@ export class Product extends MongooseDocument {
 	// Attributes.
 	// - Own attributes.
     @arrayProp({ itemsRef: AttributeValue }) public attributeValues: Ref<AttributeValue>[]
-    @arrayProp({ items: String }) public attributeValueSlugs: string[]
+    @arrayProp({ items: SimpleAttributeValue }) public simpleAttributeValues: SimpleAttributeValue[]
 	// - Variation attributes.
-    @arrayProp({ itemsRef: Attribute }) public variableAttributes: Ref<Attribute>[] // Attribute IDs
+    @arrayProp({ itemsRef: Attribute }) public variableAttributes: Ref<Attribute>[]
     @arrayProp({ itemsRef: AttributeValue }) public variableAttributeValues: Ref<AttributeValue>[]
 
 	// Taxonomy.
