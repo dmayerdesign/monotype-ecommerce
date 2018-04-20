@@ -32,8 +32,8 @@ module.exports = {
 	devtool: 'source-map',
 	entry: path.resolve(__dirname, '../server.ts'),
 	output: {
-			path: path.resolve(__dirname, '../../dist/'),
-			filename: 'server.js',
+		path: path.resolve(__dirname, '../../dist/'),
+		filename: 'server.js',
 	},
 	resolve: {
 		extensions: ['.ts', '.js', '.json', '.pug', '.html'],
@@ -64,7 +64,12 @@ module.exports = {
 				use: [
 					'to-string-loader',
 					'css-loader',
-					'sass-loader',
+					{
+						loader: 'sass-loader',
+						options: {
+							includePaths: ['mte-client/src/styles']
+						},
+					},
 				],
 			},
 			{test: /\.pug$/, use: 'pug-loader'},

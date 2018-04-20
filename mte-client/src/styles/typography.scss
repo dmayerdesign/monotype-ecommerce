@@ -1,18 +1,30 @@
 @import url('https://fonts.googleapis.com/css?family=Montserrat:300,400,500,700');
 @import url('https://fonts.googleapis.com/css?family=Roboto:300,400,400i,500,500i,700');
+@import url('https://fonts.googleapis.com/css?family=Viga');
 @import url('https://fonts.googleapis.com/css?family=Rock+Salt');
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 @import 'variables';
 @import 'mixins/typography';
 
+.ff-paragraph,
 .roboto {
   @include Roboto;
 }
+.ff-display,
 .montserrat {
   @include Montserrat;
 }
+.ff-display-2
+.viga {
+  @include Viga;
+}
+.ff-secondary,
 .rock-salt {
   @include Rock-Salt;
+}
+
+body {
+  @extend .ff-paragraph;
 }
 
 h1, h2, h3, h4, .h1, .h2, .h3, .h4 {

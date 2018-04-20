@@ -1,0 +1,15 @@
+@import 'variables';
+
+.product-detail {
+    &-info {
+        &--brand {
+            color: $gray-500;
+        }
+
+        // Custom regions.
+        &--disc-type-label {
+            color: $white;
+            background: $gray-500;
+        }
+    }
+}

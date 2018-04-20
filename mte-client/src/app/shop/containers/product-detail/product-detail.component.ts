@@ -13,6 +13,7 @@ import { Product } from '@mte/common/models/api-models/product'
 import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
 import { GetAttributeSelectOptionsResponseBody } from '@mte/common/models/api-responses/get-attribute-select-options/get-attribute-select-options.response.body'
 import { CartService } from '../../../shared/services/cart.service'
+import { OrganizationService } from '../../../shared/services/organization.service'
 import { ProductService } from '../../services/product.service'
 
 @Component({
@@ -30,7 +31,7 @@ import { ProductService } from '../../services/product.service'
             </div>
             <div [ngClass]="productDetailInfoClassList">
                 <header>
-                    <span class="product-detail-info--brand">{{ brandName }}</span>
+                    <span class="product-detail-info--brand ff-display-2">{{ brandName }}</span>
                     <h1 class="product-detail-info--name">{{ productName }}</h1>
 
                     <!-- Custom regions -->
@@ -82,15 +83,16 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
     // Custom regions. TODO: Get these from the database.
 
-    public customRegions: CustomRegions = {
-        productDetailInfoHeader: [{
-            apiModel: 'Product',
-            dataArrayProperty: 'taxonomyTerms',
-            pathToDataArrayPropertyLookupKey: 'taxonomy.slug',
-            dataArrayPropertyLookupValue: 'disc-type',
-            pathToDataPropertyValue: 'singularName',
-        }],
-    }
+    public customRegions: CustomRegions
+    // = {
+    //     productDetailInfoHeader: [{
+    //         apiModel: 'Product',
+    //         dataArrayProperty: 'taxonomyTerms',
+    //         pathToDataArrayPropertyLookupKey: 'taxonomy.slug',
+    //         dataArrayPropertyLookupValue: 'disc-type',
+    //         pathToDataPropertyValue: 'singularName',
+    //     }],
+    // }
 
     // CSS classes.
 
@@ -118,6 +120,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         private activatedRoute: ActivatedRoute,
         private cartService: CartService,
         private productService: ProductService,
+        private organizationService: OrganizationService,
     ) {
         console.log(this)
     }
@@ -139,6 +142,10 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
                 this.populateAttributeSelectOptions()
                 this.populateSelectedProduct()
             })
+
+        this.organizationService.organizations.subscribe((organization) => {
+            this.customRegions = organization.storeUiContent.customRegions
+        })
     }
 
     public ngOnDestroy(): void { }
