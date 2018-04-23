@@ -14,6 +14,7 @@ import { fromEvent } from 'rxjs/observable/fromEvent'
 import { takeWhile } from 'rxjs/operators'
 
 import { Copy } from '@mte/common/constants/copy'
+import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { MteFormFieldOptions } from '../../models/form-field-options'
 
@@ -42,9 +43,7 @@ import { MteFormFieldOptions } from '../../models/form-field-options'
     `,
 })
 @Heartbeat()
-export class MteFormFieldComponent implements OnInit, OnDestroy, AfterContentInit {
-    private isAlive = false
-
+export class MteFormFieldComponent extends HeartbeatComponent implements OnInit, OnDestroy, AfterContentInit {
     @Input() public options: MteFormFieldOptions
     @Input() public customErrorMessage: TemplateRef<any>
     @ContentChild('input', { read: ElementRef }) public input: ElementRef

@@ -1,15 +1,110 @@
 @import 'variables';
+@import 'typography';
+
+@keyframes scale-grow-1 {
+    0% { transform: scale(0); }
+    25% { transform: scale(0); }
+    75% { transform: scale(1); }
+    100% { transform: scale(1); }
+}
+@keyframes scale-grow-2 {
+    0% { transform: scale(0); }
+    30% { transform: scale(0); }
+    80% { transform: scale(1); }
+    100% { transform: scale(1); }
+}
+@keyframes scale-grow-3 {
+    0% { transform: scale(0); }
+    35% { transform: scale(0); }
+    95% { transform: scale(1); }
+    100% { transform: scale(1); }
+}
+@keyframes scale-grow-4 {
+    0% { transform: scale(0); }
+    40% { transform: scale(0); }
+    100% { transform: scale(1); }
+}
 
 .product-detail {
     &-info {
         &--brand {
+            display: block;
             color: $gray-500;
+            margin-bottom: -0.4rem;
+        }
+
+        &--name {
+            display: inline-block;
+            font-weight: 600;
         }
 
         // Custom regions.
         &--disc-type-label {
+            display: inline-block;
+            position: relative;
+            top: -0.8rem;
             color: $white;
             background: $gray-500;
+            padding: 0.6rem 1rem;
+            margin-left: 0.6rem;
+            border-radius: 0.3rem;
+            font-size: 1.1rem;
+            letter-spacing: 0.05rem;
+        }
+
+        &--flight-stat {
+            &--speed, &--glide, &--turn, &--fade {
+                display: inline-block;
+                
+                + br {
+                    display: none;
+                }
+                
+                .flight-stats-bubble {
+                    display: flex;
+                    width: 6rem;
+                    height: 6rem;
+                    margin-right: 0.6rem;
+                    align-items: center;
+                    justify-content: center;
+                    flex-direction: column;
+                    border-radius: 3rem;
+                    background: $primary;
+                    animation-duration: 800ms;
+                    animation-timing-function: cubic-bezier(0, 0.8, 0.4, 1);
+    
+                    &--label, &--value {
+                        color: $white;
+                    }
+    
+                    &--label {
+                        @extend .ff-display;
+                        text-transform: uppercase;
+                        font-weight: normal;
+                        font-size: 0.9rem;
+                        letter-spacing: 0.05rem;
+                    }
+    
+                    &--value {
+                        @extend .ff-display-2;
+                        font-size: 1.9rem;
+                        line-height: 1;
+                    }
+                }
+            }
+
+            &--speed .flight-stats-bubble {
+                animation-name: scale-grow-1;
+            }
+            &--glide .flight-stats-bubble {
+                animation-name: scale-grow-2;
+            }
+            &--turn .flight-stats-bubble {
+                animation-name: scale-grow-3;
+            }
+            &--fade .flight-stats-bubble {
+                animation-name: scale-grow-4;
+            }
         }
     }
 }

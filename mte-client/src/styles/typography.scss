@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Montserrat:300,400,500,700');
+@import url('https://fonts.googleapis.com/css?family=Montserrat:300,400,600,700');
 @import url('https://fonts.googleapis.com/css?family=Roboto:300,400,400i,500,500i,700');
 @import url('https://fonts.googleapis.com/css?family=Viga');
 @import url('https://fonts.googleapis.com/css?family=Rock+Salt');
@@ -6,36 +6,16 @@
 @import 'variables';
 @import 'mixins/typography';
 
-.ff-paragraph,
-.roboto {
-  @include Roboto;
-}
-.ff-display,
-.montserrat {
-  @include Montserrat;
-}
-.ff-display-2
-.viga {
-  @include Viga;
-}
-.ff-secondary,
-.rock-salt {
-  @include Rock-Salt;
-}
-
 body {
   @extend .ff-paragraph;
 }
 
 h1, h2, h3, h4, .h1, .h2, .h3, .h4 {
+  @include Montserrat;
   letter-spacing: 0;
-  color: $text-gray;
+  color: $gray-text;
   font-weight: normal;
   line-height: 1.1;
-}
-
-h1, h2, h3, h4, .h1, .h2, .h3, .h4 {
-  @include Montserrat;
 }
 
 h1, .h1 {
@@ -48,42 +28,31 @@ h2, .h2 {
   letter-spacing: 0;
 }
 
-h1, .h1 { font-size: 5rem; }
+h1, .h1 { font-size: 6.6rem; }
 h2, .h2 { font-size: 4rem; }
-h3, .h3 { font-size: 2.8rem; margin: 2.6rem 0 1.4rem; }
+h3, .h3 { font-size: 2.6rem; }
 h4, .h4 { font-size: 2rem; }
 h5, .h5 { font-size: 1.6rem; }
 
 ul, ol, p, label, .label, dd, dt {
   font-size: 1.4rem;
-  color: $text-gray;
+  color: $gray-text;
 }
 
 dt {
 	font-weight: 500;
 }
 
-.text-right, .align-right {
-	text-align: right !important;
-}
-.text-center, .center, .align-center {
-  text-align: center !important;
-}
-.text-left, .align-left {
-	text-align: left !important;
-}
-
-.uppercase { text-transform: uppercase !important; }
-.underline, .text-underline { text-decoration: underline !important; }
-.no-underline { text-decoration: none !important; }
+.text-underline { text-decoration: underline !important; }
+.text-no-underline { text-decoration: none !important; }
 
 label, .label, span {
   @include Roboto;
-	color: $text-gray;
+  color: $gray-text;
 }
 
 p, .dark, dd {
-	color: $text-dark-gray;
+	color: $gray-dark-text;
 }
 
 dd {
@@ -95,18 +64,22 @@ dd {
   font-weight: 500;
 }
 
-// Colors
+// Font families
 
-.text-light { color: $text-light-gray !important; }
-.text { color: $text-gray !important; }
-.text-dark { color: $text-dark-gray !important; }
-.white, .text-white { color: #fff !important; }
-.off-white, .text-off-white { color: $gray-100 !important; }
-.text-orange, .text-accent, .text-action { color: $orange !important; }
-.text-primary { color: $primary !important; }
-.text-red { color: $red !important; }
-.text-white { color: $white !important; }
-.text-green { color: $green !important; }
+.ff {
+  &-paragraph {
+    @include Roboto;
+  }
+  &-display {
+    @include Montserrat;
+  }
+  &-display-2 {
+    @include Viga;
+  }
+  &-secondary {
+    @include Rock-Salt;
+  }
+}
 
 // Weights
 

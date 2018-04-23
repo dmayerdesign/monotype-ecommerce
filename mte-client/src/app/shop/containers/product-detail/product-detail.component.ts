@@ -1,10 +1,11 @@
-import { Component, OnDestroy, OnInit } from '@angular/core'
+import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core'
 import { FormGroup } from '@angular/forms'
 import { ActivatedRoute } from '@angular/router'
 import { switchMap, takeWhile } from 'rxjs/operators'
 
 import { CustomRegionsHelper } from '@mte/common/helpers/custom-regions.helper'
 import { ProductHelper } from '@mte/common/helpers/product.helper'
+import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Attribute } from '@mte/common/models/api-models/attribute'
 import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
@@ -31,18 +32,42 @@ import { ProductService } from '../../services/product.service'
             </div>
             <div [ngClass]="productDetailInfoClassList">
                 <header>
-                    <span class="product-detail-info--brand ff-display-2">{{ brandName }}</span>
+                    <span [ngClass]="[
+                        'product-detail-info--brand',
+                        'ff-display-2 h3 text-uppercase'
+                    ]">{{ brandName }}</span>
                     <h1 class="product-detail-info--name">{{ productName }}</h1>
 
                     <!-- Custom regions -->
-                    <span *ngFor="let region of customRegions.productDetailInfoHeader; let i = index"
-                        [ngClass]="[
-                            ('product-detail-info--header-custom-region' + i),
-                            (region.className || '')
-                        ]">
-                        {{ customRegionsHelper.getCustomRegionTextValueFromArrayProperty(region, parentOrStandalone) }}
-                    </span>
+                    <ng-container *ngFor="let region of customRegions.productDetailInfoHeader; let i = index">
+                        <div [ngClass]="[
+                                ('product-detail-info--header-custom-region' + i),
+                                (region.className || '')
+                            ]"
+                            [innerHTML]="customRegionsHelper.getCustomRegionHtml(region, parentOrStandalone)">
+                        </div>
+                        <br>
+                    </ng-container>
                 </header>
+
+                <div class="product-detail-info--price">
+                    {{ productHelper.getPriceString(parentOrStandalone) }}
+                </div>
+
+                <div class="product-detail-info--description"
+                     [innerHTML]="parentOrStandalone.description">
+                </div>
+
+                <div class="product-detail-info--variable-attributes">
+                    <div *ngFor="let variableAttrAndOptions of productHelper.getVariableAttributesAndOptions(parentOrStandalone)">
+                        <div class="product-detail-info--variable-attributes--name">
+                            {{ variableAttrAndOptions.attribute?.name || variableAttrAndOptions.attribute?.slug }}
+                        </div>
+                        <select>
+                            <option *ngFor="let attributeValue of variableAttrAndOptions.attributeValues">{{ attributeValue?.name || attributeValue?.slug }}</option>
+                        </select>
+                    </div>
+                </div>
 
                 <mte-form-field [options]="{
                         label: 'Quantity'
@@ -59,11 +84,11 @@ import { ProductService } from '../../services/product.service'
         </div>
     </div>
     `,
-    styleUrls: ['./product-detail.component.scss']
+    styleUrls: ['./product-detail.component.scss'],
+    encapsulation: ViewEncapsulation.None,
 })
 @Heartbeat()
-export class ProductDetailComponent implements OnInit, OnDestroy {
-    private isAlive = false
+export class ProductDetailComponent extends HeartbeatComponent implements OnInit, OnDestroy {
     /**
      * Represents the product that is displayed when the view
      * is loaded.
@@ -108,13 +133,14 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     ]
     public productDetailContainerClassList = [
         'product-detail',
+        'page-container',
         'container',
-        'pt-5',
     ]
 
     // Helpers.
 
     public customRegionsHelper = CustomRegionsHelper
+    public productHelper = ProductHelper
 
     constructor(
         private activatedRoute: ActivatedRoute,
@@ -122,6 +148,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         private productService: ProductService,
         private organizationService: OrganizationService,
     ) {
+        super()
         console.log(this)
     }
 

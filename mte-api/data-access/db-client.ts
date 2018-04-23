@@ -317,11 +317,8 @@ export class DbClient<T extends MongooseDocument> {
                 throw new SchemaError('Invalid update')
             }
 
-            Object.keys(model).forEach(key => {
-                if (iterable[key] && iterable[key].constructor === Object) {
-                    updateDoc(doc[key], iterable[key])
-                }
-                else if (concatArrays && Array.isArray(iterable[key])) {
+            Object.keys(iterable).forEach(key => {
+                if (concatArrays && Array.isArray(iterable[key])) {
                     doc[key] = doc[key].concat(iterable[key])
                 }
                 else {

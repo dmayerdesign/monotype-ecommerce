@@ -8,6 +8,7 @@ export class CustomRegion extends MongooseDocument {
     @prop() public pathToDataArrayPropertyLookupKey?: string
     @prop() public dataArrayPropertyLookupValue?: string
     @prop() public pathToDataPropertyValue: string
+    @prop() public template: string
 }
 
 new CustomRegion().getSchema()

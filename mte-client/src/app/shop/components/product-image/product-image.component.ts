@@ -1,5 +1,6 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core'
 import { ImageHelper } from '@mte/common/helpers/image.helper'
+import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component';
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
 import { BootstrapBreakpoint } from '@mte/common/models/enums/bootstrap-breakpoint'
@@ -38,9 +39,7 @@ import { map, pairwise, takeWhile } from 'rxjs/operators'
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 @Heartbeat()
-export class ProductImageComponent implements AfterViewInit, OnInit, OnDestroy {
-    private isAlive = false
-
+export class ProductImageComponent extends HeartbeatComponent implements AfterViewInit, OnInit, OnDestroy {
     @ViewChild('productImage') public productImageElement: ElementRef
     @Input() public src: string
     @Input() public alt = 'Product image'
@@ -59,7 +58,7 @@ export class ProductImageComponent implements AfterViewInit, OnInit, OnDestroy {
     constructor(
         private windowRefService: WindowRefService,
         private changeDetectorRef: ChangeDetectorRef
-    ) {}
+    ) { super() }
 
     // Lifecycle methods.
 

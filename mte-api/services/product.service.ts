@@ -4,6 +4,7 @@ import * as mongoose from 'mongoose'
 
 import { Crud, HttpStatus } from '@mte/common/constants'
 import { Types } from '@mte/common/constants/inversify'
+import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { MongooseModel } from '@mte/common/lib/goosetype'
 import { Attribute, AttributeModel } from '@mte/common/models/api-models/attribute'
 import { AttributeValue, AttributeValueModel } from '@mte/common/models/api-models/attribute-value'
@@ -82,6 +83,10 @@ export class ProductService extends CrudService<Product> {
                             path: 'taxonomy',
                             model: TaxonomyModel,
                         }
+                    },
+                    {
+                        path: 'simpleAttributeValues.attribute',
+                        model: AttributeModel,
                     },
                     {
                         path: 'variableAttributes',
@@ -359,26 +364,11 @@ export class ProductService extends CrudService<Product> {
 
     // Helpers.
 
-    public getPrice(product: Product): Price {
-        if (product.isOnSale) {
-            return product.salePrice
-        }
-        else {
-            return product.price
-        }
+    public getPrice(product: Product): Price | Price[] {
+        return ProductHelper.getPrice(product)
     }
 
-    public determinePrice(product: Product): Price {
-        if (product.isOnSale && product.salePrice) {
-            return product.salePrice
-        }
-        else if (product.price) {
-            return product.price
-        }
-        return {
-            amount: 0,
-            currency: Currency.USD,
-        }
+    public determinePrice(product: Product): Price | Price[] {
+        return ProductHelper.getPrice(product)
     }
-
 }

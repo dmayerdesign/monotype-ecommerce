@@ -6,6 +6,7 @@ import { Types } from '@mte/common/constants/inversify'
 import { StripeOrder } from '@mte/common/lib/stripe-order'
 import { Discount } from '@mte/common/models/api-models/discount'
 import { Order, OrderModel } from '@mte/common/models/api-models/order'
+import { Price } from '@mte/common/models/api-models/price'
 import { Product } from '@mte/common/models/api-models/product'
 import { GetProductsFromIdsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { ListFromIdsRequest } from '@mte/common/models/api-requests/list.request'
@@ -63,7 +64,7 @@ export class StripeOrderActionsService {
                 const orderItemsResponse = await <Promise<ApiResponse<Product[]>>>this.productService.get(orderItemsRequest)
                 orderItems = orderItemsResponse.body
                 orderItems.forEach(orderItem => {
-                    order.total.amount += this.productService.getPrice(orderItem).amount
+                    order.total.amount += (this.productService.getPrice(orderItem) as Price).amount
                 })
             }
             catch (getItemsError) {

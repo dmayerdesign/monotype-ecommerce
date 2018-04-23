@@ -1,5 +1,6 @@
+import { pluralize, singularize, titleize } from 'inflection'
 import { inject, injectable } from 'inversify'
-import { capitalize, cloneDeep, kebabCase } from 'lodash'
+import { cloneDeep, kebabCase } from 'lodash'
 import { Document } from 'mongoose'
 
 import { AppConfig } from '@mte/app-config'
@@ -185,7 +186,7 @@ export class WoocommerceMigrationService {
                                 const taxonomyTermPromises: Promise<{ doc: TaxonomyTerm }>[] = []
                                 const taxonomySlug = kebabCase(key.replace('taxonomies.', ''))
                                 const taxonomyTermSlugs = product[key].split('|').map((originalTaxonomyTermSlug) => {
-                                    return kebabCase(key.replace('taxonomies.', '') + '-' + originalTaxonomyTermSlug.replace(/\s/g, '-').toLowerCase())
+                                    return kebabCase(key.replace('taxonomies.', '') + '-' + originalTaxonomyTermSlug.replace(/\s/g, '-').toLowerCase()).trim()
                                 })
 
                                 try {
@@ -193,27 +194,10 @@ export class WoocommerceMigrationService {
                                     const taxonomy = taxonomyResponse.doc
 
                                     taxonomyTermSlugs.forEach((taxonomyTermSlug) => {
-                                        // [ EXCEPTION ]
-                                        if (taxonomyTermSlug === 'disc-type-mid-ranges') {
-                                            taxonomyTermPromises.push(TaxonomyTermModel.findOrCreate({
-                                                taxonomy: taxonomy._id,
-                                                slug: taxonomyTermSlug,
-                                                name: 'Mid-range',
-                                                pluralName: 'Mid-ranges',
-                                                pageSettings: {
-                                                    banner: '/page-images/mid-ranges-banner.jpg',
-                                                    bannerOverlay: '/page-images/disc-type-mid-ranges.png',
-                                                },
-                                                singularName: 'Mid-range',
-                                            }))
-                                        }
-                                        // [ /EXCEPTION ]
-                                        else {
-                                            taxonomyTermPromises.push(TaxonomyTermModel.findOrCreate({
-                                                taxonomy: taxonomy._id,
-                                                slug: taxonomyTermSlug
-                                            }))
-                                        }
+                                        taxonomyTermPromises.push(TaxonomyTermModel.findOrCreate({
+                                            taxonomy: taxonomy._id,
+                                            slug: taxonomyTermSlug
+                                        }))
                                     })
 
                                     const taxonomyTermsResponse = await Promise.all(taxonomyTermPromises)
@@ -539,7 +523,61 @@ export class WoocommerceMigrationService {
                     await parent.save()
                 }
 
-                // Crawl Infinite Discs
+                // Fill out taxonomy terms.
+
+                const discTypes = [
+                    'disc-type-putters',
+                    'disc-type-mid-ranges',
+                    'disc-type-fairway-drivers',
+                    'disc-type-distance-drivers',
+                ]
+
+                for (let i = 0; i < discTypes.length; i++) {
+                    const slug = discTypes[i]
+                    const discType = await this.dbClient.findOne(TaxonomyTermModel, { slug })
+                    const partialSlug = slug.replace('disc-type-', '')
+                    const name = titleize(partialSlug.replace(/-/g, ' '))
+                    const singularName = singularize(name)
+                    const pluralName = pluralize(name)
+
+                    await this.dbClient.updateById(TaxonomyTermModel, discType._id, {
+                        singularName,
+                        pluralName,
+                        pageSettings: {
+                            banner: `/page-images/${partialSlug}-banner.jpg`,
+                            bannerOverlay: `/page-images/${slug}.png`,
+                        },
+                    })
+                }
+
+                const brands = [
+                    'brand-mvp-disc-sports',
+                    'brand-axiom-discs',
+                    'brand-discraft',
+                ]
+
+                for (let i = 0; i < brands.length; i++) {
+                    const slug = brands[i]
+                    const brand = await this.dbClient.findOne(TaxonomyTermModel, { slug })
+                    const partialSlug = slug.replace('brand-', '')
+                    let brandName = titleize(partialSlug.substring(0, partialSlug.indexOf('-')))
+                    let name = titleize(partialSlug.replace(/-/g, ' '))
+                    if (slug === 'brand-mvp-disc-sports') {
+                        brandName = 'MVP Disc Sports'
+                        name = 'MVP'
+                    }
+                    const singularName = singularize(name)
+                    const pluralName = `${brandName} Discs`
+
+                    await this.dbClient.updateById(TaxonomyTermModel, brand._id, {
+                        singularName,
+                        pluralName,
+                        pageSettings: {
+                            banner: `/page-images/${partialSlug}-banner.jpg`,
+                            bannerOverlay: `/page-images/${slug}.png`,
+                        },
+                    })
+                }
 
                 resolve(new ApiResponse(allProducts))
             }

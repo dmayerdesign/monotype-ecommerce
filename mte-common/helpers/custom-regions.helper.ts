@@ -15,4 +15,10 @@ export class CustomRegionsHelper {
             .find(lookUpProperty(customRegion.pathToDataArrayPropertyLookupKey))[customRegion.pathToDataPropertyValue]
         return `${value}`
     }
+
+    public static getCustomRegionHtml(customRegion: CustomRegion, data: any): string {
+        const value = this.getCustomRegionTextValueFromArrayProperty(customRegion, data)
+        if (!customRegion.template) return value
+        return customRegion.template.split('{}').join(value)
+    }
 }

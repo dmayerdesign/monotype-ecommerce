@@ -1,5 +1,6 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
+import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Product } from '@mte/common/models/api-models/product'
 import { GetProductsFilterType, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
@@ -14,14 +15,13 @@ import { ProductService } from '../../services'
     styleUrls: ['./products-by-term.component.scss']
 })
 @Heartbeat()
-export class ProductsByTermComponent implements OnInit, OnDestroy {
-    private isAlive = false
+export class ProductsByTermComponent extends HeartbeatComponent implements OnInit, OnDestroy {
     public products: Observable<Product[]>
 
     constructor(
         private productService: ProductService,
         public activatedRoute: ActivatedRoute
-    ) { }
+    ) { super() }
 
     public ngOnInit(): void {
         this.activatedRoute.paramMap
