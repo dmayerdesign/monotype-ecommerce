@@ -17,10 +17,10 @@ import { GetProductsFilterType, GetProductsFromIdsRequest, GetProductsRequest } 
 import { ListFromQueryRequest } from '@mte/common/models/api-requests/list.request'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
-import { GetAttributeSelectOptionsResponseBody } from '@mte/common/models/api-responses/get-attribute-select-options/get-attribute-select-options.response.body'
 import { GetProductDetailResponseBody } from '@mte/common/models/api-responses/get-product-detail/get-product-detail.response.body'
 import { Currency } from '@mte/common/models/enums/currency'
 import { Price } from '@mte/common/models/interfaces/api/price'
+import { VariableAttributesAndOptions } from '@mte/common/models/interfaces/common/variable-attributes-and-options'
 import { DbClient } from '../data-access/db-client'
 import { ProductSearchHelper } from '../helpers/product-search.helper'
 import { CrudService } from './crud.service'
@@ -87,6 +87,14 @@ export class ProductService extends CrudService<Product> {
                     {
                         path: 'simpleAttributeValues.attribute',
                         model: AttributeModel,
+                    },
+                    {
+                        path: 'attributeValues',
+                        model: AttributeValueModel,
+                        populate: {
+                            path: 'attribute',
+                            model: AttributeModel,
+                        },
                     },
                     {
                         path: 'variableAttributes',
@@ -311,8 +319,8 @@ export class ProductService extends CrudService<Product> {
         })
     }
 
-    public getAttributeSelectOptions(slug: string): Promise<ApiResponse<GetAttributeSelectOptionsResponseBody>> {
-        const attributeSelections: GetAttributeSelectOptionsResponseBody = []
+    public getAttributeSelectOptions(slug: string): Promise<ApiResponse<VariableAttributesAndOptions>> {
+        const attributeSelections: VariableAttributesAndOptions = []
 
         function getSelectOptions(attr: Attribute): AttributeValue[] {
             const selection = attributeSelections.find((s) => s.attribute._id === attr._id)
@@ -334,7 +342,7 @@ export class ProductService extends CrudService<Product> {
             }
         }
 
-        return new Promise<ApiResponse<GetAttributeSelectOptionsResponseBody>>(async (resolve, reject) => {
+        return new Promise<ApiResponse<VariableAttributesAndOptions>>(async (resolve, reject) => {
             const productDetailResponse = await this.getProductDetail(slug)
             const product = productDetailResponse.body
             if (!product || !product.variations) {

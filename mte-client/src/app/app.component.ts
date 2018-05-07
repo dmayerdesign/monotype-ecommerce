@@ -11,24 +11,30 @@ import { UiService } from './shared/services/ui.service'
 })
 export class AppComponent {
     public organization: Organization
+    public ready = false
 
     constructor(
         public ui: UiService,
         public organizationService: OrganizationService
     ) {
-        this.organizationService.organizations.subscribe((org) => this.organization = org)
+        this.organizationService.organizations.subscribe((org) => {
+            this.organization = org
+            this.checkIfReady()
+        })
     }
 
     public getBackgroundStyle() {
-        if (!this.organization) {
-            return {}
-        }
-
         if (this.organization.globalStyles.backgroundPatternImageSrc) {
             return {
                 backgroundRepeat: 'repeat',
                 backgroundImage: `url(${this.organization.globalStyles.backgroundPatternImageSrc})`
             }
+        }
+    }
+
+    private checkIfReady(): void {
+        if (!!this.organization) {
+            this.ready = true
         }
     }
 }

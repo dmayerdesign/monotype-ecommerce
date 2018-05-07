@@ -4,16 +4,13 @@ import { injectable } from 'inversify'
 import * as mongoose from 'mongoose'
 import { Document, Error, Model, Types } from 'mongoose'
 
-import { ErrorMessage } from '@mte/common/constants/error-message'
+import { Copy } from '@mte/common/constants/copy'
 import { prop, MongooseDocument, MongooseModel } from '@mte/common/lib/goosetype'
+import { PopulateOptions } from '@mte/common/models/interfaces/api/populate-options'
 import { SchemaError } from '@mte/common/models/types/errors'
 import { ListFromIdsRequest, ListFromQueryRequest, ListFromSearchRequest, ListRequest } from '../../mte-common/models/api-requests/list.request'
 
-interface PopulateOptions {
-    path: string
-    model?: MongooseModel<any>
-    populate?: PopulateOptions | string
-}
+
 
 /**
  * Methods for querying the database
@@ -342,7 +339,7 @@ export class DbClient<T extends MongooseDocument> {
                 const newDocs = await model.create(docs)
 
                 if (!newDocs || !newDocs.length) {
-                    reject(new Error(ErrorMessage.DocumentsNotCreated))
+                    reject(new Error(Copy.ErrorMessages.documentsNotCreated))
                 }
                 else {
                     resolve(newDocs)
@@ -362,6 +359,24 @@ export class DbClient<T extends MongooseDocument> {
             }
             catch (deleteError) {
                 reject(deleteError)
+            }
+        })
+    }
+
+    public save<T extends MongooseDocument = T>(document: T): Promise<T> {
+        return new Promise<T>(async (resolve, reject) => {
+            try {
+                const documentResult: any = await document.save()
+                if (documentResult) {
+                    const savedDocument: T = documentResult._doc
+                    resolve(savedDocument)
+                }
+                else {
+                    throw new Error('Document not saved.')
+                }
+            }
+            catch (error) {
+                reject(error)
             }
         })
     }

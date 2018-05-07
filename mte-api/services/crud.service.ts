@@ -2,7 +2,6 @@ import { Response } from 'express'
 import { injectable } from 'inversify'
 import { Error } from 'mongoose'
 
-import { ErrorMessage } from '@mte/common/constants/error-message'
 import { HttpStatus } from '@mte/common/constants/http-status'
 import { MongooseDocument, MongooseModel } from '@mte/common/lib/goosetype'
 import { ListFromIdsRequest, ListFromQueryRequest, ListRequest } from '@mte/common/models/api-requests/list.request'

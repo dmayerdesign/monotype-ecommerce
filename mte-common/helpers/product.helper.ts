@@ -18,14 +18,14 @@ export class ProductHelper {
 
     public static getPrice(product: Product): Price | Price[] {
         if (product.isOnSale) {
-            if (product.salePriceRange) {
+            if (this.hasPriceRange(product)) {
                 return product.salePriceRange
             }
             if (product.salePrice) {
                 return product.salePrice
             }
         }
-        else if (product.priceRange) {
+        else if (this.hasPriceRange(product)) {
             return product.priceRange
         }
         else if (product.price) {

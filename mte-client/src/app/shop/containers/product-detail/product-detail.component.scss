@@ -27,6 +27,12 @@
 
 .product-detail {
     &-info {
+        font-size: 1.3rem;
+
+        &--header {
+            padding-bottom: 2rem;
+        }
+
         &--brand {
             display: block;
             color: $gray-500;
@@ -35,14 +41,34 @@
 
         &--name {
             display: inline-block;
-            font-weight: 600;
+        }
+
+        &--description {
+            margin-bottom: 4rem;
+        }
+
+        &--price {
+            padding-bottom: 1.5rem;
+            font-size: 1.6rem;
+        }
+
+        &--variable-attributes {
+            width: 100%;
+            max-width: 24rem;
+
+            &--name {
+                @extend .ff-secondary;
+                font-weight: bold;
+                text-transform: lowercase;
+                margin-bottom: 0.1rem;
+            }
         }
 
         // Custom regions.
-        &--disc-type-label {
+        &--disc-specs-label {
             display: inline-block;
             position: relative;
-            top: -0.8rem;
+            top: -1rem;
             color: $white;
             background: $gray-500;
             padding: 0.6rem 1rem;
@@ -50,6 +76,11 @@
             border-radius: 0.3rem;
             font-size: 1.1rem;
             letter-spacing: 0.05rem;
+
+            &--mid-dot {
+                display: inline-block;
+                padding: 0 0.6rem;
+            }
         }
 
         &--flight-stat {
@@ -70,6 +101,7 @@
                     flex-direction: column;
                     border-radius: 3rem;
                     background: $primary;
+                    box-shadow: 0.2rem 0.2rem 0.6rem rgba(0,0,0,0.1);
                     animation-duration: 800ms;
                     animation-timing-function: cubic-bezier(0, 0.8, 0.4, 1);
     
@@ -105,6 +137,38 @@
             &--fade .flight-stats-bubble {
                 animation-name: scale-grow-4;
             }
+        }
+    }
+
+    &-add-to-cart {
+        display: flex;
+        align-items: center;
+        padding-top: 2.2rem;
+
+        &--quantity {
+            .form-group,
+            .input-group {
+                margin-bottom: 0;
+            }
+
+            label {
+                @extend .product-detail-info--variable-attributes--name;
+            }
+
+            input {
+                @extend .ff-display-2;
+                width: 8.6rem;
+                height: 5.1rem;
+                background: $gray-300;
+                border-radius: 2.6rem;
+                font-size: 2rem;
+                font-weight: bold;
+                padding-left: 2rem;
+            }
+        }
+
+        &--submit {
+            margin-left: 3rem;
         }
     }
 }

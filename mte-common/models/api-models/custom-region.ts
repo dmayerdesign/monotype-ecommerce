@@ -1,6 +1,9 @@
-import { prop, MongooseDocument } from '../../lib/goosetype'
+import { arrayProp, prop, MongooseDocument } from '../../lib/goosetype'
 
 export class CustomRegion extends MongooseDocument {
+    @prop() public isMetaRegion?: boolean
+    @arrayProp({ items: CustomRegion }) public childRegions?: CustomRegion[]
+    @prop() public key?: string
     @prop() public className?: string
     @prop() public apiModel: string
     @prop() public dataProperty?: string

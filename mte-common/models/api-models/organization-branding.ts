@@ -12,5 +12,6 @@ new OrganizationBrandingColors().getSchema()
 export class OrganizationBranding extends MongooseDocument {
     @prop() public logo: string
     @prop() public colors: OrganizationBrandingColors
+    @prop() public cartName: string
 }
 new OrganizationBranding().getSchema()

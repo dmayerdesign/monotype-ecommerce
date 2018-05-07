@@ -1,4 +1,5 @@
-<div id="app-wrapper"
+<div *ngIf="ready"
+     id="app-wrapper"
      [ngStyle]="getBackgroundStyle()">
     <router-outlet></router-outlet>
     <mte-modal [datas]="ui.modals"></mte-modal>

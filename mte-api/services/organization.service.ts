@@ -60,6 +60,7 @@ export class OrganizationService extends CrudService<Organization> {
                 branding: {
                     logo: 'https://d1eqpdomqeekcv.cloudfront.net/branding/hyzershop-wordmark-250.png',
                     colors: { primary: '#00b0ff' },
+                    cartName: 'basket',
                 },
                 storeUiContent: {
                     primaryNavigation: [

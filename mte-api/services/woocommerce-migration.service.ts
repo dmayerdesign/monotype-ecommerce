@@ -119,7 +119,7 @@ export class WoocommerceMigrationService {
                                 }
 
                                 if (theKey === 'fade' || theKey === 'glide' || theKey === 'turn' || theKey === 'speed') {
-                                    flightStats[theKey] = product[key]
+                                    flightStats[theKey] = newProduct[key]
 
                                     // Add speed/glide/turn/fade Attribute.
 
@@ -130,23 +130,23 @@ export class WoocommerceMigrationService {
                                         value: flightStats[theKey]
                                     })
 
-                                    // Add stability AttributeValue and TaxonomyTerm
+                                    // Add stability AttributeValue and TaxonomyTerm.
 
-                                    const stability = function(stabilityStats): 'overstable'|'stable'|'understable' {
-                                        if ( stabilityStats.fade + stabilityStats.turn >= 3 ) {
+                                    const getStability = function(stabilityStats): 'overstable'|'stable'|'understable' {
+                                        if ( (stabilityStats.fade + stabilityStats.turn) >= 3 ) {
                                             return 'overstable'
                                         }
-                                        else if ( stabilityStats.fade + stabilityStats.turn < 3 && stabilityStats.fade + stabilityStats.turn >= 0 ) {
+                                        else if ( (stabilityStats.fade + stabilityStats.turn) < 3 && (stabilityStats.fade + stabilityStats.turn) >= 0 ) {
                                             return 'stable'
                                         }
-                                        else if ( stabilityStats.fade + stabilityStats.turn < 0 ) {
+                                        else if ( (stabilityStats.fade + stabilityStats.turn) < 0 ) {
                                             return 'understable'
                                         }
                                     }
 
-                                    if (Object.keys(flightStats).every(statKey => !!flightStats[statKey])) {
+                                    if (Object.keys(flightStats).every(statKey => typeof flightStats[statKey] !== 'undefined')) {
                                         try {
-                                            const stabilityValue = stability(flightStats)
+                                            const stabilityValue = getStability(flightStats)
                                             const attributeSlug = 'stability'
                                             const taxonomySlug = 'stability'
                                             const attributeValueSlug = attributeSlug + '-' + stabilityValue
@@ -181,7 +181,17 @@ export class WoocommerceMigrationService {
                                         }
                                     }
                                 }
+
+                                if (theKey === 'inboundsId') {
+                                    const inboundsIdAttributeResponse = await AttributeModel.findOrCreate({ slug: kebabCase(theKey) })
+                                    const inboundsIdAttribute = inboundsIdAttributeResponse.doc
+                                    simpleAttributeValues.push({
+                                        attribute: inboundsIdAttribute._id,
+                                        value: newProduct[key]
+                                    })
+                                }
                             }
+
                             if (key.indexOf('taxonomies.') > -1) {
                                 const taxonomyTermPromises: Promise<{ doc: TaxonomyTerm }>[] = []
                                 const taxonomySlug = kebabCase(key.replace('taxonomies.', ''))

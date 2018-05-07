@@ -9,7 +9,7 @@ mongodump -h ds117859.mlab.com:17859 -d time -u dannymayer -p Kounice372 -o /dat
 mongorestore --db time /data/db/migrate/time
 
 # Local restore from local backup
-mongorestore --db time /data/db/backup/time
+mongorestore --db time /data/db/migrate/time
 
 # Connect to shell
 mongo ds117859.mlab.com:17859/time -u dannymayer -p Kounice372

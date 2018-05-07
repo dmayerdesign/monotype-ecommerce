@@ -4,6 +4,7 @@ import { Address } from './address'
 import { Cart } from './cart'
 import { Image } from './image'
 import { Order } from './order'
+import { Wishlist } from './wishlist'
 
 export class User extends MongooseDocument {
     @prop({ required: true }) public email: string
@@ -30,6 +31,7 @@ export class User extends MongooseDocument {
     @prop() public stripeCustomerId?: string
 
     @prop() public cart?: Cart
+    @prop({ ref: Wishlist }) public wishlist?: Ref<Wishlist>
 }
 
 export const UserModel = new User().getModel(MongooseSchemaOptions.timestamped)

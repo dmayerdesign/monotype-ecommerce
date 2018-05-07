@@ -23,5 +23,6 @@ export class Types {
     public static TaxonomyTermService = Symbol('TaxonomyTermService')
     public static TimerService = Symbol('TimerService')
     public static UserService = Symbol('UserService')
+    public static WishlistService = Symbol('WishlistService')
     public static WoocommerceMigrationService = Symbol('WoocommerceMigrationService')
 }

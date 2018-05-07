@@ -33,6 +33,7 @@ import { TaxonomyTermService } from '../services/taxonomy-term.service'
 import { TaxonomyService } from '../services/taxonomy.service'
 import { TimerService } from '../services/timer.service'
 import { UserService } from '../services/user.service'
+import { WishlistService } from '../services/wishlist.service'
 import { WoocommerceMigrationService } from '../services/woocommerce-migration.service'
 
 import { Discount } from '@mte/common/models/api-models/discount'
@@ -71,6 +72,7 @@ container.bind<TaxonomyService>(Types.TaxonomyService).to(TaxonomyService)
 container.bind<TaxonomyTermService>(Types.TaxonomyTermService).to(TaxonomyTermService)
 container.bind<TimerService>(Types.TimerService).to(TimerService)
 container.bind<UserService>(Types.UserService).to(UserService)
+container.bind<WishlistService>(Types.WishlistService).to(WishlistService)
 container.bind<WoocommerceMigrationService>(Types.WoocommerceMigrationService).to(WoocommerceMigrationService)
 
 // Middleware.

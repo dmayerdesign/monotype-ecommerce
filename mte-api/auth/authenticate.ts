@@ -3,8 +3,8 @@ import { inject, injectable } from 'inversify'
 import * as jwt from 'jsonwebtoken'
 
 import { Cookies, Copy, HttpStatus } from '@mte/common/constants'
-import { ErrorMessage } from '@mte/common/constants/error-message'
 import { Types } from '@mte/common/constants/inversify'
+import { UserHelper } from '@mte/common/helpers/user.helper'
 import { User, UserModel } from '@mte/common/models/api-models/user'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { DbClient } from '../data-access/db-client'
@@ -25,7 +25,7 @@ export class Authenticate {
         let payload: User = null
 
         if (!token) {
-            res.status(HttpStatus.CLIENT_ERROR_UNAUTHORIZED).send(new ApiErrorResponse(new Error(ErrorMessage.UserNotAuthenticated), HttpStatus.CLIENT_ERROR_UNAUTHORIZED))
+            res.status(HttpStatus.CLIENT_ERROR_UNAUTHORIZED).send(new ApiErrorResponse(new Error(Copy.ErrorMessages.userNotAuthenticated), HttpStatus.CLIENT_ERROR_UNAUTHORIZED))
             return
         }
 
@@ -33,12 +33,12 @@ export class Authenticate {
             payload = jwt.verify(token, jwtSecret) as User
         }
         catch (error) {
-            res.status(HttpStatus.CLIENT_ERROR_UNAUTHORIZED).json(new ApiErrorResponse(new Error(Copy.ErrorMessages.generic), HttpStatus.CLIENT_ERROR_UNAUTHORIZED))
+            res.status(HttpStatus.CLIENT_ERROR_UNAUTHORIZED).json(new ApiErrorResponse(new Error(Copy.ErrorMessages.userNotAuthenticated), HttpStatus.CLIENT_ERROR_UNAUTHORIZED))
             return
         }
 
         if (payload.email) {
-            req.user = Authenticate.userService.cleanUser(payload)
+            req.user = UserHelper.cleanUser(payload)
             next()
         }
 

@@ -5,7 +5,7 @@ import { Observable } from 'rxjs/Observable'
 import { Subject } from 'rxjs/Subject'
 
 import { InjectionTokens } from '@mte/common/constants/angular/injection-tokens'
-import { ErrorMessage } from '@mte/common/constants/error-message'
+import { Copy } from '@mte/common/constants/copy'
 import { HttpStatus } from '@mte/common/constants/http-status'
 import { MteHttpService, SimpleError } from '@mte/common/lib/ng-modules/http'
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
@@ -26,8 +26,8 @@ export class UiService {
     ) {
         this.mteHttpService.errors.subscribe((error) => {
             const isClientError = Object.keys(HttpStatus)
-                    .filter((httpStatusKey) => HttpStatus[httpStatusKey] >= 400 && HttpStatus[httpStatusKey] < 500)
-                    .some((httpStatusKey) => error.status === HttpStatus[httpStatusKey])
+                .filter((httpStatusKey) => HttpStatus[httpStatusKey] >= 400 && HttpStatus[httpStatusKey] < 500)
+                .some((httpStatusKey) => error.status === HttpStatus[httpStatusKey])
 
             if (isClientError) {
                 this.flashWarning(error)
@@ -82,7 +82,7 @@ export class UiService {
      * @memberof UiService
      */
     public flashError(error: SimpleError) {
-        this.flash(error.message || ErrorMessage.ServerError, ToastType.Error)
+        this.flash(error.message || Copy.ErrorMessages.serverError, ToastType.Error)
     }
 
     /**
@@ -92,7 +92,7 @@ export class UiService {
      * @memberof UiService
      */
     public flashWarning(error: SimpleError) {
-        this.flash(error.message || ErrorMessage.ServerWarning, ToastType.Warning)
+        this.flash(error.message || Copy.ErrorMessages.serverWarning, ToastType.Warning)
     }
 
     /**

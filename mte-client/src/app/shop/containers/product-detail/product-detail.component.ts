@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core'
 import { FormGroup } from '@angular/forms'
 import { ActivatedRoute } from '@angular/router'
+import { startCase } from 'lodash'
 import { switchMap, takeWhile } from 'rxjs/operators'
 
 import { CustomRegionsHelper } from '@mte/common/helpers/custom-regions.helper'
@@ -10,9 +11,10 @@ import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Attribute } from '@mte/common/models/api-models/attribute'
 import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
 import { CustomRegions } from '@mte/common/models/api-models/custom-regions'
+import { Organization } from '@mte/common/models/api-models/organization'
 import { Product } from '@mte/common/models/api-models/product'
 import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
-import { GetAttributeSelectOptionsResponseBody } from '@mte/common/models/api-responses/get-attribute-select-options/get-attribute-select-options.response.body'
+import { VariableAttributesAndOptions } from '@mte/common/models/interfaces/common/variable-attributes-and-options'
 import { CartService } from '../../../shared/services/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { ProductService } from '../../services/product.service'
@@ -31,14 +33,14 @@ import { ProductService } from '../../services/product.service'
                 </mte-product-image>
             </div>
             <div [ngClass]="productDetailInfoClassList">
-                <header>
+                <header class="product-detail-info--header">
                     <span [ngClass]="[
                         'product-detail-info--brand',
                         'ff-display-2 h3 text-uppercase'
                     ]">{{ brandName }}</span>
                     <h1 class="product-detail-info--name">{{ productName }}</h1>
 
-                    <!-- Custom regions -->
+                    <!-- Custom regions: productDetailInfoHeader -->
                     <ng-container *ngFor="let region of customRegions.productDetailInfoHeader; let i = index">
                         <div [ngClass]="[
                                 ('product-detail-info--header-custom-region' + i),
@@ -54,32 +56,53 @@ import { ProductService } from '../../services/product.service'
                     {{ productHelper.getPriceString(parentOrStandalone) }}
                 </div>
 
-                <div class="product-detail-info--description"
+                <p class="product-detail-info--description"
                      [innerHTML]="parentOrStandalone.description">
-                </div>
+                </p>
 
                 <div class="product-detail-info--variable-attributes">
-                    <div *ngFor="let variableAttrAndOptions of productHelper.getVariableAttributesAndOptions(parentOrStandalone)">
-                        <div class="product-detail-info--variable-attributes--name">
-                            {{ variableAttrAndOptions.attribute?.name || variableAttrAndOptions.attribute?.slug }}
-                        </div>
-                        <select>
-                            <option *ngFor="let attributeValue of variableAttrAndOptions.attributeValues">{{ attributeValue?.name || attributeValue?.slug }}</option>
-                        </select>
+                    <div *ngFor="let variableAttrAndOptions of variableAttributesAndOptions">
+                        <mte-form-field [options]="{
+                                label: getVariableAttributeLabel(variableAttrAndOptions),
+                                labelClass: 'product-detail-info--variable-attributes--name'
+                            }">
+                            <select #input>
+                                <option *ngFor="let attributeValue of variableAttrAndOptions.attributeValues">{{ attributeValue?.name || attributeValue?.slug }}</option>
+                            </select>
+                        </mte-form-field>
                     </div>
                 </div>
 
-                <mte-form-field [options]="{
-                        label: 'Quantity'
-                    }">
-                    <input #input
-                        id="add-to-cart-form--quantity-to-add"
-                        type="number"
-                        [disabled]="!selectedProduct"
-                        [attr.max]="quantityInputMax"
-                        [attr.min]="0"
-                        [(ngModel)]="quantityToAdd">
-                </mte-form-field>
+                <div class="product-detail-add-to-cart">
+                    <div class="product-detail-add-to-cart--quantity">
+                        <mte-form-field [options]="{ label: 'Quantity', hideLabel: true }">
+                            <input #input
+                                id="add-to-cart--quantity-input"
+                                type="number"
+                                [disabled]="!selectedProduct"
+                                [attr.max]="quantityInputMax"
+                                [attr.min]="0"
+                                [(ngModel)]="quantityToAdd">
+                        </mte-form-field>
+                    </div>
+                    <div class="product-detail-add-to-cart--submit">
+                        <button (click)="addToCart()"
+                            [disabled]="!selectedProduct || !quantityToAdd">
+                            Add to {{ organization.branding.cartName || 'cart' }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Custom regions: productDetailMid -->
+                <ng-container *ngFor="let region of customRegions.productDetailMid; let i = index">
+                    <div [ngClass]="[
+                            ('product-detail-mid--custom-region' + i),
+                            (region.className || '')
+                        ]"
+                        [innerHTML]="customRegionsHelper.getCustomRegionHtml(region, parentOrStandalone)">
+                    </div>
+                    <br>
+                </ng-container>
             </div>
         </div>
     </div>
@@ -89,14 +112,15 @@ import { ProductService } from '../../services/product.service'
 })
 @Heartbeat()
 export class ProductDetailComponent extends HeartbeatComponent implements OnInit, OnDestroy {
+    // State.
+
+    public organization: Organization
     /**
-     * Represents the product that is displayed when the view
-     * is loaded.
+     * Represents the product that is displayed when the view is loaded.
      */
     public parentOrStandalone: Product
     /**
-     * Represents any variations associated with the product,
-     * if the product is a Parent.
+     * Represents any variations associated with the product, if the product is a Parent.
      */
     public variations: Product[]
     /**
@@ -104,9 +128,9 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
      */
     public selectedProduct: Product
     public quantityToAdd = 1
-    public attributeSelections: GetAttributeSelectOptionsResponseBody = []
+    public variableAttributesAndOptions: VariableAttributesAndOptions = []
 
-    // Custom regions. TODO: Get these from the database.
+    // Custom regions.
 
     public customRegions: CustomRegions
     // = {
@@ -166,12 +190,13 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
             .subscribe((responseBody) => {
                 this.parentOrStandalone = responseBody
                 this.variations = this.parentOrStandalone.variations as Product[]
-                this.populateAttributeSelectOptions()
+                this.populateVariableAttributesAndOptions()
                 this.populateSelectedProduct()
             })
 
         this.organizationService.organizations.subscribe((organization) => {
-            this.customRegions = organization.storeUiContent.customRegions
+            this.organization = organization
+            this.customRegions = this.organization.storeUiContent.customRegions
         })
     }
 
@@ -179,15 +204,12 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
 
     // Init methods.
 
-    private populateAttributeSelectOptions(): void {
+    private populateVariableAttributesAndOptions(): void {
 
         // But only if it's a variable product, of course.
         if (!this.hasVariations() || !this.parentOrStandalone.variableAttributes) return
 
-        this.productService.getAttributeSelectOptionss.subscribe((attributeSelectionData) => {
-            this.attributeSelections = attributeSelectionData
-        })
-        this.productService.getAttributeSelectOptions(this.parentOrStandalone.slug)
+        this.variableAttributesAndOptions = this.productHelper.getVariableAttributesAndOptions(this.parentOrStandalone)
     }
 
     private populateSelectedProduct(): void {
@@ -237,6 +259,10 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
         return this.selectedProduct && typeof this.selectedProduct.stockQuantity !== 'undefined'
             ? this.selectedProduct.stockQuantity
             : 1
+    }
+
+    public getVariableAttributeLabel({ attribute }: { attribute: Attribute }): string {
+        return startCase(attribute.singularName || attribute.slug)
     }
 
     // Booleans.

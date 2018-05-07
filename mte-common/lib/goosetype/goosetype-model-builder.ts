@@ -1,11 +1,6 @@
 import { injectable } from 'inversify'
+import { camelCase } from 'lodash'
 import * as mongoose from 'mongoose'
-
-// Utilities.
-
-export function camelCase(str: string): string {
-    return str.charAt(0).toLowerCase() + str.substring(1)
-}
 
 // Errors.
 
@@ -133,8 +128,9 @@ export class ModelBuilder {
             if (type === mongoose.Schema.Types.ObjectId) {
                 return mongoose.Schema.Types.ObjectId
             }
-            if (!this.schemaDefinitions[camelCase(type.name)]) {
-                throw new SchemaNotDefinedError(`A schema associated with ${type.name} has not been defined. Make sure the class extends MongooseDocument.`)
+            if (!this.schemas[camelCase(type.name)]) {
+                this.schemas[camelCase(type.name)] = new mongoose.Schema()
+                // throw new SchemaNotDefinedError(`A schema associated with ${type.name} has not been defined. Make sure the class extends MongooseDocument.`)
             }
 
             return this.schemas[camelCase(type.name)]

@@ -1,6 +1,7 @@
+import { camelCase } from 'lodash'
 import { model, DocumentToObjectOptions, ModelPopulateOptions, ModelUpdateOptions, MongooseDocument as Document, NativeError, Query, Schema, SchemaOptions, ValidationError, WriteConcern } from 'mongoose'
 import 'reflect-metadata'
-import { camelCase, ArrayPropOptions, ModelBuilder, MongooseModel, MongooseSchemaOptions, PropOptions, Ref } from './goosetype-model-builder'
+import { ArrayPropOptions, ModelBuilder, MongooseModel, MongooseSchemaOptions, PropOptions, Ref } from './goosetype-model-builder'
 
 const modelBuilder = new ModelBuilder()
 
@@ -229,7 +230,16 @@ export abstract class MongooseDocument {
             ...{ usePushEach: true }, // https://github.com/Automattic/mongoose/issues/5574
         } as SchemaOptions
 
-        const schema = new Schema(schemaDefinition, schemaOptions)
+        let schema: Schema
+        if (!modelBuilder.schemas[camelCase(target.constructor.name)]) {
+            schema = new Schema(schemaDefinition, schemaOptions)
+            modelBuilder.schemas[camelCase(target.constructor.name)] = schema
+        } else {
+            schema = modelBuilder.schemas[camelCase(target.constructor.name)]
+            Object.keys(schemaDefinition).forEach((schemaKey) => {
+                schema.add({ [schemaKey]: schemaDefinition[schemaKey] })
+            })
+        }
 
         if (preMiddleware) {
             preMiddleware.forEach((preHookArgs) => {
@@ -258,8 +268,6 @@ export abstract class MongooseDocument {
                 schema.plugin(plugin[0] as (schema: Schema, options?: Object) => void, plugin[1] as Object)
             })
         }
-
-        modelBuilder.schemas[camelCase(target.constructor.name)] = schema
 
         return schema
     }
