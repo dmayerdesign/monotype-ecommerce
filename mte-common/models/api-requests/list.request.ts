@@ -1,5 +1,5 @@
 import { Crud } from '../../constants/crud'
-import { Ref } from '../../lib/goosetype/goosetype-model-builder'
+import { Ref } from '../../lib/goosetype'
 import { SortDirection } from '../enums/sort-direction'
 
 export class ListRequest {

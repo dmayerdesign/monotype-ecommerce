@@ -1,80 +1,12 @@
 import { injectable } from 'inversify'
 import { camelCase } from 'lodash'
 import * as mongoose from 'mongoose'
+import { PropTypeArgs } from './models/mongoose-model'
 
 // Errors.
 
 export class InvalidArrayPropOptionsError extends Error { }
 export class SchemaNotDefinedError extends Error { }
-
-// Schema options.
-
-export class MongooseSchemaOptions {
-    public static readonly timestamped = { timestamps: true }
-}
-
-// Types.
-
-export type Func = (...args: any[]) => any
-
-export type RequiredType = boolean | [boolean, string] | string | Func | [Func, string]
-
-export interface BasePropOptions {
-    required?: RequiredType
-    enum?: string[] | object
-    get?: (value?: any) => any
-    default?: any
-    unique?: boolean
-    index?: boolean
-    type?: string | Function | Object | mongoose.Schema.Types.ObjectId
-}
-
-export interface MongooseDocument extends mongoose.Document {
-    _id: string
-    createdAt?: any
-    updatedAt?: any
-}
-
-export interface MongooseModel<T = any> extends mongoose.Model<T & (MongooseDocument | mongoose.Document)> {
-    findOrCreate: (query: object) => Promise<{ doc: T; created: boolean }>
-}
-
-export interface PropOptions extends BasePropOptions {
-    ref?: any
-}
-
-export interface ArrayPropOptions extends BasePropOptions {
-    items?: any
-    itemsRef?: any
-}
-
-export interface SchemaTypeOptions extends PropOptions {
-    type?: string | Function | Object | mongoose.Schema.Types.ObjectId
-}
-
-export interface ValidateNumberOptions {
-    min?: number | [number, string]
-    max?: number | [number, string]
-}
-
-export interface ValidateStringOptions {
-    minlength?: number | [number, string]
-    maxlength?: number | [number, string]
-    match?: RegExp | [RegExp, string]
-}
-
-export interface PropTypeArgs {
-    options: PropOptions & ArrayPropOptions
-    propType: PropType
-    key: string
-    target: MongooseModel<any>
-}
-
-export type PropType = 'array' | 'object'
-export type PropOptionsWithNumberValidate = PropOptions & ValidateNumberOptions
-export type PropOptionsWithStringValidate = PropOptions & ValidateStringOptions
-export type PropOptionsWithValidate = PropOptionsWithNumberValidate | PropOptionsWithStringValidate
-export type Ref<T> = T | string
 
 // Model builder.
 
@@ -82,7 +14,7 @@ export type Ref<T> = T | string
 let modelBuilder: ModelBuilder
 
 export class ModelBuilder {
-    public schemaDefinitions: any = {}
+    public schemaDefinitions: { [key: string]: mongoose.SchemaDefinition } = {}
     public schemas: { [key: string]: mongoose.Schema } = {}
     public preMiddleware: any = {}
     public postMiddleware: any = {}
@@ -128,28 +60,30 @@ export class ModelBuilder {
             if (type === mongoose.Schema.Types.ObjectId) {
                 return mongoose.Schema.Types.ObjectId
             }
+            // If the prop is not a valid primitive or object, and it's not an ObjectId,
+            // assume it's a custom schema. If the schema has yet to be defined, define it.
+            // (This will probably only happen if you're using a schema class as the type
+            // of one of its own properties.)
             if (!this.schemas[camelCase(type.name)]) {
                 this.schemas[camelCase(type.name)] = new mongoose.Schema()
-                // throw new SchemaNotDefinedError(`A schema associated with ${type.name} has not been defined. Make sure the class extends MongooseDocument.`)
             }
-
             return this.schemas[camelCase(type.name)]
         }
     }
 
-    public baseProp(propTypeArgs: PropTypeArgs) {
+    public baseProp(propTypeArgs: PropTypeArgs): void {
         const { target, key, propType, options } = propTypeArgs
-        let schema: mongoose.SchemaDefinition = this.schemaDefinitions[camelCase((target.constructor as any).name)]
+        let schemaDefinition: mongoose.SchemaDefinition = this.schemaDefinitions[camelCase(target.constructor.name)]
         let schemaProperty: mongoose.SchemaTypeOpts<any> = {}
-        let type
+        let type: any
 
         const nonPropertyOptions = [
             'items',
             'itemsRef'
         ]
 
-        if (!schema) {
-            schema = this.schemaDefinitions[camelCase((target.constructor as any).name)] = {}
+        if (!schemaDefinition) {
+            schemaDefinition = this.schemaDefinitions[camelCase(target.constructor.name)] = {}
         }
 
         // Might need a second glance.
@@ -209,6 +143,9 @@ export class ModelBuilder {
             schemaProperty.type = this.getTypeOrSchema(type)
         }
 
-        schema[key] = schemaProperty
+        schemaDefinition[key] = schemaProperty
     }
 }
+
+modelBuilder = new ModelBuilder()
+export { modelBuilder }

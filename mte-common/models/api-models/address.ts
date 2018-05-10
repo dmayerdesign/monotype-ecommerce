@@ -1,5 +1,6 @@
-import { prop, MongooseDocument } from '../../lib/goosetype'
+import { prop, schema, MongooseDocument } from '../../lib/goosetype'
 
+@schema(Address)
 export class Address extends MongooseDocument {
     @prop() public name?: string
     @prop() public company?: string
@@ -11,5 +12,3 @@ export class Address extends MongooseDocument {
     @prop() public zip: string
     @prop() public phone?: string
 }
-
-new Address().getSchema()

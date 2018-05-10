@@ -1,4 +1,4 @@
-import { MongooseModel } from '../../../lib/goosetype/goosetype'
+import { MongooseModel } from '../../../lib/goosetype'
 
 export interface PopulateOptions {
     path: string

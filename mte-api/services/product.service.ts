@@ -5,9 +5,8 @@ import * as mongoose from 'mongoose'
 import { Crud, HttpStatus } from '@mte/common/constants'
 import { Types } from '@mte/common/constants/inversify'
 import { ProductHelper } from '@mte/common/helpers/product.helper'
-import { MongooseModel } from '@mte/common/lib/goosetype'
 import { Attribute, AttributeModel } from '@mte/common/models/api-models/attribute'
-import { AttributeValue, AttributeValueModel } from '@mte/common/models/api-models/attribute-value'
+import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
 import { Organization } from '@mte/common/models/api-models/organization'
 import { Product, ProductModel } from '@mte/common/models/api-models/product'
 import { TaxonomyModel } from '@mte/common/models/api-models/taxonomy'
@@ -28,6 +27,11 @@ import { OrganizationService } from './organization.service'
 
 /**
  * Methods for querying the `products` collection
+ *
+ * TODO:
+ * - Write simple method for querying related products
+ * -- *Simple match* on one or more attributes/taxonomies (in this case probably brand and stability)
+ * -- Those that match all go first, all but one next, etc.
  *
  * @export
  * @class ProductService
@@ -90,7 +94,7 @@ export class ProductService extends CrudService<Product> {
                     },
                     {
                         path: 'attributeValues',
-                        model: AttributeValueModel,
+                        model: AttributeValue.__model,
                         populate: {
                             path: 'attribute',
                             model: AttributeModel,
@@ -102,13 +106,13 @@ export class ProductService extends CrudService<Product> {
                     },
                     {
                         path: 'variableAttributeValues',
-                        model: AttributeValueModel,
+                        model: AttributeValue.__model,
                     },
                     {
                         path: 'variations',
                         populate: {
                             path: 'attributeValues',
-                            model: AttributeValueModel,
+                            model: AttributeValue.__model,
                         },
                     },
                 ])

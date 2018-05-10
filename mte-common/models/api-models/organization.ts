@@ -1,5 +1,5 @@
 import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions } from '../../lib/goosetype'
-import { Ref } from '../../lib/goosetype/goosetype'
+import { Ref } from '../../lib/goosetype'
 import { GlobalStyles } from './global-styles'
 import { OrganizationBranding } from './organization-branding'
 import { OrganizationRetailSettings } from './organization-retail-settings'

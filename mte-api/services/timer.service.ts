@@ -37,7 +37,7 @@ export class TimerService {
         // Delete all existing Timers.
 
         try {
-            await TimerModel.remove({})
+            await this.dbClient.remove(TimerModel, {})
         }
         catch (error) {
             this.errorService.handleError(error)

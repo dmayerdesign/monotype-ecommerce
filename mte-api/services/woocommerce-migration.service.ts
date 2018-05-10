@@ -5,9 +5,8 @@ import { Document } from 'mongoose'
 
 import { AppConfig } from '@mte/app-config'
 import { Types } from '@mte/common/constants/inversify'
-import { MongooseModel } from '@mte/common/lib/goosetype'
 import { Attribute, AttributeModel } from '@mte/common/models/api-models/attribute'
-import { AttributeValue, AttributeValueModel } from '@mte/common/models/api-models/attribute-value'
+import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
 import { Image } from '@mte/common/models/api-models/image'
 import { Price } from '@mte/common/models/api-models/price'
 import { Product, ProductModel } from '@mte/common/models/api-models/product'
@@ -30,7 +29,17 @@ export class WoocommerceMigrationService {
         return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
             const newProducts = []
 
-            async function createProducts() {
+            const dropAllProductRelatedCollections = async () => {
+                await this.dbClient.remove(ProductModel, {})
+                await this.dbClient.remove(AttributeModel, {})
+                await this.dbClient.remove(AttributeValue, {})
+                await this.dbClient.remove(TaxonomyModel, {})
+                await this.dbClient.remove(TaxonomyTermModel, {})
+            }
+
+            await dropAllProductRelatedCollections()
+
+            const buildProducts = async () => {
                 for (const product of productsJSON) {
                     console.log('Creating product:', product.SKU)
                     const newProduct: Product = cloneDeep(product)
@@ -68,19 +77,17 @@ export class WoocommerceMigrationService {
                                         const variableAttributeValueValues = product[key].split('|')
                                         const variableAttributeSlug = theKey
                                         try {
-                                            const variableAttributeResponse = await AttributeModel.findOrCreate({
+                                            const variableAttribute = await this.dbClient.findOrCreate(AttributeModel, {
                                                 slug: variableAttributeSlug
                                             })
-                                            const variableAttribute = variableAttributeResponse.doc
                                             variableAttributeIds.push(variableAttribute._id)
                                             for (const variableAttributeValueSlug of variableAttributeValueSlugs) {
                                                 try {
-                                                    const variableAttributeValueResponse = await AttributeValueModel.findOrCreate({
+                                                    const variableAttributeValue = await this.dbClient.findOrCreate(AttributeValue, {
                                                         attribute: variableAttribute._id,
                                                         slug: variableAttributeValueSlug,
                                                         value: variableAttributeValueValues[variableAttributeValueSlugs.indexOf(variableAttributeValueSlug)],
                                                     })
-                                                    const variableAttributeValue = variableAttributeValueResponse.doc
                                                     variableAttributeValueIds.push(variableAttributeValue._id)
                                                 }
                                                 catch (error) {
@@ -98,16 +105,14 @@ export class WoocommerceMigrationService {
                                         const attributeValueSlug = kebabCase(theKey + '-' + product[key].replace(/\s/g, '-').replace(/[\(\)]/g, '').toLowerCase())
                                         const attributeSlug = theKey
                                         try {
-                                            const attributeResponse = await AttributeModel.findOrCreate({
+                                            const attribute = await this.dbClient.findOrCreate(AttributeModel, {
                                                 slug: attributeSlug
                                             })
-                                            const attribute = attributeResponse.doc
-                                            const attributeValueResponse = await AttributeValueModel.findOrCreate({
+                                            const attributeValue = await this.dbClient.findOrCreate(AttributeValue, {
                                                 attribute: attribute._id,
                                                 slug: attributeValueSlug,
                                                 value,
                                             })
-                                            const attributeValue = attributeValueResponse.doc
                                             attributeValueIds.push(attributeValue._id)
                                             delete newProduct[key]
                                         }
@@ -123,8 +128,7 @@ export class WoocommerceMigrationService {
 
                                     // Add speed/glide/turn/fade Attribute.
 
-                                    const speedGlideTurnFadeAttributeResponse = await AttributeModel.findOrCreate({ slug: theKey })
-                                    const speedGlideTurnFadeAttribute = speedGlideTurnFadeAttributeResponse.doc
+                                    const speedGlideTurnFadeAttribute = await this.dbClient.findOrCreate(AttributeModel, { slug: theKey })
                                     simpleAttributeValues.push({
                                         attribute: speedGlideTurnFadeAttribute._id,
                                         value: flightStats[theKey]
@@ -152,27 +156,23 @@ export class WoocommerceMigrationService {
                                             const attributeValueSlug = attributeSlug + '-' + stabilityValue
                                             const taxonomyTermSlug = taxonomySlug + '-' + stabilityValue
 
-                                            const attributeResponse = await AttributeModel.findOrCreate({
+                                            const attribute = await this.dbClient.findOrCreate(AttributeModel, {
                                                 slug: attributeSlug,
                                             })
-                                            const attribute = attributeResponse.doc
-                                            const attributeValueResponse = await AttributeValueModel.findOrCreate({
+                                            const attributeValue = await this.dbClient.findOrCreate(AttributeValue, {
                                                 attribute: attribute._id,
                                                 slug: attributeValueSlug,
                                                 value: stabilityValue,
                                             })
-                                            const attributeValue = attributeValueResponse.doc
                                             attributeValueIds.push(attributeValue._id)
 
-                                            const taxonomyResponse = await TaxonomyModel.findOrCreate({
+                                            const taxonomy = await this.dbClient.findOrCreate(TaxonomyModel, {
                                                 slug: taxonomySlug,
                                             })
-                                            const taxonomy = taxonomyResponse.doc
-                                            const taxonomyTermResponse = await TaxonomyTermModel.findOrCreate({
+                                            const taxonomyTerm = await this.dbClient.findOrCreate(TaxonomyTermModel, {
                                                 taxonomy: taxonomy._id,
                                                 slug: taxonomyTermSlug,
                                             })
-                                            const taxonomyTerm = taxonomyTermResponse.doc
                                             taxonomyTermIds.push(taxonomyTerm._id)
                                         }
                                         catch (error) {
@@ -183,8 +183,7 @@ export class WoocommerceMigrationService {
                                 }
 
                                 if (theKey === 'inboundsId') {
-                                    const inboundsIdAttributeResponse = await AttributeModel.findOrCreate({ slug: kebabCase(theKey) })
-                                    const inboundsIdAttribute = inboundsIdAttributeResponse.doc
+                                    const inboundsIdAttribute = await this.dbClient.findOrCreate(AttributeModel, { slug: kebabCase(theKey) })
                                     simpleAttributeValues.push({
                                         attribute: inboundsIdAttribute._id,
                                         value: newProduct[key]
@@ -193,25 +192,26 @@ export class WoocommerceMigrationService {
                             }
 
                             if (key.indexOf('taxonomies.') > -1) {
-                                const taxonomyTermPromises: Promise<{ doc: TaxonomyTerm }>[] = []
+                                const taxonomyTermPromises: Promise<TaxonomyTerm>[] = []
                                 const taxonomySlug = kebabCase(key.replace('taxonomies.', ''))
                                 const taxonomyTermSlugs = product[key].split('|').map((originalTaxonomyTermSlug) => {
                                     return kebabCase(key.replace('taxonomies.', '') + '-' + originalTaxonomyTermSlug.replace(/\s/g, '-').toLowerCase()).trim()
                                 })
 
                                 try {
-                                    const taxonomyResponse = await TaxonomyModel.findOrCreate({ slug: taxonomySlug })
-                                    const taxonomy = taxonomyResponse.doc
+                                    const taxonomy = await this.dbClient.findOrCreate(TaxonomyModel, { slug: taxonomySlug })
 
                                     taxonomyTermSlugs.forEach((taxonomyTermSlug) => {
-                                        taxonomyTermPromises.push(TaxonomyTermModel.findOrCreate({
+                                        taxonomyTermPromises.push(this.dbClient.findOrCreate(TaxonomyTermModel, {
                                             taxonomy: taxonomy._id,
                                             slug: taxonomyTermSlug
                                         }))
                                     })
 
-                                    const taxonomyTermsResponse = await Promise.all(taxonomyTermPromises)
-                                    const taxonomyTerms = taxonomyTermsResponse.map((taxonomyTermResponse) => taxonomyTermResponse.doc)
+                                    const taxonomyTerms = await Promise.all(taxonomyTermPromises)
+
+                                    console.log('---- TAXONOMY TERMS ----')
+                                    console.log(taxonomyTerms)
 
                                     taxonomyTerms.forEach((taxonomyTerm) => taxonomyTermIds.push(taxonomyTerm._id))
                                     newProduct.taxonomyTermSlugs = taxonomyTermSlugs
@@ -354,7 +354,7 @@ export class WoocommerceMigrationService {
             }
 
             try {
-                await createProducts.call(this)
+                await buildProducts()
             }
             catch (error) {
                 reject(new ApiErrorResponse(error))
@@ -365,7 +365,6 @@ export class WoocommerceMigrationService {
              * The switch
              ******* -> */
             try {
-                console.log('Creating products')
                 const allProducts = await this.dbClient.create<Product>(ProductModel, newProducts)
                 const parentProducts = allProducts.filter((p) => p.isParent)
                 const variationProducts = allProducts.filter((p) => p.isVariation)
@@ -409,7 +408,7 @@ export class WoocommerceMigrationService {
                         }
 
                         try {
-                            attributeValues = await this.dbClient.findIds(AttributeValueModel, new ListFromIdsRequest({ ids: product.attributeValues })) as AttributeValue[]
+                            attributeValues = await this.dbClient.findIds(AttributeValue, new ListFromIdsRequest({ ids: product.attributeValues })) as AttributeValue[]
                             taxonomyTerms = await this.dbClient.findIds(TaxonomyTermModel, new ListFromIdsRequest({ ids: product.taxonomyTerms }))
                             isDisc = taxonomyTerms && taxonomyTerms.some((taxTerm) => taxTerm.slug === 'product-type-discs')
                         }

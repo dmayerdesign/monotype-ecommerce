@@ -8,6 +8,13 @@ import { DbClient } from '../data-access/db-client'
 import { CrudService } from './crud.service'
 import { StripeOrderService } from './stripe/stripe-order.service'
 
+/**
+ * TODO:
+ * - Create a way to extract useful data from orders
+ * -- e.g. Which items did people purchase together?
+ * -- Maybe create a `ProductRecommendationData` entity
+ * --- { productId: string, purchasedWithProducts: { productId: string, count: number }[] }
+ */
 @injectable()
 export class OrderService extends CrudService<Order> {
 
