@@ -1,8 +1,9 @@
-import { arrayProp, prop, MongooseDocument, Ref } from '../../lib/goosetype'
+import { arrayProp, prop, schema, MongooseDocument, Ref } from '../../lib/goosetype'
 import { CartProduct } from '../interfaces/ui/cart-product'
 import { Discount } from './discount'
 import { Product } from './product'
 
+@schema(Cart)
 export class Cart extends MongooseDocument {
     public displayItems: CartProduct[]
 
@@ -12,5 +13,3 @@ export class Cart extends MongooseDocument {
     @prop() public total: number
     @arrayProp({ itemsRef: Discount }) public discounts?: Ref<Discount>[]
 }
-
-new Cart().getSchema()

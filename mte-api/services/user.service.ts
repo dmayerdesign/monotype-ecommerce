@@ -7,8 +7,8 @@ import { AuthConfig } from '@mte/common/config/auth.config'
 import { Cookies, Copy, HttpStatus } from '@mte/common/constants'
 import { Types } from '@mte/common/constants/inversify'
 import { UserHelper } from '@mte/common/helpers/user.helper'
-import { User, UserModel } from '@mte/common/models/api-models/user'
-import { WishlistModel } from '@mte/common/models/api-models/wishlist'
+import { User } from '@mte/common/models/api-models/user'
+import { Wishlist } from '@mte/common/models/api-models/wishlist'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
 import { Login } from '@mte/common/models/interfaces/api/login'
@@ -23,7 +23,7 @@ export class UserService {
 
     private userPopulateOptions: PopulateOptions = {
         path: 'wishlist',
-        model: WishlistModel,
+        model: Wishlist.getModel(),
     }
 
     public register(user: User, res: Response): Promise<void> {
@@ -46,12 +46,12 @@ export class UserService {
 
                 // Check for an existing user.
 
-                const existingUser = await this.dbClient.findOne(UserModel, { email: user.email.toLowerCase() }, [ this.userPopulateOptions ])
+                const existingUser = await this.dbClient.findOne(User, { email: user.email.toLowerCase() }, [ this.userPopulateOptions ])
 
                 // If there's no existing user, create a new one.
 
                 if (!existingUser) {
-                    const newUser = new UserModel({
+                    const newUser = new User({
                         firstName: user.firstName,
                         lastName: user.lastName,
                         email: user.email.toLowerCase(),
@@ -62,7 +62,7 @@ export class UserService {
 
                     // Create a wishlist for the user.
 
-                    const newWishlist = new WishlistModel({
+                    const newWishlist = new Wishlist({
                         user: savedUser._id
                     })
                     const savedWishlist = await this.dbClient.save(newWishlist)
@@ -96,7 +96,7 @@ export class UserService {
 
                 // Find a user with the provided email.
 
-                const user = await this.dbClient.findOne(UserModel, {
+                const user = await this.dbClient.findOne(User, {
                     email: credentials.email.toLowerCase()
                 }, [ this.userPopulateOptions ])
 
@@ -147,7 +147,7 @@ export class UserService {
     public updateUser(id: string, update: any): Promise<ApiResponse<User>> {
         return new Promise<ApiResponse<User>>(async (resolve, reject) => {
             try {
-                const { _doc } = await this.dbClient.updateById(UserModel, id, update)
+                const { _doc } = await this.dbClient.updateById(User, id, update)
                 const user = _doc
                 resolve(new ApiResponse(user))
             }
@@ -160,7 +160,7 @@ export class UserService {
     public deleteUser(id: string): Promise<ApiResponse<null>> {
         return new Promise<ApiResponse<null>>(async (resolve, reject) => {
             try {
-                await this.dbClient.delete(UserModel, id)
+                await this.dbClient.delete(User, id)
                 resolve(new ApiResponse(null, HttpStatus.SUCCESS_NO_CONTENT))
             }
             catch (error) {
@@ -172,7 +172,7 @@ export class UserService {
     public verifyEmail(token: string): Promise<ApiResponse<User>> {
         return new Promise<ApiResponse<User>>(async (resolve, reject) => {
             try {
-                const user = await this.dbClient.findOne(UserModel, { emailVerificationToken: token }, [ this.userPopulateOptions ])
+                const user = await this.dbClient.findOne(User, { emailVerificationToken: token }, [ this.userPopulateOptions ])
 
                 if (!user) {
                     reject(new ApiErrorResponse(new Error('User not found - the email verification token did not match any token in the database'), HttpStatus.CLIENT_ERROR_NOT_FOUND))

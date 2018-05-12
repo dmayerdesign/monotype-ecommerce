@@ -7,7 +7,9 @@ import { MongooseModel } from './mongoose-model'
 // Base classes
 
 export abstract class MongooseDocument {
+    // Goosetype.
     public static __model?: MongooseModel<any>
+    public static __schema?: Schema
 
     public _doc?: this
     /** Hash containing current validation errors. */
@@ -20,6 +22,18 @@ export abstract class MongooseDocument {
     public schema?: Schema
     public createdAt?: any
     public updatedAt?: any
+
+    // Goosetype.
+    constructor(doc: any = {}) {
+        if (!!(this.constructor as typeof MongooseDocument).__model) {
+            return new (this.constructor as typeof MongooseDocument).__model(doc)
+        } else {
+            return this
+        }
+    }
+    public static getModel?(): MongooseModel<any> {
+        return this.__model
+    }
 
     /** Checks if a path is set to its default. */
     public $isDefault?(path?: string): boolean
@@ -174,7 +188,7 @@ export abstract class MongooseDocument {
     public save?(...args: any[]): Promise<this> & void
     public save?(optionsOrCb?: (SaveOptions | ((err: any, product: this) => void)), cbOrOptions?: (SaveOptions | ((err: any, product: this) => void))): Promise<this> | void
 
-    // Goosetype functions.
+    // Goosetype methods.
 
     private composeSchemaForInstance?<T>(schemaOptions?: SchemaOptions): Schema {
         const target = this
@@ -235,25 +249,6 @@ export abstract class MongooseDocument {
         type T = this & MongooseDocument
         const schema = this.composeSchemaForInstance(schemaOptions)
         return model(target.constructor.name, schema) as MongooseModel<this>
-    }
-
-    public getSchema?(schemaOptions?: SchemaOptions): Schema {
-        return this.composeSchemaForInstance(schemaOptions)
-    }
-
-    public getSchemaWithGetters?(schemaOptions?: SchemaOptions): Schema {
-        return this.composeSchemaForInstance({
-            ...schemaOptions,
-            ...{
-                toObject: { getters: true },
-                toJSON: { getters: true }
-            }
-        })
-    }
-
-    public getModel?(schemaOptions?: SchemaOptions): MongooseModel<this> {
-        const model = this.composeModelForInstance(schemaOptions)
-        return model
     }
 }
 

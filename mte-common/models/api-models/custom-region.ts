@@ -1,5 +1,6 @@
-import { arrayProp, prop, MongooseDocument } from '../../lib/goosetype'
+import { arrayProp, prop, schema, MongooseDocument } from '../../lib/goosetype'
 
+@schema(CustomRegion)
 export class CustomRegion extends MongooseDocument {
     @prop() public isMetaRegion?: boolean
     @arrayProp({ items: CustomRegion }) public childRegions?: CustomRegion[]
@@ -13,5 +14,3 @@ export class CustomRegion extends MongooseDocument {
     @prop() public pathToDataPropertyValue: string
     @prop() public template: string
 }
-
-new CustomRegion().getSchema()

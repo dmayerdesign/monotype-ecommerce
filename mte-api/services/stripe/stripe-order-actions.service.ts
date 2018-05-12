@@ -5,7 +5,7 @@ import * as Stripe from 'stripe'
 import { Types } from '@mte/common/constants/inversify'
 import { StripeOrder } from '@mte/common/lib/stripe-order'
 import { Discount } from '@mte/common/models/api-models/discount'
-import { Order, OrderModel } from '@mte/common/models/api-models/order'
+import { Order } from '@mte/common/models/api-models/order'
 import { Price } from '@mte/common/models/api-models/price'
 import { Product } from '@mte/common/models/api-models/product'
 import { GetProductsFromIdsRequest } from '@mte/common/models/api-requests/get-products.request'
@@ -83,7 +83,7 @@ export class StripeOrderActionsService {
                 reject(getDiscountsError)
             }
 
-            const dbOrder = new OrderModel(order)
+            const dbOrder = new Order(order)
 
             // Build the stripe order.
             const stripeOrder = new StripeOrder()
@@ -182,7 +182,7 @@ export class StripeOrderActionsService {
             async function makePayment() {
                 try {
                     const paidStripeOrder = await <Promise<StripeOrder>>stripe.orders.pay(order.stripeOrderId, payment)
-                    let paidOrder = await this.dbClient.findById(OrderModel, order._id) as Order
+                    let paidOrder = await this.dbClient.findById(Order, order._id) as Order
                     paidOrder.status = OrderStatus.Paid
                     const paidOrderResponse = await paidOrder.save()
                     paidOrder = paidOrderResponse._doc

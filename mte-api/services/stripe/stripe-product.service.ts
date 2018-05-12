@@ -6,7 +6,7 @@ import { Copy } from '@mte/common/constants/copy'
 import { Types } from '@mte/common/constants/inversify'
 import { Order } from '@mte/common/models/api-models/order'
 import { Price } from '@mte/common/models/api-models/price'
-import { Product, ProductModel } from '@mte/common/models/api-models/product'
+import { Product } from '@mte/common/models/api-models/product'
 import {
     StripeCreateProductsOrSkusResponse,
 } from '@mte/common/models/api-responses/stripe/stripe-create-products-or-skus.response'

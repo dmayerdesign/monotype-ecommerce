@@ -5,7 +5,7 @@ import * as jwt from 'jsonwebtoken'
 import { Cookies, Copy, HttpStatus } from '@mte/common/constants'
 import { Types } from '@mte/common/constants/inversify'
 import { UserHelper } from '@mte/common/helpers/user.helper'
-import { User, UserModel } from '@mte/common/models/api-models/user'
+import { User } from '@mte/common/models/api-models/user'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { DbClient } from '../data-access/db-client'
 import { UserService } from '../services/user.service'
@@ -42,7 +42,7 @@ export class Authenticate {
             next()
         }
 
-        Authenticate.dbClient.findById(UserModel, payload._id).then((user) => {
+        Authenticate.dbClient.findById(User, payload._id).then((user) => {
             if (user) {
                 req.user = user
                 next()

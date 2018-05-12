@@ -7,8 +7,8 @@ import { HttpStatus } from '@mte/common/constants'
 import { Types } from '@mte/common/constants/inversify'
 import { UserHelper } from '@mte/common/helpers/user.helper'
 import { Order } from '@mte/common/models/api-models/order'
-import { Organization, OrganizationModel } from '@mte/common/models/api-models/organization'
-import { Product, ProductModel } from '@mte/common/models/api-models/product'
+import { Organization } from '@mte/common/models/api-models/organization'
+import { Product } from '@mte/common/models/api-models/product'
 import { FindProductError } from '@mte/common/models/api-models/product'
 import { ListFromIdsRequest, ListFromQueryRequest } from '@mte/common/models/api-requests/list.request'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
@@ -59,7 +59,7 @@ export class StripeOrderService {
                     query: { SKU: { $in: variationAndStandaloneSKUs } },
                     limit: 0,
                 })
-                variationsAndStandalones = await this.dbClient.findQuery<Product>(ProductModel, request)
+                variationsAndStandalones = await this.dbClient.findQuery<Product>(Product, request)
                 if (!variationsAndStandalones || !variationsAndStandalones.length) {
                     reject(new ApiErrorResponse(new FindProductError(), HttpStatus.CLIENT_ERROR_NOT_FOUND))
                 }
@@ -81,7 +81,7 @@ export class StripeOrderService {
                     ids: parentIds,
                     limit: 0
                 })
-                const parents = await this.dbClient.findIds(ProductModel, findParentsRequest)
+                const parents = await this.dbClient.findIds(Product, findParentsRequest)
                 const products = parents.concat(variationsAndStandalones)
                 await this.stripeProductService.createProducts(products)
                 console.log('Created products')
@@ -105,7 +105,7 @@ export class StripeOrderService {
                 // Update the stock quantity and total sales of each variation and standalone.
                 this.stripeProductService.updateInventory(products, paidOrder)
 
-                const organization = await this.dbClient.findOne(OrganizationModel, {})
+                const organization = await this.dbClient.findOne(Organization, {})
 
                 await this.email.sendReceipt({
                     organization,

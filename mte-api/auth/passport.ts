@@ -2,7 +2,7 @@ import * as passport from 'passport'
 import * as FacebookStrategy from 'passport-facebook'
 
 import { Copy, Types } from '@mte/common/constants'
-import { User, UserModel } from '@mte/common/models/api-models/user'
+import { User } from '@mte/common/models/api-models/user'
 import { bind, container } from '../config/inversify.config'
 import { DbClient } from '../data-access/db-client'
 
@@ -32,19 +32,19 @@ function _passportConfig(dbClient: DbClient<User>): void {
     */
     passport.use(new FacebookStrategy(facebookStrategyConfig, async (accessToken, refreshToken, profile, done) => {
         try {
-            const localUser = await dbClient.findOne(UserModel, { email: profile.emails[0].value })
+            const localUser = await dbClient.findOne(User, { email: profile.emails[0].value })
 
             if (localUser) {
                 return done(Copy.ErrorMessages.userEmailExists)
             }
 
-            const user = await dbClient.findOne(UserModel, { facebookId: profile.id })
+            const user = await dbClient.findOne(User, { facebookId: profile.id })
 
             if (user) {
                 return done(null, user)
             }
 
-            const newUser = new UserModel(buildUserFromFacebookProfile(profile))
+            const newUser = new User(buildUserFromFacebookProfile(profile))
 
             try {
                 const savedUser = await newUser.save()

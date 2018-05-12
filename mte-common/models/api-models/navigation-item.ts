@@ -1,5 +1,5 @@
 import { TemplateRef } from '@angular/core'
-import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
+import { arrayProp, model, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 
 /**
  * A navigation item to be displayed in the UI
@@ -8,6 +8,7 @@ import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '.
  * @class NavigationItem
  * @extends {MongooseDocument}
  */
+@model(NavigationItem)
 export class NavigationItem extends MongooseDocument {
     @prop() public text: string
     @prop() public isTopLevel? = true
@@ -17,8 +18,6 @@ export class NavigationItem extends MongooseDocument {
     public template: TemplateRef<any>
     public context: any
 }
-
-export const NavigationItemModel = new NavigationItem().getModel()
 
 export class CreateNavigationItemError extends Error { }
 export class FindNavigationItemError extends Error { }

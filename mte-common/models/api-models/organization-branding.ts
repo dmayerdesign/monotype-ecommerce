@@ -1,17 +1,17 @@
-import { prop, MongooseDocument, MongooseSchemaOptions } from '../../lib/goosetype'
+import { prop, schema, MongooseDocument, MongooseSchemaOptions } from '../../lib/goosetype'
 
 // Brand colors.
 
+@schema(OrganizationBrandingColors)
 export class OrganizationBrandingColors extends MongooseDocument {
     @prop() public primary: string
 }
-new OrganizationBrandingColors().getSchema()
 
 // Branding.
 
+@schema(OrganizationBranding)
 export class OrganizationBranding extends MongooseDocument {
     @prop() public logo: string
     @prop() public colors: OrganizationBrandingColors
     @prop() public cartName: string
 }
-new OrganizationBranding().getSchema()

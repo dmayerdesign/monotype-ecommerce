@@ -1,13 +1,12 @@
-import { prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
+import { model, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 import { UsabilityExperience } from './usability-experience'
 
+@model(UsabilityTestBucket, MongooseSchemaOptions.timestamped)
 export class UsabilityTestBucket extends MongooseDocument {
     @prop() public description: string
     @prop({ ref: UsabilityExperience }) public usabilityExperience: Ref<UsabilityExperience>
     @prop() public likelihood: number
 }
-
-export const UsabilityTestBucketModel = new UsabilityTestBucket().getModel(MongooseSchemaOptions.timestamped)
 
 // Errors.
 

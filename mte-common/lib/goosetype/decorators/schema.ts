@@ -1,6 +1,6 @@
 import { camelCase } from 'lodash'
 import * as mongoose from 'mongoose'
-import { modelBuilder } from '../goosetype-model-builder'
+import { modelBuilder, ModelBuilder } from '../goosetype-model-builder'
 import { MongooseDocument } from '../models/mongoose-document'
 import { MongooseModel } from '../models/mongoose-model'
 
@@ -10,26 +10,7 @@ function composeSchemaForInstance<T>(target: MongooseDocument, schemaOptions?: m
     const postMiddleware = modelBuilder.postMiddleware[camelCase(target.constructor.name)]
     const plugins = modelBuilder.plugins[camelCase(target.constructor.name)]
 
-    if (target.constructor.name === 'AttributeValue') {
-        console.log(JSON.stringify(schemaDefinition))
-        console.log(JSON.stringify(plugins))
-    }
-
-    schemaOptions = {
-        ...schemaOptions,
-        ...{ usePushEach: true }, // https://github.com/Automattic/mongoose/issues/5574
-    } as mongoose.SchemaOptions
-
-    let schema: mongoose.Schema
-    if (!modelBuilder.schemas[camelCase(target.constructor.name)]) {
-        schema = new mongoose.Schema(schemaDefinition, schemaOptions)
-        modelBuilder.schemas[camelCase(target.constructor.name)] = schema
-    } else {
-        schema = modelBuilder.schemas[camelCase(target.constructor.name)]
-        Object.keys(schemaDefinition).forEach((schemaKey) => {
-            schema.add({ [schemaKey]: schemaDefinition[schemaKey] })
-        })
-    }
+    const schema = modelBuilder.findOrCreateSchema(target.constructor.name, schemaDefinition, schemaOptions)
 
     if (preMiddleware) {
         preMiddleware.forEach((preHookArgs) => {
@@ -59,6 +40,8 @@ function composeSchemaForInstance<T>(target: MongooseDocument, schemaOptions?: m
         })
     }
 
+    (target.constructor as typeof MongooseDocument).__schema = schema
+
     return schema
 }
 
@@ -77,7 +60,7 @@ function composeModelForInstance(target: MongooseDocument, schemaOptions?: mongo
 
 function getSchema(target: MongooseDocument, schemaOptions?: mongoose.SchemaOptions): mongoose.Schema {
     return composeSchemaForInstance(target, {
-        ...schemaOptions,
+        ...(schemaOptions || {}),
         ...{
             toObject: { getters: true },
             toJSON: { getters: true }

@@ -20,12 +20,7 @@ export class UtilService {
         if (window && window.localStorage) {
             const item = window.localStorage.getItem(key)
             if (item && item.length) {
-                if (item.charAt(0) === '[' || item.charAt(0) === '{') {
-                    return JSON.parse(item)
-                }
-                else {
-                    return item
-                }
+                return JSON.parse(item)
             }
         }
         return undefined
@@ -33,7 +28,7 @@ export class UtilService {
 
     public saveToLocalStorage(key: string, payload: any): void {
         if (window && window.localStorage) {
-            window.localStorage.setItem(key, payload)
+            window.localStorage.setItem(key, JSON.stringify(payload))
         }
     }
 

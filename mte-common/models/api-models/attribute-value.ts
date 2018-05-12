@@ -1,5 +1,4 @@
 import * as findOrCreate from 'mongoose-findorcreate'
-
 import { model, plugin, prop, MongooseDocument, Ref } from '../../lib/goosetype'
 import { Attribute } from './attribute'
 
@@ -12,8 +11,6 @@ export class AttributeValue extends MongooseDocument {
     @prop() public description: string
     @prop() public value: any
 }
-
-// export const AttributeValueModel = new AttributeValue().getModel()
 
 export class CreateAttributeValueError extends Error { }
 export class FindAttributeValueError extends Error { }

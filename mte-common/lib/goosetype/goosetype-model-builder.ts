@@ -27,6 +27,26 @@ export class ModelBuilder {
         return modelBuilder
     }
 
+    public findOrCreateSchema(name: string, schemaDefinition: mongoose.SchemaDefinition, schemaOptions: mongoose.SchemaOptions): mongoose.Schema {
+        schemaOptions = {
+            ...schemaOptions,
+            ...{ usePushEach: true }, // https://github.com/Automattic/mongoose/issues/5574
+        } as mongoose.SchemaOptions
+
+        let schema: mongoose.Schema
+        if (!modelBuilder.schemas[camelCase(name)]) {
+            schema = new mongoose.Schema(schemaDefinition, schemaOptions)
+            modelBuilder.schemas[camelCase(name)] = schema
+        } else {
+            schema = modelBuilder.schemas[camelCase(name)]
+            Object.keys(schemaDefinition).forEach((schemaKey) => {
+                schema.add({ [schemaKey]: schemaDefinition[schemaKey] })
+            })
+        }
+
+        return schema
+    }
+
     public addTo(which: string, constructorName: string, value: any): void {
         let definition = this[which][camelCase(constructorName)]
         if (!definition) {
@@ -64,10 +84,7 @@ export class ModelBuilder {
             // assume it's a custom schema. If the schema has yet to be defined, define it.
             // (This will probably only happen if you're using a schema class as the type
             // of one of its own properties.)
-            if (!this.schemas[camelCase(type.name)]) {
-                this.schemas[camelCase(type.name)] = new mongoose.Schema()
-            }
-            return this.schemas[camelCase(type.name)]
+            return this.findOrCreateSchema(camelCase(type.name), this.schemaDefinitions[camelCase(type.name)], options)
         }
     }
 

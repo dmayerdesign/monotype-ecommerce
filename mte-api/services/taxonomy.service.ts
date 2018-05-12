@@ -1,5 +1,5 @@
 import { Types } from '@mte/common/constants/inversify/types'
-import { Taxonomy, TaxonomyModel } from '@mte/common/models/api-models/taxonomy'
+import { Taxonomy } from '@mte/common/models/api-models/taxonomy'
 import { inject, injectable } from 'inversify'
 import { DbClient } from '../data-access/db-client'
 import { CrudService } from './crud.service'
@@ -13,7 +13,7 @@ import { CrudService } from './crud.service'
  */
 @injectable()
 export class TaxonomyService extends CrudService<Taxonomy> {
-    public model = TaxonomyModel
+    public model = Taxonomy
 
     constructor(
         @inject(Types.DbClient) protected dbClient: DbClient<Taxonomy>,

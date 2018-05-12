@@ -1,5 +1,5 @@
 import * as mongooseDelete from 'mongoose-delete'
-import { arrayProp, plugin, pre, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
+import { arrayProp, model, plugin, pre, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 
 import { ImageHelper } from '../../helpers/image.helper'
 import { ProductClass } from '../enums/product-class'
@@ -34,6 +34,7 @@ import { Units } from './units'
     next()
 })
 @plugin(mongooseDelete)
+@model(Product, MongooseSchemaOptions.timestamped)
 export class Product extends MongooseDocument {
 	// Aesthetic.
     @prop() public name: string
@@ -88,9 +89,11 @@ export class Product extends MongooseDocument {
     @prop() public isEnteredIntoStripe: boolean
 }
 
-export const ProductModel = new Product().getModel()
-
 export class CreateProductError extends Error { }
 export class FindProductError extends Error { }
 export class UpdateProductError extends Error { }
 export class DeleteProductError extends Error { }
+
+setTimeout(() => {
+    console.log(Product.__model.schema.obj.featuredImages[0].paths.large.getters[0])
+}, 2000)
