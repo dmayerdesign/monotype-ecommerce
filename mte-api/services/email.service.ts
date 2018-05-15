@@ -61,7 +61,7 @@ export class EmailService {
         const emailBuilder = new EmailBuilder()
             .setOptions({
                 ...options,
-                subject: `Your receipt | ${options.organization.name}`,
+                subject: `Your receipt | ${options.organization.branding.displayName}`,
                 preheader: `View your receipt from your recent order`,
             })
             .setHtml(receipt)
@@ -78,7 +78,7 @@ export class EmailService {
         const emailBuilder = new EmailBuilder()
             .setOptions({
                 ...options,
-                subject: `Your ${options.organization.name} order has been shipped`,
+                subject: `Your ${options.organization.branding.displayName} order has been shipped`,
                 preheader: `It's on the way! View the shipping details from your recent order`,
             })
             .setCustomData({

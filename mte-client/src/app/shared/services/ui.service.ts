@@ -12,6 +12,7 @@ import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-
 import { ToastType } from '@mte/common/models/enums/toast-type'
 import { ModalData } from '@mte/common/models/interfaces/ui/modal-data'
 import { Toast } from '@mte/common/models/interfaces/ui/toast'
+import { OrganizationService } from './organization.service'
 
 @Injectable()
 export class UiService {
@@ -23,6 +24,7 @@ export class UiService {
         private titleService: Title,
         private mteHttpService: MteHttpService,
         private windowRef: WindowRefService,
+        private organizationService: OrganizationService
     ) {
         this.mteHttpService.errors.subscribe((error) => {
             const isClientError = Object.keys(HttpStatus)
@@ -45,7 +47,12 @@ export class UiService {
      * @memberof UiService
      */
     public setTitle(title: string): void {
-        this.titleService.setTitle(title)
+        if (!!this.organizationService.getName()) {
+            this.titleService.setTitle(`${title} | ${this.organizationService.getName()}`)
+        }
+        else {
+            this.titleService.setTitle(title)
+        }
     }
 
     /**

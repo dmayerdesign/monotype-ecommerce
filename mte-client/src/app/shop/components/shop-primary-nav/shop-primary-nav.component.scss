@@ -1,6 +1,6 @@
-@import '../../../../styles/variables';
-@import '../../../../styles/vendor-helpers';
-@import '../../../../styles/mixins/typography';
+@import 'variables';
+@import 'vendor-helpers';
+@import 'mixins/typography';
 
 .container {
     position: relative;
@@ -69,6 +69,21 @@
         &#right-nav {
             align-items: flex-end;
             text-align: right;
+        }
+
+        .nav {
+            &-item {
+                &--cart {
+                    &-total {
+                        color: $white;
+                    }
+                    &-count {
+                        display: inline-block;
+                        margin-left: 0.3rem;
+                        margin-right: 0.5rem;
+                    }
+                }
+            }
         }
     }
 }

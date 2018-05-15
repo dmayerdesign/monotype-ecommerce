@@ -51,13 +51,15 @@ export class OrganizationService extends CrudService<Organization> {
     public create(): any {
         return super.create([
             {
-                name: 'Hyzer Shop',
+                name: 'Hyzer Shop, LLC',
+                dbaNames: [],
                 retailSettings: {
                     salesTaxPercentage: 6,
                     addSalesTax: false,
                     shippingFlatRate: { amount: 5, currency: 'USD' },
                 },
                 branding: {
+                    displayName: 'Hyzer Shop',
                     logo: 'https://d1eqpdomqeekcv.cloudfront.net/branding/hyzershop-wordmark-250.png',
                     colors: { primary: '#00b0ff' },
                     cartName: 'basket',

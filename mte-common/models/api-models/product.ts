@@ -1,5 +1,5 @@
 import * as mongooseDelete from 'mongoose-delete'
-import { arrayProp, model, plugin, pre, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
+import { arrayProp, model, plugin, post, pre, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 
 import { ImageHelper } from '../../helpers/image.helper'
 import { ProductClass } from '../enums/product-class'
@@ -12,7 +12,13 @@ import { SimpleAttributeValue } from './simple-attribute-value'
 import { TaxonomyTerm } from './taxonomy-term'
 import { Units } from './units'
 
-@pre('save', false, function(next) {
+@pre('find', function() {
+    this.populate('parent')
+})
+@pre('findOne', function() {
+    this.populate('parent')
+})
+@pre('save', function(next) {
     const product = this
     if (!product.slug && product.isNew) {
         product.slug = product.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '-')
@@ -48,6 +54,8 @@ export class Product extends MongooseDocument {
     @prop({ enum: ProductClass }) public class: ProductClass
     @prop() public isStandalone: boolean
     @prop() public isParent: boolean
+    @prop() public parentSku: string
+    @prop({ ref: Product }) public parent: Ref<Product>
 
     // Financial.
     @prop() public price: Price
@@ -59,8 +67,6 @@ export class Product extends MongooseDocument {
     @arrayProp({ itemsRef: Product }) public variations: Ref<Product>[]
     @prop() public isVariation: boolean
     @prop() public isDefaultVariation: boolean
-    @prop() public parentSku: string
-    @prop({ ref: Product }) public parent: Ref<Product>
 
 	// Attributes.
 	// - Own attributes.
@@ -93,7 +99,3 @@ export class CreateProductError extends Error { }
 export class FindProductError extends Error { }
 export class UpdateProductError extends Error { }
 export class DeleteProductError extends Error { }
-
-setTimeout(() => {
-    console.log(Product.__model.schema.obj.featuredImages[0].paths.large.getters[0])
-}, 2000)

@@ -98,10 +98,9 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
 
         // Get the taxonomy term if one is found in the request.
         if (requestedTaxonomyTermSlug) {
-            this.taxonomyTermService.getOneSource
+            this.taxonomyTermService.getOne(requestedTaxonomyTermSlug)
                 .pipe(takeWhile(() => this.isAlive))
                 .subscribe((term) => this.taxonomyTerm = term)
-            this.taxonomyTermService.getOne(requestedTaxonomyTermSlug)
         }
     }
 

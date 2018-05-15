@@ -32,4 +32,11 @@ export class OrganizationService {
                 (error: SimpleError) => this.organizationErrorPump.next(error),
             )
     }
+
+    public getName(): string {
+        if (this.organization) {
+            return this.organization.branding.displayName
+        }
+        else return ''
+    }
 }

@@ -16,11 +16,10 @@ import { CartService, OrganizationService, UiService, UserService } from '../../
 import { CheckoutService } from '../../services/checkout.service'
 
 @Component({
-    selector: 'checkout',
+    selector: 'mte-checkout',
     templateUrl: './checkout.component.html',
 })
 export class CheckoutComponent implements OnInit {
-
     // The cast of crazy characters.
     private user: User
     // private stripeCustomer: any
@@ -46,8 +45,6 @@ export class CheckoutComponent implements OnInit {
     // private savedCard: any
     private cards: any[]
 
-
-
     constructor(
         private ui: UiService,
         private cartService: CartService,
@@ -59,8 +56,6 @@ export class CheckoutComponent implements OnInit {
     ) {}
 
     public ngOnInit(): void {
-        this.ui.setTitle('Checkout')
-
         this.checkoutForm = this.mteFormBuilder.create({
             firstName: {
                 label: 'First name',
@@ -127,8 +122,8 @@ export class CheckoutComponent implements OnInit {
             if (!this.order.shippingCost && this.organization.retailSettings.shippingFlatRate)
             this.order.shippingCost = this.organization.retailSettings.shippingFlatRate
 
-            /*****************/
-            /** FOR TESTING **/
+            ////////////////////////////////////
+            // FOR TESTING
 
             if (this.user) {
                 this.user.firstName = 'Danny'
@@ -153,8 +148,9 @@ export class CheckoutComponent implements OnInit {
                 this.order.customer.billingAddress = this.order.customer.shippingAddress
                 // this.order.savePaymentInfo = true;
             }
-            /*****************
-            *****************/
+
+            // /FOR TESTING
+            ////////////////////////////////////
 
             this.getStripeCustomer()
 
@@ -176,9 +172,6 @@ export class CheckoutComponent implements OnInit {
         if (!this.order) return
         console.log(this.checkoutFormGroup)
         if (this.order.status !== OrderStatus.PreSubmitInvalid) return
-
-
-
 
         /*** Validations ***/
         /*

@@ -15,6 +15,7 @@ import { Organization } from '@mte/common/models/api-models/organization'
 import { Product } from '@mte/common/models/api-models/product'
 import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
 import { VariableAttributesAndOptions } from '@mte/common/models/interfaces/common/variable-attributes-and-options'
+import { UiService } from '../../../shared/services'
 import { CartService } from '../../../shared/services/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { ProductService } from '../../services/product.service'
@@ -41,15 +42,19 @@ import { ProductService } from '../../services/product.service'
                     <h1 class="product-detail-info--name">{{ productName }}</h1>
 
                     <!-- Custom regions: productDetailInfoHeader -->
-                    <ng-container *ngFor="let region of customRegions.productDetailInfoHeader; let i = index">
-                        <div [ngClass]="[
-                                ('product-detail-info--header-custom-region' + i),
-                                (region.className || '')
-                            ]"
-                            [innerHTML]="customRegionsHelper.getCustomRegionHtml(region, parentOrStandalone)">
-                        </div>
-                        <br>
-                    </ng-container>
+                    <div class="product-detail-info--header-custom-regions">
+                        <ng-container *ngFor="let region of customRegions.productDetailInfoHeader; let i = index">
+                            <ng-container *ngIf="customRegionsHelper.hasDataForCustomRegion(region, parentOrStandalone)">
+                                <div [ngClass]="[
+                                        ('product-detail-info--header-custom-region-' + i),
+                                        (region.className || '')
+                                    ]"
+                                    [innerHTML]="customRegionsHelper.getCustomRegionHtml(region, parentOrStandalone)">
+                                </div>
+                                <br>
+                            </ng-container>
+                        </ng-container>
+                    </div>
                 </header>
 
                 <div class="product-detail-info--price">
@@ -57,7 +62,7 @@ import { ProductService } from '../../services/product.service'
                 </div>
 
                 <p class="product-detail-info--description"
-                     [innerHTML]="parentOrStandalone.description">
+                    [innerHTML]="parentOrStandalone.description">
                 </p>
 
                 <div class="product-detail-info--variable-attributes">
@@ -87,22 +92,26 @@ import { ProductService } from '../../services/product.service'
                     </div>
                     <div class="product-detail-add-to-cart--submit">
                         <button (click)="addToCart()"
-                            [disabled]="!selectedProduct || !quantityToAdd">
+                            [disabled]="addToCartShouldBeDisabled()">
                             Add to {{ organization.branding.cartName || 'cart' }}
                         </button>
                     </div>
                 </div>
 
                 <!-- Custom regions: productDetailMid -->
-                <ng-container *ngFor="let region of customRegions.productDetailMid; let i = index">
-                    <div [ngClass]="[
-                            ('product-detail-mid--custom-region' + i),
-                            (region.className || '')
-                        ]"
-                        [innerHTML]="customRegionsHelper.getCustomRegionHtml(region, parentOrStandalone)">
-                    </div>
-                    <br>
-                </ng-container>
+                <div class="product-detail-mid--custom-regions">
+                    <ng-container *ngFor="let region of customRegions.productDetailMid; let i = index">
+                        <ng-container *ngIf="customRegionsHelper.hasDataForCustomRegion(region, parentOrStandalone)">
+                            <div [ngClass]="[
+                                    ('product-detail-mid--custom-region-' + i),
+                                    (region.className || '')
+                                ]"
+                                [innerHTML]="customRegionsHelper.getCustomRegionHtml(region, parentOrStandalone)">
+                            </div>
+                            <br>
+                        </ng-container>
+                    </ng-container>
+                </div>
             </div>
         </div>
     </div>
@@ -129,6 +138,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
     public selectedProduct: Product
     public quantityToAdd = 1
     public variableAttributesAndOptions: VariableAttributesAndOptions = []
+    public addingToCart = false
 
     // Custom regions.
 
@@ -171,6 +181,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
         private cartService: CartService,
         private productService: ProductService,
         private organizationService: OrganizationService,
+        private uiService: UiService,
     ) {
         super()
         console.log(this)
@@ -196,7 +207,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
 
         this.organizationService.organizations.subscribe((organization) => {
             this.organization = organization
-            this.customRegions = this.organization.storeUiContent.customRegions
+            this.customRegions = CustomRegionsHelper.getActiveCustomRegions(this.organization.storeUiContent.customRegions)
         })
     }
 
@@ -226,6 +237,8 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
         else {
             this.selectedProduct = this.parentOrStandalone
         }
+
+        this.uiService.setTitle(this.productService.getName(this.parentOrStandalone))
     }
 
     public getMainImage(): string {
@@ -271,10 +284,16 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
         return this.variations != null && this.variations.length > 0
     }
 
+    public addToCartShouldBeDisabled(): boolean {
+        return !this.selectedProduct || !this.quantityToAdd || this.addingToCart || !this.cartService.getNumberAvailableToAdd(this.selectedProduct)
+    }
+
     // Interactions.
 
     public addToCart(): void {
         if (!this.selectedProduct) return
+        this.addingToCart = true
         this.cartService.add(this.selectedProduct.slug, this.quantityToAdd)
+            .subscribe(() => this.addingToCart = false)
     }
 }

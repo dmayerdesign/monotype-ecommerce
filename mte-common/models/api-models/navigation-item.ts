@@ -12,6 +12,7 @@ import { arrayProp, model, prop, MongooseDocument, MongooseSchemaOptions, Ref } 
 export class NavigationItem extends MongooseDocument {
     @prop() public text: string
     @prop() public isTopLevel? = true
+    @prop() public className?: string
     @arrayProp({ items: String }) public routerLink: string[]
     @arrayProp({ itemsRef: NavigationItem }) public children: Ref<NavigationItem>[]
 

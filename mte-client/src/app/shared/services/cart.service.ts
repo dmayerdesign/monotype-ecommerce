@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core'
 import { cloneDeep } from 'lodash'
 import { Observable } from 'rxjs/Observable'
 import { ReplaySubject } from 'rxjs/ReplaySubject'
+import { map } from 'rxjs/operators/map'
 
 import { LocalStorageKeys } from '@mte/common/constants/local-storage-keys'
 import { Cart } from '@mte/common/models/api-models/cart'
@@ -25,7 +26,7 @@ export class CartService {
         total: 0,
         discounts: [],
     }
-    private cart: Cart
+    private _cart: Cart
     private cartPump = new ReplaySubject<Cart>(1)
     public carts = this.cartPump.asObservable()
 
@@ -71,19 +72,69 @@ export class CartService {
         })
     }
 
-    public add(slug: string, quantity = 1): void {
+    private set cart(cart: Cart) {
+        this._cart = {
+            ...cart,
+            displayItems: this.getDisplayItems(cart.items as Product[])
+        }
+    }
+
+    private get cart(): Cart {
+        return this._cart
+    }
+
+    public add(slug: string, quantity = 1): Observable<Cart> {
         const newCart = cloneDeep(this.cart)
         this.previousState = cloneDeep(this.cart)
 
-        this.productService.getOneSource.subscribe(product => {
-            const amtToAdd: number = product.stockQuantity >= quantity ? quantity : product.stockQuantity
+        const getOneSource = this.productService.getOne(slug)
+        getOneSource.subscribe((product) => {
+            const productsAvailable = this.getNumberAvailableToAdd(product)
+            const amtToAdd = productsAvailable >= quantity ? quantity : productsAvailable
             for (let i = 0; i < amtToAdd; i++) {
                 newCart.items.push(product)
             }
-
             this.updateAndStream(newCart)
         })
-        this.productService.getOne(slug)
+        return getOneSource.pipe(map(() => this.cart))
+    }
+
+    public incrementQuantity(product: Product, direction: 1|-1): boolean {
+        if (direction === 1) {
+            const numberAvailable = this.getNumberAvailableToAdd(product)
+            if (!!numberAvailable) {
+                this.add(product.slug, 1)
+                return true
+            }
+        }
+        else if (direction === -1) {
+            this.remove(product.slug)
+        }
+        return false
+    }
+
+    public remove(slug: string): void {
+        const newCart = cloneDeep(this.cart)
+        this.previousState = cloneDeep(this.cart)
+        this.removeOne(slug, newCart)
+        this.updateAndStream(newCart)
+    }
+
+    public removeAll(slug: string): void {
+        const newCart = cloneDeep(this.cart)
+        this.previousState = cloneDeep(this.cart)
+        while (newCart.items.findIndex((item: Product) => item.slug === slug) > -1) {
+            this.removeOne(slug, newCart)
+        }
+        this.updateAndStream(newCart)
+    }
+
+    public getNumberAvailableToAdd(product: Product): number {
+        return product.stockQuantity - this.cart.items.filter((item: Product) => item._id === product._id).length
+    }
+
+    private removeOne(slug: string, cart: Cart): void {
+        cart.items.splice(cart.items.findIndex((i: Product) => i.slug === slug), 1)
     }
 
     private updateAndStream(newCart: Cart, refreshProducts = true): void {
@@ -91,29 +142,23 @@ export class CartService {
             this.userService.updateCart(this.cart)
             this.cart = cart
             this.cartPump.next(this.cart)
+            this.util.saveToLocalStorage(LocalStorageKeys.Cart, this.cart)
         }
 
-        newCart.subTotal = this.getSubTotal(<Product[]>newCart.items)
-        newCart.total = this.getTotal(<Product[]>newCart.items)
+        newCart.count = newCart.items.length
+        newCart.subTotal = this.getSubTotal(newCart.items as Product[])
+        newCart.total = this.getTotal(newCart.items as Product[])
+
         if (refreshProducts) {
             this.productService.getSome(newCart.items.map((item: Product) => item._id))
                 .subscribe(products => {
                     newCart.items = products
-                    newCart.displayItems = this.getDisplayItems(products)
                     saveAndStream(newCart)
                 })
         }
         else {
             saveAndStream(newCart)
         }
-    }
-
-    public remove(slug: string): void {
-        const newCart = cloneDeep(this.cart)
-        this.previousState = cloneDeep(this.cart)
-        newCart.items.splice(newCart.items.findIndex((i: Product) => i.slug === slug), 1)
-
-        this.updateAndStream(newCart)
     }
 
     private getSubTotal(items: Product[]): number {
@@ -127,7 +172,8 @@ export class CartService {
     }
 
     private getTotal(items: Product[]): number {
-        return this.getSubTotal(items) * this.orgService.organization.retailSettings.salesTaxPercentage / 100
+        const subTotal = this.getSubTotal(items)
+        return subTotal + (subTotal * this.orgService.organization.retailSettings.salesTaxPercentage / 100)
     }
 
     private getDisplayItems(items: Product[]): CartProduct[] {

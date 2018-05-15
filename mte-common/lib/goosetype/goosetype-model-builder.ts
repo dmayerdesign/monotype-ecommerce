@@ -28,12 +28,8 @@ export class ModelBuilder {
     }
 
     public findOrCreateSchema(name: string, schemaDefinition: mongoose.SchemaDefinition, schemaOptions: mongoose.SchemaOptions): mongoose.Schema {
-        schemaOptions = {
-            ...schemaOptions,
-            ...{ usePushEach: true }, // https://github.com/Automattic/mongoose/issues/5574
-        } as mongoose.SchemaOptions
-
         let schema: mongoose.Schema
+
         if (!modelBuilder.schemas[camelCase(name)]) {
             schema = new mongoose.Schema(schemaDefinition, schemaOptions)
             modelBuilder.schemas[camelCase(name)] = schema
@@ -43,6 +39,14 @@ export class ModelBuilder {
                 schema.add({ [schemaKey]: schemaDefinition[schemaKey] })
             })
         }
+
+        // Allows getters to work.
+        schema.set('toObject', { getters: true })
+        schema.set('toJSON', { getters: true })
+
+        // Prevents `MongoError: Unknown modifier: $pushAll` (see https://github.com/Automattic/mongoose/issues/5574)
+        // TODO: remove once upgraded to mongoose v5.x
+        schema.set('usePushEach', true)
 
         return schema
     }
@@ -153,6 +157,11 @@ export class ModelBuilder {
                     type = options.type
                 }
                 if (options.ref) {
+                    let ref = options.ref
+                    if (typeof options.ref !== 'string') {
+                        ref = ref.name
+                    }
+                    schemaProperty.ref = ref
                     type = mongoose.Schema.Types.ObjectId
                 }
             }

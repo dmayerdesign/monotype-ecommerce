@@ -51,10 +51,16 @@
     </div>
 </ng-template>
 
-<ng-template #basket let-icon="cartIcon" let-c="cartLength">
-    <ng-container *ngIf="icon">
-        <img [src]="icon"
-             [attr.alt]="'Your cart (' + c + ')'"/>
+<ng-template #cart
+    let-count="count"
+    let-total="total">
+    <ng-container *ngIf="getShoppingCartIcon()">
+        <span *ngIf="!!total"
+            class="nav-item--cart-total ff-display-2">{{ total | currency }}</span>
+        <span *ngIf="!!count"
+            class="nav-item--cart-count ff-display-2">({{ count }})</span>
+        <img [src]="getShoppingCartIcon()"
+            [attr.alt]="'Your cart (' + c + ')'"
+        />
     </ng-container>
 </ng-template>
-

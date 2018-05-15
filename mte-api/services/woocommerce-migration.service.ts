@@ -80,6 +80,7 @@ export class WoocommerceMigrationService {
                                             const variableAttribute = await this.dbClient.findOrCreate(Attribute, {
                                                 slug: variableAttributeSlug
                                             })
+                                            console.log('findOrCreate: ' + variableAttributeSlug)
                                             variableAttributeIds.push(variableAttribute._id)
                                             for (const variableAttributeValueSlug of variableAttributeValueSlugs) {
                                                 try {
@@ -88,6 +89,7 @@ export class WoocommerceMigrationService {
                                                         slug: variableAttributeValueSlug,
                                                         value: variableAttributeValueValues[variableAttributeValueSlugs.indexOf(variableAttributeValueSlug)],
                                                     })
+                                                    console.log('findOrCreate: ' + variableAttributeValueSlug)
                                                     variableAttributeValueIds.push(variableAttributeValue._id)
                                                 }
                                                 catch (error) {
@@ -108,11 +110,13 @@ export class WoocommerceMigrationService {
                                             const attribute = await this.dbClient.findOrCreate(Attribute, {
                                                 slug: attributeSlug
                                             })
+                                            console.log('findOrCreate: ' + attributeSlug)
                                             const attributeValue = await this.dbClient.findOrCreate(AttributeValue, {
                                                 attribute: attribute._id,
                                                 slug: attributeValueSlug,
                                                 value,
                                             })
+                                            console.log('findOrCreate: ' + attributeValueSlug)
                                             attributeValueIds.push(attributeValue._id)
                                             delete newProduct[key]
                                         }
@@ -129,6 +133,7 @@ export class WoocommerceMigrationService {
                                     // Add speed/glide/turn/fade Attribute.
 
                                     const speedGlideTurnFadeAttribute = await this.dbClient.findOrCreate(Attribute, { slug: theKey })
+                                    console.log('findOrCreate: ' + theKey)
                                     simpleAttributeValues.push({
                                         attribute: speedGlideTurnFadeAttribute._id,
                                         value: flightStats[theKey]
@@ -164,6 +169,7 @@ export class WoocommerceMigrationService {
                                                 slug: attributeValueSlug,
                                                 value: stabilityValue,
                                             })
+                                            console.log('findOrCreate: ' + attributeSlug + 'and' + attributeValueSlug)
                                             attributeValueIds.push(attributeValue._id)
 
                                             const taxonomy = await this.dbClient.findOrCreate(Taxonomy, {
@@ -173,6 +179,7 @@ export class WoocommerceMigrationService {
                                                 taxonomy: taxonomy._id,
                                                 slug: taxonomyTermSlug,
                                             })
+                                            console.log('findOrCreate: ' + taxonomySlug + 'and' + taxonomyTermSlug)
                                             taxonomyTermIds.push(taxonomyTerm._id)
                                         }
                                         catch (error) {
@@ -209,9 +216,6 @@ export class WoocommerceMigrationService {
                                     })
 
                                     const taxonomyTerms = await Promise.all(taxonomyTermPromises)
-
-                                    console.log('---- TAXONOMY TERMS ----')
-                                    console.log(taxonomyTerms)
 
                                     taxonomyTerms.forEach((taxonomyTerm) => taxonomyTermIds.push(taxonomyTerm._id))
                                     newProduct.taxonomyTermSlugs = taxonomyTermSlugs
@@ -354,7 +358,9 @@ export class WoocommerceMigrationService {
             }
 
             try {
+                console.log('Building products...')
                 await buildProducts()
+                console.log('Products built!')
             }
             catch (error) {
                 reject(new ApiErrorResponse(error))
@@ -365,7 +371,9 @@ export class WoocommerceMigrationService {
              * The switch
              ******* -> */
             try {
+                console.log('Creating products...')
                 const allProducts = await this.dbClient.create<Product>(Product, newProducts)
+                console.log('Products created!')
                 const parentProducts = allProducts.filter((p) => p.isParent)
                 const variationProducts = allProducts.filter((p) => p.isVariation)
 
@@ -478,6 +486,7 @@ export class WoocommerceMigrationService {
                     }
 
                     await product.save()
+                    console.log('Product images saved')
                 }
 
                 // Populate parent product images with variation images.
@@ -494,6 +503,7 @@ export class WoocommerceMigrationService {
                     }
 
                     await product.save()
+                    console.log('Parent images saved')
                 }
 
                 // Populate parent products with variation attributes and attribute values.
@@ -505,6 +515,9 @@ export class WoocommerceMigrationService {
                     if (!parent) {
                         throw new Error(`Could not find a parent for the product variation: ${JSON.stringify(variation)}`)
                     }
+
+                    // Add the parent to the variation.
+                    variation.parent = parent._id
 
                     if (!parent.variableAttributes) {
                         parent.variableAttributes = []
@@ -530,6 +543,7 @@ export class WoocommerceMigrationService {
 
                     await variation.save()
                     await parent.save()
+                    console.log('Variation attributes and attribute values added')
                 }
 
                 // Fill out taxonomy terms.
@@ -557,6 +571,7 @@ export class WoocommerceMigrationService {
                             bannerOverlay: `/page-images/${slug}.png`,
                         },
                     })
+                    console.log('Disc type hydrated: ' + slug)
                 }
 
                 const brands = [
@@ -586,6 +601,7 @@ export class WoocommerceMigrationService {
                             bannerOverlay: `/page-images/${slug}.png`,
                         },
                     })
+                    console.log('Brand hydrated: ' + slug)
                 }
 
                 resolve(new ApiResponse(allProducts))

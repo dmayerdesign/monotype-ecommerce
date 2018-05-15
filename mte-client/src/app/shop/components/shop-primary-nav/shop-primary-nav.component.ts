@@ -22,10 +22,10 @@ import { ShopRouterLinks } from '../../constants/shop-router-links'
     encapsulation: ViewEncapsulation.None,
 })
 export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
-    @ViewChild('basket', { read: TemplateRef }) private basketTemplate: TemplateRef<{ discs: number | string, cartLength: number }>
-    public basketTemplateContext = {
-        cartIcon: null,
-        cartLength: 0,
+    @ViewChild('cart', { read: TemplateRef }) private cartTemplate: TemplateRef<{ discs: number | string, cartLength: number }>
+    public cartTemplateContext = {
+        count: 0,
+        total: 0,
     }
     public user: User
     public organization: Organization
@@ -54,10 +54,10 @@ export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
                 this.organization.storeUiContent.primaryNavigation
                     .filter((item: NavigationItem) => item.isTopLevel) as NavigationItem[]
             )
-            this.basketTemplateContext.cartIcon = this.getShoppingCartIcon()
         })
         this.cartService.carts.subscribe((cart) => {
-            this.basketTemplateContext.cartLength = cart.items ? cart.items.length : 0
+            this.cartTemplateContext.count = cart.count || 0
+            this.cartTemplateContext.total = cart.total || 0
         })
     }
 
@@ -73,10 +73,11 @@ export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
             this.rightNavigation = this.navigationBuilder.items([
                 {
                     text: 'Cart',
-                    template: this.basketTemplate,
-                    context: this.basketTemplateContext,
+                    template: this.cartTemplate,
+                    context: this.cartTemplateContext,
                     routerLink: [ ShopRouterLinks.cart ],
-                    children: []
+                    children: [],
+                    className: 'nav-item--cart',
                 },
             ])
         })
@@ -93,10 +94,10 @@ export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
 
     public getShoppingCartIcon(): string {
         const getIconSuffix = () => {
-            if (this.basketTemplateContext) {
-                return this.basketTemplateContext.cartLength && this.basketTemplateContext.cartLength < 4
-                    ? this.basketTemplateContext.cartLength
-                    : !this.basketTemplateContext.cartLength
+            if (this.cartTemplateContext) {
+                return this.cartTemplateContext.count && this.cartTemplateContext.count < 4
+                    ? this.cartTemplateContext.count
+                    : !this.cartTemplateContext.count
                     ? 'empty'
                     : 'full'
             }

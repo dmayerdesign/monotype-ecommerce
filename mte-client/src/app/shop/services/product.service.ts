@@ -3,8 +3,7 @@ import { Injectable } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
 
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
-import { SimpleError } from '@mte/common/lib/ng-modules/http'
-import { RestService } from '@mte/common/lib/ng-modules/http/http.models'
+import { RestService, SimpleError } from '@mte/common/lib/ng-modules/http'
 import { Attribute } from '@mte/common/models/api-models/attribute'
 import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
 import { Price } from '@mte/common/models/api-models/price'
@@ -35,12 +34,18 @@ export class ProductService extends RestService<Product> {
         return super.get(request)
     }
 
-    public getDetail(slug: string): void {
-        this.http.get<GetProductDetailResponseBody>(`${this.endpoint}/${slug}/detail`)
-            .subscribe(
-                (responseBody) => this.getDetailPump.next(responseBody),
-                (error: SimpleError) => this.getDetailErrorPump.next(error),
-            )
+    public getDetailOnce(slug: string): Promise<GetProductDetailResponseBody> {
+        return this.http.get<GetProductDetailResponseBody>(`${this.endpoint}/${slug}/detail`).toPromise()
+    }
+
+    public async getDetail(slug: string): Promise<any> {
+        try {
+            const getDetailResponseBody = await this.getDetailOnce(slug)
+            this.getDetailPump.next(getDetailResponseBody)
+        }
+        catch (getDetailError) {
+            this.getDetailErrorPump.next(getDetailError)
+        }
     }
 
     public getPrice(product: Product): Price {
@@ -49,6 +54,14 @@ export class ProductService extends RestService<Product> {
         }
         else {
             return product.price
+        }
+    }
+
+    public getName(product: Product): string {
+        if (product.isParent || product.isStandalone || !product.parent || !(product.parent as Product)._id) {
+            return product.name
+        } else {
+            return (product.parent as Product).name
         }
     }
 }

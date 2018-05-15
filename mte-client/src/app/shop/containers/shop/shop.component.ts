@@ -1,17 +1,11 @@
-import { Component, OnInit } from '@angular/core'
-import { UiService } from '../../../shared/services'
+import { Component } from '@angular/core'
 
 @Component({
-    selector: 'shop',
-    templateUrl: './shop.component.html',
+    selector: 'mte-shop',
+    template: `
+        <mte-shop-primary-nav></mte-shop-primary-nav>
+        <router-outlet></router-outlet>
+    `,
     styleUrls: ['./shop.component.scss'],
 })
-export class ShopComponent implements OnInit {
-    constructor(
-        public ui: UiService,
-    ) { }
-
-    public ngOnInit(): void {
-        this.ui.setTitle('Shop')
-    }
-}
+export class ShopComponent { }

@@ -12,25 +12,43 @@ export const shopRoutes: Routes = [
     {
         path: ShopRoutePaths.home,
         component: ShopHomeComponent,
+        data: {
+            title: 'Shop'
+        }
     },
     {
         path: ShopRoutePaths.shopAll,
         component: ShopAllComponent,
+        data: {
+            title: 'Shop All'
+        }
     },
     {
         path: ShopRoutePaths.productsByTaxonomy,
         component: ShopAllComponent,
+        data: {
+            title: 'Shop'
+        }
     },
     {
         path: ShopRoutePaths.productDetail,
         component: ProductDetailComponent,
+        data: {
+            title: 'Shop'
+        }
     },
     {
         path: ShopRoutePaths.cart,
         component: CartComponent,
+        data: {
+            title: 'Cart'
+        }
     },
     {
         path: ShopRoutePaths.checkout,
         component: CheckoutComponent,
+        data: {
+            title: 'Checkout'
+        }
     },
 ]

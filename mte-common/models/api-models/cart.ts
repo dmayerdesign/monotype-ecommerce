@@ -5,8 +5,7 @@ import { Product } from './product'
 
 @schema(Cart)
 export class Cart extends MongooseDocument {
-    public displayItems: CartProduct[]
-
+    public displayItems?: CartProduct[]
     @prop() public count?: number
     @arrayProp({ itemsRef: Product }) public items: Ref<Product>[]
     @prop() public subTotal: number

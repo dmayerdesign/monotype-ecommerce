@@ -27,7 +27,6 @@ export class ImageHelper {
     }
 
     public static getImageForSchema(src: string): string {
-        console.log('Ran getter', src)
         if (src.indexOf('/') === 0) {
             src = src.substr(1)
         }
