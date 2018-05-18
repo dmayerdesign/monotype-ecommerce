@@ -4,9 +4,8 @@ import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.componen
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Product } from '@mte/common/models/api-models/product'
 import { GetProductsFilterType, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
-import { BehaviorSubject } from 'rxjs/BehaviorSubject'
-import { Observable } from 'rxjs/Observable'
-import { takeWhile } from 'rxjs/operators/takeWhile'
+import { BehaviorSubject, Observable } from 'rxjs'
+import { takeWhile } from 'rxjs/operators'
 import { ProductService } from '../../services'
 
 @Component({

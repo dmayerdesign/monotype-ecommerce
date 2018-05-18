@@ -1,4 +1,3 @@
-require('dotenv').config()
 import * as AWS from 'aws-sdk'
 import * as fs from 'fs-extra'
 import { inject, injectable } from 'inversify'

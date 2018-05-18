@@ -1,8 +1,7 @@
 import { HttpClient } from '@angular/common/http'
 import { Injectable } from '@angular/core'
 import { ActivatedRoute, Router } from '@angular/router'
-import { Observable } from 'rxjs/Observable'
-import { ReplaySubject } from 'rxjs/ReplaySubject'
+import { Observable, ReplaySubject } from 'rxjs'
 
 import { LocalStorageKeys } from '@mte/common/constants'
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'

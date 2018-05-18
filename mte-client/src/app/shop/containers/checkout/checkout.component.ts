@@ -12,7 +12,10 @@ import { User } from '@mte/common/models/api-models/user'
 import { Currency } from '@mte/common/models/enums/currency'
 import { OrderStatus } from '@mte/common/models/enums/order-status'
 import { Price } from '@mte/common/models/interfaces/api/price'
-import { CartService, OrganizationService, UiService, UserService } from '../../../shared/services'
+import { CartService } from '../../../shared/services/cart/cart.service'
+import { OrganizationService } from '../../../shared/services/organization.service'
+import { UiService } from '../../../shared/services/ui.service'
+import { UserService } from '../../../shared/services/user.service'
 import { CheckoutService } from '../../services/checkout.service'
 
 @Component({
@@ -74,7 +77,7 @@ export class CheckoutComponent implements OnInit {
         })
         this.checkoutFormGroup = this.checkoutForm.formGroup
 
-        this.cartService.carts.subscribe(cart => {
+        this.cartService.store.states.subscribe(cart => {
             this.cart = cart
             this.populateOrder()
         })

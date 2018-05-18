@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, OnInit, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core'
 import { NavigationStart, Router } from '@angular/router'
-import { filter } from 'rxjs/operators/filter'
+import { filter } from 'rxjs/operators'
 
 import { AppConfig } from '@mte/app-config'
 import { NavigationBuilder } from '@mte/common/builders/navigation.builder'
@@ -9,7 +9,7 @@ import { NavigationItem } from '@mte/common/models/api-models/navigation-item'
 import { Organization } from '@mte/common/models/api-models/organization'
 import { User } from '@mte/common/models/api-models/user'
 import { BootstrapBreakpointKey } from '@mte/common/models/enums/bootstrap-breakpoint-key'
-import { CartService } from '../../../shared/services/cart.service'
+import { CartService } from '../../../shared/services/cart/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { UiService } from '../../../shared/services/ui.service'
 import { UserService } from '../../../shared/services/user.service'
@@ -55,9 +55,9 @@ export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
                     .filter((item: NavigationItem) => item.isTopLevel) as NavigationItem[]
             )
         })
-        this.cartService.carts.subscribe((cart) => {
+        this.cartService.store.states.subscribe((cart) => {
             this.cartTemplateContext.count = cart.count || 0
-            this.cartTemplateContext.total = cart.total || 0
+            this.cartTemplateContext.total = !!cart.total ? (cart.total.amount || 0) : 0
         })
     }
 

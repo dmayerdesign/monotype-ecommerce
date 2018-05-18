@@ -1,8 +1,7 @@
 import { HttpClient } from '@angular/common/http'
 import { Component, Input, OnInit } from '@angular/core'
-import { Observable } from 'rxjs/Observable'
-
 import { InstagramPost } from '@mte/common/models/interfaces/ui/instagram-post'
+import { Observable } from 'rxjs'
 
 @Component({
     selector: 'mte-instagram-feed',

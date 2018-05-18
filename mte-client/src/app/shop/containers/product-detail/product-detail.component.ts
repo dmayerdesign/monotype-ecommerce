@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router'
 import { startCase } from 'lodash'
 import { switchMap, takeWhile } from 'rxjs/operators'
 
+import { CartHelper } from '@mte/common/helpers/cart.helper'
 import { CustomRegionsHelper } from '@mte/common/helpers/custom-regions.helper'
 import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
@@ -15,9 +16,9 @@ import { Organization } from '@mte/common/models/api-models/organization'
 import { Product } from '@mte/common/models/api-models/product'
 import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
 import { VariableAttributesAndOptions } from '@mte/common/models/interfaces/common/variable-attributes-and-options'
-import { UiService } from '../../../shared/services'
-import { CartService } from '../../../shared/services/cart.service'
+import { CartService } from '../../../shared/services/cart/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
+import { UiService } from '../../../shared/services/ui.service'
 import { ProductService } from '../../services/product.service'
 
 @Component({
@@ -285,7 +286,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
     }
 
     public addToCartShouldBeDisabled(): boolean {
-        return !this.selectedProduct || !this.quantityToAdd || this.addingToCart || !this.cartService.getNumberAvailableToAdd(this.selectedProduct)
+        return !this.selectedProduct || !this.quantityToAdd || this.addingToCart || !CartHelper.getNumberAvailableToAdd(this.cartService.cart, this.selectedProduct)
     }
 
     // Interactions.

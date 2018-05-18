@@ -1,9 +1,8 @@
 import { Component, Injector, OnInit } from '@angular/core'
 import { ActivatedRoute, ActivatedRouteSnapshot, NavigationEnd, Router } from '@angular/router'
 import { Organization } from '@mte/common/models/api-models/organization'
-import { filter } from 'rxjs/operators/filter'
-import { tap } from 'rxjs/operators/tap'
-import { OrganizationService } from './shared/services'
+import { filter, tap } from 'rxjs/operators'
+import { OrganizationService } from './shared/services/organization.service'
 import { UiService } from './shared/services/ui.service'
 
 @Component({

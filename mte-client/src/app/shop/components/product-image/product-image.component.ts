@@ -4,7 +4,7 @@ import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.componen
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
 import { BootstrapBreakpoint } from '@mte/common/models/enums/bootstrap-breakpoint'
-import { Observable } from 'rxjs/Observable'
+import { Observable } from 'rxjs'
 import { map, pairwise, takeWhile } from 'rxjs/operators'
 
 @Component({

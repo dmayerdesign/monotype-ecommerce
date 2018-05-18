@@ -1,7 +1,6 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
-import { Observable } from 'rxjs/Observable'
-import { ReplaySubject } from 'rxjs/ReplaySubject'
-import { takeWhile } from 'rxjs/operators/takeWhile'
+import { Observable, ReplaySubject } from 'rxjs'
+import { takeWhile } from 'rxjs/operators'
 
 import { AppConfig } from '@mte/app-config'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'

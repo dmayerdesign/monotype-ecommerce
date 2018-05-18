@@ -1,6 +1,5 @@
 import { Request } from 'express'
 import { inject, injectable } from 'inversify'
-
 import { Copy } from '@mte/common/constants/copy'
 import { HttpStatus } from '@mte/common/constants/http-status'
 import { Types } from '@mte/common/constants/inversify/types'
@@ -10,6 +9,7 @@ import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.res
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
 import { DbClient } from '../data-access/db-client'
 import { CrudService } from './crud.service'
+import { Currency } from '@mte/common/models/enums/currency';
 
 @injectable()
 export class OrganizationService extends CrudService<Organization> {
@@ -56,7 +56,7 @@ export class OrganizationService extends CrudService<Organization> {
                 retailSettings: {
                     salesTaxPercentage: 6,
                     addSalesTax: false,
-                    shippingFlatRate: { amount: 5, currency: 'USD' },
+                    shippingFlatRate: { amount: 5, currency: Currency.USD },
                 },
                 branding: {
                     displayName: 'Hyzer Shop',

@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core'
 import { Title } from '@angular/platform-browser'
-import { BehaviorSubject } from 'rxjs/BehaviorSubject'
-import { Observable } from 'rxjs/Observable'
-import { Subject } from 'rxjs/Subject'
+import { BehaviorSubject, Observable, Subject } from 'rxjs'
 
 import { InjectionTokens } from '@mte/common/constants/angular/injection-tokens'
 import { Copy } from '@mte/common/constants/copy'

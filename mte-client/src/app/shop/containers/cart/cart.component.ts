@@ -4,8 +4,8 @@ import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Cart } from '@mte/common/models/api-models/cart'
 import { Product } from '@mte/common/models/api-models/product'
 import { capitalize } from 'lodash'
-import { takeWhile } from 'rxjs/operators/takeWhile'
-import { CartService } from '../../../shared/services/cart.service'
+import { takeWhile } from 'rxjs/operators'
+import { CartService } from '../../../shared/services/cart/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { UiService } from '../../../shared/services/ui.service'
 import { ProductService } from '../../services/product.service'
@@ -17,7 +17,7 @@ import { ProductService } from '../../services/product.service'
             <h1>{{ capitalize(organizationService.organization.branding.cartName) || 'Your Cart' }}</h1>
             <div *ngFor="let item of cart?.items">
                 <h3 *ngIf="productNamesMap.has(item)">{{ productNamesMap.get(item) }}</h3>
-                <button (click)="cartService.removeAll(item.slug)">Remove</button>
+                <button (click)="cartService.remove(item)">Remove</button>
             </div>
         </div>
     `,
@@ -37,9 +37,9 @@ export class CartComponent extends HeartbeatComponent implements OnInit, OnDestr
     ) { super() }
 
     public ngOnInit(): void {
-        this.cartService.carts
+        this.cartService.store.states
             .pipe(takeWhile(() => this.isAlive))
-            .subscribe((cart) => {
+            .subscribe((cart: Cart) => {
                 this.cart = cart
                 cart.items.forEach((item: Product) => {
                     this.productNamesMap.set(item, this.productService.getName(item))

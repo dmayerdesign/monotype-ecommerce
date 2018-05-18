@@ -2,7 +2,7 @@ import { NgForOfContext } from '@angular/common'
 import { Component, ContentChild, EventEmitter, Input, Output, TemplateRef } from '@angular/core'
 import { ImageHelper } from '@mte/common/helpers/image.helper'
 import { Product } from '@mte/common/models/api-models/product'
-import { Observable } from 'rxjs/Observable'
+import { Observable } from 'rxjs'
 import { ProductService } from '../../services/product.service'
 
 @Component({

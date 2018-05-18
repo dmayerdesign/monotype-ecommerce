@@ -1,6 +1,5 @@
 import { HttpClient, HttpErrorResponse, HttpEvent, HttpParams } from '@angular/common/http'
-import { Observable } from 'rxjs/Observable'
-import { Subject } from 'rxjs/Subject'
+import { Observable, Subject } from 'rxjs'
 import { ListFromIdsRequest, ListRequest } from '../../../models/api-requests/list.request'
 import { SimpleError } from './http.models'
 

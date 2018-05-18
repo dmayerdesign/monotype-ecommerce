@@ -3,17 +3,17 @@ import {
     HttpHandler,
     HttpInterceptor,
     HttpRequest,
+    HttpErrorResponse,
 } from '@angular/common/http'
 import { Inject, Injectable } from '@angular/core'
-import { Observable } from 'rxjs/Observable'
-import { of } from 'rxjs/observable/of'
-import { _throw } from 'rxjs/observable/throw'
+import { Observable, of, throwError } from 'rxjs'
 import { catchError, switchMap } from 'rxjs/operators'
 
 import { HttpStatus } from '../../../constants'
 import { HttpInjectionTokens } from './http.injection-tokens'
 import { IHttpSettings, SimpleError } from './http.models'
 import { MteHttpService } from './http.service'
+import { AnalysisSchemeStatusList } from 'aws-sdk/clients/cloudsearch';
 
 @Injectable()
 export class MteHttpResponseInterceptor implements HttpInterceptor {
@@ -36,7 +36,7 @@ export class MteHttpResponseInterceptor implements HttpInterceptor {
 
         return of(request)
             .pipe(
-                switchMap((req) => next.handle(req)),
+                switchMap<HttpRequest<any>, HttpErrorResponse>((req) => next.handle(req)),
                 catchError((errorResponse) => {
                     // console.log('[MteHttpResponseInterceptor#intercept] Error response', errorResponse)
                     const error = new SimpleError(errorResponse)
@@ -53,8 +53,8 @@ export class MteHttpResponseInterceptor implements HttpInterceptor {
                         this.mteHttpService.errors.next(error)
                     }
 
-                    return _throw(error)
+                    return throwError(error)
                 })
-            )
+            ) as any
     }
 }

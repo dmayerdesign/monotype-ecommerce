@@ -9,8 +9,7 @@ import {
     TemplateRef,
 } from '@angular/core'
 import { FormControl } from '@angular/forms'
-import { Observable } from 'rxjs/Observable'
-import { fromEvent } from 'rxjs/observable/fromEvent'
+import { Observable, fromEvent } from 'rxjs'
 import { takeWhile } from 'rxjs/operators'
 
 import { Copy } from '@mte/common/constants/copy'

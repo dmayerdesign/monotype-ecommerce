@@ -1,4 +1,3 @@
-require('dotenv').config()
 import { AppConfig as DevConfig } from '@mte/common/config/app-config.dev'
 import { AppConfig as ProdConfig } from '@mte/common/config/app-config.prod'
 import { AppConfig as StagingConfig } from '@mte/common/config/app-config.staging'
@@ -14,7 +13,7 @@ declare const process: any
 
 let AppConfig = class AppConfig extends ProdConfig { }
 
-if (process.env && process.env.ENVIRONMENT) {
+if (typeof process !== 'undefined' && process.env && process.env.ENVIRONMENT) {
     if (process.env.ENVIRONMENT === 'production') {
         AppConfig = ProdConfig
     }

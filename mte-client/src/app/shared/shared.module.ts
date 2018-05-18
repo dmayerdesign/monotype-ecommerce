@@ -18,7 +18,6 @@ import { ProductService } from '../shop/services/product.service'
 import { TaxonomyTermService } from '../shop/services/taxonomy-term.service'
 import { AdminGuardService } from './services/admin-guard.service'
 import { AuthGuardService } from './services/auth-guard.service'
-import { CartService } from './services/cart.service'
 import { GAnalyticsService } from './services/ga.service'
 import { OrganizationService } from './services/organization.service'
 import { RouteStateService } from './services/route-state.service'
@@ -54,7 +53,6 @@ export class SharedModule {
             providers: [
                 AdminGuardService,
                 AuthGuardService,
-                CartService,
                 GAnalyticsService,
                 OrganizationService,
                 ProductService,

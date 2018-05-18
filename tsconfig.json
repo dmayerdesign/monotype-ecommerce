@@ -28,8 +28,9 @@
     "moduleResolution": "node",
     "allowJs": false
   },
-  "outDir": "dist/",
   "compileOnSave": false,
+  "outDir": "dist/",
+  "preserveWhitespaces": "off",
   "exclude": [
     "node_modules",
     "dist/"
