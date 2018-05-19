@@ -3,7 +3,7 @@ import { Action } from '@mte/common/lib/state-manager/action'
 import { Cart } from '@mte/common/models/api-models/cart'
 import { Product } from '@mte/common/models/api-models/product'
 import { cloneDeep } from 'lodash'
-import { CartAction, CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartUpdate } from './cart.actions'
+import { CartAction, CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartUpdate, CartTotalUpdate } from './cart.actions'
 import { CartState } from './cart.state'
 
 export function cartReducer(state: CartState, action: CartAction): CartState {
@@ -65,9 +65,13 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
         }
     }
 
+    // Update the total.
+    if (action instanceof CartTotalUpdate) {
+        cart.total = action.payload
+    }
+
     cart.count = cart.items.length
-    cart.subTotal = this.getSubTotal(cart.items)
-    cart.total = this.getTotal(cart.items)
+    cart.subTotal = CartHelper.getSubTotal(cart.items)
     cart.displayItems = CartHelper.getDisplayItems(cart.items)
 
     return cart

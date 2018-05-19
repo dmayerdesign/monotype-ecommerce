@@ -9,6 +9,7 @@ import { Price } from '@mte/common/models/api-models/price'
 import { Product } from '@mte/common/models/api-models/product'
 import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { GetProductDetailResponseBody } from '@mte/common/models/api-responses/get-product-detail/get-product-detail.response.body'
+import { SimpleAttributeValue } from '@mte/common/models/api-models/simple-attribute-value';
 
 @Injectable()
 export class ProductService extends RestService<Product> {
@@ -36,30 +37,29 @@ export class ProductService extends RestService<Product> {
         return this.http.get<GetProductDetailResponseBody>(`${this.endpoint}/${slug}/detail`).toPromise()
     }
 
-    public async getDetail(slug: string): Promise<any> {
-        try {
-            const getDetailResponseBody = await this.getDetailOnce(slug)
-            this.getDetailPump.next(getDetailResponseBody)
+    public getDetail(slug: string): void {
+        const getDetail = async () => {
+            try {
+                const getDetailResponseBody = await this.getDetailOnce(slug)
+                this.getDetailPump.next(getDetailResponseBody)
+            }
+            catch (getDetailError) {
+                this.getDetailErrorPump.next(getDetailError)
+            }
         }
-        catch (getDetailError) {
-            this.getDetailErrorPump.next(getDetailError)
-        }
+        getDetail()
     }
 
-    public getPrice(product: Product): Price {
-        if (product.isOnSale) {
-            return product.salePrice
-        }
-        else {
-            return product.price
-        }
-    }
-
-    public getName(product: Product): string {
-        if (product.isParent || product.isStandalone || !product.parent || !(product.parent as Product)._id) {
-            return product.name
-        } else {
-            return (product.parent as Product).name
-        }
+    public getVariationsFromAttributeValues(productDetail: Product, variableAttributeValues: (AttributeValue | SimpleAttributeValue)[]): Product[] {
+        return productDetail.variations.filter((product: Product) => {
+            const allVariationAttributeValues = [
+                ...product.simpleAttributeValues as SimpleAttributeValue[],
+                ...product.attributeValues as AttributeValue[],
+            ]
+            const condition = variableAttributeValues.filter((x) => !!x)
+                .every((variableAttributeValue) => !!allVariationAttributeValues.find((variationAttributeValue) => variableAttributeValue._id === variationAttributeValue._id))
+            console.log(condition)
+            return condition
+        }) as Product[]
     }
 }

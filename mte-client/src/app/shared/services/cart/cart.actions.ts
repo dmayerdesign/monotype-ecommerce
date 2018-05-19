@@ -15,6 +15,8 @@ export class CartItemQuantityDecrement extends Action<Product> { }
 
 export class CartItemRemoval extends Action<Product> { }
 
+export class CartTotalUpdate extends Action<Price> { }
+
 export type CartAction =
       CartUpdate
     | CartItemsUpdate
@@ -22,3 +24,4 @@ export type CartAction =
     | CartItemQuantityIncrement
     | CartItemQuantityDecrement
     | CartItemRemoval
+    | CartTotalUpdate

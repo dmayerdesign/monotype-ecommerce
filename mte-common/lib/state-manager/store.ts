@@ -19,17 +19,16 @@ export class Store<T> {
     }
 
     public dispatch(action: Action): Observable<boolean> {
-        console.log(action)
         const currentState = this._statePump.getValue()
         try {
             const newState = this.reducer(Object.assign({}, currentState), action)
             this._statePump.next(newState)
             this._previousState = currentState
             this._actionPump.next(action)
-            console.log(newState)
             return observableOf(true)
         }
         catch (failure) {
+            console.error(failure)
             return observableOf(false)
         }
     }

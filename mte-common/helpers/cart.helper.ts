@@ -38,7 +38,7 @@ export class CartHelper {
 
     public static getSubTotal(items: Product[]): Price {
         return items
-            .map(p => {
+            .map((p) => {
                 return (ProductHelper.getPrice(p) as Price)
             })
             .reduce((prev: Price, current: Price) => {

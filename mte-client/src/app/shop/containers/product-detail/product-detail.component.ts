@@ -1,8 +1,8 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core'
-import { FormGroup } from '@angular/forms'
+import { FormGroup, FormControl } from '@angular/forms'
 import { ActivatedRoute } from '@angular/router'
 import { startCase } from 'lodash'
-import { switchMap, takeWhile } from 'rxjs/operators'
+import { switchMap, takeWhile, filter, map, delay, tap } from 'rxjs/operators'
 
 import { CartHelper } from '@mte/common/helpers/cart.helper'
 import { CustomRegionsHelper } from '@mte/common/helpers/custom-regions.helper'
@@ -20,6 +20,8 @@ import { CartService } from '../../../shared/services/cart/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { UiService } from '../../../shared/services/ui.service'
 import { ProductService } from '../../services/product.service'
+import { SimpleAttributeValue } from '@mte/common/models/api-models/simple-attribute-value';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'mte-product-detail',
@@ -67,16 +69,26 @@ import { ProductService } from '../../services/product.service'
                 </p>
 
                 <div class="product-detail-info--variable-attributes">
-                    <div *ngFor="let variableAttrAndOptions of variableAttributesAndOptions">
-                        <mte-form-field [options]="{
-                                label: getVariableAttributeLabel(variableAttrAndOptions),
-                                labelClass: 'product-detail-info--variable-attributes--name'
-                            }">
-                            <select #input>
-                                <option *ngFor="let attributeValue of variableAttrAndOptions.attributeValues">{{ attributeValue?.name || attributeValue?.slug }}</option>
-                            </select>
-                        </mte-form-field>
-                    </div>
+                    <form *ngIf="variableAttributesFormDidInit"
+                        [formGroup]="variableAttributesForm">
+                        <div *ngFor="let variableAttrAndOptions of variableAttributesAndOptions">
+                            <mte-form-field [options]="{
+                                    label: getVariableAttributeLabel(variableAttrAndOptions),
+                                    labelClass: 'product-detail-info--variable-attributes--name'
+                                }">
+                                <select #input
+                                    [formControlName]="variableAttrAndOptions.attribute.slug">
+                                    <option *ngFor="let attributeValue of variableAttrAndOptions.attributeValues"
+                                        [ngValue]="attributeValue">
+                                        {{ attributeValue?.name || attributeValue?.slug }}
+                                        <ng-container *ngIf="attributeValueIsUnavailable(attributeValue)">
+                                            (unavailable)
+                                        </ng-container>
+                                    </option>
+                                </select>
+                            </mte-form-field>
+                        </div>
+                    </form>
                 </div>
 
                 <div class="product-detail-add-to-cart">
@@ -137,8 +149,17 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
      * Represents the product that will be added to the cart.
      */
     public selectedProduct: Product
+    /**
+     * A list of product variations matching the currently-selected variable attribute values.
+     */
+    public possibleVariations: Product[]
     public quantityToAdd = 1
     public variableAttributesAndOptions: VariableAttributesAndOptions = []
+    public variableAttributesForm: FormGroup
+    public variableAttributesFormValue: any = {}
+    public variableAttributesFormDidInit = false
+    public variableAttributesFormIsInitializing = false
+    public variableAttributesFormValueChangesDisposable: Subscription
     public addingToCart = false
 
     // Custom regions.
@@ -202,8 +223,9 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
             .subscribe((responseBody) => {
                 this.parentOrStandalone = responseBody
                 this.variations = this.parentOrStandalone.variations as Product[]
-                this.populateVariableAttributesAndOptions()
                 this.populateSelectedProduct()
+                this.populateVariableAttributesAndOptions()
+                this.subscribeToVariableAttributesFormChanges()
             })
 
         this.organizationService.organizations.subscribe((organization) => {
@@ -216,12 +238,52 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
 
     // Init methods.
 
+    private subscribeToVariableAttributesFormChanges(): void {
+        if (this.variableAttributesFormValueChangesDisposable) {
+            this.variableAttributesFormValueChangesDisposable.unsubscribe()
+        }
+        this.variableAttributesFormValueChangesDisposable = this.variableAttributesForm.valueChanges
+            .pipe(
+                tap((value) => this.variableAttributesFormValue = value),
+                filter((value) =>
+                    !this.variableAttributesFormIsInitializing &&
+                    this.hasVariations() &&
+                    !!Object.keys(value).length),
+                map((value) => Object.keys(value)
+                    .filter((key) => !!value[key])
+                    .map((key) => value[key]) as (AttributeValue | SimpleAttributeValue)[]
+                )
+            )
+            .subscribe((values) => {
+                this.possibleVariations = this.productService.getVariationsFromAttributeValues(this.parentOrStandalone, values)
+                if (this.possibleVariations.length) {
+                    this.selectedProduct = this.possibleVariations[0]
+                }
+            })
+    }
+
     private populateVariableAttributesAndOptions(): void {
+        this.variableAttributesFormIsInitializing = true
 
         // But only if it's a variable product, of course.
         if (!this.hasVariations() || !this.parentOrStandalone.variableAttributes) return
 
-        this.variableAttributesAndOptions = this.productHelper.getVariableAttributesAndOptions(this.parentOrStandalone)
+        const newVariableAttributesAndOptions = this.productHelper.getVariableAttributesAndOptions(this.parentOrStandalone)
+
+        this.variableAttributesAndOptions = newVariableAttributesAndOptions
+
+        // Build the form.
+        this.variableAttributesForm = new FormGroup({})
+        this.variableAttributesAndOptions
+            .forEach(({ attribute, attributeValues }) => {
+                this.variableAttributesForm.addControl(
+                    attribute.slug,
+                    new FormControl('')
+                )
+            })
+
+        this.variableAttributesFormDidInit = true
+        this.variableAttributesFormIsInitializing = false
     }
 
     private populateSelectedProduct(): void {
@@ -239,7 +301,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
             this.selectedProduct = this.parentOrStandalone
         }
 
-        this.uiService.setTitle(this.productService.getName(this.parentOrStandalone))
+        this.uiService.setTitle(ProductHelper.getName(this.parentOrStandalone))
     }
 
     public getMainImage(): string {
@@ -286,7 +348,27 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
     }
 
     public addToCartShouldBeDisabled(): boolean {
-        return !this.selectedProduct || !this.quantityToAdd || this.addingToCart || !CartHelper.getNumberAvailableToAdd(this.cartService.cart, this.selectedProduct)
+        return !this.selectedProduct
+            || !this.quantityToAdd
+            || this.addingToCart
+            || !CartHelper.getNumberAvailableToAdd(this.cartService.cart, this.selectedProduct)
+            || (this.hasVariations() && this.possibleVariations && this.possibleVariations.length > 1)
+    }
+
+    public attributeValueIsUnavailable(attributeValue: AttributeValue): boolean {
+        if (!!this.variableAttributesForm) {
+            const attributeFormControl = this.variableAttributesForm.get((attributeValue.attribute as Attribute).slug)
+            if (attributeFormControl && !!attributeFormControl.value) {
+                return false
+            }
+        }
+        if (!this.possibleVariations) return false
+        return this.possibleVariations.every((variation) => {
+            return !variation.attributeValues.find((attrValue) => {
+                const attrValueId = (typeof attrValue === 'string') ? attrValue : attrValue._id
+                return attrValueId === attributeValue._id
+            })
+        })
     }
 
     // Interactions.

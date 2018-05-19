@@ -8,7 +8,7 @@ import { takeWhile } from 'rxjs/operators'
 import { CartService } from '../../../shared/services/cart/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { UiService } from '../../../shared/services/ui.service'
-import { ProductService } from '../../services/product.service'
+import { ProductHelper } from '@mte/common/helpers/product.helper';
 
 @Component({
     selector: 'mte-cart',
@@ -31,7 +31,6 @@ export class CartComponent extends HeartbeatComponent implements OnInit, OnDestr
 
     constructor(
       public cartService: CartService,
-      public productService: ProductService,
       public organizationService: OrganizationService,
       public uiService: UiService,
     ) { super() }
@@ -42,7 +41,7 @@ export class CartComponent extends HeartbeatComponent implements OnInit, OnDestr
             .subscribe((cart: Cart) => {
                 this.cart = cart
                 cart.items.forEach((item: Product) => {
-                    this.productNamesMap.set(item, this.productService.getName(item))
+                    this.productNamesMap.set(item, ProductHelper.getName(item))
                 })
             })
 

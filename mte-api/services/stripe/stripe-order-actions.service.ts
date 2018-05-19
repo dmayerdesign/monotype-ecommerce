@@ -18,6 +18,7 @@ import { OrderStatus } from '@mte/common/models/enums/order-status'
 import { DbClient } from '../../data-access/db-client'
 import { DiscountService } from '../discount.service'
 import { ProductService } from '../product.service'
+import { ProductHelper } from '@mte/common/helpers/product.helper';
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
@@ -60,11 +61,11 @@ export class StripeOrderActionsService {
 
             try {
                 const orderItemsRequest = new GetProductsFromIdsRequest()
-                orderItemsRequest.ids = <string[]>order.items
-                const orderItemsResponse = await <Promise<ApiResponse<Product[]>>>this.productService.get(orderItemsRequest)
+                orderItemsRequest.ids = order.items as string[]
+                const orderItemsResponse = await this.productService.get(orderItemsRequest)
                 orderItems = orderItemsResponse.body
                 orderItems.forEach(orderItem => {
-                    order.total.amount += (this.productService.getPrice(orderItem) as Price).amount
+                    order.total.amount += (ProductHelper.getPrice(orderItem) as Price).amount
                 })
             }
             catch (getItemsError) {

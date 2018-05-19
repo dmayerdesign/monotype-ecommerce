@@ -121,7 +121,7 @@
     "@types/stripe-node": "4.7.1",
     "angular2-template-loader": "0.6.2",
     "autoprefixer": "6.5.3",
-    "awesome-typescript-loader": "3.4.1",
+    "awesome-typescript-loader": "5.0.0",
     "babel-core": "6.25.0",
     "babel-loader": "7.1.1",
     "circular-dependency-plugin": "4.3.0",

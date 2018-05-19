@@ -10,14 +10,15 @@ import { Currency } from '@mte/common/models/enums/currency'
 import { CartProduct } from '@mte/common/models/interfaces/ui/cart-product'
 import { cloneDeep } from 'lodash'
 import { Observable, ReplaySubject } from 'rxjs'
-import { map } from 'rxjs/operators'
+import { map, filter } from 'rxjs/operators'
 import { ProductService } from '../../../shop/services/product.service'
 import { OrganizationService } from '../organization.service'
 import { UserService } from '../user.service'
 import { UtilService } from '../util.service'
-import { CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartUpdate } from './cart.actions'
+import { CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartUpdate, CartTotalUpdate } from './cart.actions'
 import { cartReducer } from './cart.reducer'
 import { CartState } from './cart.state'
+import { CartHelper } from '@mte/common/helpers/cart.helper';
 
 @Injectable({
     providedIn: 'root'
@@ -43,7 +44,9 @@ export class CartService {
 
     public init(): void {
         // Register side effects.
-        this.store.actions.subscribe(() => this.updateAndStream())
+        this.store.actions
+            .pipe(filter((action) => !(action instanceof CartTotalUpdate)))
+            .subscribe(() => this.updateAndStream())
 
         // Set state.
         /// Check local storage.
@@ -87,8 +90,16 @@ export class CartService {
     private updateAndStream(): void {
         this.productService.getSome(this.cart.items.map((item: Product) => item._id))
             .subscribe(products => {
-                this.userService.updateCart(this.cart)
-                this.util.saveToLocalStorage(LocalStorageKeys.Cart, this.cart)
+                const subTotal = this.cart.subTotal
+                const total = {
+                    amount: subTotal.amount + (subTotal.amount * this.orgService.organization.retailSettings.salesTaxPercentage / 100),
+                    currency: subTotal.currency,
+                }
+                this.store.dispatch(new CartTotalUpdate(total))
+                    .subscribe(() => {
+                        this.userService.updateCart(this.cart)
+                        this.util.saveToLocalStorage(LocalStorageKeys.Cart, this.cart)
+                    })
             })
     }
 }

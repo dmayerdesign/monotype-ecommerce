@@ -75,6 +75,7 @@ export class Product extends MongooseDocument {
 	// - Variation attributes.
     @arrayProp({ itemsRef: Attribute }) public variableAttributes: Ref<Attribute>[]
     @arrayProp({ itemsRef: AttributeValue }) public variableAttributeValues: Ref<AttributeValue>[]
+    @arrayProp({ items: SimpleAttributeValue }) public variableSimpleAttributeValues: SimpleAttributeValue[]
 
 	// Taxonomy.
     @arrayProp({ itemsRef: TaxonomyTerm }) public taxonomyTerms: Ref<TaxonomyTerm>[]

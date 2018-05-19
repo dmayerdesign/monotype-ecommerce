@@ -106,13 +106,29 @@ export class ProductService extends CrudService<Product> {
                     {
                         path: 'variableAttributeValues',
                         model: AttributeValue.getModel(),
+                        populate: {
+                            path: 'attribute',
+                            model: Attribute.getModel(),
+                        }
+                    },
+                    {
+                        path: 'variableSimpleAttributeValues.attribute',
+                        model: Attribute.getModel(),
                     },
                     {
                         path: 'variations',
                         populate: {
                             path: 'attributeValues',
                             model: AttributeValue.getModel(),
+                            populate: {
+                                path: 'attribute',
+                                model: Attribute.getModel(),
+                            }
                         },
+                    },
+                    {
+                        path: 'variations.simpleAttributeValues.attribute',
+                        model: Attribute.getModel(),
                     },
                 ])
 

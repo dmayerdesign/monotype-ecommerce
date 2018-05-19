@@ -310,6 +310,7 @@ export class WoocommerceMigrationService {
                                     newProduct.description = newProduct.description.replace(/ŠÜ¢/g, ' –')
                                     newProduct.description = newProduct.description.replace('<div class="longdescription">', '\n')
                                     newProduct.description = newProduct.description.replace('</div>', '')
+                                    newProduct.description = newProduct.description.replace(/Î¾/g, ' ')
                                 }
                             }
 
