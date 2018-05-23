@@ -4,9 +4,9 @@ import { Observable, ReplaySubject, Subject } from 'rxjs'
 
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
 import { SimpleError } from '@mte/common/lib/ng-modules/http'
-import { Organization } from '@mte/common/models/api-models/organization'
+import { Organization } from '@mte/common/models/api-interfaces/organization'
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class OrganizationService {
     public organization: Organization
     private organizationPump = new ReplaySubject<Organization>(1)

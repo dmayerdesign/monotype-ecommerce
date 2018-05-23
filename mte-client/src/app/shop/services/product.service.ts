@@ -1,17 +1,17 @@
 import { HttpClient } from '@angular/common/http'
 import { Injectable } from '@angular/core'
-import { Observable, Subject } from 'rxjs'
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
 import { RestService, SimpleError } from '@mte/common/lib/ng-modules/http'
-import { Attribute } from '@mte/common/models/api-models/attribute'
-import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
-import { Price } from '@mte/common/models/api-models/price'
-import { Product } from '@mte/common/models/api-models/product'
+import { Attribute } from '@mte/common/models/api-interfaces/attribute'
+import { AttributeValue } from '@mte/common/models/api-interfaces/attribute-value'
+import { Price } from '@mte/common/models/api-interfaces/price'
+import { Product } from '@mte/common/models/api-interfaces/product'
+import { SimpleAttributeValue } from '@mte/common/models/api-interfaces/simple-attribute-value'
 import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { GetProductDetailResponseBody } from '@mte/common/models/api-responses/get-product-detail/get-product-detail.response.body'
-import { SimpleAttributeValue } from '@mte/common/models/api-models/simple-attribute-value';
+import { Observable, Subject } from 'rxjs'
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class ProductService extends RestService<Product> {
     public endpoint = ApiEndpoints.Products
     public getSomeRequestType = GetProductsFromIdsRequest
@@ -58,7 +58,6 @@ export class ProductService extends RestService<Product> {
             ]
             const condition = variableAttributeValues.filter((x) => !!x)
                 .every((variableAttributeValue) => !!allVariationAttributeValues.find((variationAttributeValue) => variableAttributeValue._id === variationAttributeValue._id))
-            console.log(condition)
             return condition
         }) as Product[]
     }

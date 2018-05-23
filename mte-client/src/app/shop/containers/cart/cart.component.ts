@@ -1,14 +1,14 @@
 import { Component, OnDestroy, OnInit } from '@angular/core'
+import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
-import { Cart } from '@mte/common/models/api-models/cart'
-import { Product } from '@mte/common/models/api-models/product'
+import { Cart } from '@mte/common/models/api-interfaces/cart'
+import { Product } from '@mte/common/models/api-interfaces/product'
 import { capitalize } from 'lodash'
 import { takeWhile } from 'rxjs/operators'
 import { CartService } from '../../../shared/services/cart/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { UiService } from '../../../shared/services/ui.service'
-import { ProductHelper } from '@mte/common/helpers/product.helper';
 
 @Component({
     selector: 'mte-cart',

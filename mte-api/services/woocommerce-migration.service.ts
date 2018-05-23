@@ -229,7 +229,11 @@ export class WoocommerceMigrationService {
                             }
                             if (key === 'netWeight') {
                                 newProduct[key] = (newProduct[key] as any).replace(/g/g, '')
-                                if ( (newProduct[key] as any).indexOf('|') > -1 ) {
+                                if ((newProduct[key] as any).indexOf('|') > -1) {
+                                    if (!newProduct.variableProperties) {
+                                        newProduct.variableProperties = []
+                                    }
+                                    newProduct.variableProperties.push('netWeight')
                                     delete newProduct[key]
                                 }
                             }

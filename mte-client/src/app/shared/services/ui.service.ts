@@ -12,7 +12,7 @@ import { ModalData } from '@mte/common/models/interfaces/ui/modal-data'
 import { Toast } from '@mte/common/models/interfaces/ui/toast'
 import { OrganizationService } from './organization.service'
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class UiService {
     public loadings = new BehaviorSubject<boolean>(true)
     public flashes = new Subject<Toast>()

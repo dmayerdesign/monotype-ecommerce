@@ -3,9 +3,9 @@ import { LocalStorageKeys } from '@mte/common/constants/local-storage-keys'
 import { Action } from '@mte/common/lib/state-manager/action'
 import { Reducer } from '@mte/common/lib/state-manager/reducer'
 import { Store } from '@mte/common/lib/state-manager/store'
-import { Cart } from '@mte/common/models/api-models/cart'
-import { Price } from '@mte/common/models/api-models/price'
-import { Product } from '@mte/common/models/api-models/product'
+import { Cart } from '@mte/common/models/api-interfaces/cart'
+import { Price } from '@mte/common/models/api-interfaces/price'
+import { Product } from '@mte/common/models/api-interfaces/product'
 import { Currency } from '@mte/common/models/enums/currency'
 import { CartProduct } from '@mte/common/models/interfaces/ui/cart-product'
 import { cloneDeep } from 'lodash'
@@ -20,9 +20,7 @@ import { cartReducer } from './cart.reducer'
 import { CartState } from './cart.state'
 import { CartHelper } from '@mte/common/helpers/cart.helper';
 
-@Injectable({
-    providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class CartService {
     public store: Store<CartState>
 

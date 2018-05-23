@@ -4,8 +4,6 @@
     "module": "commonjs",
     "baseUrl": ".",
     "paths": {
-      "@angular/*": [ "./node_modules/@angular/*" ],
-      "rxjs/*": [ "./node_modules/rxjs/*" ],
       "@mte/common/*": [ "./mte-common/*" ],
       "@mte/app-config": [ "./app-config.ts" ],
       "@mte/environment": [ "./mte-client/src/environments/environment.ts" ],

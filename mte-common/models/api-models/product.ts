@@ -69,10 +69,11 @@ export class Product extends MongooseDocument {
     @prop() public isDefaultVariation: boolean
 
 	// Attributes.
-	// - Own attributes.
+	/// Own attributes.
     @arrayProp({ itemsRef: AttributeValue }) public attributeValues: Ref<AttributeValue>[]
     @arrayProp({ items: SimpleAttributeValue }) public simpleAttributeValues: SimpleAttributeValue[]
-	// - Variation attributes.
+    /// Variation attributes.
+    @arrayProp({ items: String }) public variableProperties: string[]
     @arrayProp({ itemsRef: Attribute }) public variableAttributes: Ref<Attribute>[]
     @arrayProp({ itemsRef: AttributeValue }) public variableAttributeValues: Ref<AttributeValue>[]
     @arrayProp({ items: SimpleAttributeValue }) public variableSimpleAttributeValues: SimpleAttributeValue[]

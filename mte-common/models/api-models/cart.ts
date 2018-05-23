@@ -1,7 +1,7 @@
-import { Price } from '@mte/common/models/api-models/price'
 import { arrayProp, prop, schema, MongooseDocument, Ref } from '../../lib/goosetype'
 import { CartProduct } from '../interfaces/ui/cart-product'
 import { Discount } from './discount'
+import { Price } from './price'
 import { Product } from './product'
 
 @schema(Cart)

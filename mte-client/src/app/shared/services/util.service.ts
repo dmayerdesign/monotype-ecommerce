@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core'
 import { Observable, ReplaySubject, Subject } from 'rxjs'
 import { delay } from 'rxjs/operators'
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class UtilService {
 
     constructor() {}

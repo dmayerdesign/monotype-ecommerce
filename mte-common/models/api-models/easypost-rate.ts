@@ -1,5 +1,5 @@
-import { Currency } from '@mte/common/models/enums/currency'
 import { prop, schema, MongooseDocument } from '../../lib/goosetype'
+import { Currency } from '../../models/enums/currency'
 
 @schema(EasypostRate)
 export class EasypostRate extends MongooseDocument {

@@ -1,6 +1,6 @@
 import { injectable } from 'inversify'
 import { camelCase } from 'lodash'
-import * as mongoose from 'mongoose'
+import { Schema, SchemaDefinition, SchemaOptions, SchemaTypeOpts } from 'mongoose'
 import { PropTypeArgs } from './models/mongoose-model'
 
 // Errors.
@@ -10,12 +10,11 @@ export class SchemaNotDefinedError extends Error { }
 
 // Model builder.
 
-// Create a singleton.
-let modelBuilder: ModelBuilder
+let modelBuilder: ModelBuilder // Create a singleton.
 
 export class ModelBuilder {
-    public schemaDefinitions: { [key: string]: mongoose.SchemaDefinition } = {}
-    public schemas: { [key: string]: mongoose.Schema } = {}
+    public schemaDefinitions: { [key: string]: SchemaDefinition } = {}
+    public schemas: { [key: string]: Schema } = {}
     public preMiddleware: any = {}
     public postMiddleware: any = {}
     public plugins: any = {}
@@ -27,11 +26,11 @@ export class ModelBuilder {
         return modelBuilder
     }
 
-    public findOrCreateSchema(name: string, schemaDefinition: mongoose.SchemaDefinition, schemaOptions: mongoose.SchemaOptions): mongoose.Schema {
-        let schema: mongoose.Schema
+    public findOrCreateSchema(name: string, schemaDefinition: SchemaDefinition, schemaOptions: SchemaOptions): Schema {
+        let schema: Schema
 
         if (!modelBuilder.schemas[camelCase(name)]) {
-            schema = new mongoose.Schema(schemaDefinition, schemaOptions)
+            schema = new Schema(schemaDefinition, schemaOptions)
             modelBuilder.schemas[camelCase(name)] = schema
         } else {
             schema = modelBuilder.schemas[camelCase(name)]
@@ -70,19 +69,19 @@ export class ModelBuilder {
         )
     }
 
-    public getTypeOrSchema(type: any, options?: mongoose.SchemaOptions): object {
+    public getTypeOrSchema(type: any, options?: SchemaOptions): object {
         if (this.isValidPrimitiveOrObject(type)) {
             if (type === Object) {
-                return mongoose.Schema.Types.Mixed
+                return Schema.Types.Mixed
             }
             if (type === Buffer) {
-                return mongoose.Schema.Types.Buffer
+                return Schema.Types.Buffer
             }
             return type
         }
         else {
-            if (type === mongoose.Schema.Types.ObjectId) {
-                return mongoose.Schema.Types.ObjectId
+            if (type === Schema.Types.ObjectId) {
+                return Schema.Types.ObjectId
             }
             // If the prop is not a valid primitive or object, and it's not an ObjectId,
             // assume it's a custom schema. If the schema has yet to be defined, define it.
@@ -94,8 +93,8 @@ export class ModelBuilder {
 
     public baseProp(propTypeArgs: PropTypeArgs): void {
         const { target, key, propType, options } = propTypeArgs
-        let schemaDefinition: mongoose.SchemaDefinition = this.schemaDefinitions[camelCase(target.constructor.name)]
-        let schemaProperty: mongoose.SchemaTypeOpts<any> = {}
+        let schemaDefinition: SchemaDefinition = this.schemaDefinitions[camelCase(target.constructor.name)]
+        let schemaProperty: SchemaTypeOpts<any> = {}
         let type: any
 
         const nonPropertyOptions = [
@@ -144,7 +143,7 @@ export class ModelBuilder {
             }
             else if (options.itemsRef) {
                 schemaProperty = [{
-                    type: mongoose.Schema.Types.ObjectId,
+                    type: Schema.Types.ObjectId,
                     ref: options.itemsRef.name,
                 }]
             }
@@ -162,7 +161,7 @@ export class ModelBuilder {
                         ref = ref.name
                     }
                     schemaProperty.ref = ref
-                    type = mongoose.Schema.Types.ObjectId
+                    type = Schema.Types.ObjectId
                 }
             }
 

@@ -1,7 +1,6 @@
 {
   "rulesDirectory": [
-    "node_modules/codelyzer",
-    "node_modules/rxjs-tslint"
+    "node_modules/codelyzer"
   ],
   "rules": {
     "arrow-return-shorthand": true,
@@ -14,9 +13,7 @@
     "curly": false,
     "eofline": true,
     "forin": false,
-    "import-blacklist": [
-      true
-    ],
+    "import-blacklist": false,
     "import-spacing": true,
     "indent": [
       true,
@@ -88,10 +85,6 @@
       "single"
     ],
     "radix": true,
-    "rxjs-collapse-imports": true,
-    "rxjs-pipeable-operators-only": true,
-    "rxjs-no-static-observable-methods": true,
-    "rxjs-proper-imports": true,
     "semicolon": [
       true,
       "never"

@@ -13,7 +13,7 @@ import { AppRoutes } from '../../constants/app-routes'
 import { RouteStateService } from './route-state.service'
 import { UserService } from './user.service'
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class AdminGuardService implements CanActivate, CanActivateChild {
 
     constructor(

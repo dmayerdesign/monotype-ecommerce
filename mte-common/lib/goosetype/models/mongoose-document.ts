@@ -1,7 +1,6 @@
 import { camelCase } from 'lodash'
 import { model, DocumentToObjectOptions, Model, ModelPopulateOptions, ModelUpdateOptions, MongooseDocument as Document, NativeError, Query, SaveOptions, Schema, SchemaOptions, ValidationError } from 'mongoose'
 import 'reflect-metadata'
-import { modelBuilder } from '../goosetype-model-builder'
 import { MongooseModel } from './mongoose-model'
 
 // Base classes
@@ -16,6 +15,7 @@ export abstract class MongooseDocument {
     public errors?: Object
     /** This document's _id. */
     public _id?: any
+    public id?: any
     /** Boolean flag specifying if the document is new. */
     public isNew?: boolean
     /** The document's schema. */
