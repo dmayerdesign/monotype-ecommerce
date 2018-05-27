@@ -9,8 +9,8 @@ import { Ref } from './ref'
 import { StripeCardToken } from './stripe-card-token'
 
 export interface Order extends MongooseDocument {
-    items: Ref<Product> []
-    discounts: Ref<Discount> []
+    items: Ref<Product>[]
+    discounts: Ref<Discount>[]
     total: Price
     taxPercent: number
     shippingCost: Price

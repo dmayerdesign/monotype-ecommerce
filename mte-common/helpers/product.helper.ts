@@ -2,9 +2,10 @@ import { Attribute } from '@mte/common/models/api-models/attribute'
 import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
 import { Price } from '@mte/common/models/api-models/price'
 import { Product } from '@mte/common/models/api-models/product'
+import { SimpleAttributeValue } from '@mte/common/models/api-models/simple-attribute-value'
 import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
 import { Currency } from '@mte/common/models/enums/currency'
-import { SimpleAttributeValue } from '@mte/common/models/api-models/simple-attribute-value';
+import { VariableAttributeSelectOption } from '@mte/common/models/ui-models/variable-attribute-select'
 
 export class ProductHelper {
     public static getBrand(product: Product): TaxonomyTerm {
@@ -47,35 +48,18 @@ export class ProductHelper {
         }
     }
 
-    public static getVariableAttributesAndOptions(productDetail: Product): { attribute: Attribute, attributeValues: AttributeValue[] }[] {
-        return productDetail.variableAttributes.map((attribute: Attribute) => {
-            return {
-                attribute,
-                attributeValues: [
-                    ...productDetail.variableAttributeValues,
-                    ...productDetail.variableSimpleAttributeValues,
-                ].filter((attributeValue: AttributeValue) => {
-                    const attributeId = (attributeValue.attribute as Attribute)._id
-                    // if (!possibleVariations || !possibleVariations.length) {
-                        return attributeId === attribute._id
-                    // }
-                    // else {
-                    //     return attributeId === attribute._id &&
-                    //         possibleVariations.some((variation) => 
-                    //             !![ ...variation.attributeValues, ...variation.simpleAttributeValues ].find((attributeValue: AttributeValue | SimpleAttributeValue) =>
-                    //                 (attributeValue.attribute as string) === attributeId || (attributeValue.attribute as Attribute)._id === attributeId)
-                    //         )
-                    // }
-                }) as AttributeValue[]
-            }
-        })
-    }
-
     public static getName(product: Product): string {
         if (product.isParent || product.isStandalone || !product.parent || !(product.parent as Product)._id) {
             return product.name
         } else {
             return (product.parent as Product).name
         }
+    }
+
+    public static isAttributeValue(data: any): boolean {
+        return !!data && !!data.slug
+    }
+    public static isSimpleAttributeValue(data: any): boolean {
+        return !!data && !data.slug
     }
 }

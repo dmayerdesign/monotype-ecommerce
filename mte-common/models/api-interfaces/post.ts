@@ -18,8 +18,8 @@ export interface Author extends MongooseDocument {
 }
 
 export interface Reactions extends MongooseDocument {
-    up: Ref<User> []
-    down: Ref<User> []
+    up: Ref<User>[]
+    down: Ref<User>[]
 }
 
 export interface Comment extends MongooseDocument {

@@ -1,5 +1,5 @@
-import { Order } from '../../api-models/order'
-import { Organization } from '../../api-models/organization'
+import { Order } from './order'
+import { Organization } from './organization'
 
 export interface EmailStyleOptions {
     mastheadBgColor: string

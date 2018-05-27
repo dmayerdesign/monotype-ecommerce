@@ -6,7 +6,7 @@ const mailgun = require('mailgun-js')({ apiKey: process.env.MAILGUN_API_KEY, dom
 import { AppConfig } from '@mte/app-config'
 import { EmailBuilder } from '@mte/common/builders/email.builder'
 import { Types } from '@mte/common/constants/inversify'
-import { EmailOptions, EmailServiceOptions, OrderEmailOptions } from '@mte/common/models/interfaces/api/email-options'
+import { EmailOptions, EmailServiceOptions, OrderEmailOptions } from '@mte/common/models/api-interfaces/email-options'
 import { OrderHelper } from '../helpers/order.helper'
 
 const receipt = require('@mte/common/emails/templates/receipt')

@@ -24,6 +24,19 @@
   }
 }
 
+@mixin ff-paragraph {
+  @include Montserrat;
+}
+@mixin ff-display {
+  @include Montserrat;
+}
+@mixin ff-display-2 {
+  @include Viga;
+}
+@mixin ff-secondary {
+  @include Rock-Salt;
+}
+
 /// Weights
 
 .weight-normal, .normal-weight { font-weight: normal !important; }

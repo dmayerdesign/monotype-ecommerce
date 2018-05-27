@@ -44,12 +44,12 @@ export interface Product extends MongooseDocument {
     simpleAttributeValues: SimpleAttributeValue[]
     /// Variation attributes.
     variableProperties: string[]
-    variableAttributes: Ref<Attribute > []
-    variableAttributeValues: Ref<AttributeValue > []
+    variableAttributes: Ref<Attribute>[]
+    variableAttributeValues: Ref<AttributeValue>[]
     variableSimpleAttributeValues: SimpleAttributeValue[]
 
 	// Taxonomy.
-    taxonomyTerms: Ref<TaxonomyTerm > []
+    taxonomyTerms: Ref<TaxonomyTerm>[]
     taxonomyTermSlugs: string[]
 
 	// Shipping.

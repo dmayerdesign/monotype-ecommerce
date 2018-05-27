@@ -5,6 +5,7 @@ import * as mongoose from 'mongoose'
 import { Crud, HttpStatus } from '@mte/common/constants'
 import { Types } from '@mte/common/constants/inversify'
 import { ProductHelper } from '@mte/common/helpers/product.helper'
+import { Price } from '@mte/common/models/api-interfaces/price'
 import { Attribute } from '@mte/common/models/api-models/attribute'
 import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
 import { Organization } from '@mte/common/models/api-models/organization'
@@ -17,8 +18,6 @@ import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.res
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
 import { GetProductDetailResponseBody } from '@mte/common/models/api-responses/get-product-detail/get-product-detail.response.body'
 import { Currency } from '@mte/common/models/enums/currency'
-import { Price } from '@mte/common/models/interfaces/api/price'
-import { VariableAttributesAndOptions } from '@mte/common/models/interfaces/common/variable-attributes-and-options'
 import { DbClient } from '../data-access/db-client'
 import { ProductSearchHelper } from '../helpers/product-search.helper'
 import { CrudService } from './crud.service'
@@ -335,57 +334,6 @@ export class ProductService extends CrudService<Product> {
             catch (error) {
                 reject(new ApiErrorResponse(error))
             }
-        })
-    }
-
-    public getAttributeSelectOptions(slug: string): Promise<ApiResponse<VariableAttributesAndOptions>> {
-        const attributeSelections: VariableAttributesAndOptions = []
-
-        function getSelectOptions(attr: Attribute): AttributeValue[] {
-            const selection = attributeSelections.find((s) => s.attribute._id === attr._id)
-            if (selection) {
-                return selection.attributeValues as AttributeValue[]
-            }
-            else {
-                return undefined
-            }
-        }
-
-        function setSelectOptions(attribute: Attribute, attributeValues: AttributeValue[]): void {
-            const existingSelections = getSelectOptions(attribute)
-            if (existingSelections) {
-                attributeSelections.splice(attributeSelections.findIndex((x) => x.attribute._id === attribute._id), 1, { attribute, attributeValues })
-            }
-            else {
-                attributeSelections.push({ attribute, attributeValues })
-            }
-        }
-
-        return new Promise<ApiResponse<VariableAttributesAndOptions>>(async (resolve, reject) => {
-            const productDetailResponse = await this.getProductDetail(slug)
-            const product = productDetailResponse.body
-            if (!product || !product.variations) {
-                reject(new ApiErrorResponse(new Error('No selection data was found for ' + slug + '.'), HttpStatus.CLIENT_ERROR_NOT_FOUND))
-                return
-            }
-            product.variations.forEach((variation: Product) => {
-                if (variation.attributeValues) {
-                    variation.attributeValues
-                        .filter((variationAttributeValue: AttributeValue) =>
-                            !!product.variableAttributeValues.find((x: AttributeValue) => x._id === variationAttributeValue._id))
-                        .forEach((variationAttributeValue: AttributeValue) => {
-                            const parentAttribute = product.variableAttributes.find((attr: Attribute) => attr._id === variationAttributeValue.attribute)
-                            if (!getSelectOptions(parentAttribute as Attribute)) {
-                                setSelectOptions(parentAttribute as Attribute, [])
-                            }
-                            setSelectOptions(parentAttribute as Attribute, [
-                                ...getSelectOptions(parentAttribute as Attribute),
-                                variationAttributeValue
-                            ])
-                        })
-                }
-            })
-            resolve(new ApiResponse(attributeSelections))
         })
     }
 

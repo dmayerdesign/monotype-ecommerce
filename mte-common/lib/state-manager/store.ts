@@ -1,4 +1,4 @@
-import { BehaviorSubject, Observable, ReplaySubject, of as observableOf } from 'rxjs'
+import { of as observableOf, BehaviorSubject, Observable, ReplaySubject } from 'rxjs'
 import { distinctUntilChanged, filter, map } from 'rxjs/operators'
 import { Action } from './action'
 import { Reducer } from './reducer'

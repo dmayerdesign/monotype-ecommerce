@@ -6,7 +6,7 @@ import { Document, Error, Model, Types } from 'mongoose'
 
 import { Copy } from '@mte/common/constants/copy'
 import { prop, MongooseDocument, MongooseModel } from '@mte/common/lib/goosetype'
-import { PopulateOptions } from '@mte/common/models/interfaces/api/populate-options'
+import { PopulateOptions } from '@mte/common/models/api-interfaces/populate-options'
 import { SchemaError } from '@mte/common/models/types/errors'
 import { ListFromIdsRequest, ListFromQueryRequest, ListFromSearchRequest, ListRequest } from '../../mte-common/models/api-requests/list.request'
 

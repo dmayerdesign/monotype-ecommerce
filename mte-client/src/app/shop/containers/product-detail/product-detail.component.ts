@@ -1,9 +1,6 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core'
-import { FormGroup, FormControl, AbstractControl } from '@angular/forms'
+import { AbstractControl, FormControl, FormGroup } from '@angular/forms'
 import { ActivatedRoute } from '@angular/router'
-import { startCase } from 'lodash'
-import { switchMap, takeWhile, filter, map, delay, tap } from 'rxjs/operators'
-import { Subscription } from 'rxjs'
 import { CartHelper } from '@mte/common/helpers/cart.helper'
 import { CustomRegionsHelper } from '@mte/common/helpers/custom-regions.helper'
 import { ProductHelper } from '@mte/common/helpers/product.helper'
@@ -14,13 +11,14 @@ import { AttributeValue } from '@mte/common/models/api-interfaces/attribute-valu
 import { CustomRegions } from '@mte/common/models/api-interfaces/custom-regions'
 import { Organization } from '@mte/common/models/api-interfaces/organization'
 import { Product } from '@mte/common/models/api-interfaces/product'
+import { SimpleAttributeValue } from '@mte/common/models/api-interfaces/simple-attribute-value'
 import { TaxonomyTerm } from '@mte/common/models/api-interfaces/taxonomy-term'
-import { VariableAttributesAndOptions } from '@mte/common/models/interfaces/common/variable-attributes-and-options'
+import { Subscription } from 'rxjs'
+import { delay, filter, map, switchMap, takeWhile, tap } from 'rxjs/operators'
 import { CartService } from '../../../shared/services/cart/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { UiService } from '../../../shared/services/ui.service'
 import { ProductService } from '../../services/product.service'
-import { SimpleAttributeValue } from '@mte/common/models/api-interfaces/simple-attribute-value'
 
 @Component({
     selector: 'mte-product-detail',
@@ -271,10 +269,6 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
         return this.selectedProduct && typeof this.selectedProduct.stockQuantity !== 'undefined'
             ? this.selectedProduct.stockQuantity
             : 1
-    }
-
-    public getVariableAttributeLabel({ attribute }: { attribute: Attribute }): string {
-        return startCase(attribute.singularName || attribute.slug)
     }
 
     // Booleans.

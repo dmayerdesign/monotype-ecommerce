@@ -1,11 +1,15 @@
-.variable-attributes {
+@import 'typography';
+
+#variable-attributes {
     width: 100%;
     max-width: 24rem;
 
-    &--name {
-        @extend .ff-secondary;
-        font-weight: bold;
-        text-transform: lowercase;
-        margin-bottom: 0.1rem;
+    .variable-attributes {
+        &--name {
+            @extend .ff-secondary;
+            font-weight: bold;
+            text-transform: lowercase;
+            margin-bottom: 0.1rem;
+        }
     }
 }

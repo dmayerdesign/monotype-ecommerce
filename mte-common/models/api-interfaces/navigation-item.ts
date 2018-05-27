@@ -7,7 +7,7 @@ export interface NavigationItem extends MongooseDocument {
     isTopLevel?: boolean
     className?: string
     routerLink: string[]
-    children: Ref<NavigationItem> []
+    children: Ref<NavigationItem>[]
     template: TemplateRef<any>
     context: any
 }

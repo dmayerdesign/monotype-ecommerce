@@ -50,7 +50,23 @@ export class ProductSearchHelper {
                         },
                     },
                     {
+                        simpleAttributeValues: {
+                            $elemMatch: {
+                                attribute: filter.key,
+                                $or: attributeVOs,
+                            },
+                        },
+                    },
+                    {
                         variableAttributeValues: {
+                            $elemMatch: {
+                                attribute: filter.key,
+                                $or: attributeVOs,
+                            },
+                        },
+                    },
+                    {
+                        variableSimpleAttributeValues: {
                             $elemMatch: {
                                 attribute: filter.key,
                                 $or: attributeVOs,
