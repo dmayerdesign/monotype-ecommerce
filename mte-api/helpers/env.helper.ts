@@ -1,5 +1,3 @@
-require('dotenv').config()
-
 export function isDev(): boolean {
     return process.env.ENVIRONMENT === 'development' || process.env.ENVIRONMENT === 'dev'
 }

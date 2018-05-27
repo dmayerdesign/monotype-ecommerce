@@ -1,5 +1,6 @@
-import { prop, MongooseDocument, MongooseSchemaOptions } from '../../lib/goosetype'
+import { model, prop, MongooseDocument, MongooseSchemaOptions } from '../../lib/goosetype'
 
+@model(Timer, MongooseSchemaOptions.timestamped)
 export class Timer extends MongooseDocument {
     @prop() public name: string
     @prop() public url: string
@@ -8,8 +9,6 @@ export class Timer extends MongooseDocument {
     @prop() public duration: number
     @prop() public jsonData: string
 }
-
-export const TimerModel = new Timer().getModel(MongooseSchemaOptions.timestamped)
 
 // Errors.
 

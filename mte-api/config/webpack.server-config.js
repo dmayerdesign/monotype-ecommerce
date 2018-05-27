@@ -1,14 +1,18 @@
+require('dotenv').config()
+
 const webpack = require('webpack')
 const path = require('path')
 const fs = require('fs')
 const CircularDependencyPlugin = require('circular-dependency-plugin')
-require('dotenv').config()
 const packageJson = require('../../package.json')
 const version = packageJson.version
 
 // Exclude all packages from the build, since your node server
 // has access to node_modules directly.
-const externals = {}
+const externals = {
+	'dotenv': 'commonjs dotenv'
+}
+
 fs.readdirSync(path.resolve(__dirname, '../../node_modules'))
 	.filter(x => ['.bin'].indexOf(x) === -1)
 	.forEach(mod => {
@@ -28,12 +32,13 @@ fs.readdirSync(path.resolve(__dirname, '../../node_modules'))
 module.exports = {
 	name: 'server',
 	target: 'node',
+	mode: process.env.ENVIRONMENT === 'development' ? 'development' : 'production',
 	externals,
 	devtool: 'source-map',
 	entry: path.resolve(__dirname, '../server.ts'),
 	output: {
-			path: path.resolve(__dirname, '../../dist/'),
-			filename: 'server.js',
+		path: path.resolve(__dirname, '../../dist/'),
+		filename: 'server.js',
 	},
 	resolve: {
 		extensions: ['.ts', '.js', '.json', '.pug', '.html'],
@@ -64,7 +69,12 @@ module.exports = {
 				use: [
 					'to-string-loader',
 					'css-loader',
-					'sass-loader',
+					{
+						loader: 'sass-loader',
+						options: {
+							includePaths: ['mte-client/src/styles']
+						},
+					},
 				],
 			},
 			{test: /\.pug$/, use: 'pug-loader'},

@@ -5,7 +5,8 @@ import * as Stripe from 'stripe'
 import { Types } from '@mte/common/constants/inversify'
 import { StripeOrder } from '@mte/common/lib/stripe-order'
 import { Discount } from '@mte/common/models/api-models/discount'
-import { Order, OrderModel } from '@mte/common/models/api-models/order'
+import { Order } from '@mte/common/models/api-models/order'
+import { Price } from '@mte/common/models/api-models/price'
 import { Product } from '@mte/common/models/api-models/product'
 import { GetProductsFromIdsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { ListFromIdsRequest } from '@mte/common/models/api-requests/list.request'
@@ -17,6 +18,7 @@ import { OrderStatus } from '@mte/common/models/enums/order-status'
 import { DbClient } from '../../data-access/db-client'
 import { DiscountService } from '../discount.service'
 import { ProductService } from '../product.service'
+import { ProductHelper } from '@mte/common/helpers/product.helper';
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
@@ -59,11 +61,11 @@ export class StripeOrderActionsService {
 
             try {
                 const orderItemsRequest = new GetProductsFromIdsRequest()
-                orderItemsRequest.ids = <string[]>order.items
-                const orderItemsResponse = await <Promise<ApiResponse<Product[]>>>this.productService.get(orderItemsRequest)
+                orderItemsRequest.ids = order.items as string[]
+                const orderItemsResponse = await this.productService.get(orderItemsRequest)
                 orderItems = orderItemsResponse.body
                 orderItems.forEach(orderItem => {
-                    order.total.amount += this.productService.getPrice(orderItem).amount
+                    order.total.amount += (ProductHelper.getPrice(orderItem) as Price).amount
                 })
             }
             catch (getItemsError) {
@@ -82,7 +84,7 @@ export class StripeOrderActionsService {
                 reject(getDiscountsError)
             }
 
-            const dbOrder = new OrderModel(order)
+            const dbOrder = new Order(order)
 
             // Build the stripe order.
             const stripeOrder = new StripeOrder()
@@ -181,7 +183,7 @@ export class StripeOrderActionsService {
             async function makePayment() {
                 try {
                     const paidStripeOrder = await <Promise<StripeOrder>>stripe.orders.pay(order.stripeOrderId, payment)
-                    let paidOrder = await this.dbClient.findById(OrderModel, order._id) as Order
+                    let paidOrder = await this.dbClient.findById(Order, order._id) as Order
                     paidOrder.status = OrderStatus.Paid
                     const paidOrderResponse = await paidOrder.save()
                     paidOrder = paidOrderResponse._doc

@@ -1,5 +1,5 @@
 import { Types } from '@mte/common/constants/inversify/types'
-import { TaxonomyTerm, TaxonomyTermModel } from '@mte/common/models/api-models/taxonomy-term'
+import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
 import { inject, injectable } from 'inversify'
@@ -15,7 +15,7 @@ import { CrudService } from './crud.service'
  */
 @injectable()
 export class TaxonomyTermService extends CrudService<TaxonomyTerm> {
-    public model = TaxonomyTermModel
+    public model = TaxonomyTerm
 
     constructor(
         @inject(Types.DbClient) protected dbClient: DbClient<TaxonomyTerm>,
@@ -32,7 +32,7 @@ export class TaxonomyTermService extends CrudService<TaxonomyTerm> {
     public getOneSlug(slug: string): Promise<ApiResponse<TaxonomyTerm>> {
         return new Promise<ApiResponse<TaxonomyTerm>>(async (resolve, reject) => {
             try {
-                const taxonomyTerm = await this.dbClient.findOne(TaxonomyTermModel, { slug })
+                const taxonomyTerm = await this.dbClient.findOne(TaxonomyTerm, { slug })
                 resolve(new ApiResponse(taxonomyTerm))
             }
             catch (error) {

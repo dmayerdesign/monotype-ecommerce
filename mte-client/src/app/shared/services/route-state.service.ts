@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core'
 import { NavigationStart, Router } from '@angular/router'
-import { Observable } from 'rxjs/Observable'
+import { Observable } from 'rxjs'
 import { filter } from 'rxjs/operators'
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class RouteStateService {
 
     public previousUrl: string

@@ -1,10 +1,8 @@
 import { Component, ElementRef, Input, OnDestroy, OnInit, Output, Renderer2, ViewChild } from '@angular/core'
 import { AbstractControl, FormBuilder, FormGroup } from '@angular/forms'
-import { Observable } from 'rxjs/Observable'
-import { Subscription } from 'rxjs/Subscription'
-import { Copy } from '../../../../../constants'
-
 import { AppConfig } from '@mte/app-config'
+import { Observable, Subscription } from 'rxjs'
+import { Copy } from '../../../../../constants'
 import { ModalType } from '../../../../../models/enums/modal-type'
 import { ModalData } from '../../../../../models/interfaces/ui/modal-data'
 import { WindowRefService } from '../../services/window-ref.service'

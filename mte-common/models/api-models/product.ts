@@ -1,5 +1,5 @@
 import * as mongooseDelete from 'mongoose-delete'
-import { arrayProp, plugin, pre, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
+import { arrayProp, model, plugin, post, pre, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 
 import { ImageHelper } from '../../helpers/image.helper'
 import { ProductClass } from '../enums/product-class'
@@ -8,10 +8,17 @@ import { AttributeValue } from './attribute-value'
 import { Dimensions } from './dimensions'
 import { Image } from './image'
 import { Price } from './price'
+import { SimpleAttributeValue } from './simple-attribute-value'
 import { TaxonomyTerm } from './taxonomy-term'
 import { Units } from './units'
 
-@pre('save', false, function(next) {
+@pre('find', function() {
+    this.populate('parent')
+})
+@pre('findOne', function() {
+    this.populate('parent')
+})
+@pre('save', function(next) {
     const product = this
     if (!product.slug && product.isNew) {
         product.slug = product.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '-')
@@ -33,6 +40,7 @@ import { Units } from './units'
     next()
 })
 @plugin(mongooseDelete)
+@model(Product, MongooseSchemaOptions.timestamped)
 export class Product extends MongooseDocument {
 	// Aesthetic.
     @prop() public name: string
@@ -46,6 +54,8 @@ export class Product extends MongooseDocument {
     @prop({ enum: ProductClass }) public class: ProductClass
     @prop() public isStandalone: boolean
     @prop() public isParent: boolean
+    @prop() public parentSku: string
+    @prop({ ref: Product }) public parent: Ref<Product>
 
     // Financial.
     @prop() public price: Price
@@ -57,16 +67,16 @@ export class Product extends MongooseDocument {
     @arrayProp({ itemsRef: Product }) public variations: Ref<Product>[]
     @prop() public isVariation: boolean
     @prop() public isDefaultVariation: boolean
-    @prop() public parentSku: string
-    @prop({ ref: Product }) public parent: Ref<Product>
 
 	// Attributes.
-	// - Own attributes.
+	/// Own attributes.
     @arrayProp({ itemsRef: AttributeValue }) public attributeValues: Ref<AttributeValue>[]
-    @arrayProp({ items: String }) public attributeValueSlugs: string[]
-	// - Variation attributes.
-    @arrayProp({ itemsRef: Attribute }) public variableAttributes: Ref<Attribute>[] // Attribute IDs
+    @arrayProp({ items: SimpleAttributeValue }) public simpleAttributeValues: SimpleAttributeValue[]
+    /// Variation attributes.
+    @arrayProp({ items: String }) public variableProperties: string[]
+    @arrayProp({ itemsRef: Attribute }) public variableAttributes: Ref<Attribute>[]
     @arrayProp({ itemsRef: AttributeValue }) public variableAttributeValues: Ref<AttributeValue>[]
+    @arrayProp({ items: SimpleAttributeValue }) public variableSimpleAttributeValues: SimpleAttributeValue[]
 
 	// Taxonomy.
     @arrayProp({ itemsRef: TaxonomyTerm }) public taxonomyTerms: Ref<TaxonomyTerm>[]
@@ -86,8 +96,6 @@ export class Product extends MongooseDocument {
     @prop() public totalSales: number
     @prop() public isEnteredIntoStripe: boolean
 }
-
-export const ProductModel = new Product().getModel()
 
 export class CreateProductError extends Error { }
 export class FindProductError extends Error { }

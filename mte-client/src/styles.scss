@@ -1,11 +1,13 @@
 @import 'variables';
-@import './styles/vendor';
+@import 'vendor';
 @import 'utilities';
 @import 'accessibility';
 @import 'typography';
+@import 'layout';
 
 @import 'elements/buttons';
 @import 'elements/modal';
+@import 'elements/forms';
 @import 'elements/navigation/nav-item';
 
 html {

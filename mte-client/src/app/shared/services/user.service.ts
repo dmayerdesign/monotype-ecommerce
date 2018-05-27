@@ -1,20 +1,19 @@
 import { HttpClient } from '@angular/common/http'
 import { Injectable } from '@angular/core'
 import { ActivatedRoute, Router } from '@angular/router'
-import { Observable } from 'rxjs/Observable'
-import { ReplaySubject } from 'rxjs/ReplaySubject'
+import { Observable, ReplaySubject } from 'rxjs'
 
 import { LocalStorageKeys } from '@mte/common/constants'
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
 import { MteHttpService } from '@mte/common/lib/ng-modules/http'
-import { Cart } from '@mte/common/models/api-models/cart'
-import { User } from '@mte/common/models/api-models/user'
-import { Login } from '@mte/common/models/interfaces/api/login'
-import { UserRegistration } from '@mte/common/models/interfaces/api/user-registration'
+import { Cart } from '@mte/common/models/api-interfaces/cart'
+import { Login } from '@mte/common/models/api-interfaces/login'
+import { User } from '@mte/common/models/api-interfaces/user'
+import { UserRegistration } from '@mte/common/models/api-interfaces/user-registration'
 import { AppRoutes } from '../../constants/app-routes'
 import { UtilService } from './util.service'
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class UserService {
     private _user: User
     private userSubject = new ReplaySubject<User>(1)

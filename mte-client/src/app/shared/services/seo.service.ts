@@ -4,7 +4,7 @@ import { DOCUMENT } from '@angular/platform-browser'
 import { platform } from '@mte/common/lib/ng-modules/ui/utils/platform'
 import { UiService } from './ui.service'
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class SeoService {
 
     private headElement: HTMLElement

@@ -1,0 +1,150 @@
+{
+    "$schema": "./node_modules/@angular-devkit/core/src/workspace/workspace-schema.json",
+    "version": 1,
+    "newProjectRoot": ".",
+    "defaultProject": "mte-client",
+    "projects": {
+        "mte-client": {
+            "root": "mte-client/src",
+            "projectType": "application",
+            "architect": {
+                "build": {
+                    "builder": "@angular-devkit/build-angular:browser",
+                    "options": {
+                        "outputPath": "./dist/public",
+                        "main": "mte-client/src/main.ts",
+                        "tsConfig": "tsconfig.app.json",
+                        "serviceWorker": false,
+                        "stylePreprocessorOptions": {
+                            "includePaths": [
+                                "mte-client/src/styles"
+                            ]
+                        },
+                        "index": "mte-client/src/index.html",
+                        "assets": [
+                            {
+                                "glob": "**/*",
+                                "input": "mte-client/src/assets",
+                                "output": "assets"
+                            },
+                            {
+                                "glob": "favicon.ico",
+                                "input": "mte-client/src",
+                                "output": "favicon.ico"
+                            }
+                        ],
+                        "styles": [
+                            "mte-client/src/styles.scss"
+                        ],
+                        "scripts": [],
+                        "polyfills": "mte-client/src/polyfills.ts"
+                    },
+                    "configurations": {
+                        "staging": {
+                            "fileReplacements": [
+                                {
+                                    "src": "mte-client/src/environments/environment.ts",
+                                    "replaceWith": "mte-client/src/environments/environment.staging.ts"
+                                }
+                            ],
+                            "optimization": true,
+                            "outputHashing": "all",
+                            "sourceMap": false,
+                            "extractCss": true,
+                            "namedChunks": false,
+                            "aot": true,
+                            "extractLicenses": true,
+                            "vendorChunk": false,
+                            "buildOptimizer": true
+                        },
+                        "production": {
+                            "fileReplacements": [
+                                {
+                                    "src": "mte-client/src/environments/environment.ts",
+                                    "replaceWith": "mte-client/src/environments/environment.prod.ts"
+                                }
+                            ],
+                            "optimization": true,
+                            "outputHashing": "all",
+                            "sourceMap": false,
+                            "extractCss": true,
+                            "namedChunks": false,
+                            "aot": true,
+                            "extractLicenses": true,
+                            "vendorChunk": false,
+                            "buildOptimizer": true
+                        }
+                    }
+                },
+                "test": {
+                    "builder": "@angular-devkit/build-angular:karma",
+                    "options": {
+                        "main": "mte-client/src/test.ts",
+                        "polyfills": "mte-client/src/polyfills.ts",
+                        "tsConfig": "tsconfig.spec.json",
+                        "karmaConfig": "mte-client/src/karma.conf.js",
+                        "styles": [],
+                        "scripts": [],
+                        "assets": []
+                    }
+                },
+                "serve": {
+                    "builder": "@angular-devkit/build-angular:dev-server",
+                    "options": {
+                        "browserTarget": "mte-client:build"
+                    },
+                    "configurations": {
+                        "production": {
+                            "browserTarget": "mte-client:build:production"
+                        }
+                    }
+                },
+                "extract-i18n": {
+                    "builder": "@angular-devkit/build-angular:extract-i18n",
+                    "options": {
+                        "browserTarget": "mte-client:build"
+                    }
+                },
+                "lint": {
+                    "builder": "@angular-devkit/build-angular:tslint",
+                    "options": {
+                        "tsConfig": [
+                            "tsconfig.app.json"
+                        ],
+                        "exclude": [
+                            "**/node_modules/**"
+                        ]
+                    }
+                }
+            }
+        },
+        "mte-client-universal": {
+            "root": "mte-client/src",
+            "projectType": "application",
+            "architect": {
+                "build": {
+                    "builder": "@angular-devkit/build-angular:server",
+                    "options": {
+                        "outputPath": "./dist/server-app",
+                        "main": "mte-client/src/main.server.ts",
+                        "tsConfig": "tsconfig.server.json",
+                        "serviceWorker": false,
+                        "stylePreprocessorOptions": {
+                            "includePaths": [
+                                "mte-client/src/styles"
+                            ]
+                        }
+                    },
+                    "configurations": {
+                        "staging": {
+                            "environment": "mte-client/src/environments/environment.staging.ts"
+                        },
+                        "production": {
+                            "environment": "mte-client/src/environments/environment.prod.ts"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

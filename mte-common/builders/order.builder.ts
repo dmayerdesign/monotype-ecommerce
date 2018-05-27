@@ -1,8 +1,8 @@
 import {} from 'stripe'
 
+import { OrderCustomer } from '../models/api-interfaces/order-customer'
+import { Price } from '../models/api-interfaces/price'
 import { OrderStatus } from '../models/enums/order-status'
-import { OrderCustomer } from '../models/interfaces/api/order-customer'
-import { Price } from '../models/interfaces/api/price'
 
 export class OrderBuilder {
     public discounts: string[]

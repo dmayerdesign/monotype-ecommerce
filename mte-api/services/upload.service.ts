@@ -1,4 +1,3 @@
-require('dotenv').config()
 import * as AWS from 'aws-sdk'
 import * as fs from 'fs-extra'
 import { inject, injectable } from 'inversify'
@@ -8,8 +7,8 @@ import sharp from 'sharp'
 
 import { AppConfig } from '@mte/app-config'
 import { Types } from '@mte/common/constants/inversify'
-import { Product, ProductModel } from '@mte/common/models/api-models/product'
-import { RevisionModel } from '@mte/common/models/api-models/revision'
+import { Product } from '@mte/common/models/api-models/product'
+import { Revision } from '@mte/common/models/api-models/revision'
 import { DbClient } from '../data-access/db-client'
 
 /**
@@ -72,7 +71,7 @@ export class UploadService {
         console.log(editObj)
 
         try {
-            const product = await this.dbClient.findOne(ProductModel, { sku })
+            const product = await this.dbClient.findOne(Product, { sku })
 
             Object.keys(editObj).forEach(field => {
                 if (action === 'remove') {
@@ -89,7 +88,7 @@ export class UploadService {
                 /**
                  * Add to revision history
                  */
-                const revision = new RevisionModel({
+                const revision = new Revision({
                     id: product._id.toString(),
                     field: field,
                     value: product[field],
@@ -103,7 +102,7 @@ export class UploadService {
                         done(null, _product._doc)
                     } else {
                         try {
-                            const parent = await this.dbClient.findOne(ProductModel, {sku: product.parentSku})
+                            const parent = await this.dbClient.findOne(Product, {sku: product.parentSku})
 
                             Object.keys(editObj).forEach(field => {
                                 if (action === 'remove') {
@@ -117,7 +116,7 @@ export class UploadService {
                                 /**
                                  * Add to revision history
                                  */
-                                const revision = new RevisionModel({
+                                const revision = new Revision({
                                     id: parent._id.toString(),
                                     field: field,
                                     value: parent[field],

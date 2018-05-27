@@ -5,22 +5,24 @@ import { OrderBuilder } from '@mte/common/builders/order.builder'
 import { MteFormBuilderService } from '@mte/common/lib/ng-modules/forms/services/form-builder.service'
 import { MteFormBuilder } from '@mte/common/lib/ng-modules/forms/utilities/form.builder'
 import { platform } from '@mte/common/lib/ng-modules/ui/utils/platform'
-import { Cart } from '@mte/common/models/api-models/cart'
-import { Organization } from '@mte/common/models/api-models/organization'
-import { Product } from '@mte/common/models/api-models/product'
-import { User } from '@mte/common/models/api-models/user'
+import { Cart } from '@mte/common/models/api-interfaces/cart'
+import { Organization } from '@mte/common/models/api-interfaces/organization'
+import { Price } from '@mte/common/models/api-interfaces/price'
+import { Product } from '@mte/common/models/api-interfaces/product'
+import { User } from '@mte/common/models/api-interfaces/user'
 import { Currency } from '@mte/common/models/enums/currency'
 import { OrderStatus } from '@mte/common/models/enums/order-status'
-import { Price } from '@mte/common/models/interfaces/api/price'
-import { CartService, OrganizationService, UiService, UserService } from '../../../shared/services'
+import { CartService } from '../../../shared/services/cart/cart.service'
+import { OrganizationService } from '../../../shared/services/organization.service'
+import { UiService } from '../../../shared/services/ui.service'
+import { UserService } from '../../../shared/services/user.service'
 import { CheckoutService } from '../../services/checkout.service'
 
 @Component({
-    selector: 'checkout',
+    selector: 'mte-checkout',
     templateUrl: './checkout.component.html',
 })
 export class CheckoutComponent implements OnInit {
-
     // The cast of crazy characters.
     private user: User
     // private stripeCustomer: any
@@ -46,8 +48,6 @@ export class CheckoutComponent implements OnInit {
     // private savedCard: any
     private cards: any[]
 
-
-
     constructor(
         private ui: UiService,
         private cartService: CartService,
@@ -59,8 +59,6 @@ export class CheckoutComponent implements OnInit {
     ) {}
 
     public ngOnInit(): void {
-        this.ui.setTitle('Checkout')
-
         this.checkoutForm = this.mteFormBuilder.create({
             firstName: {
                 label: 'First name',
@@ -79,7 +77,7 @@ export class CheckoutComponent implements OnInit {
         })
         this.checkoutFormGroup = this.checkoutForm.formGroup
 
-        this.cartService.carts.subscribe(cart => {
+        this.cartService.store.states.subscribe(cart => {
             this.cart = cart
             this.populateOrder()
         })
@@ -127,8 +125,8 @@ export class CheckoutComponent implements OnInit {
             if (!this.order.shippingCost && this.organization.retailSettings.shippingFlatRate)
             this.order.shippingCost = this.organization.retailSettings.shippingFlatRate
 
-            /*****************/
-            /** FOR TESTING **/
+            ////////////////////////////////////
+            // FOR TESTING
 
             if (this.user) {
                 this.user.firstName = 'Danny'
@@ -153,8 +151,9 @@ export class CheckoutComponent implements OnInit {
                 this.order.customer.billingAddress = this.order.customer.shippingAddress
                 // this.order.savePaymentInfo = true;
             }
-            /*****************
-            *****************/
+
+            // /FOR TESTING
+            ////////////////////////////////////
 
             this.getStripeCustomer()
 
@@ -176,9 +175,6 @@ export class CheckoutComponent implements OnInit {
         if (!this.order) return
         console.log(this.checkoutFormGroup)
         if (this.order.status !== OrderStatus.PreSubmitInvalid) return
-
-
-
 
         /*** Validations ***/
         /*

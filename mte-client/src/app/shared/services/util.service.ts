@@ -1,10 +1,8 @@
 import { Injectable } from '@angular/core'
-import { Observable } from 'rxjs/Observable'
-import { ReplaySubject } from 'rxjs/ReplaySubject'
-import { Subject } from 'rxjs/Subject'
-import { delay } from 'rxjs/operators/delay'
+import { Observable, ReplaySubject, Subject } from 'rxjs'
+import { delay } from 'rxjs/operators'
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class UtilService {
 
     constructor() {}
@@ -20,12 +18,7 @@ export class UtilService {
         if (window && window.localStorage) {
             const item = window.localStorage.getItem(key)
             if (item && item.length) {
-                if (item.charAt(0) === '[' || item.charAt(0) === '{') {
-                    return JSON.parse(item)
-                }
-                else {
-                    return item
-                }
+                return JSON.parse(item)
             }
         }
         return undefined
@@ -33,7 +26,7 @@ export class UtilService {
 
     public saveToLocalStorage(key: string, payload: any): void {
         if (window && window.localStorage) {
-            window.localStorage.setItem(key, payload)
+            window.localStorage.setItem(key, JSON.stringify(payload))
         }
     }
 

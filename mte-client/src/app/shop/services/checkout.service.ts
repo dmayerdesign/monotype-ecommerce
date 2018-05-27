@@ -1,12 +1,12 @@
 import { HttpClient } from '@angular/common/http'
 import { Injectable } from '@angular/core'
-import { Observable } from 'rxjs/Observable'
+import { Observable } from 'rxjs'
 
 import { AppConfig } from '@mte/app-config'
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
-import { Order } from '@mte/common/models/api-models/order'
+import { Order } from '@mte/common/models/api-interfaces/order'
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class CheckoutService {
 
     constructor (

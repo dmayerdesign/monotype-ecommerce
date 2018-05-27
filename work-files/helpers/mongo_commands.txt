@@ -1,0 +1,18 @@
+# Local to cloud
+cd /data/db
+mongodump --db time --out /data/db/migrate
+mongorestore -h ds117859.mlab.com:17859 -d time -u dannymayer -p Kounice372 /data/db/migrate/time
+
+# Cloud to local
+cd /data/db
+mongodump -h ds117859.mlab.com:17859 -d time -u dannymayer -p Kounice372 -o /data/db/migrate
+mongorestore --db time /data/db/migrate/time
+
+# Local restore from local backup
+mongorestore --db time /data/db/migrate/time
+
+# Connect to shell
+mongo ds117859.mlab.com:17859/time -u dannymayer -p Kounice372
+
+# Export to JSON
+mongoexport --db time --collection products --out /Users/danielmayer/Apps/angular-express-ecommerce/products.json --jsonArray --pretty

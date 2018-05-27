@@ -1,14 +1,12 @@
 import { HttpClient } from '@angular/common/http'
 import { Injectable } from '@angular/core'
-import { Observable } from 'rxjs/Observable'
-import { ReplaySubject } from 'rxjs/ReplaySubject'
-import { Subject } from 'rxjs/Subject'
+import { Observable, ReplaySubject, Subject } from 'rxjs'
 
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
 import { SimpleError } from '@mte/common/lib/ng-modules/http'
-import { Organization } from '@mte/common/models/api-models/organization'
+import { Organization } from '@mte/common/models/api-interfaces/organization'
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class OrganizationService {
     public organization: Organization
     private organizationPump = new ReplaySubject<Organization>(1)
@@ -31,5 +29,12 @@ export class OrganizationService {
                 },
                 (error: SimpleError) => this.organizationErrorPump.next(error),
             )
+    }
+
+    public getName(): string {
+        if (this.organization) {
+            return this.organization.branding.displayName
+        }
+        else return ''
     }
 }

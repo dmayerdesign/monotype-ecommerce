@@ -9,11 +9,11 @@ import {
     TemplateRef,
 } from '@angular/core'
 import { FormControl } from '@angular/forms'
-import { Observable } from 'rxjs/Observable'
-import { fromEvent } from 'rxjs/observable/fromEvent'
+import { Observable, fromEvent } from 'rxjs'
 import { takeWhile } from 'rxjs/operators'
 
 import { Copy } from '@mte/common/constants/copy'
+import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { MteFormFieldOptions } from '../../models/form-field-options'
 
@@ -26,7 +26,7 @@ import { MteFormFieldOptions } from '../../models/form-field-options'
                 {{ options.label }}
             </label>
 
-            <div class="input-group">
+            <div class="{{ options?.formControlType }}-group">
                 <ng-content></ng-content>
             </div>
 
@@ -42,10 +42,10 @@ import { MteFormFieldOptions } from '../../models/form-field-options'
     `,
 })
 @Heartbeat()
-export class MteFormFieldComponent implements OnInit, OnDestroy, AfterContentInit {
-    private isAlive = false
-
-    @Input() public options: MteFormFieldOptions
+export class MteFormFieldComponent extends HeartbeatComponent implements OnInit, OnDestroy, AfterContentInit {
+    @Input() public options: MteFormFieldOptions = {
+        label: ''
+    }
     @Input() public customErrorMessage: TemplateRef<any>
     @ContentChild('input', { read: ElementRef }) public input: ElementRef
 
@@ -83,8 +83,17 @@ export class MteFormFieldComponent implements OnInit, OnDestroy, AfterContentIni
     }
 
     public ngAfterContentInit(): void {
+        let nativeElement: HTMLElement
+
         if (this.input) {
             this.element = this.input
+            nativeElement = this.element.nativeElement
+        }
+
+        if (nativeElement && (!this.options || typeof this.options.formControlType === 'undefined')) {
+            this.options.formControlType = nativeElement.nodeName.toLowerCase() === 'select'
+                ? 'select'
+                : 'input'
         }
 
         fromEvent(this.element.nativeElement, 'blur')
@@ -105,6 +114,12 @@ export class MteFormFieldComponent implements OnInit, OnDestroy, AfterContentIni
 
     public getLabelClassName(): string {
         const classNames: string[] = []
+        if (this.options && !!this.options.labelClass) {
+            classNames.push(this.options.labelClass)
+        }
+        if (this.options && this.options.hideLabel) {
+            classNames.push('sr-only')
+        }
         return classNames.join(' ')
     }
 

@@ -1,10 +1,12 @@
-import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
+import { arrayProp, model, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 import { UserRole } from '../../models/enums/user-role'
 import { Address } from './address'
 import { Cart } from './cart'
 import { Image } from './image'
 import { Order } from './order'
+import { Wishlist } from './wishlist'
 
+@model(User, MongooseSchemaOptions.timestamped)
 export class User extends MongooseDocument {
     @prop({ required: true }) public email: string
     @prop() public emailIsVerified?: boolean
@@ -30,9 +32,8 @@ export class User extends MongooseDocument {
     @prop() public stripeCustomerId?: string
 
     @prop() public cart?: Cart
+    @prop({ ref: Wishlist }) public wishlist?: Ref<Wishlist>
 }
-
-export const UserModel = new User().getModel(MongooseSchemaOptions.timestamped)
 
 // Errors.
 

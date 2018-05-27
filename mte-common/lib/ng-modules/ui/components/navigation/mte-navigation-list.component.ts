@@ -26,7 +26,7 @@ export interface NavigationListContext {
                     class="nav-item"
                     routerLinkActive="active"
                     [routerLinkActiveOptions]="{ exact: true }"
-                    [ngClass]="{ 'dropdown': treeHelper.hasChildren(item) }"
+                    [ngClass]="getNavItemClassList(item)"
                     (mouseenter)="handleNavLinkMouseEnter(item)"
                     (mouseleave)="handleNavLinkMouseLeave(item)">
 
@@ -145,5 +145,16 @@ export class MteNavigationListComponent {
 
     public shouldShowPlus(item: NavigationItem): boolean {
         return TreeHelper.hasChildren(item) && this.windowRefService.mediaBreakpointBelow(BootstrapBreakpointKey.Md)
+    }
+
+    public getNavItemClassList(item: NavigationItem): string[] {
+        const classList = []
+        if (TreeHelper.hasChildren(item)) {
+            classList.push('dropdown')
+        }
+        if (!!item.className) {
+            classList.push(item.className)
+        }
+        return classList
     }
 }

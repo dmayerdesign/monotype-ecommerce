@@ -1,7 +1,8 @@
-import { prop, MongooseDocument } from '../../lib/goosetype'
+import { prop, schema, MongooseDocument } from '../../lib/goosetype'
 
 import { StripeCardHash } from './stripe-card-hash'
 
+@schema(StripeCardToken)
 export class StripeCardToken extends MongooseDocument {
     @prop() public object: string
     @prop() public id: string
@@ -12,4 +13,3 @@ export class StripeCardToken extends MongooseDocument {
     @prop() public used: boolean
     @prop() public card?: StripeCardHash
 }
-new StripeCardToken().getSchema()

@@ -13,20 +13,6 @@ import { LoginComponent } from './components/login/login.component'
 import { SignupComponent } from './components/signup/signup.component'
 import { SiteLocatorComponent } from './components/site-locator/site-locator.component'
 
-// Services.
-import { ProductService } from '../shop/services/product.service'
-import { TaxonomyTermService } from '../shop/services/taxonomy-term.service'
-import { AdminGuardService } from './services/admin-guard.service'
-import { AuthGuardService } from './services/auth-guard.service'
-import { CartService } from './services/cart.service'
-import { GAnalyticsService } from './services/ga.service'
-import { OrganizationService } from './services/organization.service'
-import { RouteStateService } from './services/route-state.service'
-import { SeoService } from './services/seo.service'
-import { UiService } from './services/ui.service'
-import { UserService } from './services/user.service'
-import { UtilService } from './services/util.service'
-
 @NgModule({
     imports: [
         MteFormsModule,
@@ -52,18 +38,6 @@ export class SharedModule {
         return {
             ngModule: SharedModule,
             providers: [
-                AdminGuardService,
-                AuthGuardService,
-                CartService,
-                GAnalyticsService,
-                OrganizationService,
-                ProductService,
-                TaxonomyTermService,
-                RouteStateService,
-                SeoService,
-                UiService,
-                UserService,
-                UtilService,
                 {
                     provide: HttpInjectionTokens.HttpSettings,
                     useValue: HttpSettings,

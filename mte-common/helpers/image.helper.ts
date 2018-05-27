@@ -27,6 +27,9 @@ export class ImageHelper {
     }
 
     public static getImageForSchema(src: string): string {
-        return `${AppConfig.cloudfront_url}${src}`
+        if (src.indexOf('/') === 0) {
+            src = src.substr(1)
+        }
+        return `${AppConfig.cloudfront_url}/${src}`
     }
 }

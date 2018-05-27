@@ -1,110 +1,110 @@
 @import url('https://fonts.googleapis.com/css?family=Montserrat:300,400,500,700');
-@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,400i,500,500i,700');
+@import url('https://fonts.googleapis.com/css?family=Viga');
 @import url('https://fonts.googleapis.com/css?family=Rock+Salt');
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 @import 'variables';
 @import 'mixins/typography';
 
-.roboto {
-  @include Roboto;
+// Class definitions
+
+/// Font families
+
+.ff {
+  &-paragraph {
+    @include Montserrat;
+  }
+  &-display {
+    @include Montserrat;
+  }
+  &-display-2 {
+    @include Viga;
+  }
+  &-secondary {
+    @include Rock-Salt;
+  }
 }
-.montserrat {
+
+@mixin ff-paragraph {
   @include Montserrat;
 }
-.rock-salt {
+@mixin ff-display {
+  @include Montserrat;
+}
+@mixin ff-display-2 {
+  @include Viga;
+}
+@mixin ff-secondary {
   @include Rock-Salt;
 }
 
-h1, h2, h3, h4, .h1, .h2, .h3, .h4 {
-  letter-spacing: 0;
-  color: $text-gray;
-  font-weight: normal;
-  line-height: 1.1;
-}
-
-h1, h2, h3, h4, .h1, .h2, .h3, .h4 {
-  @include Montserrat;
-}
-
-h1, .h1 {
-  font-weight: 300;
-  letter-spacing: -0.1rem;
-}
-
-h2, .h2 {
-  font-weight: 300;
-  letter-spacing: 0;
-}
-
-h1, .h1 { font-size: 5rem; }
-h2, .h2 { font-size: 4rem; }
-h3, .h3 { font-size: 2.8rem; margin: 2.6rem 0 1.4rem; }
-h4, .h4 { font-size: 2rem; }
-h5, .h5 { font-size: 1.6rem; }
-
-ul, ol, p, label, .label, dd, dt {
-  font-size: 1.4rem;
-  color: $text-gray;
-}
-
-dt {
-	font-weight: 500;
-}
-
-.text-right, .align-right {
-	text-align: right !important;
-}
-.text-center, .center, .align-center {
-  text-align: center !important;
-}
-.text-left, .align-left {
-	text-align: left !important;
-}
-
-.uppercase { text-transform: uppercase !important; }
-.underline, .text-underline { text-decoration: underline !important; }
-.no-underline { text-decoration: none !important; }
-
-label, .label, span {
-  @include Roboto;
-	color: $text-gray;
-}
-
-p, .dark, dd {
-	color: $text-dark-gray;
-}
-
-dd {
-	font-weight: bold;
-}
-
-.subtitle {
-  font-size: 1.6rem;
-  font-weight: 500;
-}
-
-// Colors
-
-.text-light { color: $text-light-gray !important; }
-.text { color: $text-gray !important; }
-.text-dark { color: $text-dark-gray !important; }
-.white, .text-white { color: #fff !important; }
-.off-white, .text-off-white { color: $gray-100 !important; }
-.text-orange, .text-accent, .text-action { color: $orange !important; }
-.text-primary { color: $primary !important; }
-.text-red { color: $red !important; }
-.text-white { color: $white !important; }
-.text-green { color: $green !important; }
-
-// Weights
+/// Weights
 
 .weight-normal, .normal-weight { font-weight: normal !important; }
 .weight-light { font-weight: 300 !important; }
 .weight-medium { font-weight: 500 !important; }
 .weight-bold { font-weight: bold !important; }
 
-// Shadows
+/// Shadows
 
 .text-shadow { text-shadow: 0rem 0.2rem 0.2rem rgba(0,0,0,0.1) }
 .text-shadow-light { text-shadow: 0rem 0.2rem 0.2rem rgba(60,60,60,0.1) }
 
+// Global styles
+
+body {
+  @extend .ff-paragraph;
+  color: $gray-light-text;
+}
+
+h1, h2, h3, h4, .h1, .h2, .h3, .h4 {
+  @extend .ff-display;
+  color: $gray-text;
+  font-weight: normal;
+  line-height: 1.1;
+}
+
+h1, h2 {
+  @extend .ff-display-2;
+}
+
+h1, .h1 {
+  font-weight: bold;
+  letter-spacing: -0.1rem;
+}
+
+h1, .h1 { font-size: 6.6rem; }
+h2, .h2 { font-size: 4rem; }
+h3, .h3 { font-size: 2.6rem; }
+h4, .h4 { font-size: 2rem; }
+h5, .h5 { font-size: 1.6rem; }
+
+ul, .ul,
+ol, .ol,
+p, .p,
+label, .label,
+dd, .dd,
+dt, .dt {
+  font-size: 1.3rem;
+  font-weight: 500;
+  line-height: 2.1rem;
+}
+
+dd {
+	font-weight: bold;
+}
+
+.text-underline { text-decoration: underline !important; }
+.text-no-underline { text-decoration: none !important; }
+
+.dark, dd {
+	color: $gray-dark-text;
+}
+
+div, span {
+  cursor: default;
+}
+
+.subtitle {
+  font-size: 1.6rem;
+  font-weight: 500;
+}

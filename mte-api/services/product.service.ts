@@ -4,21 +4,20 @@ import * as mongoose from 'mongoose'
 
 import { Crud, HttpStatus } from '@mte/common/constants'
 import { Types } from '@mte/common/constants/inversify'
-import { MongooseModel } from '@mte/common/lib/goosetype'
-import { Attribute, AttributeModel } from '@mte/common/models/api-models/attribute'
-import { AttributeValue, AttributeValueModel } from '@mte/common/models/api-models/attribute-value'
+import { ProductHelper } from '@mte/common/helpers/product.helper'
+import { Price } from '@mte/common/models/api-interfaces/price'
+import { Attribute } from '@mte/common/models/api-models/attribute'
+import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
 import { Organization } from '@mte/common/models/api-models/organization'
-import { Product, ProductModel } from '@mte/common/models/api-models/product'
+import { Product } from '@mte/common/models/api-models/product'
+import { Taxonomy } from '@mte/common/models/api-models/taxonomy'
 import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
-import { TaxonomyTermModel } from '@mte/common/models/api-models/taxonomy-term'
 import { GetProductsFilterType, GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { ListFromQueryRequest } from '@mte/common/models/api-requests/list.request'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
-import { GetAttributeSelectOptionsResponseBody } from '@mte/common/models/api-responses/get-attribute-select-options/get-attribute-select-options.response.body'
 import { GetProductDetailResponseBody } from '@mte/common/models/api-responses/get-product-detail/get-product-detail.response.body'
 import { Currency } from '@mte/common/models/enums/currency'
-import { Price } from '@mte/common/models/interfaces/api/price'
 import { DbClient } from '../data-access/db-client'
 import { ProductSearchHelper } from '../helpers/product-search.helper'
 import { CrudService } from './crud.service'
@@ -27,6 +26,11 @@ import { OrganizationService } from './organization.service'
 /**
  * Methods for querying the `products` collection
  *
+ * TODO:
+ * - Write simple method for querying related products
+ * -- *Simple match* on one or more attributes/taxonomies (in this case probably brand and stability)
+ * -- Those that match all go first, all but one next, etc.
+ *
  * @export
  * @class ProductService
  * @extends {CrudService<Product>}
@@ -34,7 +38,7 @@ import { OrganizationService } from './organization.service'
 @injectable()
 export class ProductService extends CrudService<Product> {
 
-    protected model = ProductModel
+    protected model = Product
     protected listRequestType = GetProductsRequest
     protected listFromIdsRequestType = GetProductsFromIdsRequest
 
@@ -55,7 +59,7 @@ export class ProductService extends CrudService<Product> {
     public getOneSlug(slug: string): Promise<ApiResponse<Product>> {
         return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
             try {
-                const product = await this.dbClient.findOne(ProductModel, { slug })
+                const product = await this.dbClient.findOne(Product, { slug })
                 resolve(new ApiResponse(product))
             }
             catch (error) {
@@ -73,25 +77,57 @@ export class ProductService extends CrudService<Product> {
     public getProductDetail(slug: string): Promise<ApiResponse<GetProductDetailResponseBody>> {
         return new Promise<ApiResponse<GetProductDetailResponseBody>>(async (resolve, reject) => {
             try {
-                const product = await this.dbClient.findOne(ProductModel, { slug }, [
+                const product = await this.dbClient.findOne(Product, { slug }, [
                     {
                         path: 'taxonomyTerms',
-                        model: TaxonomyTermModel,
+                        model: TaxonomyTerm.getModel(),
+                        populate: {
+                            path: 'taxonomy',
+                            model: Taxonomy.getModel(),
+                        }
+                    },
+                    {
+                        path: 'simpleAttributeValues.attribute',
+                        model: Attribute.getModel(),
+                    },
+                    {
+                        path: 'attributeValues',
+                        model: AttributeValue.getModel(),
+                        populate: {
+                            path: 'attribute',
+                            model: Attribute.getModel(),
+                        },
                     },
                     {
                         path: 'variableAttributes',
-                        model: AttributeModel,
+                        model: Attribute.getModel(),
                     },
                     {
                         path: 'variableAttributeValues',
-                        model: AttributeValueModel,
+                        model: AttributeValue.getModel(),
+                        populate: {
+                            path: 'attribute',
+                            model: Attribute.getModel(),
+                        }
+                    },
+                    {
+                        path: 'variableSimpleAttributeValues.attribute',
+                        model: Attribute.getModel(),
                     },
                     {
                         path: 'variations',
                         populate: {
                             path: 'attributeValues',
-                            model: AttributeValueModel,
+                            model: AttributeValue.getModel(),
+                            populate: {
+                                path: 'attribute',
+                                model: Attribute.getModel(),
+                            }
                         },
+                    },
+                    {
+                        path: 'variations.simpleAttributeValues.attribute',
+                        model: Attribute.getModel(),
                     },
                 ])
 
@@ -159,7 +195,7 @@ export class ProductService extends CrudService<Product> {
                         name: { $regex: searchRegExp },
                         slug: { $regex: searchRegExp },
                     }
-                    taxonomyTermIdsToSearch = (await this.dbClient.findQuery<TaxonomyTerm>(TaxonomyTermModel, new ListFromQueryRequest({ query: searchableTaxonomiesQuery })))
+                    taxonomyTermIdsToSearch = (await this.dbClient.findQuery<TaxonomyTerm>(TaxonomyTerm, new ListFromQueryRequest({ query: searchableTaxonomiesQuery })))
                         .map((taxonomyTerm) => taxonomyTerm._id)
                 }
                 catch (error) {
@@ -209,7 +245,7 @@ export class ProductService extends CrudService<Product> {
                     // Taxonomy Filter - performs an `$or` query on `Product.taxonomyTerms`.
 
                     if (isTaxFilter) {
-                        const taxonomyTerms = await this.dbClient.findQuery<TaxonomyTerm>(TaxonomyTermModel, { query: { slug: { $in: filter.values } } })
+                        const taxonomyTerms = await this.dbClient.findQuery<TaxonomyTerm>(TaxonomyTerm, { query: { slug: { $in: filter.values } } })
                         const taxonomyTermIds = taxonomyTerms ? taxonomyTerms.map((term) => term._id) : []
                         searchQuery = this.productSearchHelper.taxonomyTermFilter(taxonomyTermIds, searchQuery)
                     }
@@ -228,13 +264,13 @@ export class ProductService extends CrudService<Product> {
 
             if (res) {
                 // Stream the products.
-                this.dbClient.findQuery(ProductModel, listFromQueryRequest, res)
+                this.dbClient.findQuery(Product, listFromQueryRequest, res)
                 resolve()
             }
             else {
                 // Retrieve the products normally, loading them into memory.
                 try {
-                    const products = await this.dbClient.findQuery(ProductModel, listFromQueryRequest)
+                    const products = await this.dbClient.findQuery(Product, listFromQueryRequest)
                     resolve(new ApiResponse(products))
                 }
                 catch (error) {
@@ -247,7 +283,7 @@ export class ProductService extends CrudService<Product> {
     public createOne(product: Product): Promise<ApiResponse<Product>> {
         return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
             try {
-                const newProduct = await new ProductModel(product).save() as Product
+                const newProduct = await new Product(product).save() as Product
                 resolve(new ApiResponse(newProduct._doc))
             }
             catch (error) {
@@ -259,7 +295,7 @@ export class ProductService extends CrudService<Product> {
     public create(products: Product[]): Promise<ApiResponse<Product[]>> {
         return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
             try {
-                const newProducts = await this.dbClient.create(ProductModel, products) as Product[]
+                const newProducts = await this.dbClient.create(Product, products) as Product[]
                 resolve(new ApiResponse(newProducts))
             }
             catch (error) {
@@ -271,7 +307,7 @@ export class ProductService extends CrudService<Product> {
     public deleteOne(id: string): Promise<ApiResponse<any>> {
         return new Promise<ApiResponse<any>>(async (resolve, reject) => {
             try {
-                await this.dbClient.delete(ProductModel, id)
+                await this.dbClient.delete(Product, id)
                 resolve(new ApiResponse({}, HttpStatus.SUCCESS_NO_CONTENT))
             }
             catch (error) {
@@ -286,7 +322,7 @@ export class ProductService extends CrudService<Product> {
 
     public createTest(): Promise<ApiResponse<Product>> {
         return new Promise<ApiResponse<Product>>(async (resolve, reject) => {
-            const theProduct = new ProductModel({
+            const theProduct = new Product({
                 name: 'Test product',
                 slug: 'test-product',
                 sku: 'TEST_1',
@@ -301,79 +337,13 @@ export class ProductService extends CrudService<Product> {
         })
     }
 
-    public getAttributeSelectOptions(slug: string): Promise<ApiResponse<GetAttributeSelectOptionsResponseBody>> {
-        const attributeSelections: GetAttributeSelectOptionsResponseBody = []
-
-        function getSelectOptions(attr: Attribute): AttributeValue[] {
-            const selection = attributeSelections.find((s) => s.attribute._id === attr._id)
-            if (selection) {
-                return selection.attributeValues as AttributeValue[]
-            }
-            else {
-                return undefined
-            }
-        }
-
-        function setSelectOptions(attribute: Attribute, attributeValues: AttributeValue[]): void {
-            const existingSelections = getSelectOptions(attribute)
-            if (existingSelections) {
-                attributeSelections.splice(attributeSelections.findIndex((x) => x.attribute._id === attribute._id), 1, { attribute, attributeValues })
-            }
-            else {
-                attributeSelections.push({ attribute, attributeValues })
-            }
-        }
-
-        return new Promise<ApiResponse<GetAttributeSelectOptionsResponseBody>>(async (resolve, reject) => {
-            const productDetailResponse = await this.getProductDetail(slug)
-            const product = productDetailResponse.body
-            if (!product || !product.variations) {
-                reject(new ApiErrorResponse(new Error('No selection data was found for ' + slug + '.'), HttpStatus.CLIENT_ERROR_NOT_FOUND))
-                return
-            }
-            product.variations.forEach((variation: Product) => {
-                if (variation.attributeValues) {
-                    variation.attributeValues
-                        .filter((variationAttributeValue: AttributeValue) =>
-                            !!product.variableAttributeValues.find((x: AttributeValue) => x._id === variationAttributeValue._id))
-                        .forEach((variationAttributeValue: AttributeValue) => {
-                            const parentAttribute = product.variableAttributes.find((attr: Attribute) => attr._id === variationAttributeValue.attribute)
-                            if (!getSelectOptions(parentAttribute as Attribute)) {
-                                setSelectOptions(parentAttribute as Attribute, [])
-                            }
-                            setSelectOptions(parentAttribute as Attribute, [
-                                ...getSelectOptions(parentAttribute as Attribute),
-                                variationAttributeValue
-                            ])
-                        })
-                }
-            })
-            resolve(new ApiResponse(attributeSelections))
-        })
-    }
-
     // Helpers.
 
-    public getPrice(product: Product): Price {
-        if (product.isOnSale) {
-            return product.salePrice
-        }
-        else {
-            return product.price
-        }
+    public getPrice(product: Product): Price | Price[] {
+        return ProductHelper.getPrice(product)
     }
 
-    public determinePrice(product: Product): Price {
-        if (product.isOnSale && product.salePrice) {
-            return product.salePrice
-        }
-        else if (product.price) {
-            return product.price
-        }
-        return {
-            amount: 0,
-            currency: Currency.USD,
-        }
+    public determinePrice(product: Product): Price | Price[] {
+        return ProductHelper.getPrice(product)
     }
-
 }

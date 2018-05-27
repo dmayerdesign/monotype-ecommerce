@@ -4,7 +4,7 @@ import * as Stripe from 'stripe'
 
 import { Types } from '@mte/common/constants/inversify'
 import { Order } from '@mte/common/models/api-models/order'
-import { User, UserModel } from '@mte/common/models/api-models/user'
+import { User } from '@mte/common/models/api-models/user'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
 import { DbClient } from '../../data-access/db-client'
@@ -33,7 +33,7 @@ export class StripeCustomerService {
             if (order.customer.userId && order.savePaymentInfo && order.stripeTokenObject && order.stripeTokenObject.card) {
                 let user: User
                 try {
-                    user = await this.dbClient.findById(UserModel, order.customer.userId)
+                    user = await this.dbClient.findById(User, order.customer.userId)
                 }
                 catch (findUserError) {
                     reject(findUserError)

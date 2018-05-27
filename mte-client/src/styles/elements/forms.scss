@@ -1,0 +1,35 @@
+@import 'vendor-helpers';
+@import 'variables';
+
+// Form controls.
+
+.form-control {
+    height: 4rem;
+    border: none;
+    background: $white;
+    padding-left: 1rem;
+}
+
+select {
+    @extend .form-control;
+    -webkit-appearance: none;
+    background: $white url('/images/select-bg.gif') no-repeat calc(100% - 1.8rem) 50%;
+    background-size: 0.6rem auto;
+    padding-right: 2rem;
+    border-radius: 0.2rem;
+    box-shadow: -0.1rem -0.1rem 0 rgba(50,50,50,0.1);
+    height: 4rem !important;
+}
+
+input {
+    @extend .form-control;
+}
+
+// Form control groups.
+
+.input-group,
+.select-group {
+    margin-bottom: 1rem;
+}
+
+// Form groups.

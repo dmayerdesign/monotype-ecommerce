@@ -1,9 +1,9 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
-import { Observable } from 'rxjs/Observable'
-import { ReplaySubject } from 'rxjs/ReplaySubject'
-import { takeWhile } from 'rxjs/operators/takeWhile'
+import { Observable, ReplaySubject } from 'rxjs'
+import { takeWhile } from 'rxjs/operators'
 
 import { AppConfig } from '@mte/app-config'
+import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Toast } from '../../../../../models/interfaces/ui/toast'
 import { timeout } from '../../utils/timeout'
@@ -31,9 +31,7 @@ import { timeout } from '../../utils/timeout'
     styleUrls: [ './mte-toast.component.scss' ],
 })
 @Heartbeat()
-export class MteToastComponent implements OnInit, OnDestroy {
-    private isAlive = false
-
+export class MteToastComponent extends HeartbeatComponent implements OnInit, OnDestroy {
     @Input() public toasts: Observable<Toast>
 
     public queue: Toast[] = []
@@ -47,8 +45,6 @@ export class MteToastComponent implements OnInit, OnDestroy {
         toastTimeout: undefined,
         showToastDelay: undefined,
     }
-
-    constructor() { }
 
     public ngOnInit(): void {
         if (this.toasts) {

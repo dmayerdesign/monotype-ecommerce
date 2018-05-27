@@ -1,12 +1,13 @@
 import * as findOrCreate from 'mongoose-findorcreate'
 
-import { arrayProp, plugin, prop, MongooseDocument, Ref } from '../../lib/goosetype'
+import { arrayProp, model, plugin, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 import { Attribute } from './attribute'
 import { AttributeValue } from './attribute-value'
 import { PageSettings } from './page-settings'
 import { Taxonomy } from './taxonomy'
 
 @plugin(findOrCreate)
+@model(TaxonomyTerm, MongooseSchemaOptions.timestamped)
 export class TaxonomyTerm extends MongooseDocument {
     @prop({ ref: Taxonomy }) public taxonomy: Ref<Taxonomy>
     @prop() public singularName: string
@@ -27,8 +28,6 @@ export class TaxonomyTerm extends MongooseDocument {
     @prop({ ref: Taxonomy }) public archiveGroupsTaxonomy: Ref<Taxonomy>
     @arrayProp({ itemsRef: TaxonomyTerm }) public archiveTermGroups: Ref<TaxonomyTerm>[]
 }
-
-export const TaxonomyTermModel = new TaxonomyTerm().getModel()
 
 export class CreateTaxonomyTermError extends Error { }
 export class FindTaxonomyTermError extends Error { }

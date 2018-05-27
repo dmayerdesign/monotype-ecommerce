@@ -1,94 +1,20 @@
 import { injectable } from 'inversify'
-import * as mongoose from 'mongoose'
-
-// Utilities.
-
-export function camelCase(str: string): string {
-    return str.charAt(0).toLowerCase() + str.substring(1)
-}
+import { camelCase } from 'lodash'
+import { Schema, SchemaDefinition, SchemaOptions, SchemaTypeOpts } from 'mongoose'
+import { PropTypeArgs } from './models/mongoose-model'
 
 // Errors.
 
 export class InvalidArrayPropOptionsError extends Error { }
 export class SchemaNotDefinedError extends Error { }
 
-// Schema options.
-
-export class MongooseSchemaOptions {
-    public static readonly timestamped = { timestamps: true }
-}
-
-// Types.
-
-export type Func = (...args: any[]) => any
-
-export type RequiredType = boolean | [boolean, string] | string | Func | [Func, string]
-
-export interface BasePropOptions {
-    required?: RequiredType
-    enum?: string[] | object
-    get?: (value?: any) => any
-    default?: any
-    unique?: boolean
-    index?: boolean
-    type?: string | Function | Object | mongoose.Schema.Types.ObjectId
-}
-
-export interface MongooseDocument extends mongoose.Document {
-    _id: string
-    createdAt?: any
-    updatedAt?: any
-}
-
-export interface MongooseModel<T = any> extends mongoose.Model<T & (MongooseDocument | mongoose.Document)> {
-    findOrCreate: (query: object) => Promise<{ doc: T; created: boolean }>
-}
-
-export interface PropOptions extends BasePropOptions {
-    ref?: any
-}
-
-export interface ArrayPropOptions extends BasePropOptions {
-    items?: any
-    itemsRef?: any
-}
-
-export interface SchemaTypeOptions extends PropOptions {
-    type?: string | Function | Object | mongoose.Schema.Types.ObjectId
-}
-
-export interface ValidateNumberOptions {
-    min?: number | [number, string]
-    max?: number | [number, string]
-}
-
-export interface ValidateStringOptions {
-    minlength?: number | [number, string]
-    maxlength?: number | [number, string]
-    match?: RegExp | [RegExp, string]
-}
-
-export interface PropTypeArgs {
-    options: PropOptions & ArrayPropOptions
-    propType: PropType
-    key: string
-    target: MongooseModel<any>
-}
-
-export type PropType = 'array' | 'object'
-export type PropOptionsWithNumberValidate = PropOptions & ValidateNumberOptions
-export type PropOptionsWithStringValidate = PropOptions & ValidateStringOptions
-export type PropOptionsWithValidate = PropOptionsWithNumberValidate | PropOptionsWithStringValidate
-export type Ref<T> = T | string
-
 // Model builder.
 
-// Create a singleton.
-let modelBuilder: ModelBuilder
+let modelBuilder: ModelBuilder // Create a singleton.
 
 export class ModelBuilder {
-    public schemaDefinitions: any = {}
-    public schemas: { [key: string]: mongoose.Schema } = {}
+    public schemaDefinitions: { [key: string]: SchemaDefinition } = {}
+    public schemas: { [key: string]: Schema } = {}
     public preMiddleware: any = {}
     public postMiddleware: any = {}
     public plugins: any = {}
@@ -98,6 +24,30 @@ export class ModelBuilder {
             modelBuilder = this
         }
         return modelBuilder
+    }
+
+    public findOrCreateSchema(name: string, schemaDefinition: SchemaDefinition, schemaOptions: SchemaOptions): Schema {
+        let schema: Schema
+
+        if (!modelBuilder.schemas[camelCase(name)]) {
+            schema = new Schema(schemaDefinition, schemaOptions)
+            modelBuilder.schemas[camelCase(name)] = schema
+        } else {
+            schema = modelBuilder.schemas[camelCase(name)]
+            Object.keys(schemaDefinition).forEach((schemaKey) => {
+                schema.add({ [schemaKey]: schemaDefinition[schemaKey] })
+            })
+        }
+
+        // Allows getters to work.
+        schema.set('toObject', { getters: true })
+        schema.set('toJSON', { getters: true })
+
+        // Prevents `MongoError: Unknown modifier: $pushAll` (see https://github.com/Automattic/mongoose/issues/5574)
+        // TODO: remove once upgraded to mongoose v5.x
+        schema.set('usePushEach', true)
+
+        return schema
     }
 
     public addTo(which: string, constructorName: string, value: any): void {
@@ -119,41 +69,41 @@ export class ModelBuilder {
         )
     }
 
-    public getTypeOrSchema(type: any, options?: mongoose.SchemaOptions): object {
+    public getTypeOrSchema(type: any, options?: SchemaOptions): object {
         if (this.isValidPrimitiveOrObject(type)) {
             if (type === Object) {
-                return mongoose.Schema.Types.Mixed
+                return Schema.Types.Mixed
             }
             if (type === Buffer) {
-                return mongoose.Schema.Types.Buffer
+                return Schema.Types.Buffer
             }
             return type
         }
         else {
-            if (type === mongoose.Schema.Types.ObjectId) {
-                return mongoose.Schema.Types.ObjectId
+            if (type === Schema.Types.ObjectId) {
+                return Schema.Types.ObjectId
             }
-            if (!this.schemaDefinitions[camelCase(type.name)]) {
-                throw new SchemaNotDefinedError(`A schema associated with ${type.name} has not been defined. Make sure the class extends MongooseDocument.`)
-            }
-
-            return this.schemas[camelCase(type.name)]
+            // If the prop is not a valid primitive or object, and it's not an ObjectId,
+            // assume it's a custom schema. If the schema has yet to be defined, define it.
+            // (This will probably only happen if you're using a schema class as the type
+            // of one of its own properties.)
+            return this.findOrCreateSchema(camelCase(type.name), this.schemaDefinitions[camelCase(type.name)], options)
         }
     }
 
-    public baseProp(propTypeArgs: PropTypeArgs) {
+    public baseProp(propTypeArgs: PropTypeArgs): void {
         const { target, key, propType, options } = propTypeArgs
-        let schema: mongoose.SchemaDefinition = this.schemaDefinitions[camelCase((target.constructor as any).name)]
-        let schemaProperty: mongoose.SchemaTypeOpts<any> = {}
-        let type
+        let schemaDefinition: SchemaDefinition = this.schemaDefinitions[camelCase(target.constructor.name)]
+        let schemaProperty: SchemaTypeOpts<any> = {}
+        let type: any
 
         const nonPropertyOptions = [
             'items',
             'itemsRef'
         ]
 
-        if (!schema) {
-            schema = this.schemaDefinitions[camelCase((target.constructor as any).name)] = {}
+        if (!schemaDefinition) {
+            schemaDefinition = this.schemaDefinitions[camelCase(target.constructor.name)] = {}
         }
 
         // Might need a second glance.
@@ -193,7 +143,7 @@ export class ModelBuilder {
             }
             else if (options.itemsRef) {
                 schemaProperty = [{
-                    type: mongoose.Schema.Types.ObjectId,
+                    type: Schema.Types.ObjectId,
                     ref: options.itemsRef.name,
                 }]
             }
@@ -206,13 +156,21 @@ export class ModelBuilder {
                     type = options.type
                 }
                 if (options.ref) {
-                    type = mongoose.Schema.Types.ObjectId
+                    let ref = options.ref
+                    if (typeof options.ref !== 'string') {
+                        ref = ref.name
+                    }
+                    schemaProperty.ref = ref
+                    type = Schema.Types.ObjectId
                 }
             }
 
             schemaProperty.type = this.getTypeOrSchema(type)
         }
 
-        schema[key] = schemaProperty
+        schemaDefinition[key] = schemaProperty
     }
 }
+
+modelBuilder = new ModelBuilder()
+export { modelBuilder }

@@ -1,14 +1,14 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
 import { ActivatedRoute, Router } from '@angular/router'
+import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
-import { Product } from '@mte/common/models/api-models/product'
-import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
+import { Product } from '@mte/common/models/api-interfaces/product'
+import { TaxonomyTerm } from '@mte/common/models/api-interfaces/taxonomy-term'
 import { GetProductsFilter, GetProductsFilterType, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { BootstrapBreakpointKey } from '@mte/common/models/enums/bootstrap-breakpoint-key'
 import { cloneDeep } from 'lodash'
-import { BehaviorSubject } from 'rxjs/BehaviorSubject'
-import { Observable } from 'rxjs/Observable'
+import { BehaviorSubject, Observable } from 'rxjs'
 import { map, takeWhile } from 'rxjs/operators'
 import { ShopRouterLinks } from '../../constants/shop-router-links'
 import { ProductService } from '../../services'
@@ -20,9 +20,8 @@ import { TaxonomyTermService } from '../../services/taxonomy-term.service'
     styleUrls: ['./products.component.scss']
 })
 @Heartbeat()
-export class ProductsComponent implements OnInit, OnDestroy {
+export class ProductsComponent extends HeartbeatComponent implements OnInit, OnDestroy {
     @Input() public title: string
-    public isAlive = false
     public productss: Observable<Product[]>
     public taxonomyTerm: TaxonomyTerm
     public leftSidebarIsExpandeds: BehaviorSubject<boolean>
@@ -34,7 +33,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
         public windowRef: WindowRefService,
         private activatedRoute: ActivatedRoute,
         private router: Router,
-    ) { }
+    ) { super() }
 
     public ngOnInit(): void {
         this.leftSidebarIsExpandeds = new BehaviorSubject(this.windowRef.mediaBreakpointAbove(BootstrapBreakpointKey.Lg))
@@ -98,10 +97,9 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
         // Get the taxonomy term if one is found in the request.
         if (requestedTaxonomyTermSlug) {
-            this.taxonomyTermService.getOneSource
+            this.taxonomyTermService.getOne(requestedTaxonomyTermSlug)
                 .pipe(takeWhile(() => this.isAlive))
                 .subscribe((term) => this.taxonomyTerm = term)
-            this.taxonomyTermService.getOne(requestedTaxonomyTermSlug)
         }
     }
 

@@ -5,7 +5,8 @@ import * as Stripe from 'stripe'
 import { Copy } from '@mte/common/constants/copy'
 import { Types } from '@mte/common/constants/inversify'
 import { Order } from '@mte/common/models/api-models/order'
-import { Product, ProductModel } from '@mte/common/models/api-models/product'
+import { Price } from '@mte/common/models/api-models/price'
+import { Product } from '@mte/common/models/api-models/product'
 import {
     StripeCreateProductsOrSkusResponse,
 } from '@mte/common/models/api-responses/stripe/stripe-create-products-or-skus.response'
@@ -79,7 +80,7 @@ export class StripeProductService {
                 console.log('Let\'s make some SKUs')
                 products.forEach((product) => {
                     console.log(product)
-                    const thePrice = this.productService.determinePrice(product)
+                    const thePrice = this.productService.determinePrice(product) as Price
                     const productToAdd: any = {
                         id: product.sku,
                         price: thePrice.amount * 100,

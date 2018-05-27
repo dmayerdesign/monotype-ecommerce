@@ -4,10 +4,8 @@ import { AppConfig } from '@mte/app-config'
 
 declare const ga: Function
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class GAnalyticsService {
-
-    constructor() {}
 
     public getTracking() {
         return AppConfig.google_analytics_tracking_code

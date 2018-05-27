@@ -6,7 +6,7 @@ const mailgun = require('mailgun-js')({ apiKey: process.env.MAILGUN_API_KEY, dom
 import { AppConfig } from '@mte/app-config'
 import { EmailBuilder } from '@mte/common/builders/email.builder'
 import { Types } from '@mte/common/constants/inversify'
-import { EmailOptions, EmailServiceOptions, OrderEmailOptions } from '@mte/common/models/interfaces/api/email-options'
+import { EmailOptions, EmailServiceOptions, OrderEmailOptions } from '@mte/common/models/api-interfaces/email-options'
 import { OrderHelper } from '../helpers/order.helper'
 
 const receipt = require('@mte/common/emails/templates/receipt')
@@ -61,7 +61,7 @@ export class EmailService {
         const emailBuilder = new EmailBuilder()
             .setOptions({
                 ...options,
-                subject: `Your receipt | ${options.organization.name}`,
+                subject: `Your receipt | ${options.organization.branding.displayName}`,
                 preheader: `View your receipt from your recent order`,
             })
             .setHtml(receipt)
@@ -78,7 +78,7 @@ export class EmailService {
         const emailBuilder = new EmailBuilder()
             .setOptions({
                 ...options,
-                subject: `Your ${options.organization.name} order has been shipped`,
+                subject: `Your ${options.organization.branding.displayName} order has been shipped`,
                 preheader: `It's on the way! View the shipping details from your recent order`,
             })
             .setCustomData({

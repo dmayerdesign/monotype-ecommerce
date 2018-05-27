@@ -1,20 +1,20 @@
 import { Request } from 'express'
 import { inject, injectable } from 'inversify'
-
 import { Copy } from '@mte/common/constants/copy'
 import { HttpStatus } from '@mte/common/constants/http-status'
 import { Types } from '@mte/common/constants/inversify/types'
-import { NavigationItemModel } from '@mte/common/models/api-models/navigation-item'
-import { Organization, OrganizationModel } from '@mte/common/models/api-models/organization'
+import { NavigationItem } from '@mte/common/models/api-models/navigation-item'
+import { Organization } from '@mte/common/models/api-models/organization'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
 import { DbClient } from '../data-access/db-client'
 import { CrudService } from './crud.service'
+import { Currency } from '@mte/common/models/enums/currency';
 
 @injectable()
 export class OrganizationService extends CrudService<Organization> {
 
-    protected model = OrganizationModel
+    protected model = Organization
 
     constructor(
         @inject(Types.DbClient) protected dbClient: DbClient<Organization>
@@ -25,12 +25,12 @@ export class OrganizationService extends CrudService<Organization> {
     public getOrganization(): Promise<ApiResponse<Organization>> {
         return new Promise<ApiResponse<Organization>>(async (resolve, reject) => {
             try {
-                const organization = await this.dbClient.findOne(OrganizationModel, {}, [
+                const organization = await this.dbClient.findOne(Organization, {}, [
                     {
                         path: 'storeUiContent.primaryNavigation',
                         populate: {
                             path: 'children',
-                            model: NavigationItemModel,
+                            model: NavigationItem.getModel(),
                         },
                     },
                 ])
@@ -51,15 +51,18 @@ export class OrganizationService extends CrudService<Organization> {
     public create(): any {
         return super.create([
             {
-                name: 'Hyzer Shop',
+                name: 'Hyzer Shop, LLC',
+                dbaNames: [],
                 retailSettings: {
                     salesTaxPercentage: 6,
                     addSalesTax: false,
-                    shippingFlatRate: { amount: 5, currency: 'USD' },
+                    shippingFlatRate: { amount: 5, currency: Currency.USD },
                 },
                 branding: {
+                    displayName: 'Hyzer Shop',
                     logo: 'https://d1eqpdomqeekcv.cloudfront.net/branding/hyzershop-wordmark-250.png',
                     colors: { primary: '#00b0ff' },
+                    cartName: 'basket',
                 },
                 storeUiContent: {
                     primaryNavigation: [

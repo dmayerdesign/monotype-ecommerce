@@ -1,7 +1,7 @@
-import { prop, MongooseDocument } from '../../lib/goosetype'
+import { prop, schema, MongooseDocument } from '../../lib/goosetype'
+import { Currency } from '../../models/enums/currency'
 
-import { Currency } from '@mte/common/models/enums/currency'
-
+@schema(EasypostRate)
 export class EasypostRate extends MongooseDocument {
     @prop() public readonly created_at: string
     @prop() public readonly updated_at: string
@@ -21,4 +21,3 @@ export class EasypostRate extends MongooseDocument {
     @prop() public readonly delivery_date_guaranteed: boolean /* indicates if delivery window is guaranteed (true) or not (false) */
     @prop() public readonly est_delivery_days?: number /* This field is deprecated and should be ignored. */
 }
-new EasypostRate().getSchema()

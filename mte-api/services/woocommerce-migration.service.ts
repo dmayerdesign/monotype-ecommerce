@@ -1,17 +1,17 @@
+import { pluralize, singularize, titleize } from 'inflection'
 import { inject, injectable } from 'inversify'
 import { cloneDeep, kebabCase } from 'lodash'
 import { Document } from 'mongoose'
 
 import { AppConfig } from '@mte/app-config'
 import { Types } from '@mte/common/constants/inversify'
-import { MongooseModel } from '@mte/common/lib/goosetype'
-import { Attribute, AttributeModel } from '@mte/common/models/api-models/attribute'
-import { AttributeValue, AttributeValueModel } from '@mte/common/models/api-models/attribute-value'
+import { Attribute } from '@mte/common/models/api-models/attribute'
+import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
 import { Image } from '@mte/common/models/api-models/image'
 import { Price } from '@mte/common/models/api-models/price'
-import { Product, ProductModel } from '@mte/common/models/api-models/product'
-import { Taxonomy, TaxonomyModel } from '@mte/common/models/api-models/taxonomy'
-import { TaxonomyTerm, TaxonomyTermModel } from '@mte/common/models/api-models/taxonomy-term'
+import { Product } from '@mte/common/models/api-models/product'
+import { Taxonomy } from '@mte/common/models/api-models/taxonomy'
+import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
 import { ListFromIdsRequest, ListFromQueryRequest } from '@mte/common/models/api-requests/list.request'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
@@ -29,7 +29,17 @@ export class WoocommerceMigrationService {
         return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
             const newProducts = []
 
-            async function createProducts() {
+            const dropAllProductRelatedCollections = async () => {
+                await this.dbClient.remove(Product, {})
+                await this.dbClient.remove(Attribute, {})
+                await this.dbClient.remove(AttributeValue, {})
+                await this.dbClient.remove(Taxonomy, {})
+                await this.dbClient.remove(TaxonomyTerm, {})
+            }
+
+            await dropAllProductRelatedCollections()
+
+            const buildProducts = async () => {
                 for (const product of productsJSON) {
                     console.log('Creating product:', product.SKU)
                     const newProduct: Product = cloneDeep(product)
@@ -37,6 +47,7 @@ export class WoocommerceMigrationService {
                     const variableAttributeIds: string[] = []
                     const variableAttributeValueIds: string[] = []
                     const attributeValueIds: string[] = []
+                    const simpleAttributeValues: { attribute: string, value: any }[] = []
                     const taxonomyTermIds: string[] = []
 
                     const flightStats: {
@@ -66,19 +77,19 @@ export class WoocommerceMigrationService {
                                         const variableAttributeValueValues = product[key].split('|')
                                         const variableAttributeSlug = theKey
                                         try {
-                                            const variableAttributeResponse = await AttributeModel.findOrCreate({
+                                            const variableAttribute = await this.dbClient.findOrCreate(Attribute, {
                                                 slug: variableAttributeSlug
                                             })
-                                            const variableAttribute = variableAttributeResponse.doc
+                                            console.log('findOrCreate: ' + variableAttributeSlug)
                                             variableAttributeIds.push(variableAttribute._id)
                                             for (const variableAttributeValueSlug of variableAttributeValueSlugs) {
                                                 try {
-                                                    const variableAttributeValueResponse = await AttributeValueModel.findOrCreate({
+                                                    const variableAttributeValue = await this.dbClient.findOrCreate(AttributeValue, {
                                                         attribute: variableAttribute._id,
                                                         slug: variableAttributeValueSlug,
                                                         value: variableAttributeValueValues[variableAttributeValueSlugs.indexOf(variableAttributeValueSlug)],
                                                     })
-                                                    const variableAttributeValue = variableAttributeValueResponse.doc
+                                                    console.log('findOrCreate: ' + variableAttributeValueSlug)
                                                     variableAttributeValueIds.push(variableAttributeValue._id)
                                                 }
                                                 catch (error) {
@@ -96,16 +107,16 @@ export class WoocommerceMigrationService {
                                         const attributeValueSlug = kebabCase(theKey + '-' + product[key].replace(/\s/g, '-').replace(/[\(\)]/g, '').toLowerCase())
                                         const attributeSlug = theKey
                                         try {
-                                            const attributeResponse = await AttributeModel.findOrCreate({
+                                            const attribute = await this.dbClient.findOrCreate(Attribute, {
                                                 slug: attributeSlug
                                             })
-                                            const attribute = attributeResponse.doc
-                                            const attributeValueResponse = await AttributeValueModel.findOrCreate({
+                                            console.log('findOrCreate: ' + attributeSlug)
+                                            const attributeValue = await this.dbClient.findOrCreate(AttributeValue, {
                                                 attribute: attribute._id,
                                                 slug: attributeValueSlug,
                                                 value,
                                             })
-                                            const attributeValue = attributeValueResponse.doc
+                                            console.log('findOrCreate: ' + attributeValueSlug)
                                             attributeValueIds.push(attributeValue._id)
                                             delete newProduct[key]
                                         }
@@ -117,49 +128,58 @@ export class WoocommerceMigrationService {
                                 }
 
                                 if (theKey === 'fade' || theKey === 'glide' || theKey === 'turn' || theKey === 'speed') {
-                                    flightStats[theKey] = product[key]
+                                    flightStats[theKey] = newProduct[key]
 
-                                    const stability = function(stabilityStats): 'overstable'|'stable'|'understable' {
-                                        if ( stabilityStats.fade + stabilityStats.turn >= 3 ) {
+                                    // Add speed/glide/turn/fade Attribute.
+
+                                    const speedGlideTurnFadeAttribute = await this.dbClient.findOrCreate(Attribute, { slug: theKey })
+                                    console.log('findOrCreate: ' + theKey)
+                                    simpleAttributeValues.push({
+                                        attribute: speedGlideTurnFadeAttribute._id,
+                                        value: flightStats[theKey]
+                                    })
+
+                                    // Add stability AttributeValue and TaxonomyTerm.
+
+                                    const getStability = function(stabilityStats): 'overstable'|'stable'|'understable' {
+                                        if ( (stabilityStats.fade + stabilityStats.turn) >= 3 ) {
                                             return 'overstable'
                                         }
-                                        else if ( stabilityStats.fade + stabilityStats.turn < 3 && stabilityStats.fade + stabilityStats.turn >= 0 ) {
+                                        else if ( (stabilityStats.fade + stabilityStats.turn) < 3 && (stabilityStats.fade + stabilityStats.turn) >= 0 ) {
                                             return 'stable'
                                         }
-                                        else if ( stabilityStats.fade + stabilityStats.turn < 0 ) {
+                                        else if ( (stabilityStats.fade + stabilityStats.turn) < 0 ) {
                                             return 'understable'
                                         }
                                     }
 
-                                    if (Object.keys(flightStats).every(statKey => flightStats[statKey] !== undefined)) {
+                                    if (Object.keys(flightStats).every(statKey => typeof flightStats[statKey] !== 'undefined')) {
                                         try {
-                                            const stabilityValue = stability(flightStats)
+                                            const stabilityValue = getStability(flightStats)
                                             const attributeSlug = 'stability'
                                             const taxonomySlug = 'stability'
                                             const attributeValueSlug = attributeSlug + '-' + stabilityValue
                                             const taxonomyTermSlug = taxonomySlug + '-' + stabilityValue
 
-                                            const attributeResponse = await AttributeModel.findOrCreate({
+                                            const attribute = await this.dbClient.findOrCreate(Attribute, {
                                                 slug: attributeSlug,
                                             })
-                                            const attribute = attributeResponse.doc
-                                            const attributeValueResponse = await AttributeValueModel.findOrCreate({
+                                            const attributeValue = await this.dbClient.findOrCreate(AttributeValue, {
                                                 attribute: attribute._id,
                                                 slug: attributeValueSlug,
                                                 value: stabilityValue,
                                             })
-                                            const attributeValue = attributeValueResponse.doc
+                                            console.log('findOrCreate: ' + attributeSlug + 'and' + attributeValueSlug)
                                             attributeValueIds.push(attributeValue._id)
 
-                                            const taxonomyResponse = await TaxonomyModel.findOrCreate({
+                                            const taxonomy = await this.dbClient.findOrCreate(Taxonomy, {
                                                 slug: taxonomySlug,
                                             })
-                                            const taxonomy = taxonomyResponse.doc
-                                            const taxonomyTermResponse = await TaxonomyTermModel.findOrCreate({
+                                            const taxonomyTerm = await this.dbClient.findOrCreate(TaxonomyTerm, {
                                                 taxonomy: taxonomy._id,
                                                 slug: taxonomyTermSlug,
                                             })
-                                            const taxonomyTerm = taxonomyTermResponse.doc
+                                            console.log('findOrCreate: ' + taxonomySlug + 'and' + taxonomyTermSlug)
                                             taxonomyTermIds.push(taxonomyTerm._id)
                                         }
                                         catch (error) {
@@ -168,50 +188,38 @@ export class WoocommerceMigrationService {
                                         }
                                     }
                                 }
+
+                                if (theKey === 'inboundsId') {
+                                    const inboundsIdAttribute = await this.dbClient.findOrCreate(Attribute, { slug: kebabCase(theKey) })
+                                    simpleAttributeValues.push({
+                                        attribute: inboundsIdAttribute._id,
+                                        value: newProduct[key]
+                                    })
+                                }
                             }
+
                             if (key.indexOf('taxonomies.') > -1) {
-                                const taxonomyTermPromises: Promise<{ doc: TaxonomyTerm }>[] = []
+                                const taxonomyTermPromises: Promise<TaxonomyTerm>[] = []
                                 const taxonomySlug = kebabCase(key.replace('taxonomies.', ''))
                                 const taxonomyTermSlugs = product[key].split('|').map((originalTaxonomyTermSlug) => {
-                                    return kebabCase(key.replace('taxonomies.', '') + '-' + originalTaxonomyTermSlug.replace(/\s/g, '-').toLowerCase())
+                                    return kebabCase(key.replace('taxonomies.', '') + '-' + originalTaxonomyTermSlug.replace(/\s/g, '-').toLowerCase()).trim()
                                 })
+
                                 try {
-                                    const taxonomyResponse = await TaxonomyModel.findOrCreate({ slug: taxonomySlug })
-                                    const taxonomy = taxonomyResponse.doc
+                                    const taxonomy = await this.dbClient.findOrCreate(Taxonomy, { slug: taxonomySlug })
 
                                     taxonomyTermSlugs.forEach((taxonomyTermSlug) => {
-                                        console.log('Taxonomy term promise')
-                                        console.log(taxonomy._id, taxonomyTermSlug)
-
-                                        // [ EXCEPTION ]
-                                        if (taxonomyTermSlug === 'disc-type-mid-ranges') {
-                                            taxonomyTermPromises.push(TaxonomyTermModel.findOrCreate({
-                                                taxonomy: taxonomy._id,
-                                                slug: taxonomyTermSlug,
-                                                name: 'Mid-range',
-                                                pluralName: 'Mid-ranges',
-                                                pageSettings: {
-                                                    banner: '/page-images/mid-ranges-banner.jpg',
-                                                    bannerOverlay: '/page-images/disc-type-mid-ranges.png',
-                                                },
-                                                singularName: 'Mid-range',
-                                            }))
-                                        }
-                                        ////
-                                        else {
-                                            taxonomyTermPromises.push(TaxonomyTermModel.findOrCreate({
-                                                taxonomy: taxonomy._id,
-                                                slug: taxonomyTermSlug
-                                            }))
-                                        }
+                                        taxonomyTermPromises.push(this.dbClient.findOrCreate(TaxonomyTerm, {
+                                            taxonomy: taxonomy._id,
+                                            slug: taxonomyTermSlug
+                                        }))
                                     })
 
-                                    const taxonomyTermsResponse = await Promise.all(taxonomyTermPromises)
-                                    const taxonomyTerms = taxonomyTermsResponse.map((taxonomyTermResponse) => taxonomyTermResponse.doc)
+                                    const taxonomyTerms = await Promise.all(taxonomyTermPromises)
 
                                     taxonomyTerms.forEach((taxonomyTerm) => taxonomyTermIds.push(taxonomyTerm._id))
-
                                     newProduct.taxonomyTermSlugs = taxonomyTermSlugs
+
                                     delete newProduct[key]
                                 }
                                 catch (error) {
@@ -221,7 +229,11 @@ export class WoocommerceMigrationService {
                             }
                             if (key === 'netWeight') {
                                 newProduct[key] = (newProduct[key] as any).replace(/g/g, '')
-                                if ( (newProduct[key] as any).indexOf('|') > -1 ) {
+                                if ((newProduct[key] as any).indexOf('|') > -1) {
+                                    if (!newProduct.variableProperties) {
+                                        newProduct.variableProperties = []
+                                    }
+                                    newProduct.variableProperties.push('netWeight')
                                     delete newProduct[key]
                                 }
                             }
@@ -302,6 +314,7 @@ export class WoocommerceMigrationService {
                                     newProduct.description = newProduct.description.replace(/ŠÜ¢/g, ' –')
                                     newProduct.description = newProduct.description.replace('<div class="longdescription">', '\n')
                                     newProduct.description = newProduct.description.replace('</div>', '')
+                                    newProduct.description = newProduct.description.replace(/Î¾/g, ' ')
                                 }
                             }
 
@@ -329,12 +342,16 @@ export class WoocommerceMigrationService {
                             newProduct.sku = 'METEOR_GLOZ_1769_2'
                         }
                     }
+                    if (!!sku.match(/HORNET_/)) {
+                        newProduct.parentSku = 'HORNET'
+                    }
 
                     /////////////////////
 
                     newProduct.variableAttributes = variableAttributeIds
                     newProduct.variableAttributeValues = variableAttributeValueIds
                     newProduct.attributeValues = attributeValueIds
+                    newProduct.simpleAttributeValues = simpleAttributeValues
                     newProduct.taxonomyTerms = taxonomyTermIds
 
                     delete (<any>newProduct).images
@@ -346,7 +363,9 @@ export class WoocommerceMigrationService {
             }
 
             try {
-                await createProducts.call(this)
+                console.log('Building products...')
+                await buildProducts()
+                console.log('Products built!')
             }
             catch (error) {
                 reject(new ApiErrorResponse(error))
@@ -357,8 +376,9 @@ export class WoocommerceMigrationService {
              * The switch
              ******* -> */
             try {
-                console.log('Creating products')
-                const allProducts = await this.dbClient.create<Product>(ProductModel, newProducts)
+                console.log('Creating products...')
+                const allProducts = await this.dbClient.create<Product>(Product, newProducts)
+                console.log('Products created!')
                 const parentProducts = allProducts.filter((p) => p.isParent)
                 const variationProducts = allProducts.filter((p) => p.isVariation)
 
@@ -401,8 +421,8 @@ export class WoocommerceMigrationService {
                         }
 
                         try {
-                            attributeValues = await this.dbClient.findIds(AttributeValueModel, new ListFromIdsRequest({ ids: product.attributeValues })) as AttributeValue[]
-                            taxonomyTerms = await this.dbClient.findIds(TaxonomyTermModel, new ListFromIdsRequest({ ids: product.taxonomyTerms }))
+                            attributeValues = await this.dbClient.findIds(AttributeValue, new ListFromIdsRequest({ ids: product.attributeValues })) as AttributeValue[]
+                            taxonomyTerms = await this.dbClient.findIds(TaxonomyTerm, new ListFromIdsRequest({ ids: product.taxonomyTerms }))
                             isDisc = taxonomyTerms && taxonomyTerms.some((taxTerm) => taxTerm.slug === 'product-type-discs')
                         }
                         catch (error) {
@@ -471,6 +491,7 @@ export class WoocommerceMigrationService {
                     }
 
                     await product.save()
+                    console.log('Product images saved')
                 }
 
                 // Populate parent product images with variation images.
@@ -487,6 +508,7 @@ export class WoocommerceMigrationService {
                     }
 
                     await product.save()
+                    console.log('Parent images saved')
                 }
 
                 // Populate parent products with variation attributes and attribute values.
@@ -494,6 +516,14 @@ export class WoocommerceMigrationService {
                 for (let i = 0; i < variationProducts.length; i++) {
                     const variation = variationProducts[i]
                     const parent = parentProducts.find((p) => p.sku === variation.parentSku)
+
+                    if (!parent) {
+                        throw new Error(`Could not find a parent for the product variation: ${JSON.stringify(variation)}`)
+                    }
+
+                    // Add the parent to the variation.
+                    variation.parent = parent._id
+
                     if (!parent.variableAttributes) {
                         parent.variableAttributes = []
                     }
@@ -518,6 +548,65 @@ export class WoocommerceMigrationService {
 
                     await variation.save()
                     await parent.save()
+                    console.log('Variation attributes and attribute values added')
+                }
+
+                // Fill out taxonomy terms.
+
+                const discTypes = [
+                    'disc-type-putters',
+                    'disc-type-mid-ranges',
+                    'disc-type-fairway-drivers',
+                    'disc-type-distance-drivers',
+                ]
+
+                for (let i = 0; i < discTypes.length; i++) {
+                    const slug = discTypes[i]
+                    const discType = await this.dbClient.findOne(TaxonomyTerm, { slug })
+                    const partialSlug = slug.replace('disc-type-', '')
+                    const name = titleize(partialSlug.replace(/-/g, ' '))
+                    const singularName = singularize(name)
+                    const pluralName = pluralize(name)
+
+                    await this.dbClient.updateById(TaxonomyTerm, discType._id, {
+                        singularName,
+                        pluralName,
+                        pageSettings: {
+                            banner: `/page-images/${partialSlug}-banner.jpg`,
+                            bannerOverlay: `/page-images/${slug}.png`,
+                        },
+                    })
+                    console.log('Disc type hydrated: ' + slug)
+                }
+
+                const brands = [
+                    'brand-mvp-disc-sports',
+                    'brand-axiom-discs',
+                    'brand-discraft',
+                ]
+
+                for (let i = 0; i < brands.length; i++) {
+                    const slug = brands[i]
+                    const brand = await this.dbClient.findOne(TaxonomyTerm, { slug })
+                    const partialSlug = slug.replace('brand-', '')
+                    let brandName = titleize(partialSlug.substring(0, partialSlug.indexOf('-')))
+                    let name = titleize(partialSlug.replace(/-/g, ' '))
+                    if (slug === 'brand-mvp-disc-sports') {
+                        brandName = 'MVP Disc Sports'
+                        name = 'MVP'
+                    }
+                    const singularName = singularize(name)
+                    const pluralName = `${brandName} Discs`
+
+                    await this.dbClient.updateById(TaxonomyTerm, brand._id, {
+                        singularName,
+                        pluralName,
+                        pageSettings: {
+                            banner: `/page-images/${partialSlug}-banner.jpg`,
+                            bannerOverlay: `/page-images/${slug}.png`,
+                        },
+                    })
+                    console.log('Brand hydrated: ' + slug)
                 }
 
                 resolve(new ApiResponse(allProducts))

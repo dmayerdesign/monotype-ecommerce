@@ -1,15 +1,15 @@
-import { arrayProp, prop, MongooseDocument, Ref } from '../../lib/goosetype'
+import { arrayProp, model, prop, schema, MongooseDocument, Ref } from '../../lib/goosetype'
 import { Price } from './price'
 import { Product } from './product'
 import { TaxonomyTerm } from './taxonomy-term'
 
+@schema(DiscountExceptions)
 export class DiscountExceptions extends MongooseDocument {
     @arrayProp({ itemsRef: Product }) public products: Ref<Product>[]
     @arrayProp({ itemsRef: TaxonomyTerm }) public taxonomyTerms: Ref<TaxonomyTerm>[]
 }
 
-new DiscountExceptions().getSchema()
-
+@model(Discount)
 export class Discount extends MongooseDocument {
     @prop() public code: string
     @prop() public total: Price
@@ -18,8 +18,6 @@ export class Discount extends MongooseDocument {
     @prop() public includes: DiscountExceptions
     @prop() public excludes: DiscountExceptions
 }
-
-export const DiscountModel = new Discount().getModel()
 
 export class CreateDiscountError extends Error { }
 export class FindDiscountError extends Error { }

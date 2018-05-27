@@ -1,5 +1,5 @@
 import { Directive, ElementRef, Input, OnInit, Renderer } from '@angular/core'
-import { Observable } from 'rxjs/Observable'
+import { Observable } from 'rxjs'
 
 @Directive({
     selector: '[focusOn]'

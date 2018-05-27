@@ -1,6 +1,8 @@
-import { prop, MongooseDocument } from '../../lib/goosetype'
+import { prop, schema, MongooseDocument } from '../../lib/goosetype'
+import { Address as IAddress } from '../api-interfaces/address'
 
-export class Address extends MongooseDocument {
+@schema(Address)
+export class Address extends MongooseDocument implements IAddress {
     @prop() public name?: string
     @prop() public company?: string
     @prop() public street1: string
@@ -11,5 +13,3 @@ export class Address extends MongooseDocument {
     @prop() public zip: string
     @prop() public phone?: string
 }
-
-new Address().getSchema()

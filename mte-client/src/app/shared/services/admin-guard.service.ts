@@ -6,14 +6,14 @@ import {
     Router,
     RouterStateSnapshot,
 } from '@angular/router'
-import { map } from 'rxjs/operators/map'
+import { map } from 'rxjs/operators'
 
 import { UserRole } from '@mte/common/models/enums/user-role'
 import { AppRoutes } from '../../constants/app-routes'
 import { RouteStateService } from './route-state.service'
 import { UserService } from './user.service'
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class AdminGuardService implements CanActivate, CanActivateChild {
 
     constructor(

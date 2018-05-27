@@ -1,13 +1,15 @@
-import { arrayProp, prop, MongooseDocument, MongooseSchemaOptions } from '../../lib/goosetype'
-import { Ref } from '../../lib/goosetype/goosetype'
+import { arrayProp, model, prop, MongooseDocument, MongooseSchemaOptions } from '../../lib/goosetype'
+import { Ref } from '../../lib/goosetype'
 import { GlobalStyles } from './global-styles'
 import { OrganizationBranding } from './organization-branding'
 import { OrganizationRetailSettings } from './organization-retail-settings'
 import { Taxonomy } from './taxonomy'
 import { UiContent } from './ui-content'
 
+@model(Organization, MongooseSchemaOptions.timestamped)
 export class Organization extends MongooseDocument {
     @prop() public name: string
+    @arrayProp({ items: String }) public dbaNames: string[]
     @prop() public retailSettings: OrganizationRetailSettings
     @prop() public branding: OrganizationBranding
     @prop() public storeUiContent: UiContent
@@ -15,7 +17,6 @@ export class Organization extends MongooseDocument {
     @arrayProp({ itemsRef: Taxonomy }) public searchableTaxonomies?: Ref<Taxonomy>[]
     @prop() public globalStyles?: GlobalStyles
 }
-export const OrganizationModel = new Organization().getModel(MongooseSchemaOptions.timestamped)
 
 // Errors.
 
