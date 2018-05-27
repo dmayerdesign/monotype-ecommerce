@@ -24,7 +24,7 @@ import { ProductService } from '../../services/product.service'
     selector: 'mte-product-detail',
     template: `
     <div *ngIf="displayedProduct"
-         [ngClass]="productDetailContainerClassList">
+        [ngClass]="productDetailContainerClassList">
 
         <div class="product-detail-main row">
             <div [ngClass]="productDetailImagesClassList">
@@ -190,7 +190,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
         this.activatedRoute.params
             .pipe(
                 switchMap((params: { slug: string }) => {
-                    setTimeout(() => this.productService.getDetail(params.slug))
+                    this.productService.getDetail(params.slug)
                     return this.productService.getDetails
                 }),
                 takeWhile(() => this.isAlive)
@@ -296,7 +296,9 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
     // Event handlers.
 
     public handleSelectedProductChange(variation: Product): void {
-        this.selectedProduct = variation
+        if (variation) {
+            this.selectedProduct = variation
+        }
         console.log('Selected', variation)
     }
 

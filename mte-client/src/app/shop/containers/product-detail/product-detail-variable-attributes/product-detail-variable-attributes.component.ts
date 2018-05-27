@@ -12,35 +12,39 @@ import { VariableAttributeSelect, VariableAttributeSelectOption, VariableAttribu
 import { isEqual, startCase } from 'lodash'
 import { zip, Subscription } from 'rxjs'
 import { filter, map, tap } from 'rxjs/operators'
+import { OrganizationService } from '../../../../shared/services/organization.service'
 import { ProductService } from '../../../services'
 
 @Component({
     selector: 'product-detail-variable-attributes',
     template: `
-        <div id="variable-attributes"
-             class="variable-attributes">
-
-            <div *ngFor="let variableAttrSelect of variableAttributeSelects">
-                <mte-form-field
-                    [options]="{
-                        label: variableAttrSelect.attribute.displayName,
-                        labelClass: 'variable-attributes--name'
-                    }">
-                    <select #input
-                        [ngModel]="variableAttrSelect.selectedOptionModel"
-                        (ngModelChange)="handleChange(variableAttrSelect, $event)">
-                        <option [ngValue]="null">
-                            Select {{ variableAttrSelect.attribute.displayName || variableAttrSelect.attribute.slug }}
-                        </option>
-                        <option *ngFor="let option of variableAttrSelect.options"
-                            [ngValue]="option"
-                            [disabled]="!variableAttrSelect.optionIsAvailable(option)">
-                            {{ option.label }}
-                        </option>
-                    </select>
-                </mte-form-field>
+        <div id="variable-attributes-form">
+            <div class="variable-attributes">
+                <div *ngFor="let variableAttrSelect of variableAttributeSelects">
+                    <mte-form-field
+                        [options]="{
+                            label: variableAttrSelect.attribute.displayName,
+                            labelClass: 'variable-attributes--name'
+                        }">
+                        <select #input
+                            [ngModel]="variableAttrSelect.selectedOptionModel"
+                            (ngModelChange)="handleChange(variableAttrSelect, $event)">
+                            <option [ngValue]="null">
+                                Select {{ variableAttrSelect.attribute.displayName || variableAttrSelect.attribute.slug }}
+                            </option>
+                            <option *ngFor="let option of variableAttrSelect.options"
+                                [ngValue]="option"
+                                [disabled]="!variableAttrSelect.optionIsAvailable(option)">
+                                {{ option.label }}
+                            </option>
+                        </select>
+                    </mte-form-field>
+                </div>
             </div>
-
+            <button class="variable-attributes-reset-btn"
+                (click)="reset()">
+                Reset form
+            </button>
         </div>
     `,
     styleUrls: [ './product-detail-variable-attributes.component.scss' ],
@@ -58,7 +62,8 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
     public selectedVariation: Product
 
     constructor(
-        public productService: ProductService
+        public productService: ProductService,
+        public organizationService: OrganizationService,
     ) { super() }
 
     public ngOnInit(): void {
@@ -69,7 +74,6 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
         zip(...selectedOptionsSources)
             .subscribe((selectedOptions) => {
                 this.matchingVariations = this.getMatchingVariations(selectedOptions)
-                this.displayedProductChange.emit(this.matchingVariations[0])
                 this.variableAttributeSelects.forEach((variableAttrSelect) => {
                     variableAttrSelect.setStateSilently({ matchingVariations: this.matchingVariations })
                 })
@@ -105,6 +109,12 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
                             unselectedAttrSelect.select(newSelectedOption)
                         })
                     }
+                }
+
+                // If there's more than one, display the first one.
+
+                else {
+                    this.displayedProductChange.emit(this.matchingVariations[0])
                 }
             })
     }
@@ -164,18 +174,30 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
 
         // Loop through all the variable attributes and properties, and build a VariableAttributeSelect
         // for each one.
+        // TODO: handle 2-dimensional options.
 
-        return [ ...variableAttributes, ...variableProperties ]
+        return [
+                ...variableAttributes,
+                ...variableProperties,
+            ]
             .map((variableAttributeOrProperty) => {
                 const variableAttributeSelect = new VariableAttributeSelect()
                 variableAttributeSelect.builder
                     .setProductDetail(this.productDetail)
-                    .setAttributeOrProperty(variableAttributeOrProperty)
+                    .setAttributesOrProperties([ variableAttributeOrProperty ])
                 return variableAttributeSelect
+            })
+            .sort((a, b) => {
+                const orderArr = this.organizationService.organization.storeUiContent.orderOfVariableAttributeSelects
+                if (orderArr.indexOf(b.attribute.slug) === -1) return -1
+                else if (orderArr.indexOf(a.attribute.slug) === -1) return 1
+                return orderArr.indexOf(a.attribute.slug) - orderArr.indexOf(b.attribute.slug)
             })
     }
 
     public getMatchingVariations(selectedOptions: VariableAttributeSelectOption<AttributeValue>[]): Product[] {
+        // TODO: Handle 2-dimensional options.
+
         return this.variations.filter((variation) => {
             return selectedOptions
                 .filter((option) => option !== null)
@@ -196,9 +218,9 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
         })
     }
 
-    private mapSelectStatesToSelectedOptions(states: VariableAttributeSelectState[]): VariableAttributeSelectOption<AttributeValue>[] {
-        return states
-            .map((state) => state.selectedOption)
-            .filter((option) => option !== null)
+    public reset(): void {
+        this.variableAttributeSelects.forEach((variableAttrSelect) => {
+            variableAttrSelect.select(null)
+        })
     }
 }
