@@ -6,5 +6,4 @@ import { Ref } from './ref'
 export interface UiContent extends MongooseDocument {
     primaryNavigation: Ref<NavigationItem>[]
     customRegions?: CustomRegions
-    orderOfVariableAttributeSelects?: string[]
 }

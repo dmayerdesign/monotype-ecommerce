@@ -7,5 +7,4 @@ import { NavigationItem } from './navigation-item'
 export class UiContent extends MongooseDocument implements IUiContent {
     @arrayProp({ itemsRef: NavigationItem }) public primaryNavigation: Ref<NavigationItem>[]
     @prop() public customRegions?: CustomRegions
-    @arrayProp({ items: String }) public orderOfVariableAttributeSelects?: string[]
 }

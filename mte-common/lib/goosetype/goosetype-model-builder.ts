@@ -139,12 +139,13 @@ export class ModelBuilder {
             }
 
             if (options.items) {
-                schemaProperty = [ this.getTypeOrSchema(options.items) ]
+                schemaProperty.type = [ this.getTypeOrSchema(options.items) ]
             }
             else if (options.itemsRef) {
                 schemaProperty = [{
                     type: Schema.Types.ObjectId,
                     ref: options.itemsRef.name,
+                    ...schemaProperty,
                 }]
             }
         }

@@ -8,8 +8,9 @@ import { AttributeValue } from '@mte/common/models/api-interfaces/attribute-valu
 import { Product } from '@mte/common/models/api-interfaces/product'
 import { SimpleAttributeValue } from '@mte/common/models/api-interfaces/simple-attribute-value'
 import { VariableAttributeSelectOptionType } from '@mte/common/models/enums/variable-attribute-select-option-type'
+import { VariableAttributeSelectType } from '@mte/common/models/enums/variable-attribute-select-type';
 import { VariableAttributeSelect, VariableAttributeSelectOption, VariableAttributeSelectState } from '@mte/common/models/ui-models/variable-attribute-select'
-import { isEqual, startCase } from 'lodash'
+import { isEqual, startCase, uniqBy, values } from 'lodash'
 import { zip, Subscription } from 'rxjs'
 import { filter, map, tap } from 'rxjs/operators'
 import { OrganizationService } from '../../../../shared/services/organization.service'
@@ -174,21 +175,79 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
 
         // Loop through all the variable attributes and properties, and build a VariableAttributeSelect
         // for each one.
-        // TODO: handle 2-dimensional options.
 
-        return [
+        const _combinedVariableAttributesAndProperties = this.organizationService.organization.storeUiSettings.combinedVariableAttributeSelects || []
+        const combinedVariableAttributesAndProperties = values(_combinedVariableAttributesAndProperties)
+            .map((doc) => {
+                const keys = Object.keys(doc)
+                return keys
+                    .filter((key) => !isNaN(parseInt(key, 10)))
+                    .map((key) => doc[key])
+            })
+
+        const selects = [
                 ...variableAttributes,
                 ...variableProperties,
             ]
+            .filter((variableAttributeOrProperty) => {
+                let keyOrSlug: string
+                if (typeof variableAttributeOrProperty === 'string') {
+                    keyOrSlug = variableAttributeOrProperty
+                }
+                else {
+                    keyOrSlug = variableAttributeOrProperty.slug
+                }
+
+                return combinedVariableAttributesAndProperties.every((combination) => {
+                    return combination.indexOf(keyOrSlug) === -1
+                })
+            })
             .map((variableAttributeOrProperty) => {
                 const variableAttributeSelect = new VariableAttributeSelect()
                 variableAttributeSelect.builder
                     .setProductDetail(this.productDetail)
-                    .setAttributesOrProperties([ variableAttributeOrProperty ])
+                    .setAttributesOrProperties([{
+                        type: typeof variableAttributeOrProperty === 'string'
+                            ? VariableAttributeSelectType.Property
+                            : VariableAttributeSelectType.Attribute,
+                        attributeOrProperty: variableAttributeOrProperty,
+                    }])
                 return variableAttributeSelect
             })
+
+        if (!!combinedVariableAttributesAndProperties.length) {
+            combinedVariableAttributesAndProperties.forEach((combination) => {
+                const variableAttributesOrProperties = combination.map((variableAttrSlugOrPropertyKey) => {
+                    const variableAttribute = variableAttributes.find((attr) => attr.slug === variableAttrSlugOrPropertyKey)
+                    let propertyKey: string
+                    if (!variableAttribute) {
+                        propertyKey = variableAttrSlugOrPropertyKey
+                        return {
+                            type: VariableAttributeSelectType.Property,
+                            attributeOrProperty: propertyKey,
+                        }
+                    }
+                    else {
+                        return {
+                            type: VariableAttributeSelectType.Attribute,
+                            attributeOrProperty: variableAttribute,
+                        }
+                    }
+                })
+
+                const combinedVariableAttributeSelect = new VariableAttributeSelect()
+
+                combinedVariableAttributeSelect.builder
+                    .setProductDetail(this.productDetail)
+                    .setAttributesOrProperties(variableAttributesOrProperties)
+
+                selects.push(combinedVariableAttributeSelect)
+            })
+        }
+
+        return selects
             .sort((a, b) => {
-                const orderArr = this.organizationService.organization.storeUiContent.orderOfVariableAttributeSelects
+                const orderArr = this.organizationService.organization.storeUiSettings.orderOfVariableAttributeSelects
                 if (orderArr.indexOf(b.attribute.slug) === -1) return -1
                 else if (orderArr.indexOf(a.attribute.slug) === -1) return 1
                 return orderArr.indexOf(a.attribute.slug) - orderArr.indexOf(b.attribute.slug)
@@ -196,25 +255,27 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
     }
 
     public getMatchingVariations(selectedOptions: VariableAttributeSelectOption<AttributeValue>[]): Product[] {
-        // TODO: Handle 2-dimensional options.
-
         return this.variations.filter((variation) => {
             return selectedOptions
-                .filter((option) => option !== null)
-                .every((option) => {
-                    switch (option.type) {
-                        case VariableAttributeSelectOptionType.PropertyValue:
-                            return isEqual(option.data, variation[option.key])
-                        case VariableAttributeSelectOptionType.SimpleAttributeValue:
-                            return !!variation.simpleAttributeValues
-                                .find((simpleAttrValue) => isEqual(option.data as SimpleAttributeValue, simpleAttrValue))
-                        case VariableAttributeSelectOptionType.AttributeValue:
-                            return !!variation.attributeValues
-                                .find((attrValue: AttributeValue) => {
-                                    return option.data._id === attrValue._id
-                                })
-                    }
-                })
+                .filter((x) => x != null)
+                .reduce((matchingVariations, selectedOption) => {
+                    return uniqBy([ ...matchingVariations, ...selectedOption.matchingVariations ], '_id')
+                }, [] as Product[])
+                // .filter((option) => option !== null)
+                // .every((option) => {
+                //     switch (option.type) {
+                //         case VariableAttributeSelectOptionType.PropertyValue:
+                //             return isEqual(option.data, variation[option.key])
+                //         case VariableAttributeSelectOptionType.SimpleAttributeValue:
+                //             return !!variation.simpleAttributeValues
+                //                 .find((simpleAttrValue) => isEqual(option.data as SimpleAttributeValue, simpleAttrValue))
+                //         case VariableAttributeSelectOptionType.AttributeValue:
+                //             return !!variation.attributeValues
+                //                 .find((attrValue: AttributeValue) => {
+                //                     return option.data._id === attrValue._id
+                //                 })
+                //     }
+                // })
         })
     }
 

@@ -1,4 +1,5 @@
 export enum VariableAttributeSelectType {
     Attribute,
-    Property
+    Property,
+    Combination
 }

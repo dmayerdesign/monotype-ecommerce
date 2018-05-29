@@ -3,6 +3,7 @@ import { Ref } from '../../lib/goosetype'
 import { GlobalStyles } from './global-styles'
 import { OrganizationBranding } from './organization-branding'
 import { OrganizationRetailSettings } from './organization-retail-settings'
+import { StoreUiSettings } from './store-ui-settings'
 import { Taxonomy } from './taxonomy'
 import { UiContent } from './ui-content'
 
@@ -14,6 +15,7 @@ export class Organization extends MongooseDocument {
     @prop() public branding: OrganizationBranding
     @prop() public storeUiContent: UiContent
     @prop() public blogUiContent?: UiContent
+    @prop() public storeUiSettings?: StoreUiSettings
     @arrayProp({ itemsRef: Taxonomy }) public searchableTaxonomies?: Ref<Taxonomy>[]
     @prop() public globalStyles?: GlobalStyles
 }

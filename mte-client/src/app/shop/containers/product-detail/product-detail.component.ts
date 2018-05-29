@@ -181,7 +181,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
         private uiService: UiService,
     ) {
         super()
-        console.log(this)
+        // console.log(this)
     }
 
     // Lifecycle methods.
