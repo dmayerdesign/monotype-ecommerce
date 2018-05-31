@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewEncapsulation } from '@angular/core'
+import { Component, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output, ViewEncapsulation } from '@angular/core'
 import { AbstractControl, FormControl, FormGroup } from '@angular/forms'
 import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
@@ -8,7 +8,7 @@ import { AttributeValue } from '@mte/common/models/api-interfaces/attribute-valu
 import { Product } from '@mte/common/models/api-interfaces/product'
 import { SimpleAttributeValue } from '@mte/common/models/api-interfaces/simple-attribute-value'
 import { VariableAttributeSelectOptionType } from '@mte/common/models/enums/variable-attribute-select-option-type'
-import { VariableAttributeSelectType } from '@mte/common/models/enums/variable-attribute-select-type';
+import { VariableAttributeSelectType } from '@mte/common/models/enums/variable-attribute-select-type'
 import { VariableAttributeSelect, VariableAttributeSelectOption, VariableAttributeSelectState } from '@mte/common/models/ui-models/variable-attribute-select'
 import { isEqual, startCase, uniqBy, values } from 'lodash'
 import { zip, Subscription } from 'rxjs'
@@ -65,7 +65,10 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
     constructor(
         public productService: ProductService,
         public organizationService: OrganizationService,
-    ) { super() }
+        public ngZone: NgZone,
+    ) {
+        super()
+    }
 
     public ngOnInit(): void {
         this.variations = this.productDetail.variations as Product[]
@@ -75,21 +78,11 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
         zip(...selectedOptionsSources)
             .subscribe((selectedOptions) => {
                 this.matchingVariations = this.getMatchingVariations(selectedOptions)
+                console.log('Matching:', this.matchingVariations)
                 this.variableAttributeSelects.forEach((variableAttrSelect) => {
                     variableAttrSelect.setStateSilently({ matchingVariations: this.matchingVariations })
                 })
                 const unselectedAttributeSelects = this.variableAttributeSelects.filter((attrSelect) => attrSelect.state.selectedOption === null) || []
-
-                // Set the 'all available' state when appropriate (making all options selectable
-                // rather than disabling those that don't exist in the current list is matching variations).
-
-                let makeAllOptionsAvailable = false
-                if (!unselectedAttributeSelects.length) {
-                    makeAllOptionsAvailable = true
-                }
-                this.variableAttributeSelects.forEach((variableAttrSelect) => {
-                    variableAttrSelect.setStateSilently({ allOptionsAreAvailable: makeAllOptionsAvailable })
-                })
 
                 // If there's only 1 matching variation, select it!
 
@@ -191,6 +184,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
             ]
             .filter((variableAttributeOrProperty) => {
                 let keyOrSlug: string
+
                 if (typeof variableAttributeOrProperty === 'string') {
                     keyOrSlug = variableAttributeOrProperty
                 }
@@ -256,32 +250,36 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
 
     public getMatchingVariations(selectedOptions: VariableAttributeSelectOption<AttributeValue>[]): Product[] {
         return this.variations.filter((variation) => {
+            const variationContainsOptionValue = (option: VariableAttributeSelectOption<AttributeValue>) => {
+                switch (option.type) {
+                    case VariableAttributeSelectOptionType.PropertyValue:
+                        return isEqual(option.data, variation[option.key])
+                    case VariableAttributeSelectOptionType.SimpleAttributeValue:
+                        return !!variation.simpleAttributeValues
+                            .find((simpleAttrValue) => isEqual(option.data as SimpleAttributeValue, simpleAttrValue))
+                    case VariableAttributeSelectOptionType.AttributeValue:
+                        return !!variation.attributeValues
+                            .find((attrValue: AttributeValue) => {
+                                return option.data._id === attrValue._id
+                            })
+                    case VariableAttributeSelectOptionType.Combination:
+                        return option.sourceOptions.every((sourceOption) => {
+                            return variationContainsOptionValue(sourceOption)
+                        })
+                }
+            }
+
             return selectedOptions
-                .filter((x) => x != null)
-                .reduce((matchingVariations, selectedOption) => {
-                    return uniqBy([ ...matchingVariations, ...selectedOption.matchingVariations ], '_id')
-                }, [] as Product[])
-                // .filter((option) => option !== null)
-                // .every((option) => {
-                //     switch (option.type) {
-                //         case VariableAttributeSelectOptionType.PropertyValue:
-                //             return isEqual(option.data, variation[option.key])
-                //         case VariableAttributeSelectOptionType.SimpleAttributeValue:
-                //             return !!variation.simpleAttributeValues
-                //                 .find((simpleAttrValue) => isEqual(option.data as SimpleAttributeValue, simpleAttrValue))
-                //         case VariableAttributeSelectOptionType.AttributeValue:
-                //             return !!variation.attributeValues
-                //                 .find((attrValue: AttributeValue) => {
-                //                     return option.data._id === attrValue._id
-                //                 })
-                //     }
-                // })
+                .filter((option) => option !== null)
+                .every(variationContainsOptionValue)
         })
     }
 
     public reset(): void {
         this.variableAttributeSelects.forEach((variableAttrSelect) => {
-            variableAttrSelect.select(null)
+            this.ngZone.run(() => {
+                variableAttrSelect.select(null)
+            })
         })
     }
 }

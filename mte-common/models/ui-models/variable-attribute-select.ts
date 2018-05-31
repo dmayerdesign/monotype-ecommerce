@@ -213,7 +213,7 @@ export class VariableAttributeSelect<TA extends string | Attribute, TO extends A
                 throw new Error('Length mismatch - the combined options could not be built.')
             }
 
-            combinedOption.label = 'This is a combined option'
+            combinedOption.label = combinedOption.sourceOptions.map((srcOption) => srcOption.label).join(' / ')
 
             combinedOptions.push(combinedOption)
         })
@@ -267,9 +267,9 @@ export class VariableAttributeSelect<TA extends string | Attribute, TO extends A
         const getAvailableOptions = (options: VariableAttributeSelectOption<TO>[]) => {
             return options.filter((option) => {
 
-                // For each option, test whether any of the currently-matching variations has it.
+                // Only return options whose data exists on at least one of the currently-matching variations.
 
-                return this.state.matchingVariations.some((variation) => {
+                const someMatchingVariationsHaveOption = this.state.matchingVariations.some((variation) => {
 
                     // If we're looking for an attribute value, test to see if any of the variation's
                     // `attributeValues` or `simpleAttributeValues` has a `value` equal to `option.data.value`.
@@ -279,21 +279,31 @@ export class VariableAttributeSelect<TA extends string | Attribute, TO extends A
                         ...variation.simpleAttributeValues as SimpleAttributeValue[],
                     ]
 
-                    if (this.type === VariableAttributeSelectType.Attribute) {
-                        return allAttributeValues
-                            .some(({ value }) => option.data.value === value)
+                    if (option.type === VariableAttributeSelectOptionType.AttributeValue) {
+                        const someAttributeValuesHaveValue = allAttributeValues
+                            .some(({ value }) => {
+                                return option.data.value === value
+                            })
+
+                        return someAttributeValuesHaveValue
                     }
 
                     // If we're looking for a property value, loop through the parent product's
                     // `variableProperties` to get the variation's values for those property keys,
                     // and try to find one of those values that's equal to `option`.
 
-                    if (this.type === VariableAttributeSelectType.Property) {
-                        return this._productDetail.variableProperties
+                    const variableProperties = this._productDetail.variableProperties
+
+                    if (option.type === VariableAttributeSelectOptionType.PropertyValue) {
+                        const someVariablePropertiesEqualToOption = variableProperties
                             .map((key) => variation[key])
                             .some((value) => value === option.data)
+
+                        return someVariablePropertiesEqualToOption
                     }
                 })
+
+                return someMatchingVariationsHaveOption
             })
         }
 
@@ -302,6 +312,7 @@ export class VariableAttributeSelect<TA extends string | Attribute, TO extends A
 
             this.options.forEach((combinedOption) => {
                 const sourceOptions = combinedOption.sourceOptions
+
                 if (getAvailableOptions(sourceOptions).length === sourceOptions.length) {
                     availableOptions.push(combinedOption)
                 }
@@ -316,13 +327,19 @@ export class VariableAttributeSelect<TA extends string | Attribute, TO extends A
 
     // Update.
 
-    public update(): void {
+    public update(silent = false): void {
         const stateUpdate: VariableAttributeSelectState = {
             availableOptions: this.getAvailableOptions(),
         }
         if (stateUpdate.availableOptions.length === 1) {
             stateUpdate.selectedOption = stateUpdate.availableOptions[0]
         }
-        this.setState(stateUpdate)
+
+        if (silent) {
+            this.setStateSilently(stateUpdate)
+        }
+        else {
+            this.setState(stateUpdate)
+        }
     }
 }
