@@ -22,6 +22,14 @@ export class UserController extends ApiController {
 
     @inject(Types.UserService) private userService: UserService
 
+    @httpGet('/', Types.isAuthenticated)
+    public getUser(
+        @request() req: Request,
+        @response() res: Response,
+    ): void {
+        this.userService.refreshSession(req, res)
+    }
+
     @httpPost('/login')
     public login(
         @request() req: Request,
@@ -44,14 +52,6 @@ export class UserController extends ApiController {
         @response() res: Response,
     ): void {
         this.userService.logout(res)
-    }
-
-    @httpGet('/get-user', Types.isAuthenticated)
-    public getUser(
-        @request() req: Request,
-        @response() res: Response,
-    ): void {
-        this.userService.refreshSession(req, res)
     }
 
     @httpPost('/register')

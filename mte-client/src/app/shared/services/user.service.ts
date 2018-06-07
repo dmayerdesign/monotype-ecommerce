@@ -40,6 +40,12 @@ export class UserService {
         return this._user
     }
 
+    public getUser(): void {
+        this.http.get(`${ApiEndpoints.User}`).subscribe((userData: User) => {
+            this.refreshSession(userData)
+        })
+    }
+
     private clearSession(): void {
         this.userSubject.next(null)
     }
@@ -60,12 +66,6 @@ export class UserService {
             .subscribe((userData: User) => {
                 this.refreshSession(userData)
             })
-    }
-
-    public getUser(): void {
-        this.http.get(`${ApiEndpoints.User}/get-user`).subscribe((userData: User) => {
-            this.refreshSession(userData)
-        })
     }
 
     public logout(): void {

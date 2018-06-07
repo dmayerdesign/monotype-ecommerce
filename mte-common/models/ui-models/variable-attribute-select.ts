@@ -97,7 +97,7 @@ export class VariableAttributeSelect<TA extends string | Attribute, TO extends A
                 else if (type === VariableAttributeSelectType.Attribute) {
                     attribute = {
                         slug: (attributeOrProperty as Attribute).slug,
-                        displayName: (attributeOrProperty as Attribute).singularName || (attributeOrProperty as Attribute).slug,
+                        displayName: startCase((attributeOrProperty as Attribute).singularName || (attributeOrProperty as Attribute).slug),
                         data: attributeOrProperty as TA
                     }
 
@@ -156,7 +156,7 @@ export class VariableAttributeSelect<TA extends string | Attribute, TO extends A
 
                 this._attribute = {
                     slug: `${attributesAndOptions[0].attribute.slug}-and-${attributesAndOptions[1].attribute.slug}`,
-                    displayName: `${attributesAndOptions[0].attribute.displayName} / ${attributesAndOptions[1].attribute.displayName}`,
+                    displayName: `${startCase(attributesAndOptions[0].attribute.displayName)} / ${startCase(attributesAndOptions[1].attribute.displayName)}`,
                     data: attributesAndOptions.map(({ attribute }) => attribute.data) as TA[]
                 }
 
@@ -266,6 +266,7 @@ export class VariableAttributeSelect<TA extends string | Attribute, TO extends A
 
         const getAvailableOptions = (options: VariableAttributeSelectOption<TO>[]) => {
             return options.filter((option) => {
+                const logCondition = !!option.data && !!option.data.slug && !!option.data.slug.match(/rim/gi)
 
                 // Only return options whose data exists on at least one of the currently-matching variations.
 
@@ -281,8 +282,9 @@ export class VariableAttributeSelect<TA extends string | Attribute, TO extends A
 
                     if (option.type === VariableAttributeSelectOptionType.AttributeValue) {
                         const someAttributeValuesHaveValue = allAttributeValues
-                            .some(({ value }) => {
-                                return option.data.value === value
+                            .some(({ value, attribute }) => {
+                                return (option.data.attribute as Attribute).slug === (attribute as Attribute).slug
+                                    && option.data.value === value
                             })
 
                         return someAttributeValuesHaveValue
@@ -296,12 +298,17 @@ export class VariableAttributeSelect<TA extends string | Attribute, TO extends A
 
                     if (option.type === VariableAttributeSelectOptionType.PropertyValue) {
                         const someVariablePropertiesEqualToOption = variableProperties
-                            .map((key) => variation[key])
-                            .some((value) => value === option.data)
+                            .map((key) => ({ key, value: variation[key] }))
+                            .some(({ key, value }) => {
+                                return value === option.data
+                                    && key === option.key
+                            })
 
                         return someVariablePropertiesEqualToOption
                     }
                 })
+
+                // if (logCondition) console.log('SOME HAVE OPTIONS?', option.data.slug, someMatchingVariationsHaveOption)
 
                 return someMatchingVariationsHaveOption
             })

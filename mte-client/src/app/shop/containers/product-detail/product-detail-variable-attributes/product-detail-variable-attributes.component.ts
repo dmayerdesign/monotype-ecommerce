@@ -78,8 +78,8 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
         zip(...selectedOptionsSources)
             .subscribe((selectedOptions) => {
                 this.matchingVariations = this.getMatchingVariations(selectedOptions)
-                console.log('Matching:', this.matchingVariations)
                 this.variableAttributeSelects.forEach((variableAttrSelect) => {
+                    console.log('SETTING MATCHING VARIATIONS')
                     variableAttrSelect.setStateSilently({ matchingVariations: this.matchingVariations })
                 })
                 const unselectedAttributeSelects = this.variableAttributeSelects.filter((attrSelect) => attrSelect.state.selectedOption === null) || []
@@ -107,7 +107,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
 
                 // If there's more than one, display the first one.
 
-                else {
+                else if (this.matchingVariations.length > 1) {
                     this.displayedProductChange.emit(this.matchingVariations[0])
                 }
             })
@@ -124,7 +124,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
             this.selectedVariation = null
             this.selectedProductChange.emit(null)
             this.variableAttributeSelects.forEach((attributeSelect) => {
-                attributeSelect.select(null)
+                this.ngZone.run(() => attributeSelect.select(null))
             })
         }
 
@@ -132,7 +132,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
 
         variableAttributeSelect.select(option)
         this.variableAttributeSelects.forEach((attributeSelect) => {
-            attributeSelect.update()
+            this.ngZone.run(() => attributeSelect.update())
         })
     }
 
@@ -276,10 +276,19 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
     }
 
     public reset(): void {
+        this.selectedProductChange.emit(null)
+        this.displayedProductChange.emit(null)
         this.variableAttributeSelects.forEach((variableAttrSelect) => {
             this.ngZone.run(() => {
                 variableAttrSelect.select(null)
             })
         })
+    }
+
+    public logVariableAttrSelect(variableAttrSelect: VariableAttributeSelect<any, any>): any {
+        return variableAttrSelect.getAvailableOptions()
+            .map((x) => x.matchingVariations.map((y) => y.slug))
+        // return variableAttrSelect.options
+        //     .map((option) => option.type)
     }
 }
