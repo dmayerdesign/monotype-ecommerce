@@ -12,7 +12,7 @@ import { VariableAttributeSelectType } from '@mte/common/models/enums/variable-a
 import { VariableAttributeSelect, VariableAttributeSelectOption, VariableAttributeSelectState } from '@mte/common/models/ui-models/variable-attribute-select'
 import { isEqual, startCase, uniqBy, values } from 'lodash'
 import { zip, Subscription } from 'rxjs'
-import { filter, map, tap } from 'rxjs/operators'
+import { filter, map, takeWhile, tap } from 'rxjs/operators'
 import { OrganizationService } from '../../../../shared/services/organization.service'
 import { ProductService } from '../../../services'
 
@@ -30,7 +30,8 @@ import { ProductService } from '../../../services'
                         <select #input
                             [ngModel]="variableAttrSelect.selectedOptionModel"
                             (ngModelChange)="handleChange(variableAttrSelect, $event)">
-                            <option [ngValue]="null">
+                            <option [ngValue]="null"
+                                [disabled]="variableAttrSelect.selectedOptionModel !== null">
                                 Select {{ variableAttrSelect.attribute.displayName || variableAttrSelect.attribute.slug }}
                             </option>
                             <option *ngFor="let option of variableAttrSelect.options"
@@ -72,15 +73,21 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
 
     public ngOnInit(): void {
         this.variations = this.productDetail.variations as Product[]
-        this.variableAttributeSelects = this.getVariableAttributeSelects()
+        this.initForm()
+    }
 
+    public ngOnDestroy(): void { }
+
+    public initForm(): void {
+        const variableAttributeSelects = this.variableAttributeSelects = this.getVariableAttributeSelects()
         const selectedOptionsSources = this.variableAttributeSelects.map((select) => select.selectedOptionsSource)
         zip(...selectedOptionsSources)
+            .pipe(takeWhile(() => this.variableAttributeSelects === variableAttributeSelects))
             .subscribe((selectedOptions) => {
                 this.matchingVariations = this.getMatchingVariations(selectedOptions)
                 this.variableAttributeSelects.forEach((variableAttrSelect) => {
-                    console.log('SETTING MATCHING VARIATIONS')
                     variableAttrSelect.setStateSilently({ matchingVariations: this.matchingVariations })
+                    setTimeout(() => variableAttrSelect.update(true))
                 })
                 const unselectedAttributeSelects = this.variableAttributeSelects.filter((attrSelect) => attrSelect.state.selectedOption === null) || []
 
@@ -113,27 +120,23 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
             })
     }
 
-    public ngOnDestroy(): void { }
-
     public handleChange(variableAttributeSelect: VariableAttributeSelect<any, any>, option: any): void {
 
         // If a variation is selected, assume the user wants to select a different one now;
         // clear it and clear all selects.
 
-        if (!!this.selectedVariation) {
-            this.selectedVariation = null
-            this.selectedProductChange.emit(null)
-            this.variableAttributeSelects.forEach((attributeSelect) => {
-                this.ngZone.run(() => attributeSelect.select(null))
-            })
-        }
+        // if (!!this.selectedVariation) {
+        //     this.selectedVariation = null
+        //     this.selectedProductChange.emit(null)
+        //     this.variableAttributeSelects.forEach((attributeSelect) => {
+        //         this.ngZone.run(() => attributeSelect.select(null))
+        //     })
+        // }
 
         // Make our selection and update all siblings.
 
         variableAttributeSelect.select(option)
-        this.variableAttributeSelects.forEach((attributeSelect) => {
-            this.ngZone.run(() => attributeSelect.update())
-        })
+        this.variableAttributeSelects.forEach((variableAttrSelect) => variableAttrSelect.update())
     }
 
     public getVariableAttributeSelects(): VariableAttributeSelect<any, any>[] {
@@ -276,19 +279,9 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
     }
 
     public reset(): void {
+        this.matchingVariations = [ ...this.variations ]
+        this.selectedVariation = null
         this.selectedProductChange.emit(null)
-        this.displayedProductChange.emit(null)
-        this.variableAttributeSelects.forEach((variableAttrSelect) => {
-            this.ngZone.run(() => {
-                variableAttrSelect.select(null)
-            })
-        })
-    }
-
-    public logVariableAttrSelect(variableAttrSelect: VariableAttributeSelect<any, any>): any {
-        return variableAttrSelect.getAvailableOptions()
-            .map((x) => x.matchingVariations.map((y) => y.slug))
-        // return variableAttrSelect.options
-        //     .map((option) => option.type)
+        this.initForm()
     }
 }

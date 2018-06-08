@@ -595,6 +595,10 @@ export class WoocommerceMigrationService {
                         brandName = 'MVP Disc Sports'
                         name = 'MVP'
                     }
+                    if (slug === 'brand-axiom-discs') {
+                        brandName = 'Axiom'
+                        name = 'Axiom'
+                    }
                     const singularName = singularize(name)
                     const pluralName = `${brandName} Discs`
 

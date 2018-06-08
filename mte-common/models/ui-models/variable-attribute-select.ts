@@ -33,7 +33,7 @@ export interface VariableAttributeSelectOption<TO extends AttributeValue> {
     sourceOptions?: VariableAttributeSelectOption<TO>[]
 }
 
-export class VariableAttributeSelect<TA extends string | Attribute, TO extends AttributeValue> extends Stateful<VariableAttributeSelectState> {
+export class VariableAttributeSelect<TA extends string | Attribute = any, TO extends AttributeValue = any> extends Stateful<VariableAttributeSelectState> {
     protected _state = new VariableAttributeSelectState()
     private _productDetail: Product
     private _variations: Product[]
@@ -308,8 +308,6 @@ export class VariableAttributeSelect<TA extends string | Attribute, TO extends A
                     }
                 })
 
-                // if (logCondition) console.log('SOME HAVE OPTIONS?', option.data.slug, someMatchingVariationsHaveOption)
-
                 return someMatchingVariationsHaveOption
             })
         }
@@ -338,6 +336,7 @@ export class VariableAttributeSelect<TA extends string | Attribute, TO extends A
         const stateUpdate: VariableAttributeSelectState = {
             availableOptions: this.getAvailableOptions(),
         }
+
         if (stateUpdate.availableOptions.length === 1) {
             stateUpdate.selectedOption = stateUpdate.availableOptions[0]
         }

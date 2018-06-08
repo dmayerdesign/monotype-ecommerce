@@ -299,11 +299,9 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
         if (variation) {
             this.selectedProduct = variation
         }
-        console.log('Selected', variation)
     }
 
     public handleDisplayedProductChange(variation: Product): void {
         this.displayedProduct = variation
-        console.log('Displaying', variation)
     }
 }
