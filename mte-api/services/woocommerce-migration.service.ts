@@ -1,9 +1,7 @@
 import { pluralize, singularize, titleize } from 'inflection'
 import { inject, injectable } from 'inversify'
-import { cloneDeep, kebabCase } from 'lodash'
-import { Document } from 'mongoose'
+import { camelCase, cloneDeep, kebabCase } from 'lodash'
 
-import { AppConfig } from '@mte/app-config'
 import { Types } from '@mte/common/constants/inversify'
 import { Attribute } from '@mte/common/models/api-models/attribute'
 import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
@@ -17,8 +15,9 @@ import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.res
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
 import { Currency } from '@mte/common/models/enums/currency'
 import { ProductClass } from '@mte/common/models/enums/product-class'
-import * as productsJSON from '@mte/common/work-files/migration/hyzershop-products'
 import { DbClient } from '../data-access/db-client'
+
+const productsJSON = require('@mte/common/work-files/migration/hyzershop-products.json')
 
 @injectable()
 export class WoocommerceMigrationService {
@@ -41,7 +40,14 @@ export class WoocommerceMigrationService {
 
             const buildProducts = async () => {
                 for (const product of productsJSON) {
-                    console.log('Creating product:', product.SKU)
+                    const keys = Object.keys(product)
+                    keys.forEach((key) => {
+                        const newKey = camelCase(key.replace(/\:/g, '.'))
+                        product[newKey] = product[key]
+                        delete product[key]
+                    })
+
+                    console.log('Creating product:', product.Sku)
                     const newProduct: Product = cloneDeep(product)
 
                     const variableAttributeIds: string[] = []
@@ -64,145 +70,169 @@ export class WoocommerceMigrationService {
 
                     for (const key of Object.keys(product)) {
                         if (typeof newProduct[key] !== 'undefined' && newProduct[key] !== undefined && newProduct[key] !== '') {
-                            if (key.indexOf('attributes.') > -1) {
-                                const theKey = key.replace('attributes.', '')
-                                if (typeof product[key] === 'string') {
-                                    if (product.class === 'Variable' && product[key].indexOf('|') > -1) {
-                                        const value = product[key]
-                                        const variableAttributeValueSlugs = product[key]
-                                            .split('|')
-                                            .map((val) => {
-                                                return kebabCase(theKey + '-' + val.replace(/\s/g, '-').replace(/[\(\)]/g, '').toLowerCase())
-                                            })
-                                        const variableAttributeValueValues = product[key].split('|')
-                                        const variableAttributeSlug = theKey
-                                        try {
-                                            const variableAttribute = await this.dbClient.findOrCreate(Attribute, {
-                                                slug: variableAttributeSlug
-                                            })
-                                            console.log('findOrCreate: ' + variableAttributeSlug)
-                                            variableAttributeIds.push(variableAttribute._id)
-                                            for (const variableAttributeValueSlug of variableAttributeValueSlugs) {
-                                                try {
-                                                    const variableAttributeValue = await this.dbClient.findOrCreate(AttributeValue, {
-                                                        attribute: variableAttribute._id,
-                                                        slug: variableAttributeValueSlug,
-                                                        value: variableAttributeValueValues[variableAttributeValueSlugs.indexOf(variableAttributeValueSlug)],
-                                                    })
-                                                    console.log('findOrCreate: ' + variableAttributeValueSlug)
-                                                    variableAttributeValueIds.push(variableAttributeValue._id)
-                                                }
-                                                catch (error) {
-                                                    reject(new ApiErrorResponse(error))
+                            if (key === 'productId') {
+                                delete newProduct[key]
+                            }
+                            if (key.indexOf('attribute.') > -1) {
+                                const theKey = camelCase(key.replace('attribute.', ''))
+
+                                if (
+                                    theKey === 'color' ||
+                                    theKey === 'plastic' ||
+                                    theKey === 'rimColor'
+                                ) {
+                                    if (typeof product[key] === 'string') {
+                                        if (product.type === 'Variable' && product[key].indexOf('|') > -1) {
+                                            const variableAttributeValueSlugs = product[key]
+                                                .split('|')
+                                                .map((val) => {
+                                                    return kebabCase(theKey + '-' + val.replace(/\s/g, '-').replace(/[\(\)]/g, '').toLowerCase())
+                                                })
+                                            const variableAttributeValueValues = product[key].split('|')
+                                            const variableAttributeSlug = kebabCase(theKey)
+                                            try {
+                                                const variableAttribute = await this.dbClient.findOrCreate(Attribute, {
+                                                    slug: variableAttributeSlug
+                                                })
+                                                variableAttributeIds.push(variableAttribute._id)
+                                                for (const variableAttributeValueSlug of variableAttributeValueSlugs) {
+                                                    try {
+                                                        const variableAttributeValue = await this.dbClient.findOrCreate(AttributeValue, {
+                                                            attribute: variableAttribute._id,
+                                                            slug: variableAttributeValueSlug,
+                                                            value: variableAttributeValueValues[variableAttributeValueSlugs.indexOf(variableAttributeValueSlug)],
+                                                        })
+                                                        variableAttributeValueIds.push(variableAttributeValue._id)
+                                                    }
+                                                    catch (error) {
+                                                        reject(new ApiErrorResponse(error))
+                                                    }
                                                 }
                                             }
+                                            catch (error) {
+                                                reject(new ApiErrorResponse(error))
+                                                return
+                                            }
                                         }
-                                        catch (error) {
-                                            reject(new ApiErrorResponse(error))
-                                            return
-                                        }
-                                    }
-                                    else {
-                                        const value = product[key]
-                                        const attributeValueSlug = kebabCase(theKey + '-' + product[key].replace(/\s/g, '-').replace(/[\(\)]/g, '').toLowerCase())
-                                        const attributeSlug = theKey
-                                        try {
-                                            const attribute = await this.dbClient.findOrCreate(Attribute, {
-                                                slug: attributeSlug
-                                            })
-                                            console.log('findOrCreate: ' + attributeSlug)
-                                            const attributeValue = await this.dbClient.findOrCreate(AttributeValue, {
-                                                attribute: attribute._id,
-                                                slug: attributeValueSlug,
-                                                value,
-                                            })
-                                            console.log('findOrCreate: ' + attributeValueSlug)
-                                            attributeValueIds.push(attributeValue._id)
-                                            delete newProduct[key]
-                                        }
-                                        catch (error) {
-                                            reject(new ApiErrorResponse(error))
-                                            return
+                                        else {
+                                            const value = newProduct[key]
+                                            const attributeValueSlug = kebabCase(theKey + '-' + newProduct[key].replace(/\s/g, '-').replace(/[\(\)]/g, '').toLowerCase())
+                                            const attributeSlug = theKey
+                                            try {
+                                                const attribute = await this.dbClient.findOrCreate(Attribute, {
+                                                    slug: attributeSlug
+                                                })
+                                                const attributeValue = await this.dbClient.findOrCreate(AttributeValue, {
+                                                    attribute: attribute._id,
+                                                    slug: attributeValueSlug,
+                                                    value,
+                                                })
+                                                attributeValueIds.push(attributeValue._id)
+                                                delete newProduct[key]
+                                            }
+                                            catch (error) {
+                                                reject(new ApiErrorResponse(error))
+                                                return
+                                            }
                                         }
                                     }
                                 }
-
-                                if (theKey === 'fade' || theKey === 'glide' || theKey === 'turn' || theKey === 'speed') {
-                                    flightStats[theKey] = newProduct[key]
-
-                                    // Add speed/glide/turn/fade Attribute.
-
-                                    const speedGlideTurnFadeAttribute = await this.dbClient.findOrCreate(Attribute, { slug: theKey })
-                                    console.log('findOrCreate: ' + theKey)
-                                    simpleAttributeValues.push({
-                                        attribute: speedGlideTurnFadeAttribute._id,
-                                        value: flightStats[theKey]
-                                    })
-
-                                    // Add stability AttributeValue and TaxonomyTerm.
-
-                                    const getStability = function(stabilityStats): 'overstable'|'stable'|'understable' {
-                                        if ( (stabilityStats.fade + stabilityStats.turn) >= 3 ) {
-                                            return 'overstable'
+                                else {
+                                    if (theKey === 'scaledWeight') {
+                                        if ((newProduct[key] as any).indexOf('|') > -1) {
+                                            if (!newProduct.variableProperties) {
+                                                newProduct.variableProperties = []
+                                            }
+                                            if (newProduct.variableProperties.indexOf('netWeight') === -1) {
+                                                newProduct.variableProperties.push('netWeight')
+                                            }
                                         }
-                                        else if ( (stabilityStats.fade + stabilityStats.turn) < 3 && (stabilityStats.fade + stabilityStats.turn) >= 0 ) {
-                                            return 'stable'
+                                        else {
+                                            if (newProduct[key].length) {
+                                                newProduct.netWeight = parseFloat(newProduct[key])
+                                            }
                                         }
-                                        else if ( (stabilityStats.fade + stabilityStats.turn) < 0 ) {
-                                            return 'understable'
-                                        }
+                                        delete newProduct[key]
                                     }
-
-                                    if (Object.keys(flightStats).every(statKey => typeof flightStats[statKey] !== 'undefined')) {
-                                        try {
-                                            const stabilityValue = getStability(flightStats)
-                                            const attributeSlug = 'stability'
-                                            const taxonomySlug = 'stability'
-                                            const attributeValueSlug = attributeSlug + '-' + stabilityValue
-                                            const taxonomyTermSlug = taxonomySlug + '-' + stabilityValue
-
-                                            const attribute = await this.dbClient.findOrCreate(Attribute, {
-                                                slug: attributeSlug,
-                                            })
-                                            const attributeValue = await this.dbClient.findOrCreate(AttributeValue, {
-                                                attribute: attribute._id,
-                                                slug: attributeValueSlug,
-                                                value: stabilityValue,
-                                            })
-                                            console.log('findOrCreate: ' + attributeSlug + 'and' + attributeValueSlug)
-                                            attributeValueIds.push(attributeValue._id)
-
-                                            const taxonomy = await this.dbClient.findOrCreate(Taxonomy, {
-                                                slug: taxonomySlug,
-                                            })
-                                            const taxonomyTerm = await this.dbClient.findOrCreate(TaxonomyTerm, {
-                                                taxonomy: taxonomy._id,
-                                                slug: taxonomyTermSlug,
-                                            })
-                                            console.log('findOrCreate: ' + taxonomySlug + 'and' + taxonomyTermSlug)
-                                            taxonomyTermIds.push(taxonomyTerm._id)
-                                        }
-                                        catch (error) {
-                                            reject(new ApiErrorResponse(error))
-                                            return
-                                        }
-                                    }
-                                }
-
-                                if (theKey === 'inboundsId') {
-                                    const inboundsIdAttribute = await this.dbClient.findOrCreate(Attribute, { slug: kebabCase(theKey) })
-                                    simpleAttributeValues.push({
-                                        attribute: inboundsIdAttribute._id,
-                                        value: newProduct[key]
-                                    })
                                 }
                             }
 
-                            if (key.indexOf('taxonomies.') > -1) {
+                            if (key === 'fade' || key === 'glide' || key === 'turn' || key === 'speed') {
+                                flightStats[key] = newProduct[key]
+
+                                // Add speed/glide/turn/fade Attribute.
+
+                                const speedGlideTurnFadeAttribute = await this.dbClient.findOrCreate(Attribute, { slug: key })
+                                simpleAttributeValues.push({
+                                    attribute: speedGlideTurnFadeAttribute._id,
+                                    value: flightStats[key]
+                                })
+
+                                // Add stability AttributeValue and TaxonomyTerm.
+
+                                const getStability = function(stabilityStats): 'overstable'|'stable'|'understable' {
+                                    if ( (stabilityStats.fade + stabilityStats.turn) >= 3 ) {
+                                        return 'overstable'
+                                    }
+                                    else if ( (stabilityStats.fade + stabilityStats.turn) < 3 && (stabilityStats.fade + stabilityStats.turn) >= 0 ) {
+                                        return 'stable'
+                                    }
+                                    else if ( (stabilityStats.fade + stabilityStats.turn) < 0 ) {
+                                        return 'understable'
+                                    }
+                                }
+
+                                if (Object.keys(flightStats).every(statKey => typeof flightStats[statKey] !== 'undefined')) {
+                                    try {
+                                        const stabilityValue = getStability(flightStats)
+                                        const attributeSlug = 'stability'
+                                        const taxonomySlug = 'stability'
+                                        const attributeValueSlug = attributeSlug + '-' + stabilityValue
+                                        const taxonomyTermSlug = taxonomySlug + '-' + stabilityValue
+
+                                        const attribute = await this.dbClient.findOrCreate(Attribute, {
+                                            slug: attributeSlug,
+                                        })
+                                        const attributeValue = await this.dbClient.findOrCreate(AttributeValue, {
+                                            attribute: attribute._id,
+                                            slug: attributeValueSlug,
+                                            value: stabilityValue,
+                                        })
+                                        attributeValueIds.push(attributeValue._id)
+
+                                        const taxonomy = await this.dbClient.findOrCreate(Taxonomy, {
+                                            slug: taxonomySlug,
+                                        })
+                                        const taxonomyTerm = await this.dbClient.findOrCreate(TaxonomyTerm, {
+                                            taxonomy: taxonomy._id,
+                                            slug: taxonomyTermSlug,
+                                        })
+                                        taxonomyTermIds.push(taxonomyTerm._id)
+                                    }
+                                    catch (error) {
+                                        reject(new ApiErrorResponse(error))
+                                        return
+                                    }
+                                }
+                            }
+
+                            if (key === 'inboundsId') {
+                                const inboundsIdAttribute = await this.dbClient.findOrCreate(Attribute, { slug: kebabCase(key) })
+                                simpleAttributeValues.push({
+                                    attribute: inboundsIdAttribute._id,
+                                    value: newProduct[key]
+                                })
+                            }
+
+                            if (
+                                key === 'brands' ||
+                                key === 'discType' ||
+                                key === 'category'
+                            ) {
                                 const taxonomyTermPromises: Promise<TaxonomyTerm>[] = []
-                                const taxonomySlug = kebabCase(key.replace('taxonomies.', ''))
+                                const taxonomySlug = kebabCase(singularize(key))
                                 const taxonomyTermSlugs = product[key].split('|').map((originalTaxonomyTermSlug) => {
-                                    return kebabCase(key.replace('taxonomies.', '') + '-' + originalTaxonomyTermSlug.replace(/\s/g, '-').toLowerCase()).trim()
+                                    return kebabCase(taxonomySlug + '-' + originalTaxonomyTermSlug.replace(/\s/g, '-').toLowerCase()).trim()
                                 })
 
                                 try {
@@ -225,16 +255,6 @@ export class WoocommerceMigrationService {
                                 catch (error) {
                                     reject(new ApiErrorResponse(error))
                                     return
-                                }
-                            }
-                            if (key === 'netWeight') {
-                                newProduct[key] = (newProduct[key] as any).replace(/g/g, '')
-                                if ((newProduct[key] as any).indexOf('|') > -1) {
-                                    if (!newProduct.variableProperties) {
-                                        newProduct.variableProperties = []
-                                    }
-                                    newProduct.variableProperties.push('netWeight')
-                                    delete newProduct[key]
                                 }
                             }
                             if (key === 'price') {
@@ -287,27 +307,23 @@ export class WoocommerceMigrationService {
                             }
 
                             if (key === 'class') {
-                                if ((<string>newProduct.class) === 'Variable') {
+                                if ((newProduct as any).type === 'Variable') {
                                     newProduct.isParent = true
                                     newProduct.class = ProductClass.Parent
                                 }
-                                if ((<string>newProduct.class) === 'Variation') {
+                                if ((newProduct as any).type === 'Variation') {
                                     newProduct.isVariation = true
                                     newProduct.class = ProductClass.Variation
                                 }
-                                if ((<string>newProduct.class) === 'Simple Product') {
+                                if ((newProduct as any).type === 'Simple Product') {
                                     newProduct.isStandalone = true
                                     newProduct.class = ProductClass.Standalone
                                 }
                             }
 
-                            if (key === 'name') {
-                                newProduct.name = newProduct.name.replace(/ŠÜ¢/g, ' -')
-                            }
-
-                            if (key === 'description') {
-                                if (newProduct.description) {
-                                    newProduct.description = newProduct.description.replace(/http:\/\/stage\.hyzershop\.com\/product/g, '/shop/product')
+                            if (key === 'excerpt') {
+                                if (newProduct[key]) {
+                                    newProduct.description = newProduct[key].replace(/http:\/\/stage\.hyzershop\.com\/product/g, '/shop/product')
                                     newProduct.description = newProduct.description.replace(/https:\/\/hyzershop\.com\/product/g, '/shop/product')
                                     newProduct.description = newProduct.description.replace(/https:\/\/www\.hyzershop\.com\/product/g, '/shop/product')
                                     newProduct.description = newProduct.description.replace(/Š—È/g, '\'')
@@ -316,14 +332,16 @@ export class WoocommerceMigrationService {
                                     newProduct.description = newProduct.description.replace('</div>', '')
                                     newProduct.description = newProduct.description.replace(/Î¾/g, ' ')
                                 }
+                                delete newProduct[key]
                             }
 
-                            if (key === 'SKU') {
+                            if (key === 'productSku') {
                                 newProduct.sku = newProduct[key]
                                 delete newProduct[key]
                             }
-                            if (key === 'parentSKU') {
-                                newProduct.parentSku = newProduct[key]
+
+                            if (key === 'productName') {
+                                newProduct.name = newProduct[key].replace(/ŠÜ¢/g, ' -')
                                 delete newProduct[key]
                             }
                         }
@@ -399,7 +417,7 @@ export class WoocommerceMigrationService {
                     product.images = []
 
                     if (!product.isParent) {
-                        let isDisc: boolean
+                        let isDisc = false
                         let attributeValues: AttributeValue[]
                         let taxonomyTerms: TaxonomyTerm[]
                         let imageBaseUrl = `/product-images/`
@@ -462,7 +480,7 @@ export class WoocommerceMigrationService {
 
                         // Populate images for non-disc products.
 
-                        imageBaseUrl.replace(/\-\-/g, '-')
+                        imageBaseUrl.replace(/[-]{2,3}/g, '-')
                         imageBaseUrl.replace(/\-$/, '-')
                         if (product.sku === 'DISCRAFTSTARTER') {
                             imageBaseUrl = '/product-images/discraft-disc-golf-set'
