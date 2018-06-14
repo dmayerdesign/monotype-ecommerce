@@ -1,5 +1,3 @@
-import { Request } from 'express'
-import { inject, injectable } from 'inversify'
 import { Copy } from '@mte/common/constants/copy'
 import { HttpStatus } from '@mte/common/constants/http-status'
 import { Types } from '@mte/common/constants/inversify/types'
@@ -7,9 +5,10 @@ import { NavigationItem } from '@mte/common/models/api-models/navigation-item'
 import { Organization } from '@mte/common/models/api-models/organization'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
+import { Currency } from '@mte/common/models/enums/currency'
+import { inject, injectable } from 'inversify'
 import { DbClient } from '../data-access/db-client'
 import { CrudService } from './crud.service'
-import { Currency } from '@mte/common/models/enums/currency';
 
 @injectable()
 export class OrganizationService extends CrudService<Organization> {
@@ -18,9 +17,7 @@ export class OrganizationService extends CrudService<Organization> {
 
     constructor(
         @inject(Types.DbClient) protected dbClient: DbClient<Organization>
-    ) {
-        super()
-    }
+    ) { super() }
 
     public getOrganization(): Promise<ApiResponse<Organization>> {
         return new Promise<ApiResponse<Organization>>(async (resolve, reject) => {

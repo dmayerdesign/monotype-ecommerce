@@ -1,5 +1,6 @@
 export class Tags {
     public static AppController = 'AppController'
+    public static CartController = 'CartController'
     public static InstagramController = 'InstagramController'
     public static OrganizationController = 'OrganizationController'
     public static ProductsAdminController = 'ProductsAdminController'

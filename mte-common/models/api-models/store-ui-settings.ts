@@ -4,6 +4,6 @@ import { StoreUiSettings as IStoreUiSettings } from '../api-interfaces/store-ui-
 
 @schema(StoreUiSettings)
 export class StoreUiSettings extends MongooseDocument implements IStoreUiSettings {
-    @arrayProp({ items: String }) public orderOfVariableAttributeSelects?: string[]
-    @arrayProp({ items: [String] }) public combinedVariableAttributeSelects?: string[][]
+    @arrayProp({ itemsType: String }) public orderOfVariableAttributeSelects?: string[]
+    @arrayProp({ itemsType: [String] }) public combinedVariableAttributeSelects?: string[][]
 }

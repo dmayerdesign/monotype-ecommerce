@@ -1,8 +1,7 @@
 import { Response } from 'express'
 import { inject, injectable } from 'inversify'
-import * as mongoose from 'mongoose'
 
-import { Crud, HttpStatus } from '@mte/common/constants'
+import { HttpStatus } from '@mte/common/constants'
 import { Types } from '@mte/common/constants/inversify'
 import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { Price } from '@mte/common/models/api-interfaces/price'
@@ -17,7 +16,6 @@ import { ListFromQueryRequest } from '@mte/common/models/api-requests/list.reque
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
 import { GetProductDetailResponseBody } from '@mte/common/models/api-responses/get-product-detail/get-product-detail.response.body'
-import { Currency } from '@mte/common/models/enums/currency'
 import { DbClient } from '../data-access/db-client'
 import { ProductSearchHelper } from '../helpers/product-search.helper'
 import { CrudService } from './crud.service'
@@ -130,6 +128,12 @@ export class ProductService extends CrudService<Product> {
                         model: Attribute.getModel(),
                     },
                 ])
+
+                // Filter out products that are not in stock.
+
+                product.variations = product.variations.filter((variation: Product) => {
+                    return variation.stockQuantity > 0
+                })
 
                 resolve(new ApiResponse(product))
             }

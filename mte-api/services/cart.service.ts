@@ -1,0 +1,39 @@
+import { Types } from '@mte/common/constants/inversify/types'
+import { CartItem } from '@mte/common/models/api-interfaces/cart-item'
+import { GetCartItemsFromIdsRequest } from '@mte/common/models/api-requests/get-cart-items-from-ids.request'
+import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
+import { ApiResponse } from '@mte/common/models/api-responses/api.response'
+import { inject, injectable } from 'inversify'
+import { ProductService } from './product.service'
+
+@injectable()
+export class CartService {
+    constructor(
+        @inject(Types.ProductService) private _productService: ProductService
+    ) { }
+
+    public async refresh(request: GetCartItemsFromIdsRequest): Promise<ApiResponse<CartItem[]>> {
+        let items: CartItem[] = []
+        try {
+            const getProductsResponse = await this._productService.getIds(request)
+            const products = getProductsResponse.body
+            items = items.concat(products)
+        }
+        catch (error) {
+            throw new ApiErrorResponse(error)
+        }
+        return new ApiResponse<CartItem[]>(items)
+    }
+
+    public async getItem(id: string): Promise<ApiResponse<CartItem>> {
+        let item: CartItem = null
+        try {
+            const getProductResponse = await this._productService.getOne(id)
+            item = getProductResponse.body
+        }
+        catch (error) {
+            throw new ApiErrorResponse(error)
+        }
+        return new ApiResponse<CartItem>(item)
+    }
+}

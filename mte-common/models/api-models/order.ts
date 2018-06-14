@@ -14,7 +14,7 @@ export class Order extends MongooseDocument {
     @prop() public total: Price
     @prop() public taxPercent: number
     @prop() public shippingCost: Price
-    @arrayProp({ items: EasypostRate }) public shippingRates: EasypostRate[]
+    @arrayProp({ itemsType: EasypostRate }) public shippingRates: EasypostRate[]
     @prop() public selectedShippingRateId: string
     @prop() public shippingInsuranceAmt: number
     @prop() public carrier: string

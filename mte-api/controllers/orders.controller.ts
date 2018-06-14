@@ -12,14 +12,10 @@ import {
     response,
 } from 'inversify-express-utils'
 
-import { AppConfig } from '@mte/app-config'
 import { ApiEndpoints, Types } from '@mte/common/constants'
-import { Order } from '@mte/common/models/api-models/order'
 import { ExecuteOrderRequest } from '@mte/common/models/api-requests/execute-order.request'
 import { GetOrdersRequest } from '@mte/common/models/api-requests/get-orders.request'
-import { ApiResponse } from '@mte/common/models/api-responses/api.response'
 import { OrderService } from '../services/order.service'
-import { WoocommerceMigrationService } from '../services/woocommerce-migration.service'
 import { ApiController } from './api.controller'
 
 @injectable()

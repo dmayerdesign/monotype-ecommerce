@@ -98,8 +98,9 @@ export class ModelBuilder {
         let type: any
 
         const nonPropertyOptions = [
-            'items',
-            'itemsRef'
+            'itemsType',
+            'itemsRef',
+            'itemsRefPath'
         ]
 
         if (!schemaDefinition) {
@@ -134,19 +135,28 @@ export class ModelBuilder {
         }
 
         if (propType === 'array') {
-            if (!options.items && !options.itemsRef) {
-                throw new InvalidArrayPropOptionsError('You must define items or itemsRef.')
-            }
+            if (options) {
+                if (!options.itemsType && !options.itemsRef && !options.itemsRefPath) {
+                    throw new InvalidArrayPropOptionsError('You must define itemsType, itemsRef, or itemsRefPath.')
+                }
 
-            if (options.items) {
-                schemaProperty.type = [ this.getTypeOrSchema(options.items) ]
-            }
-            else if (options.itemsRef) {
-                schemaProperty = [{
-                    type: Schema.Types.ObjectId,
-                    ref: options.itemsRef.name,
-                    ...schemaProperty,
-                }]
+                if (options.itemsType) {
+                    schemaProperty.type = [ this.getTypeOrSchema(options.itemsType) ]
+                }
+                else if (options.itemsRef) {
+                    schemaProperty = [{
+                        type: Schema.Types.ObjectId,
+                        ref: options.itemsRef.name,
+                        ...schemaProperty,
+                    }]
+                }
+                else if (options.itemsRefPath) {
+                    schemaProperty = [{
+                        type: Schema.Types.ObjectId,
+                        refPath: options.itemsRefPath,
+                        ...schemaProperty,
+                    }]
+                }
             }
         }
         else {

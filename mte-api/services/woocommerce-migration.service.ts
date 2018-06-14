@@ -17,7 +17,7 @@ import { Currency } from '@mte/common/models/enums/currency'
 import { ProductClass } from '@mte/common/models/enums/product-class'
 import { DbClient } from '../data-access/db-client'
 
-const productsJSON = require('@mte/common/work-files/migration/hyzershop-products.json')
+import * as productsJSON from '@mte/common/work-files/migration/hyzershop-products'
 
 @injectable()
 export class WoocommerceMigrationService {
@@ -27,6 +27,7 @@ export class WoocommerceMigrationService {
     public createProductsFromExportedJSON(): Promise<ApiResponse<Product[]>> {
         return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
             const newProducts = []
+            let index = -1
 
             const dropAllProductRelatedCollections = async () => {
                 await this.dbClient.remove(Product, {})
@@ -40,14 +41,31 @@ export class WoocommerceMigrationService {
 
             const buildProducts = async () => {
                 for (const product of productsJSON) {
+                    index++
+                    if (!!product['Product Name'].match(/^Template/)) {
+                        continue
+                    }
+                    if (product['Product ID'] === '1195') {
+                        product['Product SKU'] = 'STRATUS_X_1776'
+                    }
+                    if (product['Product ID'] === '1057') {
+                        product['Product SKU'] = 'BUZZZ_PROD_1747'
+                    }
+
                     const keys = Object.keys(product)
                     keys.forEach((key) => {
-                        const newKey = camelCase(key.replace(/\:/g, '.'))
+                        let newKey = camelCase(key)
+
+                        if (!!newKey.match(/^attribute/)) {
+                            newKey = 'attribute.' + camelCase(newKey.replace(/^attribute/, ''))
+                        }
+                        if (newKey === 'category') {
+                            newKey = 'productType'
+                        }
                         product[newKey] = product[key]
                         delete product[key]
                     })
 
-                    console.log('Creating product:', product.Sku)
                     const newProduct: Product = cloneDeep(product)
 
                     const variableAttributeIds: string[] = []
@@ -72,7 +90,9 @@ export class WoocommerceMigrationService {
                         if (typeof newProduct[key] !== 'undefined' && newProduct[key] !== undefined && newProduct[key] !== '') {
                             if (key === 'productId') {
                                 delete newProduct[key]
+                                continue
                             }
+
                             if (key.indexOf('attribute.') > -1) {
                                 const theKey = camelCase(key.replace('attribute.', ''))
 
@@ -137,23 +157,21 @@ export class WoocommerceMigrationService {
                                         }
                                     }
                                 }
-                                else {
-                                    if (theKey === 'scaledWeight') {
-                                        if ((newProduct[key] as any).indexOf('|') > -1) {
-                                            if (!newProduct.variableProperties) {
-                                                newProduct.variableProperties = []
-                                            }
-                                            if (newProduct.variableProperties.indexOf('netWeight') === -1) {
-                                                newProduct.variableProperties.push('netWeight')
-                                            }
+                                else if (theKey === 'scaledWeight') {
+                                    if ((newProduct[key] as any).indexOf('|') > -1) {
+                                        if (!newProduct.variableProperties) {
+                                            newProduct.variableProperties = []
                                         }
-                                        else {
-                                            if (newProduct[key].length) {
-                                                newProduct.netWeight = parseFloat(newProduct[key])
-                                            }
+                                        if (newProduct.variableProperties.indexOf('netWeight') === -1) {
+                                            newProduct.variableProperties.push('netWeight')
                                         }
-                                        delete newProduct[key]
                                     }
+                                    else {
+                                        if (newProduct[key].length) {
+                                            newProduct.netWeight = parseFloat(newProduct[key])
+                                        }
+                                    }
+                                    delete newProduct[key]
                                 }
                             }
 
@@ -227,7 +245,7 @@ export class WoocommerceMigrationService {
                             if (
                                 key === 'brands' ||
                                 key === 'discType' ||
-                                key === 'category'
+                                key === 'productType'
                             ) {
                                 const taxonomyTermPromises: Promise<TaxonomyTerm>[] = []
                                 const taxonomySlug = kebabCase(singularize(key))
@@ -306,7 +324,7 @@ export class WoocommerceMigrationService {
                                 }
                             }
 
-                            if (key === 'class') {
+                            if (key === 'type') {
                                 if ((newProduct as any).type === 'Variable') {
                                     newProduct.isParent = true
                                     newProduct.class = ProductClass.Parent
@@ -319,6 +337,7 @@ export class WoocommerceMigrationService {
                                     newProduct.isStandalone = true
                                     newProduct.class = ProductClass.Standalone
                                 }
+                                delete newProduct[key]
                             }
 
                             if (key === 'excerpt') {
@@ -344,6 +363,11 @@ export class WoocommerceMigrationService {
                                 newProduct.name = newProduct[key].replace(/ŠÜ¢/g, ' -')
                                 delete newProduct[key]
                             }
+
+                            if (key === 'quantity') {
+                                newProduct.stockQuantity = newProduct[key]
+                                delete newProduct[key]
+                            }
                         }
                         else {
                             delete newProduct[key]
@@ -354,13 +378,30 @@ export class WoocommerceMigrationService {
                     // [ EXCEPTION ]
                     // !!!!!!!!!!!!!!!!!!
 
+                    const slug = newProduct.slug
+                    if (slug === 'product-754-variation-6') {
+                        newProduct.sku = 'CHALLENGER_PROD_1697'
+                    }
+                    if (slug === 'discraft-hornet') {
+                        newProduct.sku = 'HORNET'
+                    }
+                    if (slug === 'axiom-thrill') {
+                        newProduct.sku = 'THRILL'
+                    }
+                    if (slug === 'product-2237-variation-2') {
+                        newProduct.sku = 'ENERGY_NEUTRON_1678'
+                    }
+
                     const sku = newProduct.sku
                     if (sku === 'METEOR_GLOZ_1769') {
                         if (newProducts.find((p) => p.sku === 'METEOR_GLOZ_1769')) {
                             newProduct.sku = 'METEOR_GLOZ_1769_2'
                         }
                     }
-                    if (!!sku.match(/HORNET_/)) {
+                    if (!!sku.match(/^THRILL_/)) {
+                        newProduct.parentSku = 'THRILL'
+                    }
+                    if (!!sku.match(/^HORNET_/)) {
                         newProduct.parentSku = 'HORNET'
                     }
 
@@ -381,9 +422,7 @@ export class WoocommerceMigrationService {
             }
 
             try {
-                console.log('Building products...')
                 await buildProducts()
-                console.log('Products built!')
             }
             catch (error) {
                 reject(new ApiErrorResponse(error))
@@ -394,9 +433,7 @@ export class WoocommerceMigrationService {
              * The switch
              ******* -> */
             try {
-                console.log('Creating products...')
                 const allProducts = await this.dbClient.create<Product>(Product, newProducts)
-                console.log('Products created!')
                 const parentProducts = allProducts.filter((p) => p.isParent)
                 const variationProducts = allProducts.filter((p) => p.isVariation)
 
@@ -449,31 +486,26 @@ export class WoocommerceMigrationService {
                         }
 
                         const name = product.name.substr(0, product.name.indexOf(' -'))
-                        imageBaseUrl += `${name.toLowerCase().replace(/\W/g, '-')}-`
+                        imageBaseUrl += kebabCase(name).replace(/\W/g, '-')
 
                         if (isDisc) {
-                            console.log('Loop through attribute values')
                             attributeValues.forEach((attributeValue) => {
                                 if (attributeValue && attributeValue.slug.indexOf('plastic') > -1) {
-                                    console.log('Add plastic to filename', imageBaseUrl, attributeValue)
-                                    const plasticStr = attributeValue.value
-                                        .toLowerCase()
-                                        .replace(/\W/g, '')
-
-                                    imageBaseUrl += `${plasticStr}-`
+                                    const plasticStr = kebabCase(attributeValue.value).replace(/\W/g, '')
+                                    imageBaseUrl += `-${plasticStr}`
                                 }
                             })
-                            if (product.netWeight) {
+                            if (typeof product.netWeight !== 'undefined') {
                                 let netWeightStr = product.netWeight.toString()
                                     .replace('.', '')
                                 if (netWeightStr.length === 2) netWeightStr += '00'
                                 if (netWeightStr.length === 3) netWeightStr += '0'
-                                imageBaseUrl += netWeightStr
+                                imageBaseUrl += `-${netWeightStr}`
                             }
                         } else {
                             attributeValues.forEach((attributeValue) => {
                                 if (attributeValue && attributeValue.slug.indexOf('color') > -1) {
-                                    imageBaseUrl += `${attributeValue.value.toLowerCase()}-`
+                                    imageBaseUrl += `-${kebabCase(attributeValue.value)}`
                                 }
                             })
                         }
@@ -509,7 +541,6 @@ export class WoocommerceMigrationService {
                     }
 
                     await product.save()
-                    console.log('Product images saved')
                 }
 
                 // Populate parent product images with variation images.
@@ -526,7 +557,6 @@ export class WoocommerceMigrationService {
                     }
 
                     await product.save()
-                    console.log('Parent images saved')
                 }
 
                 // Populate parent products with variation attributes and attribute values.
@@ -566,7 +596,6 @@ export class WoocommerceMigrationService {
 
                     await variation.save()
                     await parent.save()
-                    console.log('Variation attributes and attribute values added')
                 }
 
                 // Fill out taxonomy terms.
@@ -594,7 +623,6 @@ export class WoocommerceMigrationService {
                             bannerOverlay: `/page-images/${slug}.png`,
                         },
                     })
-                    console.log('Disc type hydrated: ' + slug)
                 }
 
                 const brands = [
@@ -628,7 +656,6 @@ export class WoocommerceMigrationService {
                             bannerOverlay: `/page-images/${slug}.png`,
                         },
                     })
-                    console.log('Brand hydrated: ' + slug)
                 }
 
                 resolve(new ApiResponse(allProducts))

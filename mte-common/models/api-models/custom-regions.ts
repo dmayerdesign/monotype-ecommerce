@@ -3,6 +3,6 @@ import { CustomRegion } from './custom-region'
 
 @schema(CustomRegions)
 export class CustomRegions extends MongooseDocument {
-    @arrayProp({ items: CustomRegion }) public productDetailInfoHeader: CustomRegion[]
-    @arrayProp({ items: CustomRegion }) public productDetailMid: CustomRegion[]
+    @arrayProp({ itemsType: CustomRegion }) public productDetailInfoHeader: CustomRegion[]
+    @arrayProp({ itemsType: CustomRegion }) public productDetailMid: CustomRegion[]
 }

@@ -1,19 +1,25 @@
 import { ProductHelper } from '@mte/common/helpers/product.helper'
-import { Cart } from '@mte/common/models/api-models/cart'
-import { Price } from '@mte/common/models/api-models/price'
-import { Product } from '@mte/common/models/api-models/product'
+import { Cart } from '@mte/common/models/api-interfaces/cart'
+import { CartItem } from '@mte/common/models/api-interfaces/cart-item'
+import { Price } from '@mte/common/models/api-interfaces/price'
+import { Product } from '@mte/common/models/api-interfaces/product'
 import { Currency } from '@mte/common/models/enums/currency'
-import { CartProduct } from '@mte/common/models/interfaces/ui/cart-product'
+import { CartDisplayItem } from '@mte/common/models/interfaces/ui/cart-display-item'
 
 export class CartHelper {
-    public static getDisplayItems(items: Product[]): CartProduct[] {
-        const displayItems: CartProduct[] = []
 
-        items.forEach(item => {
-            const duplicateItemIndex = displayItems.findIndex(displayItem => displayItem.product._id === item._id)
+    /**
+     * @param {Product[]} items
+     * @returns {CartDisplayItem<Product>[]}
+     */
+    public static getDisplayItems(items: Product[]): CartDisplayItem<Product>[] {
+        const displayItems: CartDisplayItem<Product>[] = []
+
+        items.forEach((item) => {
+            const duplicateItemIndex = displayItems.findIndex(displayItem => displayItem.data._id === item._id)
 
             if (duplicateItemIndex > -1) {
-                const duplicateItem = displayItems.find(displayItem => displayItem.product._id === item._id)
+                const duplicateItem = displayItems.find(displayItem => displayItem.data._id === item._id)
 
                 displayItems[duplicateItemIndex] = {
                     ...duplicateItem,
@@ -27,7 +33,7 @@ export class CartHelper {
             else {
                 displayItems.push({
                     quantity: 1,
-                    product: item,
+                    data: item,
                     subTotal: ProductHelper.getPrice(item) as Price,
                 })
             }
@@ -49,7 +55,7 @@ export class CartHelper {
             }, { amount: 0, currency: Currency.USD })
     }
 
-    public static getNumberAvailableToAdd(cart: Cart, product: Product): number {
-        return product.stockQuantity - cart.items.filter((item: Product) => item._id === product._id).length
+    public static getNumberAvailableToAdd(cart: Cart, item: CartItem): number {
+        return item.stockQuantity - cart.items.filter((_item: CartItem) => _item._id === item._id).length
     }
 }

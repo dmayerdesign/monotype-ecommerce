@@ -1,20 +1,14 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core'
-import { AbstractControl, FormControl, FormGroup } from '@angular/forms'
 import { ActivatedRoute } from '@angular/router'
 import { CartHelper } from '@mte/common/helpers/cart.helper'
 import { CustomRegionsHelper } from '@mte/common/helpers/custom-regions.helper'
 import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
-import { Attribute } from '@mte/common/models/api-interfaces/attribute'
-import { AttributeValue } from '@mte/common/models/api-interfaces/attribute-value'
 import { CustomRegions } from '@mte/common/models/api-interfaces/custom-regions'
 import { Organization } from '@mte/common/models/api-interfaces/organization'
 import { Product } from '@mte/common/models/api-interfaces/product'
-import { SimpleAttributeValue } from '@mte/common/models/api-interfaces/simple-attribute-value'
-import { TaxonomyTerm } from '@mte/common/models/api-interfaces/taxonomy-term'
-import { Subscription } from 'rxjs'
-import { delay, filter, map, switchMap, takeWhile, tap } from 'rxjs/operators'
+import { switchMap, takeWhile } from 'rxjs/operators'
 import { CartService } from '../../../shared/services/cart/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { UiService } from '../../../shared/services/ui.service'
@@ -24,16 +18,28 @@ import { ProductService } from '../../services/product.service'
     selector: 'mte-product-detail',
     template: `
     <div *ngIf="displayedProduct"
-        [ngClass]="productDetailContainerClassList">
+        [ngClass]="[
+            'product-detail',
+            'page-container',
+            'container'
+        ]">
 
         <div class="product-detail-main row">
-            <div [ngClass]="productDetailImagesClassList">
+            <div [ngClass]="[
+                'product-detail-images',
+                'col-sm-4',
+                'pl-0',
+                'pr-5'
+            ]">
                 <mte-product-image
                     [src]="getMainImage()"
                     [hasMagnifier]="true">
                 </mte-product-image>
             </div>
-            <div [ngClass]="productDetailInfoClassList">
+            <div [ngClass]="[
+                'product-detail-info',
+                'col-sm-8'
+            ]">
                 <header class="product-detail-info--header">
                     <span [ngClass]="[
                         'product-detail-info--brand',
@@ -72,25 +78,27 @@ import { ProductService } from '../../services/product.service'
                     (selectedProductChange)="handleSelectedProductChange($event)">
                 </product-detail-variable-attributes>
 
-                <div class="product-detail-add-to-cart">
-                    <div class="product-detail-add-to-cart--quantity">
-                        <mte-form-field [options]="{ label: 'Quantity', hideLabel: true }">
-                            <input #input
-                                id="add-to-cart--quantity-input"
-                                type="number"
-                                [disabled]="!selectedProduct"
-                                [attr.max]="quantityInputMax"
-                                [attr.min]="0"
-                                [(ngModel)]="quantityToAdd">
-                        </mte-form-field>
+                <ng-container *ngIf="parentOrStandalone.isStandalone || isParentWithVariations()">
+                    <div class="product-detail-add-to-cart">
+                        <div class="product-detail-add-to-cart--quantity">
+                            <mte-form-field [options]="{ label: 'Quantity', hideLabel: true }">
+                                <input #input
+                                    id="add-to-cart--quantity-input"
+                                    type="number"
+                                    [disabled]="!selectedProduct"
+                                    [attr.max]="quantityInputMax"
+                                    [attr.min]="0"
+                                    [(ngModel)]="quantityToAdd">
+                            </mte-form-field>
+                        </div>
+                        <div class="product-detail-add-to-cart--submit">
+                            <button (click)="addToCart()"
+                                [disabled]="addToCartShouldBeDisabled()">
+                                Add to {{ organization.branding.cartName || 'cart' }}
+                            </button>
+                        </div>
                     </div>
-                    <div class="product-detail-add-to-cart--submit">
-                        <button (click)="addToCart()"
-                            [disabled]="addToCartShouldBeDisabled()">
-                            Add to {{ organization.branding.cartName || 'cart' }}
-                        </button>
-                    </div>
-                </div>
+                </ng-container>
 
                 <!-- Custom regions: productDetailMid -->
                 <div class="product-detail-mid--custom-regions">
@@ -115,6 +123,7 @@ import { ProductService } from '../../services/product.service'
 })
 @Heartbeat()
 export class ProductDetailComponent extends HeartbeatComponent implements OnInit, OnDestroy {
+
     // State.
 
     public organization: Organization
@@ -131,7 +140,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
      */
     public selectedProduct: Product
     /**
-     * Represents the product that currently being displayed.
+     * Represents the product currently being displayed.
      */
     public displayedProduct: Product
     public quantityToAdd = 1
@@ -140,33 +149,6 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
     // Custom regions.
 
     public customRegions: CustomRegions
-    // = {
-    //     productDetailInfoHeader: [{
-    //         apiModel: 'Product',
-    //         dataArrayProperty: 'taxonomyTerms',
-    //         pathToDataArrayPropertyLookupKey: 'taxonomy.slug',
-    //         dataArrayPropertyLookupValue: 'disc-type',
-    //         pathToDataPropertyValue: 'singularName',
-    //     }],
-    // }
-
-    // CSS classes.
-
-    public productDetailImagesClassList = [
-        'product-detail-images',
-        'col-sm-4',
-        'pl-0',
-        'pr-5',
-    ]
-    public productDetailInfoClassList = [
-        'product-detail-info',
-        'col-sm-8',
-    ]
-    public productDetailContainerClassList = [
-        'product-detail',
-        'page-container',
-        'container',
-    ]
 
     // Helpers.
 
@@ -213,7 +195,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
     // Init methods.
 
     private populateSelectedProduct(): void {
-        if (!this.hasVariations()) {
+        if (!this.isParentWithVariations()) {
             this.selectedProduct = this.parentOrStandalone
         }
     }
@@ -222,7 +204,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
 
         // If it's variable, set the default variation as the selected product.
 
-        if (this.hasVariations()) {
+        if (this.isParentWithVariations()) {
             this.displayedProduct = this.variations.find((p) => p.isDefaultVariation)
 
             // If there's no default variation, just choose the first one.
@@ -273,8 +255,12 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
 
     // Booleans.
 
-    private hasVariations(): boolean {
+    public hasVariations(): boolean {
         return this.variations != null && this.variations.length > 0
+    }
+
+    public isParentWithVariations(): boolean {
+        return this.parentOrStandalone.isParent && this.hasVariations()
     }
 
     public addToCartShouldBeDisabled(): boolean {
@@ -289,14 +275,14 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
     public addToCart(): void {
         if (!this.selectedProduct) return
         this.addingToCart = true
-        this.cartService.add(this.selectedProduct.slug, this.quantityToAdd)
-            .subscribe(() => this.addingToCart = false)
+        this.cartService.add(this.selectedProduct._id, this.quantityToAdd)
+            .then(() => this.addingToCart = false)
     }
 
     // Event handlers.
 
     public handleSelectedProductChange(variation: Product): void {
-        if (variation) {
+        if (variation || variation === null) {
             this.selectedProduct = variation
         }
     }

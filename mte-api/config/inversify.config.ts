@@ -6,6 +6,7 @@ import { Tags, Types } from '@mte/common/constants/inversify'
 import { MongooseDocument } from '@mte/common/lib/goosetype'
 import { Authenticate } from '../auth/authenticate'
 import { AppController } from '../controllers/app.controller'
+import { CartController } from '../controllers/cart.controller'
 import { InstagramController } from '../controllers/instagram.controller'
 import { OrganizationController } from '../controllers/organization.controller'
 import { ProductsAdminController } from '../controllers/products.admin.controller'
@@ -16,6 +17,7 @@ import { DbClient } from '../data-access/db-client'
 import { isDev } from '../helpers/env.helper'
 import { OrderHelper } from '../helpers/order.helper'
 import { ProductSearchHelper } from '../helpers/product-search.helper'
+import { CartService } from '../services/cart.service'
 import { CrudService } from '../services/crud.service'
 import { DiscountService } from '../services/discount.service'
 import { EasypostService } from '../services/easypost.service'
@@ -54,6 +56,7 @@ if (isDev()) {
 
 // Services.
 container.bind<DbClient<MongooseDocument>>(Types.DbClient).to(DbClient)
+container.bind<CartService>(Types.CartService).to(CartService)
 container.bind<CrudService<Discount>>(Types.DiscountService).to(DiscountService)
 container.bind<EasypostService>(Types.EasypostService).to(EasypostService)
 container.bind<EmailService>(Types.EmailService).to(EmailService)
@@ -81,6 +84,7 @@ container.bind(Types.isOwner).toConstantValue(Authenticate.isAuthorized(1))
 
 // Controllers.
 container.bind<interfaces.Controller>(TYPE.Controller).to(AppController).whenTargetNamed(Tags.AppController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(CartController).whenTargetNamed(Tags.CartController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(InstagramController).whenTargetNamed(Tags.InstagramController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(OrganizationController).whenTargetNamed(Tags.OrganizationController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsAdminController).whenTargetNamed(Tags.ProductsAdminController)

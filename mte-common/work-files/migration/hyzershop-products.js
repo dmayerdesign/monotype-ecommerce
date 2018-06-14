@@ -1,4 +1,4 @@
-[
+module.exports = [
   {
     "Parent ID": "",
     "Parent SKU": "",

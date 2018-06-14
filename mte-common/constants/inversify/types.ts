@@ -2,6 +2,7 @@ export class Types {
     public static isAuthenticated = Symbol('isAuthenticated')
     public static isOwner = Symbol('isOwner')
     public static Authenticate = Symbol('Authenticate')
+    public static CartService = Symbol('CartService')
     public static DbClient = Symbol('DbClient')
     public static DiscountService = Symbol('DiscountService')
     public static Easypost = Symbol('Easypost')

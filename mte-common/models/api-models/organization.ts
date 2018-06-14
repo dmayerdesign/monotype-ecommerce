@@ -10,7 +10,7 @@ import { UiContent } from './ui-content'
 @model(Organization, MongooseSchemaOptions.timestamped)
 export class Organization extends MongooseDocument {
     @prop() public name: string
-    @arrayProp({ items: String }) public dbaNames: string[]
+    @arrayProp({ itemsType: String }) public dbaNames: string[]
     @prop() public retailSettings: OrganizationRetailSettings
     @prop() public branding: OrganizationBranding
     @prop() public storeUiContent: UiContent

@@ -1,4 +1,3 @@
-import { ImageHelper } from '../../helpers/image.helper'
 import { ProductClass } from '../enums/product-class'
 import { Attribute } from './attribute'
 import { AttributeValue } from './attribute-value'
@@ -26,6 +25,7 @@ export interface Product extends MongooseDocument {
     isParent: boolean
     parentSku: string
     parent: Ref<Product>
+    cartItemsRefModelName: string
 
     // Financial.
     price: Price

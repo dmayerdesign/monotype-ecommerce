@@ -1,37 +1,32 @@
+import { HttpClient, HttpParams } from '@angular/common/http'
 import { Injectable } from '@angular/core'
+import { ApiEndpoints } from '@mte/common/constants'
 import { LocalStorageKeys } from '@mte/common/constants/local-storage-keys'
-import { Action } from '@mte/common/lib/state-manager/action'
-import { Reducer } from '@mte/common/lib/state-manager/reducer'
 import { Store } from '@mte/common/lib/state-manager/store'
 import { Cart } from '@mte/common/models/api-interfaces/cart'
-import { Price } from '@mte/common/models/api-interfaces/price'
-import { Product } from '@mte/common/models/api-interfaces/product'
-import { Currency } from '@mte/common/models/enums/currency'
-import { CartProduct } from '@mte/common/models/interfaces/ui/cart-product'
-import { cloneDeep } from 'lodash'
-import { Observable, ReplaySubject } from 'rxjs'
-import { map, filter } from 'rxjs/operators'
-import { ProductService } from '../../../shop/services/product.service'
+import { CartItem } from '@mte/common/models/api-interfaces/cart-item'
+import { GetCartItemsFromIdsRequest } from '@mte/common/models/api-requests/get-cart-items-from-ids.request'
+import { Observable } from 'rxjs'
+import { filter } from 'rxjs/operators'
 import { OrganizationService } from '../organization.service'
 import { UserService } from '../user.service'
 import { UtilService } from '../util.service'
-import { CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartUpdate, CartTotalUpdate } from './cart.actions'
+import { CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartTotalUpdate, CartUpdate } from './cart.actions'
 import { cartReducer } from './cart.reducer'
 import { CartState } from './cart.state'
-import { CartHelper } from '@mte/common/helpers/cart.helper';
 
 @Injectable({ providedIn: 'root' })
 export class CartService {
     public store: Store<CartState>
 
     constructor(
-        private util: UtilService,
-        private productService: ProductService,
-        private orgService: OrganizationService,
-        private userService: UserService,
+        private _util: UtilService,
+        private _httpClient: HttpClient,
+        private _organizationService: OrganizationService,
+        private _userService: UserService,
     ) {
         this.store = new Store<CartState>(new CartState(), cartReducer)
-        this.orgService.organizations.subscribe(org => {
+        this._organizationService.organizations.subscribe(org => {
             this.init()
         })
     }
@@ -41,21 +36,30 @@ export class CartService {
     }
 
     public init(): void {
+
         // Register side effects.
+
         this.store.actions
-            .pipe(filter((action) => !(action instanceof CartTotalUpdate)))
+            .pipe(
+                filter((action) =>
+                    !(action instanceof CartTotalUpdate) &&
+                    !(action instanceof CartItemsUpdate)
+                )
+            )
             .subscribe(() => this.updateAndStream())
 
         // Set state.
+
         /// Check local storage.
-        const cart = this.util.getFromLocalStorage(LocalStorageKeys.Cart) as Cart
+        const cart = this._util.getFromLocalStorage(LocalStorageKeys.Cart) as Cart
         if (cart && (!!cart.items || !!cart.discounts)) {
             if (cart.items.length || cart.discounts.length) {
                 this.store.dispatch(new CartUpdate(cart))
             }
         }
+
         /// Check user.
-        this.userService.users.subscribe((user) => {
+        this._userService.users.subscribe((user) => {
             if (user && user.cart && (!!user.cart.items || !!user.cart.discounts)) {
                 if (user.cart.items.length || user.cart.discounts.length) {
                     this.store.dispatch(new CartUpdate(user.cart))
@@ -64,15 +68,18 @@ export class CartService {
         })
     }
 
-    public add(slug: string, quantity = 1): Observable<Cart> {
-        const getOneSource = this.productService.getOne(slug)
-        getOneSource.subscribe((product) => {
-            this.store.dispatch(new CartItemAddition({ item: product, quantity }))
-        })
-        return getOneSource.pipe(map(() => this.cart))
+    public async add(id: string, quantity = 1): Promise<Cart> {
+        try {
+            const item: CartItem = await this.getItem(id)
+            this.store.dispatch(new CartItemAddition({ item, quantity }))
+        }
+        catch (error) {
+            console.log('Could not find the item in the database.')
+        }
+        return this.cart
     }
 
-    public incrementQuantity(item: Product, direction: 1|-1): Observable<boolean> {
+    public incrementQuantity(item: CartItem, direction: 1|-1): Observable<boolean> {
         if (direction === 1) {
             return this.store.dispatch(new CartItemQuantityIncrement(item))
         }
@@ -81,22 +88,35 @@ export class CartService {
         }
     }
 
-    public remove(item: Product): void {
+    public remove(item: CartItem): void {
         this.store.dispatch(new CartItemRemoval(item))
     }
 
-    private updateAndStream(): void {
-        this.productService.getSome(this.cart.items.map((item: Product) => item._id))
-            .subscribe(products => {
+    // API calls.
+
+    private async getItem(id: string): Promise<CartItem> {
+        return this._httpClient.get<CartItem>(`${ApiEndpoints.Cart}/get-item/${id}`)
+        .toPromise()
+    }
+
+    private async updateAndStream(): Promise<void> {
+        const ids = this.cart.items.map((item: CartItem) => item._id)
+        const request = new GetCartItemsFromIdsRequest({ ids })
+        const params = new HttpParams()
+            .set('request', JSON.stringify(request))
+
+        this._httpClient.get<CartItem[]>(`${ApiEndpoints.Cart}/refresh`, { params })
+            .subscribe((items) => {
+                this.store.dispatch(new CartItemsUpdate(items))
                 const subTotal = this.cart.subTotal
                 const total = {
-                    amount: subTotal.amount + (subTotal.amount * this.orgService.organization.retailSettings.salesTaxPercentage / 100),
+                    amount: subTotal.amount + (subTotal.amount * this._organizationService.organization.retailSettings.salesTaxPercentage / 100),
                     currency: subTotal.currency,
                 }
                 this.store.dispatch(new CartTotalUpdate(total))
                     .subscribe(() => {
-                        this.userService.updateCart(this.cart)
-                        this.util.saveToLocalStorage(LocalStorageKeys.Cart, this.cart)
+                        this._userService.updateCart(this.cart)
+                        this._util.saveToLocalStorage(LocalStorageKeys.Cart, this.cart)
                     })
             })
     }
