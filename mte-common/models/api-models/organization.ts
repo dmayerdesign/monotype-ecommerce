@@ -1,5 +1,6 @@
 import { arrayProp, model, prop, MongooseDocument, MongooseSchemaOptions } from '../../lib/goosetype'
 import { Ref } from '../../lib/goosetype'
+import { OrganizationType } from '../enums/organization-type'
 import { GlobalStyles } from './global-styles'
 import { OrganizationBranding } from './organization-branding'
 import { OrganizationRetailSettings } from './organization-retail-settings'
@@ -9,10 +10,12 @@ import { UiContent } from './ui-content'
 
 @model(Organization, MongooseSchemaOptions.timestamped)
 export class Organization extends MongooseDocument {
+    @prop({ enum: OrganizationType }) public type?: OrganizationType
     @prop() public name: string
     @arrayProp({ itemsType: String }) public dbaNames: string[]
     @prop() public retailSettings: OrganizationRetailSettings
     @prop() public branding: OrganizationBranding
+    @prop() public storeUrl: string
     @prop() public storeUiContent: UiContent
     @prop() public blogUiContent?: UiContent
     @prop() public storeUiSettings?: StoreUiSettings

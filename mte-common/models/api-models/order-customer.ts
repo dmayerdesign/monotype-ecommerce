@@ -10,4 +10,5 @@ export class OrderCustomer extends MongooseDocument {
     @prop() public firstName: string
     @prop() public shippingAddress: Address
     @prop() public billingAddress: Address
+    @prop() public savePaymentInfo: boolean
 }

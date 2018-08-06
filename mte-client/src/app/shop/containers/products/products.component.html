@@ -12,23 +12,20 @@
 <ng-container *ngIf="isOneColLayout()">
     <div class="sub-banner">Some info here</div>
 
-    <div class="products container">
-    
+    <div class="products container">    
         <div class="row">
-    
+
             <!-- Products grid -->
-            <div [ngClass]="getGridContainerFullWidthClasses()">
-                <mte-products-grid [products]="products"></mte-products-grid>
+            <div [ngClass]="[ 'products-grid-container', 'col-12' ]">
+                <mte-products-grid [productsSource]="products"></mte-products-grid>
             </div>
-    
+
         </div>
-    
     </div>
 </ng-container>
 
 <ng-container *ngIf="isTwoColLayout()">
     <div class="products container">
-    
         <div class="row">
             <!-- Left sidebar -->
             <ng-container *ngIf="layoutIsMdAboves() | async">
@@ -36,8 +33,8 @@
             </ng-container>
     
             <!-- Products grid -->
-            <div [ngClass]="getGridContainerWithSidebarClasses()">
-                <mte-products-grid [products]="productss"
+            <div [ngClass]="[ 'products-grid-container', 'col-lg-8', 'col-sm-12' ]">
+                <mte-products-grid [productsSource]="productsSource"
                     (productClick)="handleProductClick($event)">
                 </mte-products-grid>
             </div>
@@ -48,44 +45,45 @@
                 <ng-container *ngTemplateOutlet="leftSidebar"></ng-container>
             </div>
         </div>
-    
     </div>
     
     <ng-template #leftSidebar>
         <div [attr.aria-expanded]="leftSidebarIsExpandeds | async"
-             [ngClass]="getLeftSidebarClasses()">
+             [ngClass]="[ 'products-left-sidebar', 'col-lg-4', 'col-sm-12' ]">
             
             <h2>Narrow it down</h2>
     
-            <div class="products-left-sidebar-filters">
+            <form class="products-left-sidebar-filters">
     
+                <!-- Standard filters. -->
                 <div class="price-range-filter">
                     Price range
                 </div>
     
-                <div class="product-type-filter">
-                    Product type
+                <div class="categories-filter">
+                    Categories
+                </div>
+
+                <div class="brands-filter">
+                    Brands
+                </div>
+
+                <div class="colors-filter">
+                    Colors
                 </div>
     
+                <!-- Custom filters. -->
                 <div class="disc-type-filter">
                     Disc type
-                </div>
-    
-                <div class="manufacturers-filter">
-                    Manufacturers
                 </div>
     
                 <div class="stabilities-filter">
                     Stabilities
                 </div>
     
-                <div class="colors-filter">
-                    Colors
-                </div>
-    
                 <button>Clear filters</button>
     
-            </div>
+            </form>
     
         </div>
     </ng-template>

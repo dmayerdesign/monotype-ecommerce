@@ -60,7 +60,7 @@
         <span *ngIf="!!count"
             class="nav-item--cart-count ff-display-2">({{ count }})</span>
         <img [src]="getShoppingCartIcon()"
-            [attr.alt]="'Your cart (' + c + ')'"
+            [attr.alt]="'Your ' + organization.branding.cartName + ' (' + count + ')'"
         />
     </ng-container>
 </ng-template>

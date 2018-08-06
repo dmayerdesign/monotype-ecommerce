@@ -7,10 +7,12 @@ import { Product } from '@mte/common/models/api-interfaces/product'
 import { TaxonomyTerm } from '@mte/common/models/api-interfaces/taxonomy-term'
 import { GetProductsFilter, GetProductsFilterType, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { BootstrapBreakpointKey } from '@mte/common/models/enums/bootstrap-breakpoint-key'
-import { BehaviorSubject, Observable } from 'rxjs'
+import { isEqual, uniqWith } from 'lodash'
+import { merge, BehaviorSubject, Observable, Subject } from 'rxjs'
 import { map, takeWhile } from 'rxjs/operators'
+import { ShopQueryParamKeys } from '../../constants/shop-query-param-keys'
 import { ShopRouterLinks } from '../../constants/shop-router-links'
-import { ProductService } from '../../services'
+import { ProductService } from '../../services/product.service'
 import { TaxonomyTermService } from '../../services/taxonomy-term.service'
 
 @Component({
@@ -21,10 +23,12 @@ import { TaxonomyTermService } from '../../services/taxonomy-term.service'
 @Heartbeat()
 export class ProductsComponent extends HeartbeatComponent implements OnInit, OnDestroy {
     @Input() public title: string
-    public productss: Observable<Product[]>
+    public productsSource: Observable<Product[]>
     public taxonomyTerm: TaxonomyTerm
     public leftSidebarIsExpandeds: BehaviorSubject<boolean>
-    public request: GetProductsRequest
+    private _requestPump = new Subject<GetProductsRequest>()
+    private _request = new GetProductsRequest()
+    private _lastUnparsedRequest: string
 
     constructor(
         private productService: ProductService,
@@ -35,105 +39,107 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     ) { super() }
 
     public ngOnInit(): void {
-        this.leftSidebarIsExpandeds = new BehaviorSubject(this.windowRef.mediaBreakpointAbove(BootstrapBreakpointKey.Lg))
-
+        this.leftSidebarIsExpandeds = new BehaviorSubject(
+            this.windowRef.mediaBreakpointAbove(BootstrapBreakpointKey.Lg)
+        )
         const route = this.activatedRoute.snapshot
 
-        // Trigger a search when the route is '/for/:taxonomySlug/:partialTermSlug'
+        // Execute the request any time it changes.
 
-        if (route.paramMap.get('taxonomySlug')) {
-            this.activatedRoute.paramMap
-                .pipe(takeWhile(() => this.isAlive))
-                .subscribe((paramMap) => {
+        this._requestPump
+            .subscribe((request) => {
+                this.executeRequest(request)
+            })
+
+        // Construct a new request when the URL changes.
+
+        const paramMaps = merge(
+            this.activatedRoute.paramMap,
+            this.activatedRoute.queryParamMap,
+        )
+        paramMaps
+            .pipe(takeWhile(() => this.isAlive))
+            .subscribe((_paramMap) => {
+                const paramMap = route.paramMap
+                const queryParamMap = route.queryParamMap
+
+                // Replace the request whenever the query params change.
+
+                const requestStr = queryParamMap.get(ShopQueryParamKeys.request)
+                if (requestStr) {
+                    this._request = JSON.parse(requestStr) as GetProductsRequest
+                }
+
+                // Mutate the request if the route is '/for/:taxonomySlug/:partialTermSlug'.
+
+                if (paramMap.get('taxonomySlug')) {
                     const taxonomySlug = paramMap.get('taxonomySlug')
                     const partialTermSlug = paramMap.get('partialTermSlug')
 
-                    const request = new GetProductsRequest({
-                        filters: [{
-                            type: GetProductsFilterType.Taxonomy,
+                    if (!this._request.filters) {
+                        this._request.filters = []
+                    }
+                    this._request.filters = uniqWith<GetProductsFilter>([
+                        ...this._request.filters,
+                        {
+                            type: GetProductsFilterType.TaxonomyTerm,
                             key: taxonomySlug,
                             values: [ `${taxonomySlug}-${partialTermSlug}` ]
-                        }]
-                    })
-
-                    this.executeRequest(request)
-                })
-        }
-
-        // Trigger a search whenever the query params change.
-
-        else {
-            this.activatedRoute.queryParamMap
-                .pipe(takeWhile(() => this.isAlive))
-                .subscribe((queryParamMap) => {
-                    const requestStr = queryParamMap.get('request')
-                    const request = !!requestStr ? JSON.parse(requestStr) as GetProductsRequest : {}
-                    this.executeRequest(request)
-                })
-        }
+                        },
+                    ], isEqual)
+                    this._requestPump.next(this._request)
+                }
+                else if (requestStr !== this._lastUnparsedRequest) {
+                    this._lastUnparsedRequest = requestStr
+                    this._requestPump.next(this._request)
+                }
+            })
+        /*
+?r={"filters":[{"type":1,"values":["5b208b8ee0d70ab68576ea41"]}]}
+        */
     }
 
     public executeRequest(request: GetProductsRequest): void {
         let requestedTaxonomyTermFilter: GetProductsFilter
         let requestedTaxonomyTermSlug: string
 
-        this.taxonomyTerm = null
+        // Figure out if we need to fetch taxonomy term data along with the products.
+        // (e.g. to display a banner for "Women's")
 
         if (request) {
-            requestedTaxonomyTermFilter = request.filters && request.filters.filter((filter) => filter.type === GetProductsFilterType.Taxonomy).length === 1
-                ? request.filters.find((filter) => filter.type === GetProductsFilterType.Taxonomy)
+            requestedTaxonomyTermFilter = request.filters && request.filters.filter((filter) => filter.type === GetProductsFilterType.TaxonomyTerm).length === 1
+                ? request.filters.find((filter) => filter.type === GetProductsFilterType.TaxonomyTerm)
                 : undefined
             requestedTaxonomyTermSlug = requestedTaxonomyTermFilter && requestedTaxonomyTermFilter.values
-                ? requestedTaxonomyTermFilter.values[0] // Note: we don't need the `key` from the filter since TaxonomyTerm slugs are unique.
+                // Note: we don't need the `key` from the filter since TaxonomyTerm slugs are unique.
+                ? requestedTaxonomyTermFilter.values[0]
                 : undefined
         }
 
-        // Get products based on the parsed request.
-        if (!this.productss) {
-            this.productss = this.productService.getSource
-        }
-        this.productService.get(new GetProductsRequest(request))
-
         // Get the taxonomy term if one is found in the request.
+
         if (requestedTaxonomyTermSlug) {
             this.taxonomyTermService.getOne(requestedTaxonomyTermSlug)
                 .pipe(takeWhile(() => this.isAlive))
                 .subscribe((term) => this.taxonomyTerm = term)
         }
+        else {
+            this.taxonomyTerm = null
+        }
+
+        // Get products based on the parsed request.
+
+        if (!this.productsSource) {
+            this.productsSource = this.productService.getSource
+        }
+        this.productService.get(request)
     }
 
     // I'm pretty sure this needs to be here for AOT. #thanksaot
 
     public ngOnDestroy(): void { }
 
-    // Classes.
-
-    public getLeftSidebarClasses(): string[] {
-        const identifiers = [ 'products-left-sidebar' ]
-        const bootstrapLayoutClasses = [ 'col-lg-4', 'col-sm-12' ]
-        return [
-            ...bootstrapLayoutClasses,
-            ...identifiers,
-        ]
-    }
-    public getGridContainerWithSidebarClasses(): string[] {
-        const identifiers = [ 'products-grid-container' ]
-        const bootstrapLayoutClasses = [ 'col-lg-8', 'col-sm-12' ]
-        return [
-            ...bootstrapLayoutClasses,
-            ...identifiers,
-        ]
-    }
-    public getGridContainerFullWidthClasses(): string[] {
-        const identifiers = [ 'products-grid-container' ]
-        const bootstrapLayoutClasses = [ 'col-12' ]
-        return [
-            ...bootstrapLayoutClasses,
-            ...identifiers,
-        ]
-    }
-
-    // Bootstrap.
+    // Responsive design.
 
     public layoutIsMdAboves(): Observable<boolean> {
         return this.windowRef.mediaBreakpointAboves(BootstrapBreakpointKey.Md)
@@ -150,13 +156,13 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     }
 
     /**
-     * Apply the filter, thus triggering a search.
+     * Apply the filter, triggering a search.
      */
-    public applyFilter(): void {
+    public applyFilter(key: string, value: any): void {
         this.router.navigate([ShopRouterLinks.shopAll], {
             queryParams: {
-                request: JSON.stringify(this.request)
-            }
+                [ShopQueryParamKeys.request]: JSON.stringify(this._request)
+            },
         })
     }
 

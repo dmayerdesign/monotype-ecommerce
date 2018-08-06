@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http'
 import { Injectable } from '@angular/core'
-import { ActivatedRoute, Router } from '@angular/router'
+import { Router } from '@angular/router'
 import { Observable, ReplaySubject } from 'rxjs'
 
 import { LocalStorageKeys } from '@mte/common/constants'
@@ -22,7 +22,6 @@ export class UserService {
     constructor (
         private http: HttpClient,
         private mteHttpService: MteHttpService,
-        private route: ActivatedRoute,
         private router: Router,
         private utilService: UtilService
     ) {
@@ -33,14 +32,14 @@ export class UserService {
         this.mteHttpService.sessionInvalids.subscribe(err => {
             this.clearSession()
         })
-        this.getUser()
+        this.fetchUser()
     }
 
     public get user(): User {
         return this._user
     }
 
-    public getUser(): void {
+    public fetchUser(): void {
         this.http.get(`${ApiEndpoints.User}`).subscribe((userData: User) => {
             this.refreshSession(userData)
         })

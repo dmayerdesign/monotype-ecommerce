@@ -14,7 +14,7 @@ export abstract class RestService<T> {
     protected getErrorPump = new Subject<SimpleError>()
     public getErrorSource: Observable<SimpleError>
 
-    constructor(protected http: HttpClient) {
+    constructor(protected httpClient: HttpClient) {
         this.getSource = this.getPump.asObservable()
         this.getErrorSource = this.getErrorPump.asObservable()
 
@@ -28,9 +28,12 @@ export abstract class RestService<T> {
 
         if (request) params = params.set('request', JSON.stringify(request))
 
-        this.http.get<T[]>(this.endpoint, { params })
+        this.httpClient.get<T[]>(this.endpoint, { params })
             .subscribe(
-                (docs) => this.getPump.next(docs),
+                (docs) => {
+                    this.getPump.next(docs)
+                    console.log(docs)
+                },
                 (error: SimpleError) => this.getErrorPump.next(error),
             )
     }
@@ -41,11 +44,11 @@ export abstract class RestService<T> {
 
         const params = new HttpParams().set('request', JSON.stringify(request))
 
-        return this.http.get<T[]>(this.endpoint, { params })
+        return this.httpClient.get<T[]>(this.endpoint, { params })
     }
 
     public getOne(id: string): Observable<T> {
-        return this.http.get<T>(`${this.endpoint}/${id}`)
+        return this.httpClient.get<T>(`${this.endpoint}/${id}`)
     }
 
     public create?(doc: T): void

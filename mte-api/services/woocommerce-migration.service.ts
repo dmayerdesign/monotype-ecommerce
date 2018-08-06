@@ -15,6 +15,7 @@ import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.res
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
 import { Currency } from '@mte/common/models/enums/currency'
 import { ProductClass } from '@mte/common/models/enums/product-class'
+import { WeightUnit } from '@mte/common/models/enums/weight-unit'
 import { DbClient } from '../data-access/db-client'
 
 import * as productsJSON from '@mte/common/work-files/migration/hyzershop-products'
@@ -27,7 +28,6 @@ export class WoocommerceMigrationService {
     public createProductsFromExportedJSON(): Promise<ApiResponse<Product[]>> {
         return new Promise<ApiResponse<Product[]>>(async (resolve, reject) => {
             const newProducts = []
-            let index = -1
 
             const dropAllProductRelatedCollections = async () => {
                 await this.dbClient.remove(Product, {})
@@ -41,7 +41,6 @@ export class WoocommerceMigrationService {
 
             const buildProducts = async () => {
                 for (const product of productsJSON) {
-                    index++
                     if (!!product['Product Name'].match(/^Template/)) {
                         continue
                     }
@@ -168,7 +167,10 @@ export class WoocommerceMigrationService {
                                     }
                                     else {
                                         if (newProduct[key].length) {
-                                            newProduct.netWeight = parseFloat(newProduct[key])
+                                            newProduct.netWeight = {
+                                                amount: parseFloat(newProduct[key]),
+                                                unitOfMeasurement: WeightUnit.Grams
+                                            }
                                         }
                                     }
                                     delete newProduct[key]
@@ -189,13 +191,14 @@ export class WoocommerceMigrationService {
                                 // Add stability AttributeValue and TaxonomyTerm.
 
                                 const getStability = function(stabilityStats): 'overstable'|'stable'|'understable' {
-                                    if ( (stabilityStats.fade + stabilityStats.turn) >= 3 ) {
+                                    const fadePlusTurn = parseFloat(`${stabilityStats.fade}`) + parseFloat(`${stabilityStats.turn}`)
+                                    if (fadePlusTurn >= 3) {
                                         return 'overstable'
                                     }
-                                    else if ( (stabilityStats.fade + stabilityStats.turn) < 3 && (stabilityStats.fade + stabilityStats.turn) >= 0 ) {
+                                    else if (fadePlusTurn < 3 && fadePlusTurn >= 0) {
                                         return 'stable'
                                     }
-                                    else if ( (stabilityStats.fade + stabilityStats.turn) < 0 ) {
+                                    else if (fadePlusTurn < 0) {
                                         return 'understable'
                                     }
                                 }

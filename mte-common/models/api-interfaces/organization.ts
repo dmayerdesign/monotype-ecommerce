@@ -1,3 +1,4 @@
+import { OrganizationType } from '../enums/organization-type'
 import { GlobalStyles } from './global-styles'
 import { MongooseDocument } from './mongoose-document'
 import { OrganizationBranding } from './organization-branding'
@@ -8,10 +9,12 @@ import { Taxonomy } from './taxonomy'
 import { UiContent } from './ui-content'
 
 export interface Organization extends MongooseDocument {
+    type?: OrganizationType
     name: string
     dbaNames: string[]
     retailSettings: OrganizationRetailSettings
     branding: OrganizationBranding
+    storeUrl: string
     storeUiContent: UiContent
     blogUiContent?: UiContent
     storeUiSettings?: StoreUiSettings

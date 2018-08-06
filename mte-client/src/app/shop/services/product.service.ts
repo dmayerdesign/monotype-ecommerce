@@ -9,7 +9,11 @@ import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/model
 import { GetProductDetailResponseBody } from '@mte/common/models/api-responses/get-product-detail/get-product-detail.response.body'
 import { Observable, Subject } from 'rxjs'
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+    providedIn: 'root',
+    useFactory: (httpClient: HttpClient) => new ProductService(httpClient),
+    deps: [ HttpClient ],
+})
 export class ProductService extends RestService<Product> {
     public endpoint = ApiEndpoints.Products
     public getSomeRequestType = GetProductsFromIdsRequest
@@ -20,9 +24,9 @@ export class ProductService extends RestService<Product> {
     public getDetailErrors: Observable<SimpleError>
 
     constructor (
-        protected http: HttpClient,
+        protected httpClient: HttpClient,
     ) {
-        super(http)
+        super(httpClient)
         this.getDetails = this.getDetailPump.asObservable()
         this.getDetailErrors = this.getDetailErrorPump.asObservable()
     }
@@ -32,7 +36,7 @@ export class ProductService extends RestService<Product> {
     }
 
     public getDetailOnce(slug: string): Promise<GetProductDetailResponseBody> {
-        return this.http.get<GetProductDetailResponseBody>(`${this.endpoint}/${slug}/detail`).toPromise()
+        return this.httpClient.get<GetProductDetailResponseBody>(`${this.endpoint}/${slug}/detail`).toPromise()
     }
 
     public getDetail(slug: string): void {
@@ -48,15 +52,24 @@ export class ProductService extends RestService<Product> {
         getDetail()
     }
 
-    public getVariationsFromAttributeValues(productDetail: Product, variableAttributeValues: (AttributeValue | SimpleAttributeValue)[]): Product[] {
+    public getVariationsFromAttributeValues(
+        productDetail: Product,
+        variableAttributeValues: (AttributeValue | SimpleAttributeValue)[]
+    ): Product[] {
         return productDetail.variations.filter((product: Product) => {
             const allVariationAttributeValues = [
                 ...product.simpleAttributeValues as SimpleAttributeValue[],
                 ...product.attributeValues as AttributeValue[],
             ]
-            const condition = variableAttributeValues.filter((x) => !!x)
-                .every((variableAttributeValue) => !!allVariationAttributeValues.find((variationAttributeValue) => variableAttributeValue._id === variationAttributeValue._id))
-            return condition
+
+            // Only return variations wherein every attribute value passed into this method
+            // finds a match within the variation's attribute values.
+
+            return variableAttributeValues
+                .filter((x) => !!x) // TODO: Make sure that `variableAttributeValues` never has falsy elements.
+                .every((variableAttributeValue) =>
+                    !!allVariationAttributeValues.find((variationAttributeValue) =>
+                        variableAttributeValue._id === variationAttributeValue._id))
         }) as Product[]
     }
 }

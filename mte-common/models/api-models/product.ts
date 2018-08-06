@@ -10,6 +10,7 @@ import { Price } from './price'
 import { SimpleAttributeValue } from './simple-attribute-value'
 import { TaxonomyTerm } from './taxonomy-term'
 import { Units } from './units'
+import { Weight } from './weight'
 
 @pre('find', function() {
     this.populate('parent')
@@ -85,8 +86,8 @@ export class Product extends MongooseDocument {
 	// Shipping.
     @prop() public units: Units
     @prop() public dimensions: Dimensions
-    @prop() public shippingWeight: number
-    @prop() public netWeight: number
+    @prop() public shippingWeight: Weight
+    @prop() public netWeight: Weight
 
 	// Additional tax.
     @prop() public additionalTax: number
@@ -98,6 +99,10 @@ export class Product extends MongooseDocument {
 }
 
 export class CreateProductError extends Error { }
+export class CreateProductsError extends Error { }
 export class FindProductError extends Error { }
+export class FindProductsError extends Error { }
 export class UpdateProductError extends Error { }
+export class UpdateProductsError extends Error { }
 export class DeleteProductError extends Error { }
+export class DeleteProductsError extends Error { }

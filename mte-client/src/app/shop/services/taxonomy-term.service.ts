@@ -11,6 +11,6 @@ export class TaxonomyTermService extends RestService<TaxonomyTerm> {
     public endpoint = ApiEndpoints.TaxonomyTerms
 
     constructor (
-        protected http: HttpClient,
-    ) { super(http) }
+        protected httpClient: HttpClient,
+    ) { super(httpClient) }
 }

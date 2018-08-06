@@ -69,6 +69,9 @@ export class UserService {
                     savedUser.wishlist = savedWishlist._id
                     savedUser = await this.dbClient.save(savedUser)
 
+                    console.log('==== Saved user ====')
+                    console.log(savedUser)
+
                     // Create the JWT token and the JWT cookie.
 
                     const payload = UserHelper.cleanUser(savedUser)
@@ -135,10 +138,6 @@ export class UserService {
 
     public refreshSession(req: Request, res: Response): void {
         const payload = UserHelper.cleanUser((req as any).user)
-
-        console.log('Refresh session:')
-        console.log(payload)
-
         const authToken = jwt.sign(payload, this.jwtSecret, AuthConfig.JwtOptions)
         res.cookie(Cookies.jwt, authToken, AuthConfig.CookieOptions)
         res.json(payload)

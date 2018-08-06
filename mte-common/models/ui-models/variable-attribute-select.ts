@@ -10,37 +10,37 @@ import { Stateful } from '../common/stateful'
 import { VariableAttributeSelectOptionType } from '../enums/variable-attribute-select-option-type'
 import { VariableAttributeSelectType } from '../enums/variable-attribute-select-type'
 
-export class VariableAttributeSelectState<TO extends AttributeValue = any> {
-    public selectedOption?: VariableAttributeSelectOption<TO> = null
+export class VariableAttributeSelectState<OptionType extends AttributeValue = any> {
+    public selectedOption?: VariableAttributeSelectOption<OptionType> = null
     public matchingVariations?: Product[] = []
-    public availableOptions?: TO[]
+    public availableOptions?: OptionType[]
     public wasFirstSelected? = false
     public allOptionsAreAvailable? = false
 }
 
-export interface VariableAttributeSelectAttribute<TA> {
+export interface VariableAttributeSelectAttribute<AttributeType> {
     slug: string
     displayName: string
-    data: TA | TA[]
+    data: AttributeType | AttributeType[]
 }
 
-export interface VariableAttributeSelectOption<TO extends AttributeValue> {
+export interface VariableAttributeSelectOption<OptionType extends AttributeValue> {
     type?: VariableAttributeSelectOptionType
     label?: string
-    data?: TO
+    data?: OptionType
     key?: string
     matchingVariations?: Product[]
-    sourceOptions?: VariableAttributeSelectOption<TO>[]
+    sourceOptions?: VariableAttributeSelectOption<OptionType>[]
 }
 
-export class VariableAttributeSelect<TA extends string | Attribute = any, TO extends AttributeValue = any> extends Stateful<VariableAttributeSelectState> {
+export class VariableAttributeSelect<AttributeType extends string | Attribute = any, OptionType extends AttributeValue = any> extends Stateful<VariableAttributeSelectState> {
+    public type: VariableAttributeSelectType
+    public combination: VariableAttributeSelect<AttributeType, OptionType>[]
     protected _state = new VariableAttributeSelectState()
     private _productDetail: Product
     private _variations: Product[]
-    public type: VariableAttributeSelectType
-    private _attribute: VariableAttributeSelectAttribute<TA>
-    private _options: VariableAttributeSelectOption<TO>[]
-    public combination: VariableAttributeSelect<TA, TO>[]
+    private _attribute: VariableAttributeSelectAttribute<AttributeType>
+    private _options: VariableAttributeSelectOption<OptionType>[]
 
     // Builder.
 
@@ -52,14 +52,17 @@ export class VariableAttributeSelect<TA extends string | Attribute = any, TO ext
             return this.builder
         },
         setAttributesOrProperties: (configs: {
-            type: VariableAttributeSelectType,
+            type: VariableAttributeSelectType
             attributeOrProperty: Attribute | string
         }[]) => {
-            const attributesAndOptions: { attribute: VariableAttributeSelectAttribute<TA>, options: VariableAttributeSelectOption<TO>[] }[] = []
+            const attributesAndOptions: {
+                attribute: VariableAttributeSelectAttribute<AttributeType>
+                options: VariableAttributeSelectOption<OptionType>[]
+            }[] = []
 
             configs.forEach(({ type, attributeOrProperty }) => {
-                let attribute: VariableAttributeSelectAttribute<TA>
-                let options: VariableAttributeSelectOption<TO>[]
+                let attribute: VariableAttributeSelectAttribute<AttributeType>
+                let options: VariableAttributeSelectOption<OptionType>[]
 
                 // If it's a variable property:
 
@@ -67,17 +70,34 @@ export class VariableAttributeSelect<TA extends string | Attribute = any, TO ext
                     attribute = {
                         slug: kebabCase(attributeOrProperty as string),
                         displayName: startCase(attributeOrProperty as string),
-                        data: attributeOrProperty as TA,
+                        data: attributeOrProperty as AttributeType,
                     }
 
-                    options = this._variations.reduce(
+                    options = this._variations.reduce<VariableAttributeSelectOption<OptionType>[]>(
                         (_options, variation) => {
                             const data = variation[attribute.data as string]
-                            const existingOption = _options.find((option) => isEqual(option, data))
+                            let dataForDisplay = ''
+
+                            if (typeof data === 'object') {
+                                if (data.currency) {
+                                    dataForDisplay = `${data.currency}`
+                                }
+                                if (data.amount) {
+                                    dataForDisplay = `${dataForDisplay}${data.amount}`
+                                }
+                                if (data.unitOfMeasurement) {
+                                    dataForDisplay = `${dataForDisplay}${data.unitOfMeasurement}`
+                                }
+                            }
+                            else {
+                                dataForDisplay = data
+                            }
+
+                            const existingOption = _options.find((option) => isEqual(option.data, data))
                             if (!existingOption) {
                                 _options.push({
                                     type: VariableAttributeSelectOptionType.PropertyValue,
-                                    label: data,
+                                    label: dataForDisplay,
                                     key: attribute.data as string,
                                     data,
                                     matchingVariations: [ variation ],
@@ -88,7 +108,7 @@ export class VariableAttributeSelect<TA extends string | Attribute = any, TO ext
                             }
                             return _options
                         },
-                        [] as VariableAttributeSelectOption<TO>[]
+                        []
                     )
                 }
 
@@ -98,14 +118,14 @@ export class VariableAttributeSelect<TA extends string | Attribute = any, TO ext
                     attribute = {
                         slug: (attributeOrProperty as Attribute).slug,
                         displayName: startCase((attributeOrProperty as Attribute).singularName || (attributeOrProperty as Attribute).slug),
-                        data: attributeOrProperty as TA
+                        data: attributeOrProperty as AttributeType
                     }
 
-                    options = this._variations.reduce(
+                    options = this._variations.reduce<VariableAttributeSelectOption<OptionType>[]>(
                         (_options, variation) => {
-                            const allVariationAttributeValues: TO[] = [
-                                ...variation.simpleAttributeValues as TO[],
-                                ...variation.attributeValues as TO[],
+                            const allVariationAttributeValues: OptionType[] = [
+                                ...variation.simpleAttributeValues as OptionType[],
+                                ...variation.attributeValues as OptionType[],
                             ]
 
                             _options = _options.concat(
@@ -121,7 +141,7 @@ export class VariableAttributeSelect<TA extends string | Attribute = any, TO ext
                                                     label,
                                                     data: attrValue,
                                                     matchingVariations: [ variation ],
-                                                } as VariableAttributeSelectOption<TO>
+                                                } as VariableAttributeSelectOption<OptionType>
                                             }
                                             else {
                                                 existingOption.matchingVariations.push(variation)
@@ -131,7 +151,7 @@ export class VariableAttributeSelect<TA extends string | Attribute = any, TO ext
                             )
                             return _options.filter((x) => x != null)
                         },
-                        [] as VariableAttributeSelectOption<TO>[]
+                        []
                     )
                 }
 
@@ -157,7 +177,7 @@ export class VariableAttributeSelect<TA extends string | Attribute = any, TO ext
                 this._attribute = {
                     slug: `${attributesAndOptions[0].attribute.slug}-and-${attributesAndOptions[1].attribute.slug}`,
                     displayName: `${startCase(attributesAndOptions[0].attribute.displayName)} / ${startCase(attributesAndOptions[1].attribute.displayName)}`,
-                    data: attributesAndOptions.map(({ attribute }) => attribute.data) as TA[]
+                    data: attributesAndOptions.map(({ attribute }) => attribute.data) as AttributeType[]
                 }
 
                 this._options = this._getCombinedOptions([
@@ -173,8 +193,8 @@ export class VariableAttributeSelect<TA extends string | Attribute = any, TO ext
         }
     }
 
-    private _getCombinedOptions(preCombinedOptions: VariableAttributeSelectOption<TO>[][]): VariableAttributeSelectOption<TO>[] {
-        const combinedOptions: VariableAttributeSelectOption<TO>[] = []
+    private _getCombinedOptions(preCombinedOptions: VariableAttributeSelectOption<OptionType>[][]): VariableAttributeSelectOption<OptionType>[] {
+        const combinedOptions: VariableAttributeSelectOption<OptionType>[] = []
         const matchingVariations: Product[] = []
 
         // Use the (2) options arrays to create a flattened array of options.
@@ -190,7 +210,7 @@ export class VariableAttributeSelect<TA extends string | Attribute = any, TO ext
         })
 
         matchingVariations.forEach((matchingVariation) => {
-            const combinedOption: VariableAttributeSelectOption<TO> = {
+            const combinedOption: VariableAttributeSelectOption<OptionType> = {
                 type: VariableAttributeSelectOptionType.Combination,
                 sourceOptions: [],
                 matchingVariations: [],
@@ -223,97 +243,98 @@ export class VariableAttributeSelect<TA extends string | Attribute = any, TO ext
 
     // State selection and mutation.
 
-    public get attribute(): VariableAttributeSelectAttribute<TA> {
+    public get attribute(): VariableAttributeSelectAttribute<AttributeType> {
         return this._attribute
     }
 
-    public get options(): VariableAttributeSelectOption<TO>[] {
+    public get options(): VariableAttributeSelectOption<OptionType>[] {
         return this._options
     }
 
-    public set selectedOptionModel(selectedOption: VariableAttributeSelectOption<TO>) {
+    public set selectedOptionModel(selectedOption: VariableAttributeSelectOption<OptionType>) {
         this.select(selectedOption)
     }
 
-    public get selectedOptionModel(): VariableAttributeSelectOption<TO> {
+    public get selectedOptionModel(): VariableAttributeSelectOption<OptionType> {
         return this.state.selectedOption
     }
 
-    public select(selectedOption: VariableAttributeSelectOption<TO>): void {
+    public select(selectedOption: VariableAttributeSelectOption<OptionType>): void {
         this.setState({ selectedOption })
     }
 
-    public selectSilently(selectedOption: VariableAttributeSelectOption<TO>): void {
+    public selectSilently(selectedOption: VariableAttributeSelectOption<OptionType>): void {
         this.setStateSilently({ selectedOption })
     }
 
-    public get selectedOptionChanges(): Observable<VariableAttributeSelectOption<TO>> {
+    public get selectedOptionChanges(): Observable<VariableAttributeSelectOption<OptionType>> {
         return this.selectedOptionsSource.pipe(distinctUntilChanged())
     }
 
-    public get selectedOptionsSource(): Observable<VariableAttributeSelectOption<TO>> {
+    public get selectedOptionsSource(): Observable<VariableAttributeSelectOption<OptionType>> {
         return this.states.pipe(
             map((state) => state.selectedOption),
         )
     }
 
-    public optionIsAvailable(option: TO): boolean {
+    public optionIsAvailable(option: OptionType): boolean {
         return this.state.allOptionsAreAvailable
             || !!this.getAvailableOptions().find((availableOption) => isEqual(option, availableOption))
     }
 
-    public getAvailableOptions(): VariableAttributeSelectOption<TO>[] {
+    public getAvailableOptions(): VariableAttributeSelectOption<OptionType>[] {
 
-        const getAvailableOptions = (options: VariableAttributeSelectOption<TO>[]) => {
+        const getAvailableOptions = (options: VariableAttributeSelectOption<OptionType>[]) => {
             return options.filter((option) => {
-                const logCondition = !!option.data && !!option.data.slug && !!option.data.slug.match(/rim/gi)
 
-                // Only return options whose data exists on at least one of the currently-matching variations.
+                // Only return options whose data exists on at least one of the currently-matching in-stock variations.
 
-                const someMatchingVariationsHaveOption = this.state.matchingVariations.some((variation) => {
+                const someMatchingVariationsHaveOption = this.state.matchingVariations
+                    .filter((variation) => variation.stockQuantity > 0)
+                    .some((variation) => {
 
-                    // If we're looking for an attribute value, test to see if any of the variation's
-                    // `attributeValues` or `simpleAttributeValues` has a `value` equal to `option.data.value`.
+                        // If we're looking for an attribute value, test to see if any of the variation's
+                        // `attributeValues` or `simpleAttributeValues` has a `value` equal to `option.data.value`.
 
-                    const allAttributeValues = [
-                        ...variation.attributeValues as AttributeValue[],
-                        ...variation.simpleAttributeValues as SimpleAttributeValue[],
-                    ]
+                        const allAttributeValues = [
+                            ...variation.attributeValues as AttributeValue[],
+                            ...variation.simpleAttributeValues as SimpleAttributeValue[],
+                        ]
 
-                    if (option.type === VariableAttributeSelectOptionType.AttributeValue) {
-                        const someAttributeValuesHaveValue = allAttributeValues
-                            .some(({ value, attribute }) => {
-                                return (option.data.attribute as Attribute).slug === (attribute as Attribute).slug
-                                    && option.data.value === value
-                            })
+                        if (option.type === VariableAttributeSelectOptionType.AttributeValue) {
+                            const someAttributeValuesHaveValue = allAttributeValues
+                                .some(({ value, attribute }) => {
+                                    return (option.data.attribute as Attribute).slug === (attribute as Attribute).slug
+                                        && option.data.value === value
+                                })
 
-                        return someAttributeValuesHaveValue
-                    }
+                            return someAttributeValuesHaveValue
+                        }
 
-                    // If we're looking for a property value, loop through the parent product's
-                    // `variableProperties` to get the variation's values for those property keys,
-                    // and try to find one of those values that's equal to `option`.
+                        // If we're looking for a property value, loop through the parent product's
+                        // `variableProperties` to get the variation's values for those property keys,
+                        // and try to find one of those values that's equal to `option`.
 
-                    const variableProperties = this._productDetail.variableProperties
+                        const variableProperties = this._productDetail.variableProperties
 
-                    if (option.type === VariableAttributeSelectOptionType.PropertyValue) {
-                        const someVariablePropertiesEqualToOption = variableProperties
-                            .map((key) => ({ key, value: variation[key] }))
-                            .some(({ key, value }) => {
-                                return value === option.data
-                                    && key === option.key
-                            })
+                        if (option.type === VariableAttributeSelectOptionType.PropertyValue) {
+                            const someVariablePropertiesEqualToOption = variableProperties
+                                .map((key) => ({ key, value: variation[key] }))
+                                .some(({ key, value }) => {
+                                    return value === option.data
+                                        && key === option.key
+                                })
 
-                        return someVariablePropertiesEqualToOption
-                    }
-                })
+                            return someVariablePropertiesEqualToOption
+                        }
+                    })
 
                 return someMatchingVariationsHaveOption
             })
         }
 
         if (this.type === VariableAttributeSelectType.Combination) {
-            const availableOptions: VariableAttributeSelectOption<TO>[] = []
+            const availableOptions: VariableAttributeSelectOption<OptionType>[] = []
 
             this.options.forEach((combinedOption) => {
                 const sourceOptions = combinedOption.sourceOptions
@@ -326,7 +347,7 @@ export class VariableAttributeSelect<TA extends string | Attribute = any, TO ext
             return availableOptions
         }
         else {
-            return getAvailableOptions(this.options as VariableAttributeSelectOption<TO>[])
+            return getAvailableOptions(this.options as VariableAttributeSelectOption<OptionType>[])
         }
     }
 

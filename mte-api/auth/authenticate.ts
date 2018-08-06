@@ -1,14 +1,12 @@
 import { NextFunction, Request, Response } from 'express'
-import { inject, injectable } from 'inversify'
+import { injectable } from 'inversify'
 import * as jwt from 'jsonwebtoken'
 
 import { Cookies, Copy, HttpStatus } from '@mte/common/constants'
-import { Types } from '@mte/common/constants/inversify'
 import { UserHelper } from '@mte/common/helpers/user.helper'
 import { User } from '@mte/common/models/api-models/user'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { DbClient } from '../data-access/db-client'
-import { UserService } from '../services/user.service'
 
 const jwtSecret = process.env.JWT_SECRET
 
@@ -16,7 +14,6 @@ const jwtSecret = process.env.JWT_SECRET
 export class Authenticate {
 
     private static dbClient = new DbClient<User>()
-    private static userService = new UserService()
 
     // If the user is logged in, call `next()`. Else, send an error response.
 
@@ -40,6 +37,7 @@ export class Authenticate {
         if (payload.email) {
             req.user = UserHelper.cleanUser(payload)
             next()
+            return
         }
 
         Authenticate.dbClient.findById(User, payload._id).then((user) => {

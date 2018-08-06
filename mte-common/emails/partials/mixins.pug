@@ -15,8 +15,8 @@ mixin cell(fontFam, percentWidth, align, vPadding, vAlign)
 		if block
 			block
 
-mixin currencySymbol(order)
-	if (order.total.currency === "usd")
+mixin currencySymbol(priceObject)
+	if (priceObject.currency.toUpperCase() === "USD")
 		= '$'
 	if block
 		block

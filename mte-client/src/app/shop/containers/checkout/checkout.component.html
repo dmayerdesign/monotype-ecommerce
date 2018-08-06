@@ -6,27 +6,30 @@
         <!-- First name -->
         <mte-form-field [options]="checkoutForm.getOptions('firstName')">
             <input #input
-                   id="checkout-form-first-name"
-                   type="text"
-                   maxlength="100"
-                   formControlName="firstName">
+                id="checkout-form-first-name"
+                type="text"
+                maxlength="100"
+                formControlName="firstName"
+            />
         </mte-form-field>
 
         <!-- Last name -->
         <mte-form-field [options]="checkoutForm.getOptions('lastName')">
             <input #input
-                   id="checkout-form-last-name"
-                   type="text"
-                   maxlength="100"
-                   formControlName="lastName">
+                id="checkout-form-last-name"
+                type="text"
+                maxlength="100"
+                formControlName="lastName"
+            />
         </mte-form-field>
 
         <!-- Email -->
         <mte-form-field [options]="checkoutForm.getOptions('email')">
             <input #input
-                   id="checkout-form-email"
-                   type="email"
-                   formControlName="email">
+                id="checkout-form-email"
+                type="email"
+                formControlName="email"
+            />
         </mte-form-field>
 
     </form>
@@ -45,11 +48,27 @@
             <div id="card-errors"></div>
         </div>
 
-        <button [disabled]
-                (click)="submit()">Submit Payment</button>
+        <button (click)="submit()">
+            Submit Payment
+        </button>
     </form>
 
     <!--
-    * Display current card set as customer.default_source
+        "Save payment info" option.
+        TODO: Display even when a user isn't logged in, and when checked, prompt the user
+        to log in or sign up.
     -->
+    <div class="save-payment-info">
+        <input id="save-payment-info-input"
+            class="save-payment-info--input"
+            type="checkbox"
+            [(ngModel)]="shouldSavePaymentInfo"
+        />
+    </div>
+
+    <!--
+        
+    -->
+
+    
 </div>

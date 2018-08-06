@@ -14,14 +14,19 @@ import { UiService } from '../../../shared/services/ui.service'
     selector: 'mte-cart',
     template: `
         <div class="container page-container">
-            <h1>{{ capitalize(organizationService.organization.branding.cartName) || 'Your Cart' }}</h1>
-            <div *ngFor="let item of cart?.items">
-                <h3>
-                    <ng-container *ngIf="itemNamesMap.has(item); then productName; else productSlug"></ng-container>
-                    <ng-template #productName>{{ itemNamesMap.get(item) }}</ng-template>
-                    <ng-template #productSlug>{{ item.slug }}</ng-template>
-                </h3>
-                <button (click)="cartService.remove(item)">Remove</button>
+            <div id="cart">
+                <h1>{{ capitalize(organizationService.organization.branding.cartName) || 'Your Cart' }}</h1>
+                <div *ngFor="let item of cart?.items">
+                    <h3>
+                        <ng-container *ngIf="itemNamesMap.has(item); then productName; else productSlug"></ng-container>
+                        <ng-template #productName>{{ itemNamesMap.get(item) }}</ng-template>
+                        <ng-template #productSlug>{{ item.slug }}</ng-template>
+                    </h3>
+                    <button (click)="cartService.remove(item)">Remove</button>
+                </div>
+            </div>
+            <div id="checkout">
+                <mte-checkout></mte-checkout>
             </div>
         </div>
     `,

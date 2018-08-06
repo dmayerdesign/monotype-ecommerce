@@ -1,4 +1,5 @@
 import { arrayProp, model, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
+import { Order as IOrder } from '../api-interfaces/order'
 import { OrderStatus } from '../enums/order-status'
 import { Discount } from './discount'
 import { EasypostRate } from './easypost-rate'
@@ -8,9 +9,10 @@ import { Product } from './product'
 import { StripeCardToken } from './stripe-card-token'
 
 @model(Order, MongooseSchemaOptions.timestamped)
-export class Order extends MongooseDocument {
+export class Order extends MongooseDocument implements IOrder {
     @arrayProp({ itemsRef: Product }) public items: Ref<Product>[]
     @arrayProp({ itemsRef: Discount }) public discounts: Ref<Discount>[]
+    @prop() public subTotal: Price
     @prop() public total: Price
     @prop() public taxPercent: number
     @prop() public shippingCost: Price
@@ -28,8 +30,7 @@ export class Order extends MongooseDocument {
     @prop() public stripeCardId: string
     @prop() public stripeOrderId: string
     @prop() public stripeSource: string
-    @prop() public stripeToken: string
-    @prop() public stripeTokenObject: StripeCardToken
+    @prop() public stripeToken: StripeCardToken
     @prop() public customer: OrderCustomer
 }
 

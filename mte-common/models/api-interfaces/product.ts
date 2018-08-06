@@ -9,6 +9,7 @@ import { Ref } from './ref'
 import { SimpleAttributeValue } from './simple-attribute-value'
 import { TaxonomyTerm } from './taxonomy-term'
 import { Units } from './units'
+import { Weight } from './weight'
 
 export interface Product extends MongooseDocument {
 	// Aesthetic.
@@ -55,8 +56,8 @@ export interface Product extends MongooseDocument {
 	// Shipping.
     units: Units
     dimensions: Dimensions
-    shippingWeight: number
-    netWeight: number
+    shippingWeight: Weight
+    netWeight: Weight
 
 	// Additional tax.
     additionalTax: number

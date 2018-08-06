@@ -1,4 +1,4 @@
-import { BehaviorSubject, Observable, fromEvent, of } from 'rxjs'
+import { fromEvent, of, BehaviorSubject, Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
 import { BootstrapBreakpoint } from '../../../../models/enums/bootstrap-breakpoint'
 import { BootstrapBreakpointKey } from '../../../../models/enums/bootstrap-breakpoint-key'

@@ -2,6 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http'
 import { Injectable } from '@angular/core'
 import { ApiEndpoints } from '@mte/common/constants'
 import { LocalStorageKeys } from '@mte/common/constants/local-storage-keys'
+import { CartHelper } from '@mte/common/helpers/cart.helper'
 import { Store } from '@mte/common/lib/state-manager/store'
 import { Cart } from '@mte/common/models/api-interfaces/cart'
 import { CartItem } from '@mte/common/models/api-interfaces/cart-item'
@@ -109,10 +110,7 @@ export class CartService {
             .subscribe((items) => {
                 this.store.dispatch(new CartItemsUpdate(items))
                 const subTotal = this.cart.subTotal
-                const total = {
-                    amount: subTotal.amount + (subTotal.amount * this._organizationService.organization.retailSettings.salesTaxPercentage / 100),
-                    currency: subTotal.currency,
-                }
+                const total = CartHelper.getTotal(subTotal, this._organizationService.organization)
                 this.store.dispatch(new CartTotalUpdate(total))
                     .subscribe(() => {
                         this._userService.updateCart(this.cart)

@@ -1,6 +1,4 @@
 import { Component, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output, ViewEncapsulation } from '@angular/core'
-import { AbstractControl, FormControl, FormGroup } from '@angular/forms'
-import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Attribute } from '@mte/common/models/api-interfaces/attribute'
@@ -9,12 +7,12 @@ import { Product } from '@mte/common/models/api-interfaces/product'
 import { SimpleAttributeValue } from '@mte/common/models/api-interfaces/simple-attribute-value'
 import { VariableAttributeSelectOptionType } from '@mte/common/models/enums/variable-attribute-select-option-type'
 import { VariableAttributeSelectType } from '@mte/common/models/enums/variable-attribute-select-type'
-import { VariableAttributeSelect, VariableAttributeSelectOption, VariableAttributeSelectState } from '@mte/common/models/ui-models/variable-attribute-select'
-import { isEqual, startCase, uniqBy, values } from 'lodash'
-import { zip, Subscription } from 'rxjs'
-import { filter, map, takeWhile, tap } from 'rxjs/operators'
+import { VariableAttributeSelect, VariableAttributeSelectOption } from '@mte/common/models/ui-models/variable-attribute-select'
+import { isEqual, values } from 'lodash'
+import { zip } from 'rxjs'
+import { takeWhile } from 'rxjs/operators'
 import { OrganizationService } from '../../../../shared/services/organization.service'
-import { ProductService } from '../../../services'
+import { ProductService } from '../../../services/product.service'
 
 @Component({
     selector: 'product-detail-variable-attributes',
@@ -165,7 +163,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
             [] as Attribute[]
         )
 
-        // For variable properties, we DO need to fall back on trusting the parent product.
+        // Naturally, for variable properties, we DO need to fall back on trusting the parent product.
 
         const variableProperties = this.productDetail.variableProperties
 

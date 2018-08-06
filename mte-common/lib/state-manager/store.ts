@@ -1,18 +1,17 @@
 import { of as observableOf, BehaviorSubject, Observable, ReplaySubject } from 'rxjs'
-import { distinctUntilChanged, filter, map } from 'rxjs/operators'
+import { filter } from 'rxjs/operators'
 import { Action } from './action'
 import { Reducer } from './reducer'
 
-export class Store<T> {
-    private _previousState: T
-    private _statePump: BehaviorSubject<T>
-    private _states: Observable<T>
-    private _reducers = new Map<string, T>()
+export class Store<StateType> {
+    private _previousState: StateType
+    private _statePump: BehaviorSubject<StateType>
+    private _states: Observable<StateType>
     private _actionPump: ReplaySubject<Action>
     private _actions: Observable<Action>
 
-    constructor(initialState: T, private reducer: Reducer<T>) {
-        this._statePump = new BehaviorSubject<T>(Object.assign({}, initialState))
+    constructor(initialState: StateType, private _reducer: Reducer<StateType>) {
+        this._statePump = new BehaviorSubject<StateType>(Object.assign({}, initialState))
         this._states = this._statePump.asObservable()
         this._actionPump = new ReplaySubject<Action>(1)
         this._actions = this._actionPump.asObservable()
@@ -21,7 +20,7 @@ export class Store<T> {
     public dispatch(action: Action): Observable<boolean> {
         const currentState = this._statePump.getValue()
         try {
-            const newState = this.reducer(Object.assign({}, currentState), action)
+            const newState = this._reducer(Object.assign({}, currentState), action)
             this._statePump.next(newState)
             this._previousState = currentState
             this._actionPump.next(action)
@@ -33,15 +32,15 @@ export class Store<T> {
         }
     }
 
-    public get states(): Observable<T> {
+    public get states(): Observable<StateType> {
         return this._states
     }
 
-    public get state(): T {
+    public get state(): StateType {
         return this._statePump.getValue()
     }
 
-    public get previousState(): T {
+    public get previousState(): StateType {
         return this._previousState
     }
 
@@ -49,7 +48,7 @@ export class Store<T> {
         return this._actions
     }
 
-    public reactTo<A = Action>(action: A): Observable<Action> {
-        return this._actions.pipe(filter((a) => a.constructor === action.constructor))
+    public reactTo<ActionType extends Action = Action>(action: ActionType): Observable<ActionType> {
+        return this._actions.pipe(filter<ActionType>((a) => a.constructor === action.constructor))
     }
 }

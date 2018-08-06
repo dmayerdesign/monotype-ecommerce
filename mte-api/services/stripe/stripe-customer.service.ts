@@ -1,5 +1,4 @@
 import { inject, injectable } from 'inversify'
-import * as mongoose from 'mongoose'
 import * as Stripe from 'stripe'
 
 import { Types } from '@mte/common/constants/inversify'
@@ -9,7 +8,7 @@ import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.res
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
 import { DbClient } from '../../data-access/db-client'
 
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 /**
  * Stripe service
@@ -28,138 +27,119 @@ export class StripeCustomerService {
      *
      * @param {Order} order - The order from which the customer's information is being collected
      */
-    public createCustomer(order: Order): Promise<StripeNode.customers.ICustomer> {
-        return new Promise<StripeNode.customers.ICustomer>(async (resolve, reject) => {
-            if (order.customer.userId && order.savePaymentInfo && order.stripeTokenObject && order.stripeTokenObject.card) {
-                let user: User
-                try {
-                    user = await this.dbClient.findById(User, order.customer.userId)
-                }
-                catch (findUserError) {
-                    reject(findUserError)
-                }
-                if (!user) return resolve(null)
-
-                console.log('************  The Customer  *************')
-                console.log(order.customer)
-
-                // this.addCard(order.stripeToken, customer.id, (_err, card) => {
-                // 	if (_err) return done(_err);
-                // 	order.stripeTokenObject.card.id = card.id;
-
-                if (order.customer.stripeCustomerId) {
-                    try {
-                        const customer = await stripe.customers.retrieve(order.customer.stripeCustomerId)
-                        if (customer) {
-                            console.log(customer)
-                            resolve(customer)
-                        } else {
-                            createCustomer()
-                        }
-                    }
-                    catch (retrieveStripeCustomerError) {
-                        reject(retrieveStripeCustomerError)
-                    }
-                } else {
-                    createCustomer()
-                }
-
-                async function createCustomer() {
-                    try {
-                        const customer = await stripe.customers.create({
-                            source: order.stripeToken,
-                            email: order.customer.email,
-                        })
-                        if (!customer) return reject(new Error('Couldn\'t create the customer in Stripe'))
-
-                        console.log('New customer')
-                        console.log(customer)
-
-                        user.stripeCustomerId = customer.id
-                        await user.save()
-                        resolve(customer)
-                    }
-                    catch (error) {
-                        reject(error)
-                    }
-                }
-
-                // });
-            } else {
-                reject(new Error('The order did not contain sufficient data to create a customer in Stripe.'))
+    public async createCustomer(order: Order): Promise<Stripe.customers.ICustomer> {
+        if (order.customer.userId && order.stripeToken && order.stripeToken.card) {
+            let user: User
+            try {
+                user = await this.dbClient.findById(User, order.customer.userId)
             }
-        })
+            catch (findUserError) {
+                throw findUserError
+            }
+            if (!user) return null
+
+            if (order.customer.stripeCustomerId) {
+                try {
+                    const customer = await stripe.customers.retrieve(order.customer.stripeCustomerId)
+                    if (customer) {
+console.log('===== The Stripe Customer =====')
+console.log(customer)
+                        return customer
+                    }
+                }
+                catch (retrieveStripeCustomerError) {
+                    throw retrieveStripeCustomerError
+                }
+            }
+
+            // No customer was found; create the customer in Stripe.
+
+            try {
+                const customer = await stripe.customers.create({
+                    source: order.stripeToken.id,
+                    email: order.customer.email,
+                })
+                if (!customer) throw new Error('Couldn\'t create the customer in Stripe')
+
+console.log('===== New customer =====')
+console.log(customer)
+
+                user.stripeCustomerId = customer.id
+                await this.dbClient.save(user)
+                return customer
+            }
+            catch (error) {
+                throw error
+            }
+        } else {
+            throw new Error('The order did not contain sufficient data to create a customer in Stripe.')
+        }
     }
 
     /**
      * Add a card to the Stripe customer
      *
      * @param {string} source - The tokenized card
-     * @param {string} stripeCustomerId - The Stripe customer's ID
+     * @param {string} stripeCustomerId - The Stripe customer's `id`
      */
-    public addCard(tokenID: string, stripeCustomerId: string): Promise<ApiResponse<StripeNode.cards.ICard>> {
-        return new Promise<ApiResponse<StripeNode.cards.ICard>>(async (resolve, reject) => {
-            try {
-                const card = await stripe.customers.createSource(stripeCustomerId, { source: tokenID })
-                resolve(new ApiResponse(<StripeNode.cards.ICard>card))
-            }
-            catch (error) {
-                reject(new ApiErrorResponse(error))
-            }
-        })
+    public async addCard(tokenID: string, stripeCustomerId: string): Promise<ApiResponse<Stripe.cards.ICard>> {
+        try {
+            const card = await stripe.customers.createSource(stripeCustomerId, { source: tokenID })
+            return new ApiResponse(<Stripe.cards.ICard>card)
+        }
+        catch (error) {
+            throw new ApiErrorResponse(error)
+        }
     }
 
     /**
      * Get a Stripe customer
      *
-     * @param {string} stripeCustomerId - The Stripe customer's ID
+     * @param {string} stripeCustomerId - The Stripe customer's `id`
      */
-    public getCustomer(customerID: string): Promise<ApiResponse<StripeNode.customers.ICustomer>> {
-        return new Promise<ApiResponse<StripeNode.customers.ICustomer>>(async (resolve, reject) => {
-            try {
-                const customer = await stripe.customers.retrieve(customerID)
-                resolve(new ApiResponse(<StripeNode.customers.ICustomer>customer))
+    public async getCustomer(customerId: string): Promise<ApiResponse<Stripe.customers.ICustomer>> {
+        try {
+            if (!customerId) {
+                throw new Error('No Stripe customer is associated with this user.')
             }
-            catch (error) {
-                reject(new ApiErrorResponse(error))
-            }
-        })
+            const customer = await stripe.customers.retrieve(customerId)
+            return new ApiResponse(<Stripe.customers.ICustomer>customer)
+        }
+        catch (error) {
+            throw new ApiErrorResponse(error)
+        }
     }
 
     /**
      * Update a Stripe customer
      *
-     * @param {string} stripeCustomerId - The Stripe customer's ID
+     * @param {string} stripeCustomerId - The Stripe customer's `id`
      * @param {object} updateObj - An object containing the values to be updated (@see https://stripe.com/docs/api/node#update_customer)
      */
-    public updateCustomer(stripeCustomerId: string, updateObj: object): Promise<ApiResponse<StripeNode.customers.ICustomer>> {
-        return new Promise<ApiResponse<StripeNode.customers.ICustomer>>(async (resolve, reject) => {
-            try {
-                const customer = await stripe.customers.update(stripeCustomerId, updateObj)
-                resolve(new ApiResponse(<StripeNode.customers.ICustomer>customer))
-            }
-            catch (error) {
-                reject(new ApiErrorResponse(error))
-            }
-        })
+    public async updateCustomer(stripeCustomerId: string, updateObj: object): Promise<ApiResponse<Stripe.customers.ICustomer>> {
+        try {
+            const customer = await stripe.customers.update(stripeCustomerId, updateObj)
+            return new ApiResponse(<Stripe.customers.ICustomer>customer)
+        }
+        catch (error) {
+            throw new ApiErrorResponse(error)
+        }
     }
 
     /**
      * Update the customer's default card
      *
-     * @param {string} stripeCustomerId - The Stripe customer's ID
-     * @param {string} stripeCardID - The ID of the Stripe source, usually a card (*not* a single-use token)
+     * @param {string} stripeCustomerId - The Stripe customer's `id`
+     * @param {string} stripeCardId - The `id` of the Stripe source, usually a card (*not* a single-use token)
      * @example `card_19rzdy2eZvKYlo2CzJQXXiuV`
      */
-    public updateCustomerDefaultSource(stripeCustomerId: string, stripeCardID: string): Promise<ApiResponse<StripeNode.customers.ICustomer>> {
-        return new Promise<ApiResponse<StripeNode.customers.ICustomer>>(async (resolve, reject) => {
-            try {
-                const customer = await stripe.customers.update(stripeCustomerId, { default_source: stripeCardID })
-                resolve(new ApiResponse(<StripeNode.customers.ICustomer>customer))
-            }
-            catch (error) {
-                reject(new ApiErrorResponse(error))
-            }
-        })
+    public async updateCustomerDefaultSource(stripeCustomerId: string, stripeCardId: string): Promise<ApiResponse<Stripe.customers.ICustomer>> {
+        try {
+            const customer = await stripe.customers.update(stripeCustomerId, { default_source: stripeCardId })
+            return new ApiResponse(<Stripe.customers.ICustomer>customer)
+        }
+        catch (error) {
+            throw new ApiErrorResponse(error)
+        }
     }
 }

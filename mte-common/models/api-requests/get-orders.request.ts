@@ -1,3 +1,3 @@
-import { ListRequest } from './list.request'
+import { ListFromQueryRequest } from './list.request'
 
-export class GetOrdersRequest extends ListRequest { }
+export class GetOrdersRequest extends ListFromQueryRequest { }

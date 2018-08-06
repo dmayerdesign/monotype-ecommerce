@@ -25,7 +25,7 @@ export abstract class MongooseDocument {
 
     // Goosetype.
     constructor(doc: any = {}) {
-        if (!!(this.constructor as typeof MongooseDocument).__model) {
+        if ((this.constructor as typeof MongooseDocument).__model) {
             return new (this.constructor as typeof MongooseDocument).__model(doc)
         } else {
             return this

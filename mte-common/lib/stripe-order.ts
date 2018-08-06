@@ -1,6 +1,6 @@
-import 'stripe'
+import * as Stripe from 'stripe'
 
-export class StripeOrder { // implements StripeNode.orders.IOrder {
+export class StripeOrder implements Stripe.orders.IOrderCreationOptions { // implements Stripe.orders.IOrder {
     /**
      * Value is "order"
      */
@@ -23,7 +23,7 @@ export class StripeOrder { // implements StripeNode.orders.IOrder {
     /**
      * The ID of the payment used to pay for the order. Present if the order status is paid, fulfilled, or refunded. [Expandable]
      */
-    public charge: string | StripeNode.charges.ICharge
+    public charge: string | Stripe.charges.ICharge
 
     public created: number
 
@@ -35,7 +35,7 @@ export class StripeOrder { // implements StripeNode.orders.IOrder {
     /**
      * The customer used for the order. [Expandable]
      */
-    public customer: string | StripeNode.customers.ICustomer
+    public customer: string
 
     /**
      * The email address of the customer placing the order.
@@ -47,10 +47,10 @@ export class StripeOrder { // implements StripeNode.orders.IOrder {
     /**
      * List of items constituting the order.
      */
-    public items: Array<StripeNode.orders.IOrderItem> = []
+    public items: Stripe.orders.IOrderItemCreationHash[] = []
 
     public livemode: boolean
-    public metadata: StripeNode.IMetadata
+    public metadata: Stripe.IMetadata
 
     /**
      * The shipping method that is currently selected for this order, if any. If present, it is equal to one of the ids of shipping methods
@@ -62,15 +62,15 @@ export class StripeOrder { // implements StripeNode.orders.IOrder {
     /**
      * The shipping address for the order. Present if the order is for goods to be shipped.
      */
-    public shipping: StripeNode.IShippingInformation
+    public shipping: Stripe.IShippingInformation
 
     /**
      * A list of supported shipping methods for this order. The desired shipping method can be specified either by updating the order, or
      * when paying it.
      */
-    public shipping_methods: Array<StripeNode.orders.IShippingMethod> = []
+    public shipping_methods: Array<Stripe.orders.IShippingMethod> = []
 
-    public status: StripeNode.orders.OrderStatus
+    public status: Stripe.orders.OrderStatus
 
     /**
      * The timestamps at which the order status was updated
@@ -81,7 +81,7 @@ export class StripeOrder { // implements StripeNode.orders.IOrder {
         paid: number;
         returned: number;
     }
-    public status_transactions?: undefined // Accommodate type-o in @types/stripe-node
+    public status_transactions?: undefined // Accommodate type-o in @types/stripe
 
     public updated: number
 }

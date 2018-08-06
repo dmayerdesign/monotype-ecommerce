@@ -13,16 +13,14 @@ export class CartService {
     ) { }
 
     public async refresh(request: GetCartItemsFromIdsRequest): Promise<ApiResponse<CartItem[]>> {
-        let items: CartItem[] = []
         try {
             const getProductsResponse = await this._productService.getIds(request)
             const products = getProductsResponse.body
-            items = items.concat(products)
+            return new ApiResponse<CartItem[]>(products)
         }
         catch (error) {
             throw new ApiErrorResponse(error)
         }
-        return new ApiResponse<CartItem[]>(items)
     }
 
     public async getItem(id: string): Promise<ApiResponse<CartItem>> {

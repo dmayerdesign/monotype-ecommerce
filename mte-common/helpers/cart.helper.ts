@@ -3,6 +3,7 @@ import { Cart } from '@mte/common/models/api-interfaces/cart'
 import { CartItem } from '@mte/common/models/api-interfaces/cart-item'
 import { Price } from '@mte/common/models/api-interfaces/price'
 import { Product } from '@mte/common/models/api-interfaces/product'
+import { Organization } from '@mte/common/models/api-models/organization'
 import { Currency } from '@mte/common/models/enums/currency'
 import { CartDisplayItem } from '@mte/common/models/interfaces/ui/cart-display-item'
 
@@ -53,6 +54,17 @@ export class CartHelper {
                     amount: prev.amount + current.amount
                 }
             }, { amount: 0, currency: Currency.USD })
+    }
+
+    public static getTotal(subTotal: Price, organization: Organization): Price {
+        const taxPercent =
+            organization.retailSettings.addSalesTax
+            ? organization.retailSettings.salesTaxPercentage
+            : 0
+        return {
+            amount: subTotal.amount + (subTotal.amount * taxPercent / 100),
+            currency: subTotal.currency,
+        }
     }
 
     public static getNumberAvailableToAdd(cart: Cart, item: CartItem): number {

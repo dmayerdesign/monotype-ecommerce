@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify'
-import { Document } from 'mongoose'
 import * as rp from 'request-promise-native'
 
 import { Types } from '@mte/common/constants/inversify'
 import { Timer } from '@mte/common/models/api-models/timer'
+import { ListFromQueryRequest } from '@mte/common/models/api-requests/list.request'
 import { DbClient } from '../data-access/db-client'
 import { ErrorService } from '../services/error.service'
 
@@ -28,7 +28,7 @@ export class TimerService {
         // Find all existing Timers.
 
         try {
-            timers = await this.dbClient.find(Timer, {})
+            timers = await this.dbClient.findQuery(Timer, new ListFromQueryRequest({ query: {}, limit: 0 }))
         }
         catch (error) {
             this.errorService.handleError(error)

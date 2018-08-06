@@ -20,10 +20,10 @@ export class ProductSearchHelper {
         }
         if (filter.range) {
             const lowerLimit: any = {
-                [filter.key]: { $gte: filter.range[0] },
+                [filter.key]: { $gte: filter.range.min },
             }
             const upperLimit: any = {
-                [filter.key]: { $lte: filter.range[1] },
+                [filter.key]: { $lte: filter.range.max },
             }
 
             newQuery.$and = newQuery.$and.concat([lowerLimit, upperLimit])
@@ -31,9 +31,9 @@ export class ProductSearchHelper {
         return newQuery
     }
 
-    public attributeKeyValueFilter(filter: GetProductsFilter, query: MongoHelper.AndOperation): MongoHelper.AndOperation {
+    public simpleAttributeValueFilter(filter: GetProductsFilter, query: MongoHelper.AndOperation): MongoHelper.AndOperation {
         const newQuery = cloneDeep(query)
-        let attributeVOs = []
+        let attributeVOs: { value: any }[] = []
 
         if (filter.values && filter.values.length) {
             attributeVOs = filter.values.map(attributeValue => {
@@ -42,23 +42,7 @@ export class ProductSearchHelper {
             newQuery.$and.push({
                 $or: [
                     {
-                        attributeValues: {
-                            $elemMatch: {
-                                attribute: filter.key,
-                                $or: attributeVOs,
-                            },
-                        },
-                    },
-                    {
                         simpleAttributeValues: {
-                            $elemMatch: {
-                                attribute: filter.key,
-                                $or: attributeVOs,
-                            },
-                        },
-                    },
-                    {
-                        variableAttributeValues: {
                             $elemMatch: {
                                 attribute: filter.key,
                                 $or: attributeVOs,
@@ -79,12 +63,12 @@ export class ProductSearchHelper {
         if (filter.range) {
             const lowerLimit: any = {
                 [filter.key]: {
-                    value: { $gte: filter.range[0] },
+                    value: { $gte: filter.range.min },
                 }
             }
             const upperLimit: any = {
                 [filter.key]: {
-                    value: { $lte: filter.range[1] },
+                    value: { $lte: filter.range.max },
                 }
             }
 
@@ -93,7 +77,7 @@ export class ProductSearchHelper {
             newQuery.$and.push({
                 $or: [
                     {
-                        attributeValues: {
+                        simpleAttributeValues: {
                             $elemMatch: {
                                 attribute: filter.key,
                                 $and: attributeVOs,
@@ -101,7 +85,7 @@ export class ProductSearchHelper {
                         },
                     },
                     {
-                        variableAttributeValues: {
+                        variableSimpleAttributeValues: {
                             $elemMatch: {
                                 attribute: filter.key,
                                 $and: attributeVOs,
@@ -116,24 +100,13 @@ export class ProductSearchHelper {
 
     public attributeValueFilter(filter: GetProductsFilter, query: MongoHelper.AndOperation): MongoHelper.AndOperation {
         const newQuery = cloneDeep(query)
-        let attributeValueIds = []
+        const ids = filter.values
 
-        if (filter.values && filter.values.length) {
-            attributeValueIds = filter.values.map(valueId => {
-                return { valueId }
-            })
+        if (ids && ids.length) {
             newQuery.$and.push({
                 $or: [
-                    {
-                        'attributeValues.valueId': {
-                            $in: attributeValueIds,
-                        },
-                    },
-                    {
-                        'variableAttributeValues.valueId': {
-                            $in: attributeValueIds,
-                        },
-                    },
+                    { attributeValues: { $in: ids } },
+                    { variableAttributeValues: { $in: ids } },
                 ],
             })
         }
@@ -147,9 +120,7 @@ export class ProductSearchHelper {
 
         if (ids && ids.length) {
             newQuery.$and.push({
-                $or: [
-                    { taxonomyTerms: { $in: ids } },
-                ],
+                taxonomyTerms: { $in: ids },
             })
         }
 

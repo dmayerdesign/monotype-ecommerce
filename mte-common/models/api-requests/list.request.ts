@@ -33,6 +33,7 @@ export class ListFromSearchRequest extends ListRequest {
 
 export class ListFromIdsRequest<T = any> extends ListRequest {
     public ids: string[]|Ref<T>[]
+    public readonly limit? = 0
 
     constructor(request?: ListFromIdsRequest<T>) {
         super(request)

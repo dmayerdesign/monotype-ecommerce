@@ -2,7 +2,7 @@ extends ../partials/body.pug
 
 block content
 	- var tax = order.taxPercent ? (order.total.amount * order.taxPercent / 100) : 0;
-	- var TOTAL = (tax + order.total.amount + order.shippingCost).toFixed(2);
+	- var TOTAL = (tax + order.total.amount + order.shippingCost.amount).toFixed(2);
 	tr
 		td(align="center" style="padding: 30px 30px 20px 30px; background-color: " + innerBgColor, bgcolor=innerBgColor)
 			+msoTable
@@ -23,19 +23,19 @@ block content
 				tr
 					td(align="left" style="padding-top: 16px; padding-bottom: 16px; color: #707070; border-top: 3px solid #eeeeee")
 						table(cellspacing="0" cellpadding="0" border="0" width="100%")
-							each product in order.products
+							each displayItem in orderDisplayItems
 								tr
 									+cell(fontFamily, 75, 'left')
-										span(style="font-size: 12px") #{product.quantity} x &nbsp;
-										= product.name
+										span(style="font-size: 11px;") #{displayItem.quantity}&nbsp;x&nbsp;
+										= displayItem.data.name
 										span(style="font-size: 11px; font-family: Helvetica, Arial, sans-serif;") &nbsp;&nbsp;&nbsp;
 											= '(SKU'
-											strong &nbsp;#{product.sku}
+											strong &nbsp;#{displayItem.data.sku}
 											= ')'
 									+cell('Helvetica', 25, 'right')
 										strong
-											+currencySymbol(order)
-										strong(style="font-size: 14px")= product.totalCost.toFixed(2)
+											+currencySymbol(displayItem.data.price)
+										= displayItem.subTotal.amount.toFixed(2)
 				tr
 					td(align="left" style="padding-top: 14px; padding-bottom: 14px; color: #707070; border-top: 3px solid #ececec")
 						table(cellspacing="0" cellpadding="0" border="0" width="100%")
@@ -45,15 +45,15 @@ block content
 										span Tax:&nbsp;
 									+cell('Helvetica', 25, 'right', 1)
 										strong
-											+currencySymbol(order)
+											+currencySymbol(order.total)
 											= tax.toFixed(2)
 							tr
 								+cell('Helvetica', 75, 'left', 1)
 									span Shipping:&nbsp;
 								+cell('Helvetica', 25, 'right', 1)
 									strong
-										+currencySymbol(order)
-										= order.shippingCost.toFixed(2)
+										+currencySymbol(order.total)
+										= order.shippingCost.amount.toFixed(2)
 				tr
 					td(align="left" style="padding-top: 14px; color: #707070; border-top: 3px solid #ececec")
 						table(cellspacing="0" cellpadding="0" border="0" width="100%")
@@ -62,7 +62,7 @@ block content
 								+cell('Helvetica', 25, 'right')
 									span(style="font-size: 16px") Total:&nbsp;
 										strong
-											+currencySymbol(order)
+											+currencySymbol(order.total)
 										strong= TOTAL
 
 				tr
