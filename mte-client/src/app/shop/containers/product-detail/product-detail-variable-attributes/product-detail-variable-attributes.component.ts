@@ -6,11 +6,11 @@ import { AttributeValue } from '@mte/common/models/api-interfaces/attribute-valu
 import { Product } from '@mte/common/models/api-interfaces/product'
 import { SimpleAttributeValue } from '@mte/common/models/api-interfaces/simple-attribute-value'
 import { VariableAttributeSelectOptionType } from '@mte/common/models/enums/variable-attribute-select-option-type'
-import { VariableAttributeSelectType } from '@mte/common/models/enums/variable-attribute-select-type'
 import { VariableAttributeSelect, VariableAttributeSelectOption } from '@mte/common/models/ui-models/variable-attribute-select'
 import { isEqual, values } from 'lodash'
 import { zip } from 'rxjs'
-import { takeWhile } from 'rxjs/operators'
+import { map, takeWhile } from 'rxjs/operators'
+import { CartService } from '../../../../shared/services/cart/cart.service'
 import { OrganizationService } from '../../../../shared/services/organization.service'
 import { ProductService } from '../../../services/product.service'
 
@@ -42,6 +42,7 @@ import { ProductService } from '../../../services/product.service'
                 </div>
             </div>
             <button class="variable-attributes-reset-btn"
+                [disabled]="variableAttributeSelectsAreAllNull()"
                 (click)="reset()">
                 Reset form
             </button>
@@ -49,6 +50,9 @@ import { ProductService } from '../../../services/product.service'
     `,
     styleUrls: [ './product-detail-variable-attributes.component.scss' ],
     encapsulation: ViewEncapsulation.None,
+    providers: [
+        ProductService,
+    ],
 })
 @Heartbeat()
 export class ProductDetailVariableAttributesComponent extends HeartbeatComponent implements OnInit, OnDestroy {
@@ -58,40 +62,57 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
 
     public variations: Product[] = []
     public matchingVariations: Product[] = []
-    public variableAttributeSelects: VariableAttributeSelect<any, any>[] = []
+    public variableAttributeSelects: VariableAttributeSelect[] = []
     public selectedVariation: Product
 
     constructor(
         public productService: ProductService,
         public organizationService: OrganizationService,
+        public cartService: CartService,
         public ngZone: NgZone,
     ) {
         super()
     }
 
     public ngOnInit(): void {
-        this.variations = this.productDetail.variations as Product[]
-        this.initForm()
+        // We can trust this to always fire at least once, since it's attached to a BehaviorSubject.
+        this.cartService.store.states.subscribe(() => this.initForm())
     }
 
     public ngOnDestroy(): void { }
 
     public initForm(): void {
+
+        // First, create a list of variations that haven't yet been added to cart.
+
+        this.variations = (this.productDetail.variations as Product[]).filter((variation) => {
+            return !this.cartService.cart.items.find((item: Product) => item._id === variation._id)
+        })
+
+        // Create an observable that maps each `select` to an array of all selected options whenever
+        // one changes.
+
         const variableAttributeSelects = this.variableAttributeSelects = this.getVariableAttributeSelects()
-        const selectedOptionsSources = this.variableAttributeSelects.map((select) => select.selectedOptionsSource)
+        const selectedOptionsSources = this.variableAttributeSelects.map((select) => select.selectedOptionSource)
         zip(...selectedOptionsSources)
-            .pipe(takeWhile(() => this.variableAttributeSelects === variableAttributeSelects))
+            .pipe(
+                takeWhile(() => this.variableAttributeSelects === variableAttributeSelects),
+                map((selectedOptions) => selectedOptions.filter((selectedOption) => selectedOption !== null)),
+            )
             .subscribe((selectedOptions) => {
+
+                // Update the list of matching variations and let each VariableAttributeSelect know.
+
                 this.matchingVariations = this.getMatchingVariations(selectedOptions)
                 this.variableAttributeSelects.forEach((variableAttrSelect) => {
                     variableAttrSelect.setStateSilently({ matchingVariations: this.matchingVariations })
                     setTimeout(() => variableAttrSelect.update(true))
                 })
-                const unselectedAttributeSelects = this.variableAttributeSelects.filter((attrSelect) => attrSelect.state.selectedOption === null) || []
 
                 // If there's only 1 matching variation, select it!
 
                 if (this.matchingVariations.length === 1) {
+                    const unselectedAttributeSelects = this.variableAttributeSelects.filter((attrSelect) => attrSelect.state.selectedOption === null) || []
                     const matchedVariation = this.matchingVariations[0]
                     this.selectedVariation = matchedVariation
                     this.displayedProductChange.emit(matchedVariation)
@@ -118,18 +139,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
             })
     }
 
-    public handleChange(variableAttributeSelect: VariableAttributeSelect<any, any>, option: any): void {
-
-        // If a variation is selected, assume the user wants to select a different one now;
-        // clear it and clear all selects.
-
-        // if (!!this.selectedVariation) {
-        //     this.selectedVariation = null
-        //     this.selectedProductChange.emit(null)
-        //     this.variableAttributeSelects.forEach((attributeSelect) => {
-        //         this.ngZone.run(() => attributeSelect.select(null))
-        //     })
-        // }
+    public handleChange(variableAttributeSelect: VariableAttributeSelect, option: any): void {
 
         // Make our selection and update all siblings.
 
@@ -137,11 +147,11 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
         this.variableAttributeSelects.forEach((variableAttrSelect) => variableAttrSelect.update())
     }
 
-    public getVariableAttributeSelects(): VariableAttributeSelect<any, any>[] {
-        const variations = this.productDetail.variations as Product[]
+    public getVariableAttributeSelects(): VariableAttributeSelect[] {
+        const variations = this.variations
 
-        // Get the variable attributes for the product, trusting the attribute values
-        // rather than the `variableAttributes` field. Loop through each variation to
+        // Get the variable attributes for the product, trusting the attribute values on each variation
+        // rather than the `variableAttributes` field on the parent. Loop through each variation to
         // get a de-duped array of variable attributes.
 
         const variableAttributes = variations.reduce(
@@ -163,95 +173,98 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
             [] as Attribute[]
         )
 
-        // Naturally, for variable properties, we DO need to fall back on trusting the parent product.
+        // Naturally, for variable _properties_, we DO need to fall back on trusting the parent product.
 
         const variableProperties = this.productDetail.variableProperties
 
         // Loop through all the variable attributes and properties, and build a VariableAttributeSelect
         // for each one.
 
-        const _combinedVariableAttributesAndProperties = this.organizationService.organization.storeUiSettings.combinedVariableAttributeSelects || []
-        const combinedVariableAttributesAndProperties = values(_combinedVariableAttributesAndProperties)
-            .map((doc) => {
-                const keys = Object.keys(doc)
-                return keys
-                    .filter((key) => !isNaN(parseInt(key, 10)))
-                    .map((key) => doc[key])
-            })
+        // First, determine which attributes/properties are supposed to be combined together.
 
-        const selects = [
+        const combinedVariableAttributesAndProperties = this.organizationService.organization
+            .storeUiSettings
+            .combinedVariableAttributeSelects
+            || []
+
+        // Create an array of selects representing all UN-combined properties/attributes.
+
+        const attributesAndProperties = [
                 ...variableAttributes,
                 ...variableProperties,
             ]
             .filter((variableAttributeOrProperty) => {
                 let keyOrSlug: string
-
                 if (typeof variableAttributeOrProperty === 'string') {
                     keyOrSlug = variableAttributeOrProperty
                 }
                 else {
                     keyOrSlug = variableAttributeOrProperty.slug
                 }
-
-                return combinedVariableAttributesAndProperties.every((combination) => {
-                    return combination.indexOf(keyOrSlug) === -1
-                })
+                // Note: using `values` because mongo will return back arrays as objects
+                // sometimes, depending on how they were created.
+                return values(combinedVariableAttributesAndProperties).every((combination) =>
+                    values(combination).indexOf(keyOrSlug) === -1)
             })
+
+        // For each one, create a `VariableAttributeSelect` and build it.
+
+        const selects = attributesAndProperties
             .map((variableAttributeOrProperty) => {
                 const variableAttributeSelect = new VariableAttributeSelect()
                 variableAttributeSelect.builder
                     .setProductDetail(this.productDetail)
-                    .setAttributesOrProperties([{
-                        type: typeof variableAttributeOrProperty === 'string'
-                            ? VariableAttributeSelectType.Property
-                            : VariableAttributeSelectType.Attribute,
-                        attributeOrProperty: variableAttributeOrProperty,
-                    }])
+                    .setAttributesOrProperties([variableAttributeOrProperty])
                 return variableAttributeSelect
             })
 
+        // Then, add any property/attribute combinations to the array of selects.
+
         if (!!combinedVariableAttributesAndProperties.length) {
             combinedVariableAttributesAndProperties.forEach((combination) => {
-                const variableAttributesOrProperties = combination.map((variableAttrSlugOrPropertyKey) => {
-                    const variableAttribute = variableAttributes.find((attr) => attr.slug === variableAttrSlugOrPropertyKey)
-                    let propertyKey: string
-                    if (!variableAttribute) {
-                        propertyKey = variableAttrSlugOrPropertyKey
-                        return {
-                            type: VariableAttributeSelectType.Property,
-                            attributeOrProperty: propertyKey,
+                const variableAttributesOrProperties = values(combination)
+                    // Note: sometimes includes `id` or other crap, so filter that out.
+                    // We just want our 0, 1, etc.
+                    .filter((x) => x != null)
+                    .map((variableAttrSlugOrPropertyKey) => {
+                        const variableAttribute = variableAttributes.find((attr) => attr.slug === variableAttrSlugOrPropertyKey)
+                        if (!variableAttribute) {
+                            return variableAttrSlugOrPropertyKey
                         }
-                    }
-                    else {
-                        return {
-                            type: VariableAttributeSelectType.Attribute,
-                            attributeOrProperty: variableAttribute,
+                        else {
+                            return variableAttribute
                         }
-                    }
-                })
+                    })
+
+                // Build the combined select.
 
                 const combinedVariableAttributeSelect = new VariableAttributeSelect()
-
                 combinedVariableAttributeSelect.builder
                     .setProductDetail(this.productDetail)
                     .setAttributesOrProperties(variableAttributesOrProperties)
+
+                // Add it to the array.
 
                 selects.push(combinedVariableAttributeSelect)
             })
         }
 
+        // Finally, sort them in the order specified in `organization.storeUiSettings`.
+
         return selects
             .sort((a, b) => {
-                const orderArr = this.organizationService.organization.storeUiSettings.orderOfVariableAttributeSelects
+                const orderArr = this.organizationService.organization
+                    .storeUiSettings
+                    .orderOfVariableAttributeSelects
                 if (orderArr.indexOf(b.attribute.slug) === -1) return -1
                 else if (orderArr.indexOf(a.attribute.slug) === -1) return 1
                 return orderArr.indexOf(a.attribute.slug) - orderArr.indexOf(b.attribute.slug)
             })
     }
 
-    public getMatchingVariations(selectedOptions: VariableAttributeSelectOption<AttributeValue>[]): Product[] {
+    public getMatchingVariations(selectedOptions: VariableAttributeSelectOption[]): Product[] {
         return this.variations.filter((variation) => {
-            const variationContainsOptionValue = (option: VariableAttributeSelectOption<AttributeValue>) => {
+            const variationContainsOptionValue = (option: VariableAttributeSelectOption) => {
                 switch (option.type) {
                     case VariableAttributeSelectOptionType.PropertyValue:
                         return isEqual(option.data, variation[option.key])
@@ -261,7 +274,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
                     case VariableAttributeSelectOptionType.AttributeValue:
                         return !!variation.attributeValues
                             .find((attrValue: AttributeValue) => {
-                                return option.data._id === attrValue._id
+                                return (option.data as AttributeValue)._id === attrValue._id
                             })
                     case VariableAttributeSelectOptionType.Combination:
                         return option.sourceOptions.every((sourceOption) => {
@@ -271,7 +284,6 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
             }
 
             return selectedOptions
-                .filter((option) => option !== null)
                 .every(variationContainsOptionValue)
         })
     }
@@ -281,5 +293,9 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
         this.selectedVariation = null
         this.selectedProductChange.emit(null)
         this.initForm()
+    }
+
+    public variableAttributeSelectsAreAllNull(): boolean {
+        return this.variableAttributeSelects.every((select) => select.state.selectedOption == null)
     }
 }

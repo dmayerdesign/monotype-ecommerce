@@ -9,11 +9,7 @@ import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/model
 import { GetProductDetailResponseBody } from '@mte/common/models/api-responses/get-product-detail/get-product-detail.response.body'
 import { Observable, Subject } from 'rxjs'
 
-@Injectable({
-    providedIn: 'root',
-    useFactory: (httpClient: HttpClient) => new ProductService(httpClient),
-    deps: [ HttpClient ],
-})
+@Injectable()
 export class ProductService extends RestService<Product> {
     public endpoint = ApiEndpoints.Products
     public getSomeRequestType = GetProductsFromIdsRequest

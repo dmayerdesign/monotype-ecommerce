@@ -14,6 +14,7 @@ import { Currency } from '@mte/common/models/enums/currency'
 import { OrderStatus } from '@mte/common/models/enums/order-status'
 import { fromEvent } from 'rxjs'
 import { filter, takeWhile } from 'rxjs/operators'
+import * as stripe from 'stripe'
 import { CartService } from '../../../shared/services/cart/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { UserService } from '../../../shared/services/user.service'
@@ -24,6 +25,9 @@ import { checkoutForm } from './checkout-form'
 @Component({
     selector: 'mte-checkout',
     templateUrl: './checkout.component.html',
+    providers: [
+        PaymentServiceProviderService,
+    ],
 })
 @Heartbeat()
 export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, OnInit {
@@ -48,7 +52,7 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
     public stripe: any
     public elements: any
     public cardElement: any
-    public cards: any[]
+    public cards: (stripe.cards.ICard | stripe.bitcoinReceivers.IBitcoinReceiver)[]
 
     // DOM elements.
 
@@ -116,7 +120,7 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
 
         // Initialize Stripe.
 
-        if (platform.isBrowser()) {
+        if (platform.isBrowser() && typeof (window as any).Stripe === 'function') {
             this.stripe = (window as any).Stripe(AppConfig.stripe_publishable_key)
             setTimeout(() => this.initStripeForm())
         }
@@ -132,7 +136,7 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
 
                         // Populate `this.cards` with `customer.sources.data`.
 
-                        this.cards = customer.sources.data // stripe.cards.ICard[]
+                        this.cards = customer.sources.data
 
                         // If the Stripe customer has a `default_source`, move it to the top
                         // of `this.cards`.
@@ -148,6 +152,10 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
                                 ...this.cards,
                             ]
                         }
+
+                        // We're not supporting Bitcoin for the time being.
+
+                        this.cards = this.cards.filter((card) => card.object !== 'bitcoin_receiver')
 
                         // If the user hasn't already filled out the billing address, populate
                         // it with data taken from the `defaultCard`.

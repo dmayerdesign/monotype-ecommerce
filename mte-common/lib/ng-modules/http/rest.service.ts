@@ -30,10 +30,7 @@ export abstract class RestService<T> {
 
         this.httpClient.get<T[]>(this.endpoint, { params })
             .subscribe(
-                (docs) => {
-                    this.getPump.next(docs)
-                    console.log(docs)
-                },
+                (docs) => this.getPump.next(docs),
                 (error: SimpleError) => this.getErrorPump.next(error),
             )
     }
@@ -51,7 +48,7 @@ export abstract class RestService<T> {
         return this.httpClient.get<T>(`${this.endpoint}/${id}`)
     }
 
-    public create?(doc: T): void
-    public update?(id: string, update: object): void
-    public delete?(id: string): void
+    // public create?(doc: T): void
+    // public update?(id: string, update: object): void
+    // public delete?(id: string): void
 }

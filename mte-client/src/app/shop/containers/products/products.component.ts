@@ -1,4 +1,5 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
+import { FormControl, FormGroup } from '@angular/forms'
 import { ActivatedRoute, Router } from '@angular/router'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
@@ -18,7 +19,10 @@ import { TaxonomyTermService } from '../../services/taxonomy-term.service'
 @Component({
     selector: 'mte-products',
     templateUrl: './products.component.html',
-    styleUrls: ['./products.component.scss']
+    styleUrls: ['./products.component.scss'],
+    providers: [
+        ProductService,
+    ],
 })
 @Heartbeat()
 export class ProductsComponent extends HeartbeatComponent implements OnInit, OnDestroy {
@@ -26,9 +30,20 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     public productsSource: Observable<Product[]>
     public taxonomyTerm: TaxonomyTerm
     public leftSidebarIsExpandeds: BehaviorSubject<boolean>
+    public requests: Observable<GetProductsRequest>
     private _requestPump = new Subject<GetProductsRequest>()
     private _request = new GetProductsRequest()
-    private _lastUnparsedRequest: string
+    private _lastTaxonomySlugFromRoute: string
+    private _lastTaxTermSlugFromRoute: string
+
+    // Custom.
+    // TODO: move elsewhere.
+
+    public stabilitiesFormGroup = new FormGroup({
+        underStable: new FormControl(false),
+        stable: new FormControl(false),
+        overStable: new FormControl(false),
+    })
 
     constructor(
         private productService: ProductService,
@@ -39,10 +54,17 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     ) { super() }
 
     public ngOnInit(): void {
+
+        // Expose the stream of requests so that it can be accessed by parent components
+        // if needed.
+
+        this.requests = this._requestPump.asObservable()
+
+        // Expand the left sidebar if the screen width is large or above.
+
         this.leftSidebarIsExpandeds = new BehaviorSubject(
             this.windowRef.mediaBreakpointAbove(BootstrapBreakpointKey.Lg)
         )
-        const route = this.activatedRoute.snapshot
 
         // Execute the request any time it changes.
 
@@ -60,6 +82,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
         paramMaps
             .pipe(takeWhile(() => this.isAlive))
             .subscribe((_paramMap) => {
+                const route = this.activatedRoute.snapshot
                 const paramMap = route.paramMap
                 const queryParamMap = route.queryParamMap
 
@@ -67,7 +90,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
 
                 const requestStr = queryParamMap.get(ShopQueryParamKeys.request)
                 if (requestStr) {
-                    this._request = JSON.parse(requestStr) as GetProductsRequest
+                    this._request = JSON.parse(atob(requestStr)) as GetProductsRequest
                 }
 
                 // Mutate the request if the route is '/for/:taxonomySlug/:partialTermSlug'.
@@ -79,24 +102,95 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                     if (!this._request.filters) {
                         this._request.filters = []
                     }
+
+                    // Always clear whichever filter was created by the last `/for/:taxonomySlug...` route.
+
+                    if (this._lastTaxonomySlugFromRoute && this._lastTaxTermSlugFromRoute) {
+                        const indexOfFilterToRemove = this._request.filters.findIndex((filter) =>
+                            filter.type === GetProductsFilterType.TaxonomyTerm &&
+                            filter.key === this._lastTaxonomySlugFromRoute &&
+                            isEqual(filter.values, [this._lastTaxTermSlugFromRoute]))
+                        if (indexOfFilterToRemove > -1) {
+                            this._request.filters.splice(indexOfFilterToRemove, 1)
+                        }
+                    }
+
+                    // Add the new taxonomy term filter.
+
                     this._request.filters = uniqWith<GetProductsFilter>([
                         ...this._request.filters,
                         {
                             type: GetProductsFilterType.TaxonomyTerm,
-                            key: taxonomySlug,
                             values: [ `${taxonomySlug}-${partialTermSlug}` ]
                         },
                     ], isEqual)
-                    this._requestPump.next(this._request)
+
+                    this._lastTaxonomySlugFromRoute = taxonomySlug
+                    this._lastTaxTermSlugFromRoute = `${taxonomySlug}-${partialTermSlug}`
                 }
-                else if (requestStr !== this._lastUnparsedRequest) {
-                    this._lastUnparsedRequest = requestStr
-                    this._requestPump.next(this._request)
+
+                this._requestPump.next(this._request)
+
+                // Custom functionality.
+                // TODO: move elsewhere.
+
+                if (this._request.filters) {
+                    this._request.filters.forEach((filter) => {
+                        filter.values.filter((value) => value.indexOf('stability-') === 0)
+                            .forEach((stabilityTaxTerm) => {
+                                if (stabilityTaxTerm === 'stability-understable') {
+                                    this.stabilitiesFormGroup.patchValue({ underStable: true })
+                                }
+                                if (stabilityTaxTerm === 'stability-stable') {
+                                    this.stabilitiesFormGroup.patchValue({ stable: true })
+                                }
+                                if (stabilityTaxTerm === 'stability-overstable') {
+                                    this.stabilitiesFormGroup.patchValue({ overStable: true })
+                                }
+                            })
+                    })
                 }
             })
-        /*
-?r={"filters":[{"type":1,"values":["5b208b8ee0d70ab68576ea41"]}]}
-        */
+
+        // Custom functionality.
+        // TODO: move elsewhere.
+
+        this.stabilitiesFormGroup.valueChanges.subscribe((value) => {
+            const newRequestFilters = !!this._request.filters
+                ? [ ...this._request.filters ]
+                : []
+            const newRequest = {
+                ...this._request,
+                filters: newRequestFilters
+            }
+            const indexOfExistingStabilityFilter = newRequestFilters.findIndex((filter) => {
+                return filter.values.some((filterValue) =>
+                    filterValue.indexOf('stability-') === 0)
+            })
+            if (indexOfExistingStabilityFilter > -1) {
+                newRequestFilters.splice(indexOfExistingStabilityFilter, 1)
+            }
+            const values = []
+            if (value.underStable) {
+                values.push('stability-understable')
+            }
+            if (value.stable) {
+                values.push('stability-stable')
+            }
+            if (value.overStable) {
+                values.push('stability-overstable')
+            }
+            newRequestFilters.push({
+                type: GetProductsFilterType.TaxonomyTerm,
+                values
+            })
+
+            this.router.navigate([ShopRouterLinks.shopAll], {
+                queryParams: {
+                    [ShopQueryParamKeys.request]: btoa(JSON.stringify(newRequest)),
+                },
+            })
+        })
     }
 
     public executeRequest(request: GetProductsRequest): void {
@@ -158,10 +252,10 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     /**
      * Apply the filter, triggering a search.
      */
-    public applyFilter(key: string, value: any): void {
+    public navigateToNewRequestUrl(): void {
         this.router.navigate([ShopRouterLinks.shopAll], {
             queryParams: {
-                [ShopQueryParamKeys.request]: JSON.stringify(this._request)
+                [ShopQueryParamKeys.request]: btoa(JSON.stringify(this._request))
             },
         })
     }
@@ -173,5 +267,17 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     }
     public isTwoColLayout(): boolean {
         return !this.isOneColLayout()
+    }
+
+    // Custom functionality.
+    // TODO: move elsewhere.
+
+    public isDisplayingDiscs(): boolean {
+        if (!this.productService.documents) {
+            return false
+        }
+        return this.productService.documents.some((product) =>
+            product.taxonomyTerms.some((taxTerm: TaxonomyTerm) =>
+                taxTerm.slug === 'product-type-discs'))
     }
 }

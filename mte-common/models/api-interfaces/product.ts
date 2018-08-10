@@ -51,7 +51,7 @@ export interface Product extends MongooseDocument {
 
 	// Taxonomy.
     taxonomyTerms: Ref<TaxonomyTerm>[]
-    taxonomyTermSlugs: string[]
+    taxonomyTermSlugs: string[] // TODO: remove (used for convenience in HyzerShop migration for building image urls)
 
 	// Shipping.
     units: Units

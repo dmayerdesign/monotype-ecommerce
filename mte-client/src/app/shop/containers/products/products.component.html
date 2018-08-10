@@ -73,13 +73,38 @@
                 </div>
     
                 <!-- Custom filters. -->
-                <div class="disc-type-filter">
-                    Disc type
-                </div>
-    
-                <div class="stabilities-filter">
-                    Stabilities
-                </div>
+                <ng-container *ngIf="isDisplayingDiscs()">
+                    <div class="disc-type-filter">
+                        Disc type
+                    </div>
+        
+                    <form [formGroup]="stabilitiesFormGroup"
+                        class="stabilities-filter">
+                        Stabilities
+                        <div class="stabilities-filter--understable">
+                            <input id="stabilities-filter-understable-input"
+                                type="checkbox"
+                                formControlName="underStable"
+                            />
+                            <label for="stabilities-filter-understable-input">Understable</label>
+                        </div>
+                        <div class="stabilities-filter--stable">
+                            <input id="stabilities-filter-stable-input"
+                                type="checkbox"
+                                formControlName="stable"
+                            />
+                            <label for="stabilities-filter-stable-input">Stable</label>
+                        </div>
+                        <div class="stabilities-filter--overstable">
+                            <input id="stabilities-filter-overstable-input"
+                                type="checkbox"
+                                formControlName="overStable"
+                            />
+                            <label for="stabilities-filter-overstable-input">Overstable</label>
+                        </div>
+                        
+                    </form>
+                </ng-container>
     
                 <button>Clear filters</button>
     

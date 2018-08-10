@@ -1,12 +1,10 @@
 import * as rp from 'request-promise-native'
 
-export function onStart() {
+export function onStart(): void {
 
-	/**
-     * Keep server from going to sleep
-     */
+    // Keep the server from going to sleep.
+
     setInterval(function() {
         rp({uri: process.env.CLIENT_URL + '/ping'})
-    }, 300000)
-
+    }, 1000 * 60 * 15)
 }

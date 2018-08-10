@@ -120,6 +120,9 @@ import { ProductService } from '../../services/product.service'
     `,
     styleUrls: ['./product-detail.component.scss'],
     encapsulation: ViewEncapsulation.None,
+    providers: [
+        ProductService,
+    ],
 })
 @Heartbeat()
 export class ProductDetailComponent extends HeartbeatComponent implements OnInit, OnDestroy {
@@ -163,7 +166,6 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
         private uiService: UiService,
     ) {
         super()
-        // console.log(this)
     }
 
     // Lifecycle methods.

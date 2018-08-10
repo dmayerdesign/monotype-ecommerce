@@ -1,14 +1,14 @@
 import { HttpClient } from '@angular/common/http'
 import { Injectable } from '@angular/core'
 import { Observable } from 'rxjs'
-import {} from 'stripe'
+import * as stripe from 'stripe'
 
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class PaymentServiceProviderService {
 
-    constructor (private http: HttpClient) { }
+    constructor(private http: HttpClient) { }
 
-    public getStripeCustomer(id: string): Observable<any> {
-        return this.http.get(`/api/stripe/customer/${id}`)
+    public getStripeCustomer(id: string): Observable<stripe.customers.ICustomer> {
+        return this.http.get<stripe.customers.ICustomer>(`/api/stripe/customer/${id}`)
     }
 }

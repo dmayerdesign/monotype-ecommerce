@@ -264,20 +264,19 @@ export class ProductService extends CrudService<Product> {
             query
         })
 
+        const populates = [
+            'taxonomyTerms',
+            'attributeValues', // TODO: Might not be necessary, maybe remove.
+            'variableAttributeValues', // TODO: Might not be necessary, maybe remove.
+        ]
+
         if (res) { // Stream the products.
-            this.dbClient.findQuery(Product, listFromQueryRequest, res,
-                // TODO: These `populate`s might not be necessary, so maybe remove.
-                // They sure make debugging easier, though!
-                [
-                    'attributeValues',
-                    'variableAttributeValues',
-                ]
-            )
+            this.dbClient.findQuery(Product, listFromQueryRequest, res, populates)
             return
         }
         else { // Retrieve the products normally, loading them into memory.
             try {
-                const products = await this.dbClient.findQuery(Product, listFromQueryRequest)
+                const products = await this.dbClient.findQuery(Product, listFromQueryRequest, null, populates)
                 return new ApiResponse(products)
             }
             catch (error) {
