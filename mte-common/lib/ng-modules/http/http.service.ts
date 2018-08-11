@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core'
+import { SimpleError } from '@mte/common/lib/ng-modules/http/http.models'
 import { ReplaySubject } from 'rxjs'
-import { SimpleError } from './http.models'
 
 @Injectable()
 export class MteHttpService {

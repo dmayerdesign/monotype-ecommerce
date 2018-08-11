@@ -27,25 +27,22 @@ export class ProductService extends RestService<Product> {
         this.getDetailErrors = this.getDetailErrorPump.asObservable()
     }
 
-    public get(request = new GetProductsRequest()): void {
+    public get(request = new GetProductsRequest()): Promise<void> {
         return super.get(request)
+    }
+
+    public async getDetail(slug: string): Promise<void> {
+        try {
+            const getDetailResponseBody = await this.getDetailOnce(slug)
+            this.getDetailPump.next(getDetailResponseBody)
+        }
+        catch (getDetailError) {
+            this.getDetailErrorPump.next(getDetailError)
+        }
     }
 
     public getDetailOnce(slug: string): Promise<GetProductDetailResponseBody> {
         return this.httpClient.get<GetProductDetailResponseBody>(`${this.endpoint}/${slug}/detail`).toPromise()
-    }
-
-    public getDetail(slug: string): void {
-        const getDetail = async () => {
-            try {
-                const getDetailResponseBody = await this.getDetailOnce(slug)
-                this.getDetailPump.next(getDetailResponseBody)
-            }
-            catch (getDetailError) {
-                this.getDetailErrorPump.next(getDetailError)
-            }
-        }
-        getDetail()
     }
 
     public getVariationsFromAttributeValues(

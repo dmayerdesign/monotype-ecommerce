@@ -5,7 +5,7 @@ import { Types } from '@mte/common/constants/inversify'
 import { Timer } from '@mte/common/models/api-models/timer'
 import { ListFromQueryRequest } from '@mte/common/models/api-requests/list.request'
 import { DbClient } from '../data-access/db-client'
-import { ErrorService } from '../services/error.service'
+import { ErrorService } from './error.service'
 
 @injectable()
 export class TimerService {

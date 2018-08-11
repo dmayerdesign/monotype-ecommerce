@@ -1,6 +1,5 @@
 import { Crud } from '../../constants/crud'
 import { Ref } from '../../lib/goosetype'
-import { SortDirection } from '../enums/sort-direction'
 
 export class ListRequest {
     public skip? = 0

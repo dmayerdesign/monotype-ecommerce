@@ -1,6 +1,6 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
 import { FormControl, FormGroup } from '@angular/forms'
-import { ActivatedRoute, Router } from '@angular/router'
+import { ActivatedRoute, ParamMap, Router } from '@angular/router'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
@@ -10,11 +10,12 @@ import { GetProductsFilter, GetProductsFilterType, GetProductsRequest } from '@m
 import { BootstrapBreakpointKey } from '@mte/common/models/enums/bootstrap-breakpoint-key'
 import { isEqual, uniqWith } from 'lodash'
 import { merge, BehaviorSubject, Observable, Subject } from 'rxjs'
-import { map, takeWhile } from 'rxjs/operators'
+import { distinctUntilKeyChanged, map, takeWhile } from 'rxjs/operators'
 import { ShopQueryParamKeys } from '../../constants/shop-query-param-keys'
 import { ShopRouterLinks } from '../../constants/shop-router-links'
 import { ProductService } from '../../services/product.service'
 import { TaxonomyTermService } from '../../services/taxonomy-term.service'
+import { ProductsStateManager } from './products.state'
 
 @Component({
     selector: 'mte-products',
@@ -30,11 +31,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     public productsSource: Observable<Product[]>
     public taxonomyTerm: TaxonomyTerm
     public leftSidebarIsExpandeds: BehaviorSubject<boolean>
-    public requests: Observable<GetProductsRequest>
-    private _requestPump = new Subject<GetProductsRequest>()
-    private _request = new GetProductsRequest()
-    private _lastTaxonomySlugFromRoute: string
-    private _lastTaxTermSlugFromRoute: string
+    public stateManager = new ProductsStateManager()
 
     // Custom.
     // TODO: move elsewhere.
@@ -46,19 +43,14 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     })
 
     constructor(
-        private productService: ProductService,
-        private taxonomyTermService: TaxonomyTermService,
         public windowRef: WindowRefService,
-        private activatedRoute: ActivatedRoute,
-        private router: Router,
+        private _productService: ProductService,
+        private _taxonomyTermService: TaxonomyTermService,
+        private _activatedRoute: ActivatedRoute,
+        private _router: Router,
     ) { super() }
 
     public ngOnInit(): void {
-
-        // Expose the stream of requests so that it can be accessed by parent components
-        // if needed.
-
-        this.requests = this._requestPump.asObservable()
 
         // Expand the left sidebar if the screen width is large or above.
 
@@ -68,74 +60,40 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
 
         // Execute the request any time it changes.
 
-        this._requestPump
+        this.stateManager.states
+            .pipe(
+                distinctUntilKeyChanged('getProductsRequest'),
+                map((state) => state.getProductsRequest)
+            )
             .subscribe((request) => {
                 this.executeRequest(request)
             })
 
-        // Construct a new request when the URL changes.
+        // Construct a new request when the query params change.
+        // TODO: Expose this functionality to the user by allowing them to copy a link to
+        // whatever particular search/filter they have going on (to bookmark or share).
+        // By default, no request data will be shown in the URL.
 
-        const paramMaps = merge(
-            this.activatedRoute.paramMap,
-            this.activatedRoute.queryParamMap,
-        )
-        paramMaps
+        this._activatedRoute.queryParamMap
             .pipe(takeWhile(() => this.isAlive))
-            .subscribe((_paramMap) => {
-                const route = this.activatedRoute.snapshot
-                const paramMap = route.paramMap
-                const queryParamMap = route.queryParamMap
+            .subscribe((queryParamMap) => {
+                const paramMap = this._activatedRoute.snapshot.paramMap
 
-                // Replace the request whenever the query params change.
+                let newRequest: GetProductsRequest
+                newRequest = this._createRequestFromQueryParamMap(queryParamMap)
+                newRequest = this._mutateRequestFromRouteParamMap(newRequest, paramMap)
 
-                const requestStr = queryParamMap.get(ShopQueryParamKeys.request)
-                if (requestStr) {
-                    this._request = JSON.parse(atob(requestStr)) as GetProductsRequest
+                if (newRequest) {
+                    this.stateManager.setState({
+                        getProductsRequest: newRequest
+                    })
                 }
-
-                // Mutate the request if the route is '/for/:taxonomySlug/:partialTermSlug'.
-
-                if (paramMap.get('taxonomySlug')) {
-                    const taxonomySlug = paramMap.get('taxonomySlug')
-                    const partialTermSlug = paramMap.get('partialTermSlug')
-
-                    if (!this._request.filters) {
-                        this._request.filters = []
-                    }
-
-                    // Always clear whichever filter was created by the last `/for/:taxonomySlug...` route.
-
-                    if (this._lastTaxonomySlugFromRoute && this._lastTaxTermSlugFromRoute) {
-                        const indexOfFilterToRemove = this._request.filters.findIndex((filter) =>
-                            filter.type === GetProductsFilterType.TaxonomyTerm &&
-                            filter.key === this._lastTaxonomySlugFromRoute &&
-                            isEqual(filter.values, [this._lastTaxTermSlugFromRoute]))
-                        if (indexOfFilterToRemove > -1) {
-                            this._request.filters.splice(indexOfFilterToRemove, 1)
-                        }
-                    }
-
-                    // Add the new taxonomy term filter.
-
-                    this._request.filters = uniqWith<GetProductsFilter>([
-                        ...this._request.filters,
-                        {
-                            type: GetProductsFilterType.TaxonomyTerm,
-                            values: [ `${taxonomySlug}-${partialTermSlug}` ]
-                        },
-                    ], isEqual)
-
-                    this._lastTaxonomySlugFromRoute = taxonomySlug
-                    this._lastTaxTermSlugFromRoute = `${taxonomySlug}-${partialTermSlug}`
-                }
-
-                this._requestPump.next(this._request)
 
                 // Custom functionality.
                 // TODO: move elsewhere.
 
-                if (this._request.filters) {
-                    this._request.filters.forEach((filter) => {
+                if (this.stateManager.state.getProductsRequest.filters) {
+                    this.stateManager.state.getProductsRequest.filters.forEach((filter) => {
                         filter.values.filter((value) => value.indexOf('stability-') === 0)
                             .forEach((stabilityTaxTerm) => {
                                 if (stabilityTaxTerm === 'stability-understable') {
@@ -152,15 +110,28 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                 }
             })
 
+        // Mutate the request when the route params change.
+
+        this._activatedRoute.paramMap
+            .pipe(takeWhile(() => this.isAlive))
+            .subscribe((paramMap) => {
+                const getProductsRequest = this._mutateRequestFromRouteParamMap(
+                    this.stateManager.state.getProductsRequest,
+                    paramMap
+                )
+                this.stateManager.setState({ getProductsRequest })
+            })
+
         // Custom functionality.
         // TODO: move elsewhere.
 
         this.stabilitiesFormGroup.valueChanges.subscribe((value) => {
-            const newRequestFilters = !!this._request.filters
-                ? [ ...this._request.filters ]
+            const request = this.stateManager.state.getProductsRequest
+            const newRequestFilters = !!request.filters
+                ? [ ...request.filters ]
                 : []
             const newRequest = {
-                ...this._request,
+                ...request,
                 filters: newRequestFilters
             }
             const indexOfExistingStabilityFilter = newRequestFilters.findIndex((filter) => {
@@ -185,12 +156,64 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                 values
             })
 
-            this.router.navigate([ShopRouterLinks.shopAll], {
-                queryParams: {
-                    [ShopQueryParamKeys.request]: btoa(JSON.stringify(newRequest)),
-                },
-            })
+            this.stateManager.setState({ getProductsRequest: newRequest })
         })
+    }
+
+    private _createRequestFromQueryParamMap(queryParamMap: ParamMap): GetProductsRequest {
+
+        // Create a new request from the "r" query param.
+
+        const requestStr = queryParamMap.get(ShopQueryParamKeys.request)
+        const request = !!requestStr ? JSON.parse(atob(requestStr)) as GetProductsRequest : null
+        return request
+    }
+
+    private _mutateRequestFromRouteParamMap(request: GetProductsRequest, routeParamMap: ParamMap): GetProductsRequest {
+
+        // Mutate the request if the route is '/for/:taxonomySlug/:partialTermSlug'.
+
+        if (routeParamMap.get('taxonomySlug')) {
+            const taxonomySlug = routeParamMap.get('taxonomySlug')
+            const partialTermSlug = routeParamMap.get('partialTermSlug')
+
+            if (!request.filters) {
+                request.filters = []
+            }
+
+            // Always clear whichever filter was created by the last `/for/:taxonomySlug...` route.
+
+            const lastTaxonomySlugFromRoute = this.stateManager.state.getProductsRequestFromRoute.taxonomySlug
+            const lastTaxTermSlugFromRoute = this.stateManager.state.getProductsRequestFromRoute.taxonomyTermSlug
+            if (lastTaxonomySlugFromRoute && lastTaxTermSlugFromRoute) {
+                const indexOfFilterToRemove = request.filters.findIndex((filter) =>
+                    filter.type === GetProductsFilterType.TaxonomyTerm &&
+                    filter.key === lastTaxonomySlugFromRoute &&
+                    isEqual(filter.values, [lastTaxTermSlugFromRoute]))
+                if (indexOfFilterToRemove > -1) {
+                    request.filters.splice(indexOfFilterToRemove, 1)
+                }
+            }
+
+            // Add the new taxonomy term filter.
+
+            request.filters = uniqWith<GetProductsFilter>([
+                ...request.filters,
+                {
+                    type: GetProductsFilterType.TaxonomyTerm,
+                    values: [ `${taxonomySlug}-${partialTermSlug}` ]
+                },
+            ], isEqual)
+
+            this.stateManager.setState({
+                getProductsRequestFromRoute: {
+                    taxonomySlug,
+                    taxonomyTermSlug: `${taxonomySlug}-${partialTermSlug}`
+                }
+            })
+        }
+
+        return request
     }
 
     public executeRequest(request: GetProductsRequest): void {
@@ -213,7 +236,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
         // Get the taxonomy term if one is found in the request.
 
         if (requestedTaxonomyTermSlug) {
-            this.taxonomyTermService.getOne(requestedTaxonomyTermSlug)
+            this._taxonomyTermService.getOne(requestedTaxonomyTermSlug)
                 .pipe(takeWhile(() => this.isAlive))
                 .subscribe((term) => this.taxonomyTerm = term)
         }
@@ -224,9 +247,9 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
         // Get products based on the parsed request.
 
         if (!this.productsSource) {
-            this.productsSource = this.productService.getSource
+            this.productsSource = this._productService.getSource
         }
-        this.productService.get(request)
+        this._productService.get(request)
     }
 
     // I'm pretty sure this needs to be here for AOT. #thanksaot
@@ -246,18 +269,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     // Event handlers.
 
     public handleProductClick(product: Product): void {
-        this.router.navigateByUrl(ShopRouterLinks.productDetail(product.slug))
-    }
-
-    /**
-     * Apply the filter, triggering a search.
-     */
-    public navigateToNewRequestUrl(): void {
-        this.router.navigate([ShopRouterLinks.shopAll], {
-            queryParams: {
-                [ShopQueryParamKeys.request]: btoa(JSON.stringify(this._request))
-            },
-        })
+        this._router.navigateByUrl(ShopRouterLinks.productDetail(product.slug))
     }
 
     // Boolean methods.
@@ -273,10 +285,10 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     // TODO: move elsewhere.
 
     public isDisplayingDiscs(): boolean {
-        if (!this.productService.documents) {
+        if (!this._productService.documents) {
             return false
         }
-        return this.productService.documents.some((product) =>
+        return this._productService.documents.some((product) =>
             product.taxonomyTerms.some((taxTerm: TaxonomyTerm) =>
                 taxTerm.slug === 'product-type-discs'))
     }

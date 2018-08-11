@@ -1,4 +1,3 @@
-import { injectable } from 'inversify'
 import { camelCase } from 'lodash'
 import { Schema, SchemaDefinition, SchemaOptions, SchemaTypeOpts } from 'mongoose'
 import { PropTypeArgs } from './models/mongoose-model'

@@ -1,6 +1,6 @@
 import { Copy } from '@mte/common/constants'
 import { Types } from '@mte/common/constants/inversify'
-import { StripeOrder } from '@mte/common/lib/stripe-order'
+import { StripeOrder } from '@mte/common/lib/stripe-shims/stripe-order'
 import { Discount } from '@mte/common/models/api-models/discount'
 import { Order } from '@mte/common/models/api-models/order'
 import { Product } from '@mte/common/models/api-models/product'

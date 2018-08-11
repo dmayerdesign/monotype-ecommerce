@@ -18,20 +18,20 @@ export abstract class Stateful<T> {
     }
 
     public setStateSilently(newState: T): void {
-        this.silence()
+        this._silence()
         this.setState(newState)
-        this.unsilence()
+        this._unsilence()
     }
 
     public get state(): T {
         return this._state
     }
 
-    private silence(): void {
+    private _silence(): void {
         this._isSilent = true
     }
 
-    private unsilence(): void {
+    private _unsilence(): void {
         this._isSilent = false
     }
 }

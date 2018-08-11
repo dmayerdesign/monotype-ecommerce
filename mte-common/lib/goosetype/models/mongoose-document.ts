@@ -1,5 +1,4 @@
-import { camelCase } from 'lodash'
-import { model, DocumentToObjectOptions, Model, ModelPopulateOptions, ModelUpdateOptions, MongooseDocument as Document, NativeError, Query, SaveOptions, Schema, SchemaOptions, ValidationError } from 'mongoose'
+import { DocumentToObjectOptions, ModelPopulateOptions, ModelUpdateOptions, NativeError, Query, SaveOptions, Schema, ValidationError } from 'mongoose'
 import 'reflect-metadata'
 import { MongooseModel } from './mongoose-model'
 
