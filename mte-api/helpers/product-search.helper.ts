@@ -1,13 +1,12 @@
+import { GetProductsFilter } from '@mte/common/models/api-requests/get-products.request'
 import { injectable } from 'inversify'
 import { cloneDeep } from 'lodash'
-
-import { GetProductsFilter } from '@mte/common/models/api-requests/get-products.request'
 import { MongoHelper } from './mongo.helper'
 
 @injectable()
 export class ProductSearchHelper {
 
-    public propertyFilter(filter: GetProductsFilter, query: MongoHelper.AndOperation): MongoHelper.AndOperation {
+    public propertyFilter(filter: GetProductsFilter, query: typeof MongoHelper.andOperation): typeof MongoHelper.andOperation {
         const newQuery = cloneDeep(query)
 
         if (filter.values && filter.values.length) {
@@ -31,7 +30,7 @@ export class ProductSearchHelper {
         return newQuery
     }
 
-    public simpleAttributeValueFilter(filter: GetProductsFilter, query: MongoHelper.AndOperation): MongoHelper.AndOperation {
+    public simpleAttributeValueFilter(filter: GetProductsFilter, query: typeof MongoHelper.andOperation): typeof MongoHelper.andOperation {
         const newQuery = cloneDeep(query)
         let attributeVOs: { value: any }[] = []
 
@@ -98,7 +97,7 @@ export class ProductSearchHelper {
         return newQuery
     }
 
-    public attributeValueFilter(filter: GetProductsFilter, query: MongoHelper.AndOperation): MongoHelper.AndOperation {
+    public attributeValueFilter(filter: GetProductsFilter, query: typeof MongoHelper.andOperation): typeof MongoHelper.andOperation {
         const newQuery = cloneDeep(query)
         const ids = filter.values
 
@@ -115,7 +114,7 @@ export class ProductSearchHelper {
     }
 
     // Reminder: parents and variations must share the same taxonomy terms.
-    public taxonomyTermFilter(ids: string[], query: MongoHelper.AndOperation): MongoHelper.AndOperation {
+    public taxonomyTermFilter(ids: string[], query: typeof MongoHelper.andOperation): typeof MongoHelper.andOperation {
         const newQuery = cloneDeep(query)
 
         if (ids && ids.length) {

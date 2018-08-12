@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output, ViewEncapsulation } from '@angular/core'
+import { MongooseHelper as mh } from '@mte/common/helpers/mongoose.helper'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Attribute } from '@mte/common/models/api-interfaces/attribute'
@@ -7,7 +8,7 @@ import { Product } from '@mte/common/models/api-interfaces/product'
 import { SimpleAttributeValue } from '@mte/common/models/api-interfaces/simple-attribute-value'
 import { VariableAttributeSelectOptionType } from '@mte/common/models/enums/variable-attribute-select-option-type'
 import { VariableAttributeSelect, VariableAttributeSelectOption } from '@mte/common/models/ui-models/variable-attribute-select'
-import { isEqual, values } from 'lodash'
+import { isEqual } from 'lodash'
 import { zip } from 'rxjs'
 import { map, takeWhile } from 'rxjs/operators'
 import { CartService } from '../../../../shared/services/cart/cart.service'
@@ -203,8 +204,8 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
                 }
                 // Note: using `values` because mongo will return back arrays as objects
                 // sometimes, depending on how they were created.
-                return values(combinedVariableAttributesAndProperties).every((combination) =>
-                    values(combination).indexOf(keyOrSlug) === -1)
+                return mh.toArray(combinedVariableAttributesAndProperties).every((combination) =>
+                    mh.toArray(combination).indexOf(keyOrSlug) === -1)
             })
 
         // For each one, create a `VariableAttributeSelect` and build it.
@@ -222,7 +223,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
 
         if (!!combinedVariableAttributesAndProperties.length) {
             combinedVariableAttributesAndProperties.forEach((combination) => {
-                const variableAttributesOrProperties = values(combination)
+                const variableAttributesOrProperties = mh.toArray(combination)
                     // Note: sometimes includes `id` or other crap, so filter that out.
                     // We just want our 0, 1, etc.
                     .filter((x) => x != null)

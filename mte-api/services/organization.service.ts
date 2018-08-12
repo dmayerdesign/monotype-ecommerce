@@ -2,9 +2,11 @@ import { Copy } from '@mte/common/constants/copy'
 import { HttpStatus } from '@mte/common/constants/http-status'
 import { Types } from '@mte/common/constants/inversify/types'
 import { Attribute } from '@mte/common/models/api-models/attribute'
+import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
 import { NavigationItem } from '@mte/common/models/api-models/navigation-item'
 import { Organization } from '@mte/common/models/api-models/organization'
 import { Taxonomy } from '@mte/common/models/api-models/taxonomy'
+import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { ApiResponse } from '@mte/common/models/api-responses/api.response'
 import { Currency } from '@mte/common/models/enums/currency'
@@ -28,20 +30,22 @@ export class OrganizationService extends CrudService<Organization> {
                 const organization = await this.dbClient.findOne(Organization, {}, [
                     {
                         path: 'storeUiContent.primaryNavigation',
+                        model: NavigationItem.getModel(),
                         populate: {
                             path: 'children',
-                            model: NavigationItem.getModel(),
                         },
                     },
                     {
-                        path: 'storeUiContent.productsFilters.taxonomyTermOptions',
+                        path: 'storeUiSettings.productsFilters.taxonomyTermOptions',
+                        model: TaxonomyTerm.getModel(),
                         populate: {
                             path: 'taxonomy',
                             model: Taxonomy.getModel(),
                         },
                     },
                     {
-                        path: 'storeUiContent.productsFilters.attributeValueOptions',
+                        path: 'storeUiSettings.productsFilters.attributeValueOptions',
+                        model: AttributeValue.getModel(),
                         populate: {
                             path: 'attribute',
                             model: Attribute.getModel(),

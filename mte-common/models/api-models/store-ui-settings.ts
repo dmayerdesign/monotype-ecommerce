@@ -5,6 +5,6 @@ import { ProductsFilter } from './products-filter'
 @schema(StoreUiSettings)
 export class StoreUiSettings extends MongooseDocument implements IStoreUiSettings {
     @arrayProp({ itemsType: String }) public orderOfVariableAttributeSelects?: string[]
-    @arrayProp({ itemsType: [String] }) public combinedVariableAttributeSelects?: string[][]
-    @arrayProp({ itemsType: [ProductsFilter] }) public productsFilters?: ProductsFilter[]
+    @arrayProp({ itemsType: String }) public combinedVariableAttributeSelects?: string[][]
+    @arrayProp({ itemsType: ProductsFilter }) public productsFilters?: ProductsFilter[]
 }

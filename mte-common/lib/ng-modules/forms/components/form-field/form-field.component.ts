@@ -90,9 +90,19 @@ export class MteFormFieldComponent extends HeartbeatComponent implements OnInit,
         }
 
         if (nativeElement && (!this.options || typeof this.options.formControlType === 'undefined')) {
-            this.options.formControlType = nativeElement.nodeName.toLowerCase() === 'select'
-                ? 'select'
-                : 'input'
+            this.options.formControlType = (function() {
+                const nodeName = nativeElement.nodeName.toLowerCase()
+                const inputType = nativeElement.getAttribute('type')
+                if (nodeName === 'select') {
+                    return nodeName
+                }
+                else if (inputType) {
+                    if (inputType === 'checkbox') {
+                        return inputType
+                    }
+                }
+                return nodeName as 'input'
+            }())
         }
 
         fromEvent(this.element.nativeElement, 'blur')

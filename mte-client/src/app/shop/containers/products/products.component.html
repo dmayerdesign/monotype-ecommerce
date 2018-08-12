@@ -54,8 +54,37 @@
             <h2>Narrow it down</h2>
     
             <div class="products-left-sidebar-filters">
+
+                <ng-container *ngFor="let formBuilder of productsFilterFormBuilders">
+
+                    <!-- Label -->
+                    <ng-container>
+                        <h3 *ngIf="!!formBuilder.data.taxonomy"
+                            [ngClass]="formBuilder.data.taxonomy?.slug + '-filter'">
+                            {{ formBuilder.data.taxonomy?.pluralName || formBuilder.data.taxonomy?.slug }}
+                        </h3>
+                    </ng-container>
+
+                    <!-- Form -->
+                    <ng-container>
+                        <form [formGroup]="formBuilder.formGroup">
+                            <ng-container *ngIf="isChecklist(formBuilder.data.productsFilter)">
+                                <mte-form-field
+                                    *ngFor="let formControlName of formBuilder.controlNames"
+                                    [options]="formBuilder.getOptions(formControlName)">
+
+                                    <input #input
+                                        type="checkbox"
+                                        [formControlName]="formControlName"
+                                    />
+                                </mte-form-field>
+                            </ng-container>
+                        </form>
+                    </ng-container>
+
+                </ng-container>
     
-                <!-- Standard filters. -->
+                <!-- Standard filters -->
                 <div class="price-range-filter">
                     Price range
                 </div>
@@ -72,7 +101,7 @@
                     Colors
                 </div>
     
-                <!-- Custom filters. -->
+                <!-- Custom filters
                 <ng-container *ngIf="isDisplayingDiscs()">
                     <div class="disc-type-filter">
                         Disc type
@@ -104,9 +133,9 @@
                         </div>
                         
                     </form>
-                </ng-container>
+                </ng-container>-->
     
-                <button>Clear filters</button>
+                <button (click)="clearFilters()">Clear filters</button>
     
             </div>
     

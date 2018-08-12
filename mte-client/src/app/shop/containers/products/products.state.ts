@@ -11,4 +11,15 @@ export class ProductsState {
 
 export class ProductsStateManager extends Stateful<ProductsState> {
     protected _state = new ProductsState()
+
+    public setState(newState: ProductsState): void {
+        if (
+            newState.getProductsRequest &&
+            newState.getProductsRequest.filters
+        ) {
+            newState.getProductsRequest.filters = newState.getProductsRequest.filters.filter((requestFilter) =>
+                requestFilter.values && requestFilter.values.length)
+        }
+        super.setState(newState)
+    }
 }

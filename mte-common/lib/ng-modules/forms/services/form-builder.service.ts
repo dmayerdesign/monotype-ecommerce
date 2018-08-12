@@ -8,9 +8,7 @@ import { MteFormBuilder } from '../utilities/form.builder'
 export class MteFormBuilderService {
     constructor(public formBuilder: FormBuilder) { }
 
-    public create(options: MteFormGroupOptions): MteFormBuilder {
-        const mteFormBuilder = new MteFormBuilder(this.formBuilder, options)
-
-        return mteFormBuilder
+    public create<DataType = any>(options: MteFormGroupOptions): MteFormBuilder<DataType> {
+        return new MteFormBuilder<DataType>(this.formBuilder, options)
     }
 }
