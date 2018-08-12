@@ -6,7 +6,7 @@ import { MteFormBuilder } from '../utilities/form.builder'
 
 @Injectable()
 export class MteFormBuilderService {
-    constructor(public formBuilder: FormBuilder) {}
+    constructor(public formBuilder: FormBuilder) { }
 
     public create(options: MteFormGroupOptions): MteFormBuilder {
         const mteFormBuilder = new MteFormBuilder(this.formBuilder, options)

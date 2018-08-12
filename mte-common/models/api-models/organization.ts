@@ -1,5 +1,6 @@
 import { arrayProp, model, prop, MongooseDocument, MongooseSchemaOptions } from '../../lib/goosetype'
 import { Ref } from '../../lib/goosetype'
+import { Organization as IOrganization } from '../api-interfaces/organization'
 import { OrganizationType } from '../enums/organization-type'
 import { GlobalStyles } from './global-styles'
 import { OrganizationBranding } from './organization-branding'
@@ -9,7 +10,7 @@ import { Taxonomy } from './taxonomy'
 import { UiContent } from './ui-content'
 
 @model(Organization, MongooseSchemaOptions.timestamped)
-export class Organization extends MongooseDocument {
+export class Organization extends MongooseDocument implements IOrganization {
     @prop({ enum: OrganizationType }) public type?: OrganizationType
     @prop() public name: string
     @arrayProp({ itemsType: String }) public dbaNames: string[]
@@ -21,6 +22,7 @@ export class Organization extends MongooseDocument {
     @prop() public storeUiSettings?: StoreUiSettings
     @arrayProp({ itemsRef: Taxonomy }) public searchableTaxonomies?: Ref<Taxonomy>[]
     @prop() public globalStyles?: GlobalStyles
+    @prop() public defaultsHaveBeenSet: boolean
 }
 
 // Errors.

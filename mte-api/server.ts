@@ -16,7 +16,7 @@ import { passportConfig } from './auth/passport'
 import { container } from './config/inversify.config'
 import { connect } from './data-access/mongo-connection'
 import { isProduction } from './helpers/env.helper'
-import { onStart } from './helpers/startup'
+import { onStart } from './helpers/on-start'
 
 // ANGULAR UNIVERSAL
 global['XMLHttpRequest'] = xhr.XMLHttpRequest

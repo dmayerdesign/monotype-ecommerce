@@ -4,7 +4,8 @@ import { MteFormFieldOptions } from '../models/form-field-options'
 import { MteFormGroupOptions } from '../models/form-group-options'
 
 export class MteFormBuilder {
-    public _formGroup: FormGroup
+    public data?: any
+    private _formGroup: FormGroup
 
     constructor(private formBuilder: FormBuilder, private options: MteFormGroupOptions) {
         this.init()

@@ -20,4 +20,5 @@ export interface Organization extends MongooseDocument {
     storeUiSettings?: StoreUiSettings
     searchableTaxonomies?: Ref<Taxonomy>[]
     globalStyles?: GlobalStyles
+    defaultsHaveBeenSet: boolean
 }

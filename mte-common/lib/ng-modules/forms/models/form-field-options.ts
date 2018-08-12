@@ -6,5 +6,6 @@ export interface MteFormFieldOptions {
     hideLabel?: boolean
     control?: FormControl | AbstractControl
     errorMessages?: { [errorType: string]: string }
-    formControlType?: 'input'|'select'
+    formControlType?: 'input'|'select'|'checkbox'
+    data?: any
 }

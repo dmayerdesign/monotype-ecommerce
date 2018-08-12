@@ -6,7 +6,6 @@ import { InversifyExpressServer } from 'inversify-express-utils'
 import * as passport from 'passport'
 import { container } from './config/inversify.config'
 import { connect } from './data-access/mongo-connection'
-import { onStart } from './helpers/startup'
 
 function serverErrorConfig(app): void {
     app.use((err, req, res, next) => {

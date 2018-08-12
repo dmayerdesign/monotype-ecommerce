@@ -235,10 +235,10 @@ export class DbClient<M extends MongooseDocument> {
     }
 
     /**
-     * Update a document by `id`
+     * Update multiple documents.
      *
      * @param {mongoose.Model} model The Mongoose `Model` representing the collection containing the document
-     * @param {ObjectId|string} id The document's `<ObjectId>_id` field
+     * @param {ObjectId|string} ids An array of `_id`s representing the docs to be updated.
      * @param {object} update An object representing the fields to be updated
      * @param {boolean} addToArrays Set to `false` if fields should be replaced in the same way as other fields, using a MongoDB `$set`. Defaults to `true`, meaning that fields containing arrays are treated as additions to the existing array using MongoDB's `$addToSet` operator
      * @memberof DbClient
@@ -294,21 +294,21 @@ export class DbClient<M extends MongooseDocument> {
      * @param {boolean} concatArrays Set to `true` if fields containing arrays should be treated as additions to the existing array. Defaults to `false`, meaning that arrays are replaced in the same way as other fields
      * @memberof DbClient
      */
-    public async updateById<T extends MongooseDocument = M>(_model: typeof MongooseDocument, id: string|Types.ObjectId, update: Object, concatArrays = true): Promise<T> {
+    public async updateById<T extends MongooseDocument = M>(_model: typeof MongooseDocument, id: string|Types.ObjectId, update: object, concatArrays = true): Promise<T> {
         const model = _model.__model
         let document: T
 
-        function updateDoc(doc: T & Document, iterable: object) {
-            if (!iterable || !Object.keys(iterable) || !Object.keys(iterable).length) {
+        function updateDoc(doc: T & Document, enumerable: object) {
+            if (!enumerable || !Object.keys(enumerable) || !Object.keys(enumerable).length) {
                 throw new SchemaError('Invalid update')
             }
 
-            Object.keys(iterable).forEach(key => {
-                if (concatArrays && Array.isArray(iterable[key])) {
-                    doc[key] = doc[key].concat(iterable[key])
+            Object.keys(enumerable).forEach((key) => {
+                if (concatArrays && Array.isArray(enumerable[key])) {
+                    doc[key] = doc[key].concat(enumerable[key])
                 }
                 else {
-                    doc[key] = iterable[key]
+                    doc[key] = enumerable[key]
                 }
             })
         }

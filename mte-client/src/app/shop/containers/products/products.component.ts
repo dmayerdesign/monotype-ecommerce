@@ -3,14 +3,20 @@ import { FormControl, FormGroup } from '@angular/forms'
 import { ActivatedRoute, ParamMap, Router } from '@angular/router'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
+import { MteFormGroupOptions } from '@mte/common/lib/ng-modules/forms/models/form-group-options'
+import { MteFormBuilderService } from '@mte/common/lib/ng-modules/forms/services/form-builder.service'
+import { MteFormBuilder } from '@mte/common/lib/ng-modules/forms/utilities/form.builder'
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
 import { Product } from '@mte/common/models/api-interfaces/product'
 import { TaxonomyTerm } from '@mte/common/models/api-interfaces/taxonomy-term'
+import { Taxonomy } from '@mte/common/models/api-models/taxonomy'
 import { GetProductsFilter, GetProductsFilterType, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { BootstrapBreakpointKey } from '@mte/common/models/enums/bootstrap-breakpoint-key'
-import { isEqual, uniqWith } from 'lodash'
-import { merge, BehaviorSubject, Observable, Subject } from 'rxjs'
+import { ProductsFilterType } from '@mte/common/models/enums/products-filter-type'
+import { camelCase, isEqual, kebabCase, uniqWith, values } from 'lodash'
+import { BehaviorSubject, Observable } from 'rxjs'
 import { distinctUntilKeyChanged, map, takeWhile } from 'rxjs/operators'
+import { OrganizationService } from '../../../shared/services/organization.service'
 import { ShopQueryParamKeys } from '../../constants/shop-query-param-keys'
 import { ShopRouterLinks } from '../../constants/shop-router-links'
 import { ProductService } from '../../services/product.service'
@@ -32,6 +38,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     public taxonomyTerm: TaxonomyTerm
     public leftSidebarIsExpandeds: BehaviorSubject<boolean>
     public stateManager = new ProductsStateManager()
+    public productsFilterForms: MteFormBuilder[]
 
     // Custom.
     // TODO: move elsewhere.
@@ -48,15 +55,100 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
         private _taxonomyTermService: TaxonomyTermService,
         private _activatedRoute: ActivatedRoute,
         private _router: Router,
+        private _mteFormBuilderService: MteFormBuilderService,
+        private _organizationService: OrganizationService
     ) { super() }
 
     public ngOnInit(): void {
+        const { storeUiSettings } = this._organizationService.organization
 
         // Expand the left sidebar if the screen width is large or above.
 
         this.leftSidebarIsExpandeds = new BehaviorSubject(
             this.windowRef.mediaBreakpointAbove(BootstrapBreakpointKey.Lg)
         )
+
+        // Set up the filters.
+        // TODO: Instead of importing `productsFilters`, get `organization.storeUiSettings.productsFilters`.
+
+        this.productsFilterForms = values(storeUiSettings.productsFilters).map((productsFilter) => {
+            const formGroupOptions: MteFormGroupOptions = {}
+            // TODO: Add support for AttributeValueChecklist
+            if (productsFilter.filterType === ProductsFilterType.TaxonomyTermChecklist) {
+                const taxonomy = (productsFilter.taxonomyTermOptions[0] as TaxonomyTerm).taxonomy as Taxonomy
+                productsFilter.taxonomyTermOptions.forEach((taxonomyTerm: TaxonomyTerm) => {
+                    formGroupOptions[camelCase(taxonomyTerm.slug)] = {
+                        defaultValue: false,
+                        label: taxonomyTerm.singularName || taxonomyTerm.slug,
+                        formControlType: 'checkbox',
+                    }
+                })
+                const mteFormBuilder = this._mteFormBuilderService.create(formGroupOptions)
+                mteFormBuilder.data = {
+                    label: taxonomy.pluralName,
+                }
+                mteFormBuilder.formGroup.valueChanges.subscribe((formValue) => {
+                    const request = this.stateManager.state.getProductsRequest
+                    const newRequestFilters = !!request.filters
+                        ? [ ...request.filters ]
+                        : []
+                    const newRequest = {
+                        ...request,
+                        filters: newRequestFilters
+                    }
+                    const indexOfExistingFilter = newRequestFilters.findIndex((filter) => {
+                        return filter.values.some((filterValue) =>
+                            productsFilter.taxonomyTermOptions.some((taxonomyTerm: TaxonomyTerm) =>
+                                filterValue === taxonomyTerm.slug))
+                    })
+                    if (indexOfExistingFilter > -1) {
+                        newRequestFilters.splice(indexOfExistingFilter, 1)
+                    }
+                    newRequestFilters.push({
+                        type: GetProductsFilterType.TaxonomyTerm,
+                        values: Object.keys(formValue).map((key) => kebabCase(key))
+                    })
+                    this.stateManager.setState({ getProductsRequest: newRequest })
+                })
+                return mteFormBuilder
+            }
+
+            /*
+            this.stabilitiesFormGroup.valueChanges.subscribe((value) => {
+                const request = this.stateManager.state.getProductsRequest
+                const newRequestFilters = !!request.filters
+                    ? [ ...request.filters ]
+                    : []
+                const newRequest = {
+                    ...request,
+                    filters: newRequestFilters
+                }
+                const indexOfExistingStabilityFilter = newRequestFilters.findIndex((filter) => {
+                    return filter.values.some((filterValue) =>
+                        filterValue.indexOf('stability-') === 0)
+                })
+                if (indexOfExistingStabilityFilter > -1) {
+                    newRequestFilters.splice(indexOfExistingStabilityFilter, 1)
+                }
+                const values = []
+                if (value.underStable) {
+                    values.push('stability-understable')
+                }
+                if (value.stable) {
+                    values.push('stability-stable')
+                }
+                if (value.overStable) {
+                    values.push('stability-overstable')
+                }
+                newRequestFilters.push({
+                    type: GetProductsFilterType.TaxonomyTerm,
+                    values
+                })
+
+                this.stateManager.setState({ getProductsRequest: newRequest })
+            })
+            */
+        })
 
         // Execute the request any time it changes.
 
@@ -67,6 +159,28 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
             )
             .subscribe((request) => {
                 this.executeRequest(request)
+
+                // Custom functionality.
+                // TODO: move elsewhere.
+
+                if (request.filters) {
+                    request.filters.forEach((filter) => {
+                        filter.values.filter((value) => value.indexOf('stability-') === 0)
+                            .forEach((stabilityTaxTerm) => {
+                                if (stabilityTaxTerm === 'stability-understable' && this.stabilitiesFormGroup.get('underStable').value === false) {
+                                    this.stabilitiesFormGroup.patchValue({ underStable: true })
+                                }
+                                if (stabilityTaxTerm === 'stability-stable' && this.stabilitiesFormGroup.get('stable').value === false) {
+                                    this.stabilitiesFormGroup.patchValue({ stable: true })
+                                }
+                                if (stabilityTaxTerm === 'stability-overstable' && this.stabilitiesFormGroup.get('overStable').value === false) {
+                                    this.stabilitiesFormGroup.patchValue({ overStable: true })
+                                }
+                            })
+                    })
+                }
+
+                // END Custom functionality.
             })
 
         // Construct a new request when the query params change.
@@ -86,26 +200,6 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                 if (newRequest) {
                     this.stateManager.setState({
                         getProductsRequest: newRequest
-                    })
-                }
-
-                // Custom functionality.
-                // TODO: move elsewhere.
-
-                if (this.stateManager.state.getProductsRequest.filters) {
-                    this.stateManager.state.getProductsRequest.filters.forEach((filter) => {
-                        filter.values.filter((value) => value.indexOf('stability-') === 0)
-                            .forEach((stabilityTaxTerm) => {
-                                if (stabilityTaxTerm === 'stability-understable') {
-                                    this.stabilitiesFormGroup.patchValue({ underStable: true })
-                                }
-                                if (stabilityTaxTerm === 'stability-stable') {
-                                    this.stabilitiesFormGroup.patchValue({ stable: true })
-                                }
-                                if (stabilityTaxTerm === 'stability-overstable') {
-                                    this.stabilitiesFormGroup.patchValue({ overStable: true })
-                                }
-                            })
                     })
                 }
             })
@@ -158,6 +252,8 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
 
             this.stateManager.setState({ getProductsRequest: newRequest })
         })
+
+        // END Custom functionality.
     }
 
     private _createRequestFromQueryParamMap(queryParamMap: ParamMap): GetProductsRequest {
@@ -292,4 +388,6 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
             product.taxonomyTerms.some((taxTerm: TaxonomyTerm) =>
                 taxTerm.slug === 'product-type-discs'))
     }
+
+    // END Custom functionality.
 }
