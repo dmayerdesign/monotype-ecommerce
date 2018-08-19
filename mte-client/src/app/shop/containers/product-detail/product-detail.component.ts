@@ -96,6 +96,10 @@ import { ProductService } from '../../services/product.service'
                                 [disabled]="addToCartShouldBeDisabled()">
                                 Add to {{ organization.branding.cartName || 'cart' }}
                             </button>
+                            <div *ngIf="showAddToCartSuccess"
+                                class="product-detail-add-to-cart--success">
+                                Added! <button (click)="undoAddToCart()">Undo</button>
+                            </div>
                         </div>
                     </div>
                 </ng-container>
@@ -130,24 +134,17 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
     // State.
 
     public organization: Organization
-    /**
-     * Represents the product that is displayed when the view is loaded.
-     */
+    /** Represents the product that is displayed when the view is loaded. */
     public parentOrStandalone: Product
-    /**
-     * Represents any variations associated with the product, if the product is a Parent.
-     */
+    /** Represents any variations associated with the product, if the product is a Parent. */
     public variations: Product[]
-    /**
-     * Represents the product that will be added to the cart.
-     */
+    /** Represents the product that will be added to the cart. */
     public selectedProduct: Product
-    /**
-     * Represents the product currently being displayed.
-     */
+    /** Represents the product currently being displayed. */
     public displayedProduct: Product
     public quantityToAdd = 1
     public addingToCart = false
+    public showAddToCartSuccess = false
 
     // Custom regions.
 
@@ -274,11 +271,13 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
 
     // Interactions.
 
-    public addToCart(): void {
+    public async addToCart(): Promise<void> {
         if (!this.selectedProduct) return
         this.addingToCart = true
-        this.cartService.add(this.selectedProduct._id, this.quantityToAdd)
-            .then(() => this.addingToCart = false)
+        await this.cartService.add(this.selectedProduct._id, this.quantityToAdd)
+        this.addingToCart = false
+        this.showAddToCartSuccess = true
+        setTimeout(() => this.showAddToCartSuccess = false, 6000)
     }
 
     // Event handlers.
@@ -291,5 +290,9 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
 
     public handleDisplayedProductChange(variation: Product): void {
         this.displayedProduct = variation
+    }
+
+    public undoAddToCart(): void {
+        this.cartService.store.stepBackward()
     }
 }

@@ -1,5 +1,4 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
-import { FormControl, FormGroup } from '@angular/forms'
 import { ActivatedRoute, ParamMap, Router } from '@angular/router'
 import { MongooseHelper as mh } from '@mte/common/helpers/mongoose.helper'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
@@ -8,6 +7,7 @@ import { MteFormGroupOptions } from '@mte/common/lib/ng-modules/forms/models/for
 import { MteFormBuilderService } from '@mte/common/lib/ng-modules/forms/services/form-builder.service'
 import { MteFormBuilder } from '@mte/common/lib/ng-modules/forms/utilities/form.builder'
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
+import { Store } from '@mte/common/lib/state-manager/store'
 import { Attribute } from '@mte/common/models/api-interfaces/attribute'
 import { Product } from '@mte/common/models/api-interfaces/product'
 import { ProductsFilter } from '@mte/common/models/api-interfaces/products-filter'
@@ -18,13 +18,15 @@ import { BootstrapBreakpointKey } from '@mte/common/models/enums/bootstrap-break
 import { ProductsFilterType } from '@mte/common/models/enums/products-filter-type'
 import { camelCase, isEqual, kebabCase, uniqWith } from 'lodash'
 import { BehaviorSubject, Observable } from 'rxjs'
-import { debounceTime, distinctUntilKeyChanged, filter, map, takeWhile } from 'rxjs/operators'
+import { debounceTime, filter, map, takeWhile } from 'rxjs/operators'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { ShopQueryParamKeys } from '../../constants/shop-query-param-keys'
 import { ShopRouterLinks } from '../../constants/shop-router-links'
 import { ProductService } from '../../services/product.service'
 import { TaxonomyTermService } from '../../services/taxonomy-term.service'
-import { ProductsStateManager } from './products.state'
+import { GetProductsRequestFromRouteUpdate, GetProductsRequestUpdate } from './products.actions'
+import { productsReducer } from './products.reducer'
+import { ProductsState } from './products.state'
 
 export interface ProductsFilterFormData {
     taxonomy?: Taxonomy
@@ -46,17 +48,8 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     public productsSource: Observable<Product[]>
     public taxonomyTerm: TaxonomyTerm
     public leftSidebarIsExpandeds: BehaviorSubject<boolean>
-    public stateManager = new ProductsStateManager()
+    public store = new Store<ProductsState>(new ProductsState(), productsReducer)
     public productsFilterFormBuilders: MteFormBuilder[]
-
-    // Custom.
-    // TODO: move elsewhere.
-
-    public stabilitiesFormGroup = new FormGroup({
-        underStable: new FormControl(false),
-        stable: new FormControl(false),
-        overStable: new FormControl(false),
-    })
 
     constructor(
         public windowRef: WindowRefService,
@@ -119,7 +112,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                         )
                         .subscribe((formValue) => {
                             lastFormValue = formValue
-                            const request = this.stateManager.state.getProductsRequest
+                            const request = this.store.state.getProductsRequest
                             const newRequestFilters = !!request.filters
                                 ? [ ...request.filters ]
                                 : []
@@ -141,7 +134,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                                     .filter((key) => !!formValue[key])
                                     .map((key) => kebabCase(key))
                             })
-                            this.stateManager.setState({ getProductsRequest: newRequest })
+                            this.store.dispatch(new GetProductsRequestUpdate(newRequest))
                         })
                     return mteFormBuilder
                 }
@@ -150,17 +143,17 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
 
         // Execute the request any time it changes.
 
-        this.stateManager.states
+        this.store.reactTo(GetProductsRequestUpdate)
             .pipe(
-                distinctUntilKeyChanged('getProductsRequest'),
-                map((state) => state.getProductsRequest),
-                debounceTime(100), // Makes sure that `clearFilters` doesn't trigger multiple requests.
+                // Makes sure that `clearFilters` doesn't trigger multiple requests.
+                debounceTime(100),
+                map(() => this.store.state)
             )
-            .subscribe((request) => {
-                this.executeRequest(request)
+            .subscribe(({ getProductsRequest }) => {
+                this.executeRequest(getProductsRequest)
 
-                if (request.filters) {
-                    request.filters.forEach((filter) => {
+                if (getProductsRequest.filters) {
+                    getProductsRequest.filters.forEach((filter) => {
                         filter.values.forEach((filterValue) => {
                             this.productsFilterFormBuilders
                                 .map((formBuilder) => formBuilder.formGroup)
@@ -192,9 +185,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                 newRequest = this._mutateRequestFromRouteParamMap(newRequest, paramMap)
 
                 if (newRequest) {
-                    this.stateManager.setState({
-                        getProductsRequest: newRequest
-                    })
+                    this.store.dispatch(new GetProductsRequestUpdate(newRequest))
                 }
             })
 
@@ -204,10 +195,11 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
             .pipe(takeWhile(() => this.isAlive))
             .subscribe((paramMap) => {
                 const getProductsRequest = this._mutateRequestFromRouteParamMap(
-                    this.stateManager.state.getProductsRequest,
+                    this.store.state.getProductsRequest,
                     paramMap
                 )
-                this.stateManager.setState({ getProductsRequest })
+                // this.stateManager.setState({ getProductsRequest })
+                this.store.dispatch(new GetProductsRequestUpdate(getProductsRequest))
             })
     }
 
@@ -236,8 +228,8 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
 
             // Always clear whichever filter was created by the last `/for/:taxonomySlug...` route.
 
-            const lastTaxonomySlugFromRoute = this.stateManager.state.getProductsRequestFromRoute.taxonomySlug
-            const lastTaxTermSlugFromRoute = this.stateManager.state.getProductsRequestFromRoute.taxonomyTermSlug
+            const lastTaxonomySlugFromRoute = this.store.state.getProductsRequestFromRoute.taxonomySlug
+            const lastTaxTermSlugFromRoute = this.store.state.getProductsRequestFromRoute.taxonomyTermSlug
             if (lastTaxonomySlugFromRoute && lastTaxTermSlugFromRoute) {
                 const indexOfFilterToRemove = request.filters.findIndex((filter) =>
                     filter.type === GetProductsFilterType.TaxonomyTerm &&
@@ -258,12 +250,10 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                 },
             ], isEqual)
 
-            this.stateManager.setState({
-                getProductsRequestFromRoute: {
-                    taxonomySlug,
-                    taxonomyTermSlug: `${taxonomySlug}-${partialTermSlug}`
-                }
-            })
+            this.store.dispatch(new GetProductsRequestFromRouteUpdate({
+                taxonomySlug,
+                taxonomyTermSlug: `${taxonomySlug}-${partialTermSlug}`
+            }))
         }
 
         return request
@@ -284,7 +274,9 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
             requestedTaxonomyTermFilter = request.filters && request.filters.filter((filter) => filter.type === GetProductsFilterType.TaxonomyTerm).length === 1
                 ? request.filters.find((filter) => filter.type === GetProductsFilterType.TaxonomyTerm)
                 : undefined
-            requestedTaxonomyTermSlug = requestedTaxonomyTermFilter && requestedTaxonomyTermFilter.values
+            requestedTaxonomyTermSlug = requestedTaxonomyTermFilter &&
+                requestedTaxonomyTermFilter.values &&
+                requestedTaxonomyTermFilter.values.length === 1
                 // Note: we don't need the `key` from the filter since TaxonomyTerm slugs are unique.
                 ? requestedTaxonomyTermFilter.values[0]
                 : undefined

@@ -18,7 +18,7 @@ import { CartState } from './cart.state'
 
 @Injectable({ providedIn: 'root' })
 export class CartService {
-    public store: Store<CartState>
+    public store = new Store<CartState>(new CartState(), cartReducer)
 
     constructor(
         private _util: UtilService,
@@ -26,10 +26,7 @@ export class CartService {
         private _organizationService: OrganizationService,
         private _userService: UserService,
     ) {
-        this.store = new Store<CartState>(new CartState(), cartReducer)
-        this._organizationService.organizations.subscribe(org => {
-            this.init()
-        })
+        this._organizationService.organizations.subscribe(() => this.init())
     }
 
     public get cart(): Cart {
@@ -40,13 +37,7 @@ export class CartService {
 
         // Register side effects.
 
-        this.store.actions
-            .pipe(
-                filter((action) =>
-                    !(action instanceof CartTotalUpdate) &&
-                    !(action instanceof CartItemsUpdate)
-                )
-            )
+        this.store.reactTo<CartTotalUpdate | CartItemsUpdate>(CartTotalUpdate, CartItemsUpdate)
             .subscribe(() => this.updateAndStream())
 
         // Set state.

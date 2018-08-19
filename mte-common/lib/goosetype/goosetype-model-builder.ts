@@ -58,8 +58,9 @@ export class ModelBuilder {
         this[which][camelCase(constructorName)] = definition
     }
 
-    public isValidPrimitiveOrObject(type): boolean {
+    public isValidPrimitiveOrObject(type: any): boolean {
         return (
+            Array.isArray(type) ||
             type === String ||
             type === Number ||
             type === Boolean ||
