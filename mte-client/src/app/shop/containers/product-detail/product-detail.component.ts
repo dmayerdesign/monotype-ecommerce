@@ -277,7 +277,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
         await this.cartService.add(this.selectedProduct._id, this.quantityToAdd)
         this.addingToCart = false
         this.showAddToCartSuccess = true
-        setTimeout(() => this.showAddToCartSuccess = false, 6000)
+        setTimeout(() => this.showAddToCartSuccess = false, 10000)
     }
 
     // Event handlers.
@@ -293,6 +293,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
     }
 
     public undoAddToCart(): void {
-        this.cartService.store.stepBackward()
+        this.cartService.store.stepBackward(4)
+        this.showAddToCartSuccess = false
     }
 }

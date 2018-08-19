@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core'
 import { ApiEndpoints } from '@mte/common/constants'
 import { LocalStorageKeys } from '@mte/common/constants/local-storage-keys'
 import { CartHelper } from '@mte/common/helpers/cart.helper'
+import { Action } from '@mte/common/lib/state-manager/action'
 import { Store } from '@mte/common/lib/state-manager/store'
 import { Cart } from '@mte/common/models/api-interfaces/cart'
 import { CartItem } from '@mte/common/models/api-interfaces/cart-item'
@@ -37,8 +38,15 @@ export class CartService {
 
         // Register side effects.
 
-        this.store.reactTo<CartTotalUpdate | CartItemsUpdate>(CartTotalUpdate, CartItemsUpdate)
-            .subscribe(() => this.updateAndStream())
+        this.store.reactTo()
+            .subscribe((action) => {
+                if (
+                    !(action instanceof CartTotalUpdate) &&
+                    !(action instanceof CartItemsUpdate)
+                ) {
+                    this.updateAndStream()
+                }
+            })
 
         // Set state.
 

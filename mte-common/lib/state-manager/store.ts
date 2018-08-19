@@ -48,40 +48,60 @@ export class Store<StateType> {
 
     public reactTo<ActionType extends Action = Action>(...actionTypes: Type<ActionType>[]): Observable<ActionType> {
         return this._completedActions.pipe(
-            filter<ActionType>((action) =>
-                !!actionTypes.find((actionType) => action instanceof actionType)
-            )
+            filter<ActionType>((action) => {
+                if (actionTypes.length) {
+                    return !!actionTypes.find((actionType) => action instanceof actionType)
+                } else {
+                    return true
+                }
+            })
         )
     }
 
     public anticipate<ActionType extends Action = Action>(...actionTypes: Type<ActionType>[]): Observable<ActionType> {
         return this._incomingActions.pipe(
-            filter<ActionType>((action) =>
-                !!actionTypes.find((actionType) => action instanceof actionType)
-            )
+            filter<ActionType>((action) => {
+                if (actionTypes.length) {
+                    return !!actionTypes.find((actionType) => action instanceof actionType)
+                } else {
+                    return true
+                }
+            })
         )
     }
 
-    public stepBackward(): Observable<boolean> {
-        if (this._history.length > 0) {
-            const { state } = this._history[this._history.length - 1]
-            this._statePump.next(state)
-            this._future.push(this._history.pop())
+    /** Experimental */
+    public stepBackward(times = 1): Observable<boolean> {
+        if (this._history.length >= times) {
+            for (let i = 0; i < times; i++) {
+                if (i === times - 1) {
+                    const { action, state } = this._history[this._history.length - 1]
+                    this._incomingActionPump.next(action)
+                    this._statePump.next(state)
+                    this._completedActionPump.next(action)
+                }
+                this._future.push(this._history.pop())
+            }
+            console.log(this._history, this._future)
             return observableOf(true)
         }
         return observableOf(false)
     }
 
+    /** Experimental */
     public stepForward(): Observable<boolean> {
         if (this._future.length > 0) {
-            const { state } = this._future[this._future.length - 1]
+            const { action, state } = this._future[this._future.length - 1]
+            this._incomingActionPump.next(action)
             this._statePump.next(state)
+            this._completedActionPump.next(action)
             this._history.push(this._future.pop())
             return observableOf(true)
         }
         return observableOf(false)
     }
 
+    /** Experimental */
     public redoPreviousAction(): Observable<boolean> {
         if (this._history.length > 0) {
             const { action } = this._history[this._history.length - 1]
@@ -90,6 +110,7 @@ export class Store<StateType> {
         return observableOf(false)
     }
 
+    /** Experimental */
     public doNextAction(): Observable<boolean> {
         if (this._future.length > 0) {
             const { action } = this._future[this._future.length - 1]

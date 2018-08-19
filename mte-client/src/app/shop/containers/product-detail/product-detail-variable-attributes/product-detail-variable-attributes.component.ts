@@ -33,6 +33,11 @@ import { ProductService } from '../../../services/product.service'
                                 [disabled]="variableAttrSelect.selectedOptionModel !== null">
                                 Select {{ variableAttrSelect.attribute.displayName || variableAttrSelect.attribute.slug }}
                             </option>
+
+                            <!--
+                                TODO: Disable an option if it's in stock but the last one has been
+                                added to cart.
+                            -->
                             <option *ngFor="let option of variableAttrSelect.options"
                                 [ngValue]="option"
                                 [disabled]="!variableAttrSelect.optionIsAvailable(option)">
@@ -105,6 +110,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
                 // Update the list of matching variations and let each VariableAttributeSelect know.
 
                 this.matchingVariations = this.getMatchingVariations(selectedOptions)
+                    .filter((variation) => variation.stockQuantity && variation.stockQuantity > 0)
                 this.variableAttributeSelects.forEach((variableAttrSelect) => {
                     variableAttrSelect.setStateSilently({ matchingVariations: this.matchingVariations })
                     setTimeout(() => variableAttrSelect.update(true))
