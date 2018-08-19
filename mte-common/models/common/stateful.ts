@@ -7,31 +7,39 @@ export abstract class Stateful<T> {
     public states = this._statePump.asObservable()
     public onStateChange: (newState: T) => void
 
+    constructor() {
+        this.states.subscribe(() => {
+            if (
+                !this._isSilent &&
+                typeof this.onStateChange === 'function'
+            ) {
+                this.onStateChange(this._state)
+            }
+        })
+    }
+
     public setState(newState: T): void {
         this._state = Object.assign({}, this._state, newState)
         if (!this._isSilent) {
             this._statePump.next(this._state)
-            if (typeof this.onStateChange === 'function') {
-                this.onStateChange(this._state)
-            }
         }
     }
 
     public setStateSilently(newState: T): void {
-        this.silence()
+        this._silence()
         this.setState(newState)
-        this.unsilence()
+        this._unsilence()
     }
 
     public get state(): T {
         return this._state
     }
 
-    private silence(): void {
+    private _silence(): void {
         this._isSilent = true
     }
 
-    private unsilence(): void {
+    private _unsilence(): void {
         this._isSilent = false
     }
 }

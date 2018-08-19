@@ -1,19 +1,18 @@
 import {
+    HttpErrorResponse,
     HttpEvent,
     HttpHandler,
     HttpInterceptor,
     HttpRequest,
-    HttpErrorResponse,
 } from '@angular/common/http'
 import { Inject, Injectable } from '@angular/core'
-import { Observable, of, throwError } from 'rxjs'
+import { of, throwError, Observable } from 'rxjs'
 import { catchError, switchMap } from 'rxjs/operators'
 
 import { HttpStatus } from '../../../constants'
 import { HttpInjectionTokens } from './http.injection-tokens'
 import { IHttpSettings, SimpleError } from './http.models'
 import { MteHttpService } from './http.service'
-import { AnalysisSchemeStatusList } from 'aws-sdk/clients/cloudsearch';
 
 @Injectable()
 export class MteHttpResponseInterceptor implements HttpInterceptor {

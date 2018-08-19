@@ -1,49 +1,21 @@
-import { cloneDeep } from 'lodash'
 import { CustomRegion } from '../models/api-models/custom-region'
 import { CustomRegions } from '../models/api-models/custom-regions'
 
 export class CustomRegionsHelper {
     public static hasDataForCustomRegion(customRegion: CustomRegion, data: any): boolean {
-        return !!this.getCustomRegionTextValueFromArrayProperty(customRegion, data)
-    }
-
-    public static getCustomRegionTextValueFromArrayProperty(customRegion: CustomRegion, data: any): string {
-        function lookUpProperty(pathToDataArrayPropertyLookupKey: string): (prop: any) => any {
-            return function(prop: any): any {
-                let value = prop
-                pathToDataArrayPropertyLookupKey.split('.').forEach((key) => {
-                    value = value[key]
-                })
-                return value === customRegion.dataArrayPropertyLookupValue
-            }
-        }
-        const arrayElement = !!data[customRegion.dataArrayProperty]
-            ? data[customRegion.dataArrayProperty].find(lookUpProperty(customRegion.pathToDataArrayPropertyLookupKey))
-            : null
-        if (!!arrayElement) {
-            return `${arrayElement[customRegion.pathToDataPropertyValue]}`
-        }
-        return ''
+        return !!this._getCustomRegionTextValueFromArrayProperty(customRegion, data)
     }
 
     public static getCustomRegionHtml(customRegion: CustomRegion, data: any): string {
-        const delimiter = '{}'
-
-        const parseHtmlString = (_customRegion: CustomRegion, _data: any): string => {
-            const value = this.getCustomRegionTextValueFromArrayProperty(_customRegion, _data)
-
-            if (!_customRegion.template) return value
-            return _customRegion.template.split(delimiter).join(value)
-        }
-
         if (customRegion.isMetaRegion && !!customRegion.childRegions) {
             const childRegionsMap: { [key: string]: string } = {}
             let parsedTemplate = customRegion.template
             customRegion.childRegions.forEach((childRegion) => {
-                childRegionsMap[childRegion.key] = parseHtmlString(childRegion, data)
+                childRegionsMap[childRegion.key] = this._parseHtmlString(childRegion, data)
             })
             Object.keys(childRegionsMap).forEach((key) => {
-                const interpolationMatch = customRegion.template.match(new RegExp('\\{\\{(\\s)*' + key + '(\\s)*\\}\\}', 'g'))
+                const interpolationMatch = customRegion.template
+                    .match(new RegExp('\\{\\{(\\s)*' + key + '(\\s)*\\}\\}', 'g'))
                 const childRegionParsedHtml = childRegionsMap[key]
                 if (!!interpolationMatch) {
                     interpolationMatch.forEach((match) => parsedTemplate = parsedTemplate.replace(match, childRegionParsedHtml))
@@ -51,7 +23,7 @@ export class CustomRegionsHelper {
             })
             return parsedTemplate
         } else {
-            return parseHtmlString(customRegion, data)
+            return this._parseHtmlString(customRegion, data)
         }
     }
 
@@ -68,5 +40,35 @@ export class CustomRegionsHelper {
             })
 
         return newCustomRegions
+    }
+
+    private static _parseHtmlString(_customRegion: CustomRegion, _data: any): string {
+        const delimiter1 = '{}' // TODO: Deprecate
+        const delimiter2 = '%%'
+        const value = this._getCustomRegionTextValueFromArrayProperty(_customRegion, _data)
+
+        if (!_customRegion.template) return value
+        return _customRegion.template
+            .split(delimiter1).join(value)
+            .split(delimiter2).join(value)
+    }
+
+    private static _getCustomRegionTextValueFromArrayProperty(customRegion: CustomRegion, data: any): string {
+        function lookUpProperty(pathToDataArrayPropertyLookupKey: string): (prop: any) => any {
+            return function(prop: any): any {
+                let value = prop
+                pathToDataArrayPropertyLookupKey.split('.').forEach((key) => {
+                    value = value[key]
+                })
+                return value === customRegion.dataArrayPropertyLookupValue
+            }
+        }
+        const arrayElement = !!data[customRegion.dataArrayProperty]
+            ? data[customRegion.dataArrayProperty].find(lookUpProperty(customRegion.pathToDataArrayPropertyLookupKey))
+            : null
+        if (!!arrayElement) {
+            return `${arrayElement[customRegion.pathToDataPropertyValue]}`
+        }
+        return ''
     }
 }

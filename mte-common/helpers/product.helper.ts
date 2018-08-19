@@ -1,13 +1,14 @@
-import { Attribute } from '@mte/common/models/api-models/attribute'
-import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
-import { Price } from '@mte/common/models/api-models/price'
-import { Product } from '@mte/common/models/api-models/product'
-import { SimpleAttributeValue } from '@mte/common/models/api-models/simple-attribute-value'
-import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
+import { Price } from '@mte/common/models/api-interfaces/price'
+import { Product } from '@mte/common/models/api-interfaces/product'
+import { TaxonomyTerm } from '@mte/common/models/api-interfaces/taxonomy-term'
 import { Currency } from '@mte/common/models/enums/currency'
-import { VariableAttributeSelectOption } from '@mte/common/models/ui-models/variable-attribute-select'
 
 export class ProductHelper {
+    public static isProduct(obj: any): boolean {
+        return obj.cartItemsRefModelName === 'Product'
+            || (obj.isParent || obj.isVariation || obj.isStandalone)
+    }
+
     public static getBrand(product: Product): TaxonomyTerm {
         return product ? product.taxonomyTerms.find((t: TaxonomyTerm) => t.slug.indexOf('brand') > -1) as TaxonomyTerm : null
     }

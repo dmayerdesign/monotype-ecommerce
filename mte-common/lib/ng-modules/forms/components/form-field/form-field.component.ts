@@ -8,8 +8,7 @@ import {
     OnInit,
     TemplateRef,
 } from '@angular/core'
-import { FormControl } from '@angular/forms'
-import { Observable, fromEvent } from 'rxjs'
+import { fromEvent } from 'rxjs'
 import { takeWhile } from 'rxjs/operators'
 
 import { Copy } from '@mte/common/constants/copy'
@@ -51,8 +50,6 @@ export class MteFormFieldComponent extends HeartbeatComponent implements OnInit,
 
     public element: ElementRef
     public errorMessage: string
-    private parentValue: object = null
-    private value: string = null
     public hasBlurred = false
     public isFocused = false
 
@@ -70,15 +67,17 @@ export class MteFormFieldComponent extends HeartbeatComponent implements OnInit,
         }
 
         if (control) {
-            control.valueChanges.pipe(takeWhile(() => this.isAlive))
-                .subscribe((value) => {
-                    this.value = value
+            control.statusChanges.pipe(takeWhile(() => this.isAlive))
+                .subscribe(() => {
+                    this.setErrorMessage()
                 })
 
-            control.parent.valueChanges.pipe(takeWhile(() => this.isAlive))
-                .subscribe((value) => {
-                    this.parentValue = value
-                })
+            if (control.parent) {
+                control.parent.statusChanges.pipe(takeWhile(() => this.isAlive))
+                    .subscribe(() => {
+                        this.setErrorMessage()
+                    })
+            }
         }
     }
 
@@ -91,9 +90,19 @@ export class MteFormFieldComponent extends HeartbeatComponent implements OnInit,
         }
 
         if (nativeElement && (!this.options || typeof this.options.formControlType === 'undefined')) {
-            this.options.formControlType = nativeElement.nodeName.toLowerCase() === 'select'
-                ? 'select'
-                : 'input'
+            this.options.formControlType = (function() {
+                const nodeName = nativeElement.nodeName.toLowerCase()
+                const inputType = nativeElement.getAttribute('type')
+                if (nodeName === 'select') {
+                    return nodeName
+                }
+                else if (inputType) {
+                    if (inputType === 'checkbox') {
+                        return inputType
+                    }
+                }
+                return nodeName as 'input'
+            }())
         }
 
         fromEvent(this.element.nativeElement, 'blur')

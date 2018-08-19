@@ -1,9 +1,8 @@
 import { CartHelper } from '@mte/common/helpers/cart.helper'
-import { Action } from '@mte/common/lib/state-manager/action'
 import { Cart } from '@mte/common/models/api-interfaces/cart'
-import { Product } from '@mte/common/models/api-interfaces/product'
+import { CartItem } from '@mte/common/models/api-interfaces/cart-item'
 import { cloneDeep } from 'lodash'
-import { CartAction, CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartUpdate, CartTotalUpdate } from './cart.actions'
+import { CartAction, CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartTotalUpdate, CartUpdate } from './cart.actions'
 import { CartState } from './cart.state'
 
 export function cartReducer(state: CartState, action: CartAction): CartState {
@@ -30,8 +29,8 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
     // Add item.
     if (action instanceof CartItemAddition) {
         const { item, quantity } = action.payload
-        const productsAvailable = CartHelper.getNumberAvailableToAdd(cart as Cart, item)
-        const amtToAdd = productsAvailable >= quantity ? quantity : productsAvailable
+        const itemsAvailable = CartHelper.getNumberAvailableToAdd(cart as Cart, item)
+        const amtToAdd = itemsAvailable >= quantity ? quantity : itemsAvailable
         for (let i = 0; i < amtToAdd; i++) {
             cart.items.push(item)
         }
@@ -49,7 +48,7 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
 
     if (action instanceof CartItemQuantityDecrement) {
         const item = action.payload
-        const index = cart.items.findIndex((i: Product) => i.slug === item.slug)
+        const index = cart.items.findIndex((i: CartItem) => i.slug === item.slug)
         if (index > -1) {
             cart.items.splice(index, 1)
         } else {
@@ -60,8 +59,8 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
     // Remove item.
     if (action instanceof CartItemRemoval) {
         const item = action.payload
-        while (cart.items.findIndex((i: Product) => i.slug === item.slug) > -1) {
-            cart.items.splice(cart.items.findIndex((i: Product) => i.slug === item.slug), 1)
+        while (cart.items.findIndex((i: CartItem) => i.slug === item.slug) > -1) {
+            cart.items.splice(cart.items.findIndex((i: CartItem) => i.slug === item.slug), 1)
         }
     }
 

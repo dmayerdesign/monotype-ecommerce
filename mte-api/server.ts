@@ -1,5 +1,6 @@
 require('dotenv').config()
 
+import { Copy } from '@mte/common/constants'
 import * as bodyParser from 'body-parser'
 import * as cookieParser from 'cookie-parser'
 import * as express from 'express'
@@ -15,7 +16,7 @@ import { passportConfig } from './auth/passport'
 import { container } from './config/inversify.config'
 import { connect } from './data-access/mongo-connection'
 import { isProduction } from './helpers/env.helper'
-import { onStart } from './helpers/startup'
+import { onStart } from './helpers/on-start'
 
 // ANGULAR UNIVERSAL
 global['XMLHttpRequest'] = xhr.XMLHttpRequest
@@ -26,7 +27,7 @@ import { AppServerModule } from '../mte-client/src/app/app.server.module'
 function serverErrorConfig(app) {
     app.use((err, req, res, next) => {
         console.error(err.stack)
-        res.status(500).send('Something broke!')
+        res.status(500).send(Copy.ErrorMessages.generic)
     })
 }
 

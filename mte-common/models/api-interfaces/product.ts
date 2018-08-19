@@ -1,4 +1,3 @@
-import { ImageHelper } from '../../helpers/image.helper'
 import { ProductClass } from '../enums/product-class'
 import { Attribute } from './attribute'
 import { AttributeValue } from './attribute-value'
@@ -10,6 +9,7 @@ import { Ref } from './ref'
 import { SimpleAttributeValue } from './simple-attribute-value'
 import { TaxonomyTerm } from './taxonomy-term'
 import { Units } from './units'
+import { Weight } from './weight'
 
 export interface Product extends MongooseDocument {
 	// Aesthetic.
@@ -26,6 +26,7 @@ export interface Product extends MongooseDocument {
     isParent: boolean
     parentSku: string
     parent: Ref<Product>
+    cartItemsRefModelName: string
 
     // Financial.
     price: Price
@@ -50,13 +51,13 @@ export interface Product extends MongooseDocument {
 
 	// Taxonomy.
     taxonomyTerms: Ref<TaxonomyTerm>[]
-    taxonomyTermSlugs: string[]
+    taxonomyTermSlugs: string[] // TODO: remove (used for convenience in HyzerShop migration for building image urls)
 
 	// Shipping.
     units: Units
     dimensions: Dimensions
-    shippingWeight: number
-    netWeight: number
+    shippingWeight: Weight
+    netWeight: Weight
 
 	// Additional tax.
     additionalTax: number

@@ -1,12 +1,17 @@
+import { Tags, Types } from '@mte/common/constants/inversify'
+import { MongooseDocument } from '@mte/common/lib/goosetype'
+import { Discount } from '@mte/common/models/api-models/discount'
+import { Order } from '@mte/common/models/api-models/order'
+import { Organization } from '@mte/common/models/api-models/organization'
+import { Product } from '@mte/common/models/api-models/product'
 import { Container } from 'inversify'
 import { interfaces, TYPE } from 'inversify-express-utils'
 import { makeLoggerMiddleware } from 'inversify-logger-middleware'
-
-import { Tags, Types } from '@mte/common/constants/inversify'
-import { MongooseDocument } from '@mte/common/lib/goosetype'
 import { Authenticate } from '../auth/authenticate'
 import { AppController } from '../controllers/app.controller'
+import { CartController } from '../controllers/cart.controller'
 import { InstagramController } from '../controllers/instagram.controller'
+import { OrdersController } from '../controllers/orders.controller'
 import { OrganizationController } from '../controllers/organization.controller'
 import { ProductsAdminController } from '../controllers/products.admin.controller'
 import { ProductsController } from '../controllers/products.controller'
@@ -16,6 +21,7 @@ import { DbClient } from '../data-access/db-client'
 import { isDev } from '../helpers/env.helper'
 import { OrderHelper } from '../helpers/order.helper'
 import { ProductSearchHelper } from '../helpers/product-search.helper'
+import { CartService } from '../services/cart.service'
 import { CrudService } from '../services/crud.service'
 import { DiscountService } from '../services/discount.service'
 import { EasypostService } from '../services/easypost.service'
@@ -36,11 +42,6 @@ import { UserService } from '../services/user.service'
 import { WishlistService } from '../services/wishlist.service'
 import { WoocommerceMigrationService } from '../services/woocommerce-migration.service'
 
-import { Discount } from '@mte/common/models/api-models/discount'
-import { Order } from '@mte/common/models/api-models/order'
-import { Organization } from '@mte/common/models/api-models/organization'
-import { Product } from '@mte/common/models/api-models/product'
-
 // The container is where you register DI bindings.
 
 const container = new Container()
@@ -54,6 +55,7 @@ if (isDev()) {
 
 // Services.
 container.bind<DbClient<MongooseDocument>>(Types.DbClient).to(DbClient)
+container.bind<CartService>(Types.CartService).to(CartService)
 container.bind<CrudService<Discount>>(Types.DiscountService).to(DiscountService)
 container.bind<EasypostService>(Types.EasypostService).to(EasypostService)
 container.bind<EmailService>(Types.EmailService).to(EmailService)
@@ -81,7 +83,9 @@ container.bind(Types.isOwner).toConstantValue(Authenticate.isAuthorized(1))
 
 // Controllers.
 container.bind<interfaces.Controller>(TYPE.Controller).to(AppController).whenTargetNamed(Tags.AppController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(CartController).whenTargetNamed(Tags.CartController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(InstagramController).whenTargetNamed(Tags.InstagramController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(OrdersController).whenTargetNamed(Tags.OrdersController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(OrganizationController).whenTargetNamed(Tags.OrganizationController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsAdminController).whenTargetNamed(Tags.ProductsAdminController)
 container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsController).whenTargetNamed(Tags.ProductsController)

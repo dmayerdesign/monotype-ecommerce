@@ -1,4 +1,3 @@
-import { Currency } from '../../models/enums/currency'
 import { MongooseDocument } from './mongoose-document'
 
 export interface EasypostRate extends MongooseDocument {

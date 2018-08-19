@@ -1,5 +1,3 @@
-import { Order } from '@mte/common/models/api-models/order'
-import { Organization } from '@mte/common/models/api-models/organization'
 import { inject, injectable } from 'inversify'
 const mailgun = require('mailgun-js')({ apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN })
 
@@ -59,7 +57,7 @@ export class EmailService {
      */
     public sendReceipt(options: OrderEmailOptions): void {
         const emailBuilder = new EmailBuilder()
-            .setOptions({
+            .setOptions<OrderEmailOptions>({
                 ...options,
                 subject: `Your receipt | ${options.organization.branding.displayName}`,
                 preheader: `View your receipt from your recent order`,

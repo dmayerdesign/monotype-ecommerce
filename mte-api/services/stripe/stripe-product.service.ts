@@ -1,20 +1,13 @@
 import { inject, injectable } from 'inversify'
-import { Document } from 'mongoose'
 import * as Stripe from 'stripe'
 
 import { Copy } from '@mte/common/constants/copy'
 import { Types } from '@mte/common/constants/inversify'
-import { Order } from '@mte/common/models/api-models/order'
 import { Price } from '@mte/common/models/api-models/price'
 import { Product } from '@mte/common/models/api-models/product'
-import {
-    StripeCreateProductsOrSkusResponse,
-} from '@mte/common/models/api-responses/stripe/stripe-create-products-or-skus.response'
-import { StripeCreateProductsOrSkusResponseBody } from '@mte/common/models/api-responses/stripe/stripe-create-products-or-skus.response.body'
-import { Currency } from '@mte/common/models/enums/currency'
 import { ProductService } from '../product.service'
 
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 /**
  * Stripe service
@@ -28,240 +21,96 @@ export class StripeProductService {
 
     constructor(
         @inject(Types.ProductService) private productService: ProductService,
-    ) {}
+    ) { }
 
-    private createProductsOrSkus<T extends StripeNode.products.IProduct|StripeNode.skus.ISku>(which: 'products'|'skus', products: Product[], order: Order): Promise<StripeCreateProductsOrSkusResponseBody<StripeNode.products.IProduct|StripeNode.skus.ISku>> {
-        return new Promise<StripeCreateProductsOrSkusResponseBody<StripeNode.products.IProduct|StripeNode.skus.ISku>>(async (resolve, reject) => {
-            const productsToAdd = []
-            let outOfStock = false
-
-            if (!products || !products.length) {
-                resolve({
-                    products: [],
-                    stripeProductsOrSkus: [],
-                })
-                return
+    public async createProducts(products: Product[]): Promise<Stripe.products.IProduct[]> {
+        if (products.some((product) => product.isVariation)) {
+            throw new Error('Attempted to create Stripe products from product variations.')
+        }
+        if (!products || !products.length || products.every((product) => product.isEnteredIntoStripe)) {
+            return []
+        }
+        if (products.some((product) => product.stockQuantity === 0)) {
+            throw new Error(Copy.ErrorMessages.itemOutOfStockError)
+        }
+        const stripeCreateProductPromises: Promise<Stripe.products.IProduct>[] = []
+        let stripeProducts: Stripe.products.IProduct[]
+        for (const dbProduct of products) {
+            if (dbProduct.isEnteredIntoStripe) {
+                continue
             }
-
-            products.forEach((product) => {
-                if (product.stockQuantity < 1 && product.stockQuantity !== -1) {
-                    outOfStock = true
-                }
-            })
-
-            if (outOfStock) {
-                reject(new Error(Copy.ErrorMessages.itemOutOfStockError))
-                return
-            }
-
-            if (products.every((product) => product.isEnteredIntoStripe)) {
-                resolve({
-                    products,
-                    stripeProductsOrSkus: [],
-                })
-                return
-            }
-
-            if (which === 'products') {
-                console.log('Let\'s make some products')
-                console.log(products)
-                products.forEach((product) => {
-                    const productId = product.isStandalone ? product.sku + '_parent' : product.sku
-                    if (!product.isEnteredIntoStripe && !product.isVariation) {
-                        productsToAdd.push({
-                            id: productId,
-                            name: product.name,
-                            attributes: ['_id'],
-                        })
-                    }
-                })
-            }
-            else if (which === 'skus') {
-                console.log('Let\'s make some SKUs')
-                products.forEach((product) => {
-                    console.log(product)
-                    const thePrice = this.productService.determinePrice(product) as Price
-                    const productToAdd: any = {
-                        id: product.sku,
-                        price: thePrice.amount * 100,
-                        currency: order.total.currency || Currency.USD,
-                        inventory: {
-                            quantity: product.stockQuantity,
-                            type: 'finite',
-                        },
-                        attributes: {
-                            '_id': product._id,
-                        },
-                    }
-                    if (!product.isEnteredIntoStripe && !product.isParent) {
-                        productToAdd.product = product.isStandalone ? product.sku + '_parent' : product.parentSku
-                        productsToAdd.push(productToAdd)
-                    }
-                })
-            }
-
-            console.log(productsToAdd)
-
             try {
-                const stripeProductsOrSkus = await this.createStripeProductsOrSkus<T>(which, productsToAdd)
-                const idsToUpdate = []
-
-                if (!stripeProductsOrSkus) {
-                    resolve({
-                        products,
-                        stripeProductsOrSkus: [],
-                    })
-                    return
-                }
-
-                products.forEach((product) => {
-                    if (!product.isEnteredIntoStripe) {
-                        idsToUpdate.push(product.sku)
-                    }
-                })
-
-                try {
-                    const updatedProductsResponse = await this.productService.update(idsToUpdate, { enteredIntoStripe: true })
-                    const updatedProducts = updatedProductsResponse.body
-                    resolve({
-                        products: updatedProducts,
-                        stripeProductsOrSkus,
-                    })
-                }
-                catch (updateProductsError) {
-                    reject(updateProductsError)
-                }
+                stripeCreateProductPromises.push(stripe.products.create(
+                    this._getProductCreationOptionsFromProduct(dbProduct)
+                ))
+                stripeProducts = await Promise.all(stripeCreateProductPromises)
+                return stripeProducts
             }
             catch (error) {
-                resolve({
-                    products,
-                    stripeProductsOrSkus: [],
-                })
-            }
-        })
-    }
-
-    private createStripeProductsOrSkus<T>(which: 'products'|'skus', products): Promise<Array<T>> {
-        return new Promise<Array<T>>((resolve, reject) => {
-            recursivelyCreateProductsOrSkus(products)
-
-            async function recursivelyCreateProductsOrSkus(productArr): Promise<void> {
-                const stripeProducts = {
-                    products: [],
-                    skus: [],
+                if (error.message.indexOf('exists') > -1) {
+                    return stripeProducts
                 }
-
-                console.log(`*********** Creating a ${which.substring(0, which.length - 1)} ************`)
-                console.log(productArr)
-                console.log(productArr[0])
-
-                let product: StripeNode.products.IProduct | StripeNode.skus.ISku
-
-                try {
-                    if (which === 'products') {
-                        product = await stripe.products.create(productArr[0])
-                    }
-                    else {
-                        product = await stripe.skus.create(productArr[0])
-                    }
-
-                    console.log(`
-    ---------------------------------------
-    Created the ${which}s in Stripe
-    ---------------------------------------`)
-                    console.log(product.id)
-
-                    stripeProducts[which].push(product)
-                    productArr.shift()
-
-                    if (productArr.length) {
-                        recursivelyCreateProductsOrSkus(productArr)
-                    }
-                    else {
-                        resolve(stripeProducts[which])
-                    }
-                }
-                catch (error) {
-                    if (error.message.indexOf('exists') > -1) {
-                        resolve(stripeProducts[which])
-                    }
-                    else {
-                        reject(error)
-                    }
+                else {
+                    throw error
                 }
             }
-        })
+        }
     }
 
-    /**
-     * Create Parent and Standalone products in Stripe
-     *
-     * @param {Product[]} products Array of Parent and Standalone products to add to Stripe
-     */
-    public createProducts(products: Product[]): Promise<StripeCreateProductsOrSkusResponse<StripeNode.products.IProduct>> {
-        return new Promise<StripeCreateProductsOrSkusResponse<StripeNode.products.IProduct>>(async (resolve, reject) => {
+    public async createSkus(products: Product[]): Promise<Stripe.skus.ISku[]> {
+        if (products.some((product) => product.isParent)) {
+            throw new Error('Attempted to create Stripe skus from parent products.')
+        }
+        if (!products || !products.length || products.every((product) => product.isEnteredIntoStripe)) {
+            return []
+        }
+        if (products.some((product) => product.stockQuantity === 0)) {
+            throw new Error(Copy.ErrorMessages.itemOutOfStockError)
+        }
+        const stripeCreateProductPromises: Promise<Stripe.skus.ISku>[] = []
+        let stripeProducts: Stripe.skus.ISku[]
+
+        for (const dbProduct of products) {
             try {
-                const createStripeProductsResponseData = await this.createProductsOrSkus<StripeNode.products.IProduct>('products', products, null)
-                resolve(new StripeCreateProductsOrSkusResponse<StripeNode.products.IProduct>(<StripeCreateProductsOrSkusResponseBody<StripeNode.products.IProduct>>createStripeProductsResponseData))
+                stripeCreateProductPromises.push(stripe.skus.create(
+                    this._getSkuCreationOptionsFromProduct(dbProduct)
+                ))
+                stripeProducts = await Promise.all(stripeCreateProductPromises)
+                return stripeProducts
             }
             catch (error) {
-                reject(error)
+                if (error.message.indexOf('exists') > -1) {
+                    return stripeProducts
+                }
+                else {
+                    throw error
+                }
             }
-        })
+        }
     }
 
-    /**
-     * Create SKUs in Stripe
-     *
-     * @param {Product[]} products Array of Standalone products and product Variations to add to Stripe
-     * @param {Order} order The order containing references to the products being added
-     */
-    public createSkus(products: Product[], order: Order): Promise<StripeCreateProductsOrSkusResponse<StripeNode.skus.ISku>> {
-        return new Promise<StripeCreateProductsOrSkusResponse<StripeNode.skus.ISku>>(async (resolve, reject) => {
-            try {
-                const createStripeProductsResponseData = await this.createProductsOrSkus<StripeNode.skus.ISku>('products', products, order)
-                resolve(new StripeCreateProductsOrSkusResponse<StripeNode.skus.ISku>(<StripeCreateProductsOrSkusResponseBody<StripeNode.skus.ISku>>createStripeProductsResponseData))
-            }
-            catch (error) {
-                reject(error)
-            }
-        })
+    private _getProductCreationOptionsFromProduct(product: Product): Stripe.products.IProductCreationOptions {
+        return {
+            id: product.sku,
+            name: product.name,
+            description: product.description,
+            type: 'good',
+        }
     }
 
-    public updateInventory(products, order): Promise<Product[]> {
-        const productPromises: Promise<Product>[] = []
-
-        products.forEach((product) => {
-            productPromises.push(
-                new Promise<Product>(async (resolve, reject) => {
-                    let qty = 0
-                    if (product.isParent) {
-                        const variations = products.map((p) => p.parentSku === product.sku)
-                        const variationSkus = variations.map((v) => v.sku)
-                        const orderVariations = order.items.filter((op) => variationSkus.indexOf(op.sku) > -1)
-                        orderVariations.forEach((ov) => qty += ov.quantity)
-                    }
-                    else {
-                        qty = order.items.find((op) => op.sku === product.sku).quantity
-                    }
-
-                    try {
-                        const newStockQuantity = Math.floor(product.stockQuantity - qty)
-                        const newTotalSales = Math.floor(product.totalSales + qty)
-                        const updatedProductResponse = await this.productService.updateOne(product._id, {
-                            stockQuantity: newStockQuantity,
-                            totalSales: newTotalSales,
-                        })
-                        const updatedProduct = updatedProductResponse.body
-                        resolve(updatedProduct)
-                    }
-                    catch (errorResponse) {
-                        reject(errorResponse)
-                    }
-                })
-            )
-        })
-
-        return Promise.all(productPromises)
+    private _getSkuCreationOptionsFromProduct(product: Product): Stripe.skus.ISkuCreationOptions {
+        const priceAmount = (this.productService.determinePrice(product) as Price).amount
+        return {
+            id: product.sku,
+            product: product.parentSku,
+            currency: product.price.currency,
+            inventory: {
+                quantity: product.stockQuantity,
+                type: 'finite',
+            },
+            // Stripe stores price in the lowest denomination.
+            // By multiplying by 100, we're assuming USD.
+            price: priceAmount * 100,
+        }
     }
 }

@@ -14,7 +14,7 @@ export abstract class RestService<T> {
     protected getErrorPump = new Subject<SimpleError>()
     public getErrorSource: Observable<SimpleError>
 
-    constructor(protected http: HttpClient) {
+    constructor(protected httpClient: HttpClient) {
         this.getSource = this.getPump.asObservable()
         this.getErrorSource = this.getErrorPump.asObservable()
 
@@ -23,16 +23,20 @@ export abstract class RestService<T> {
         })
     }
 
-    public get(request?: ListRequest): void {
+    public async get(request?: ListRequest): Promise<void> {
+        try {
+            const docs = await this.getOnce(request)
+            this.getPump.next(docs)
+        }
+        catch (error) {
+            this.getErrorPump.next(error as SimpleError)
+        }
+    }
+
+    public getOnce(request?: ListRequest): Promise<T[]> {
         let params = new HttpParams()
-
         if (request) params = params.set('request', JSON.stringify(request))
-
-        this.http.get<T[]>(this.endpoint, { params })
-            .subscribe(
-                (docs) => this.getPump.next(docs),
-                (error: SimpleError) => this.getErrorPump.next(error),
-            )
+        return this.httpClient.get<T[]>(this.endpoint, { params }).toPromise()
     }
 
     public getSome(ids: string[]): Observable<T[]> {
@@ -41,14 +45,18 @@ export abstract class RestService<T> {
 
         const params = new HttpParams().set('request', JSON.stringify(request))
 
-        return this.http.get<T[]>(this.endpoint, { params })
+        return this.httpClient.get<T[]>(this.endpoint, { params })
+    }
+
+    public getSomeOnce(ids: string[]): Promise<T[]> {
+        return this.getSome(ids).toPromise()
     }
 
     public getOne(id: string): Observable<T> {
-        return this.http.get<T>(`${this.endpoint}/${id}`)
+        return this.httpClient.get<T>(`${this.endpoint}/${id}`)
     }
 
-    public create?(doc: T): void
-    public update?(id: string, update: object): void
-    public delete?(id: string): void
+    // public create?(doc: T): void
+    // public update?(id: string, update: object): void
+    // public delete?(id: string): void
 }

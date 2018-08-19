@@ -1,6 +1,5 @@
 import { Crud } from '../../constants/crud'
 import { Ref } from '../../lib/goosetype'
-import { SortDirection } from '../enums/sort-direction'
 
 export class ListRequest {
     public skip? = 0
@@ -33,6 +32,7 @@ export class ListFromSearchRequest extends ListRequest {
 
 export class ListFromIdsRequest<T = any> extends ListRequest {
     public ids: string[]|Ref<T>[]
+    public readonly limit? = 0
 
     constructor(request?: ListFromIdsRequest<T>) {
         super(request)

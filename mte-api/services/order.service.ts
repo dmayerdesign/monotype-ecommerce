@@ -1,11 +1,19 @@
 import { inject, injectable } from 'inversify'
 
 import { Types } from '@mte/common/constants/inversify/types'
+import { CartHelper } from '@mte/common/helpers/cart.helper'
+import { UserHelper } from '@mte/common/helpers/user.helper'
 import { Order } from '@mte/common/models/api-models/order'
+import { Product } from '@mte/common/models/api-models/product'
+import { GetCartItemsFromIdsRequest } from '@mte/common/models/api-requests/get-cart-items-from-ids.request'
 import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { StripeSubmitOrderResponse } from '@mte/common/models/api-responses/stripe/stripe-submit-order.response'
 import { DbClient } from '../data-access/db-client'
+import { CartService } from './cart.service'
 import { CrudService } from './crud.service'
+import { EmailService } from './email.service'
+import { OrganizationService } from './organization.service'
+import { ProductService } from './product.service'
 import { StripeOrderService } from './stripe/stripe-order.service'
 
 /**
@@ -23,17 +31,73 @@ export class OrderService extends CrudService<Order> {
     constructor(
         @inject(Types.DbClient) protected dbClient: DbClient<Order>,
         @inject(Types.StripeOrderService) private stripeOrderService: StripeOrderService,
+        @inject(Types.CartService) private cartService: CartService,
+        @inject(Types.ProductService) private productService: ProductService,
+        @inject(Types.EmailService) private emailService: EmailService,
+        @inject(Types.OrganizationService) private organizationService: OrganizationService,
     ) { super() }
 
-    public execute(newOrder: Order): Promise<StripeSubmitOrderResponse> {
-        return new Promise<StripeSubmitOrderResponse>(async (resolve, reject) => {
-            try {
-                const stripeSubmitOrderResponse = await this.stripeOrderService.submitOrder(newOrder)
-                resolve(stripeSubmitOrderResponse)
+    public async place(newOrder: Order): Promise<StripeSubmitOrderResponse> {
+        try {
+            // Hydrate the order (replace the `id`s stored in `order.items` with products).
+
+            const order = await this._hydrate(newOrder)
+
+            // Submit the order.
+
+            const stripeSubmitOrderResponse = await this.stripeOrderService.submitOrder(order)
+
+            const paidOrder = await this._hydrate(stripeSubmitOrderResponse.body.order)
+            const parentProducts = await this.productService.getParentProducts(order.items as Product[])
+            const allProducts = [ ...order.items as Product[], ...parentProducts ]
+
+            // Update the stock quantity and total sales of each variation and standalone.
+
+            this.productService.updateInventory(allProducts, paidOrder)
+
+            // Set `enteredIntoStripe` asynchronously.
+
+            this.productService.update(allProducts.map((product) => product._id), {
+                enteredIntoStripe: true,
+            })
+
+            // Send a receipt.
+
+            const getOrganizationResponse = await this.organizationService.getOrganization()
+            const organization = getOrganizationResponse.body
+            await this.emailService.sendReceipt({
+                organization,
+                order: paidOrder,
+                orderDisplayItems: CartHelper.getDisplayItems(order.items as Product[]),
+                toEmail: paidOrder.customer.email,
+                toName: UserHelper.getFullName(paidOrder.customer)
+            })
+
+            return stripeSubmitOrderResponse
+        }
+        catch (error) {
+            if (error instanceof ApiErrorResponse) {
+                throw error
             }
-            catch (error) {
-                reject(error as ApiErrorResponse)
-            }
-        })
+            throw new ApiErrorResponse(error)
+        }
+    }
+
+    /**
+     * Populates `order.items`.
+     * TODO: Just use a mongoose `.populate()` when fetching the order.
+     * Warning: No validation is done to ensure that `items` is not already populated.
+     * @param {Order} order
+     */
+    private async _hydrate(order: Order): Promise<Order> {
+        if (!order.items ||
+            !order.items.length) {
+            return order
+        }
+        const request = new GetCartItemsFromIdsRequest()
+        request.ids = [ ...order.items ]
+        const refreshResponse = await this.cartService.refresh(request)
+        order.items = [ ...refreshResponse.body ]
+        return order
     }
 }

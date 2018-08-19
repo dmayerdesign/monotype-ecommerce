@@ -12,14 +12,10 @@ import {
     response,
 } from 'inversify-express-utils'
 
-import { AppConfig } from '@mte/app-config'
 import { ApiEndpoints, Types } from '@mte/common/constants'
-import { Order } from '@mte/common/models/api-models/order'
-import { ExecuteOrderRequest } from '@mte/common/models/api-requests/execute-order.request'
 import { GetOrdersRequest } from '@mte/common/models/api-requests/get-orders.request'
-import { ApiResponse } from '@mte/common/models/api-responses/api.response'
+import { PlaceOrderRequest } from '@mte/common/models/api-requests/place-order.request'
 import { OrderService } from '../services/order.service'
-import { WoocommerceMigrationService } from '../services/woocommerce-migration.service'
 import { ApiController } from './api.controller'
 
 @injectable()
@@ -35,8 +31,7 @@ export class OrdersController extends ApiController implements interfaces.Contro
         @queryParam('request') request: string,
         @response() res: Response,
     ): void {
-        const parsedQuery = request ? <GetOrdersRequest>JSON.parse(request) : {}
-
+        const parsedQuery: GetOrdersRequest = request ? JSON.parse(request) : {}
         this.handleApiResponse(this.orderService.get(parsedQuery), res)
     }
 
@@ -48,12 +43,12 @@ export class OrdersController extends ApiController implements interfaces.Contro
         this.handleApiResponse(this.orderService.getOne(id), res)
     }
 
-    @httpPost('/execute')
-    public execute(
-        @requestBody() body: ExecuteOrderRequest,
+    @httpPost('/place')
+    public place(
+        @requestBody() body: PlaceOrderRequest,
         @response() res: Response,
     ): void {
-        this.handleApiResponse(this.orderService.execute(body), res)
+        this.handleApiResponse(this.orderService.place(body), res)
     }
 
 

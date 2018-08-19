@@ -1,5 +1,5 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
-import { Observable, ReplaySubject } from 'rxjs'
+import { Observable } from 'rxjs'
 import { takeWhile } from 'rxjs/operators'
 
 import { AppConfig } from '@mte/app-config'

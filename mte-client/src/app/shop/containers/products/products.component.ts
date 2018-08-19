@@ -1,140 +1,307 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
-import { ActivatedRoute, Router } from '@angular/router'
+import { ActivatedRoute, ParamMap, Router } from '@angular/router'
+import { MongooseHelper as mh } from '@mte/common/helpers/mongoose.helper'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
+import { MteFormGroupOptions } from '@mte/common/lib/ng-modules/forms/models/form-group-options'
+import { MteFormBuilderService } from '@mte/common/lib/ng-modules/forms/services/form-builder.service'
+import { MteFormBuilder } from '@mte/common/lib/ng-modules/forms/utilities/form.builder'
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
+import { Store } from '@mte/common/lib/state-manager/store'
+import { Attribute } from '@mte/common/models/api-interfaces/attribute'
 import { Product } from '@mte/common/models/api-interfaces/product'
+import { ProductsFilter } from '@mte/common/models/api-interfaces/products-filter'
+import { Taxonomy } from '@mte/common/models/api-interfaces/taxonomy'
 import { TaxonomyTerm } from '@mte/common/models/api-interfaces/taxonomy-term'
 import { GetProductsFilter, GetProductsFilterType, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { BootstrapBreakpointKey } from '@mte/common/models/enums/bootstrap-breakpoint-key'
-import { cloneDeep } from 'lodash'
+import { ProductsFilterType } from '@mte/common/models/enums/products-filter-type'
+import { camelCase, isEqual, kebabCase, uniqWith } from 'lodash'
 import { BehaviorSubject, Observable } from 'rxjs'
-import { map, takeWhile } from 'rxjs/operators'
+import { debounceTime, filter, map, takeWhile } from 'rxjs/operators'
+import { OrganizationService } from '../../../shared/services/organization.service'
+import { ShopQueryParamKeys } from '../../constants/shop-query-param-keys'
 import { ShopRouterLinks } from '../../constants/shop-router-links'
-import { ProductService } from '../../services'
+import { ProductService } from '../../services/product.service'
 import { TaxonomyTermService } from '../../services/taxonomy-term.service'
+import { GetProductsRequestFromRouteUpdate, GetProductsRequestUpdate } from './products.actions'
+import { productsReducer } from './products.reducer'
+import { ProductsState } from './products.state'
+
+export interface ProductsFilterFormData {
+    taxonomy?: Taxonomy
+    attribute?: Attribute
+    productsFilter?: ProductsFilter
+}
 
 @Component({
     selector: 'mte-products',
     templateUrl: './products.component.html',
-    styleUrls: ['./products.component.scss']
+    styleUrls: ['./products.component.scss'],
+    providers: [
+        ProductService,
+    ],
 })
 @Heartbeat()
 export class ProductsComponent extends HeartbeatComponent implements OnInit, OnDestroy {
     @Input() public title: string
-    public productss: Observable<Product[]>
+    public productsSource: Observable<Product[]>
     public taxonomyTerm: TaxonomyTerm
     public leftSidebarIsExpandeds: BehaviorSubject<boolean>
-    public request: GetProductsRequest
+    public store = new Store<ProductsState>(new ProductsState(), productsReducer)
+    public productsFilterFormBuilders: MteFormBuilder[]
 
     constructor(
-        private productService: ProductService,
-        private taxonomyTermService: TaxonomyTermService,
         public windowRef: WindowRefService,
-        private activatedRoute: ActivatedRoute,
-        private router: Router,
+        private _productService: ProductService,
+        private _taxonomyTermService: TaxonomyTermService,
+        private _activatedRoute: ActivatedRoute,
+        private _router: Router,
+        private _mteFormBuilderService: MteFormBuilderService,
+        private _organizationService: OrganizationService
     ) { super() }
 
     public ngOnInit(): void {
-        this.leftSidebarIsExpandeds = new BehaviorSubject(this.windowRef.mediaBreakpointAbove(BootstrapBreakpointKey.Lg))
+        const { storeUiSettings } = this._organizationService.organization
 
-        const route = this.activatedRoute.snapshot
+        // Expand the left sidebar if the screen width is large or above.
 
-        // Trigger a search when the route is '/for/:taxonomySlug/:partialTermSlug'
+        this.leftSidebarIsExpandeds = new BehaviorSubject(
+            this.windowRef.mediaBreakpointAbove(BootstrapBreakpointKey.Lg)
+        )
 
-        if (route.paramMap.get('taxonomySlug')) {
-            this.activatedRoute.paramMap
-                .pipe(takeWhile(() => this.isAlive))
-                .subscribe((paramMap) => {
-                    const taxonomySlug = paramMap.get('taxonomySlug')
-                    const partialTermSlug = paramMap.get('partialTermSlug')
+        // Set up the filters.
+        // TODO: Instead of importing `productsFilters`, get `organization.storeUiSettings.productsFilters`.
 
-                    const request = new GetProductsRequest({
-                        filters: [{
-                            type: GetProductsFilterType.Taxonomy,
-                            key: taxonomySlug,
-                            values: [ `${taxonomySlug}-${partialTermSlug}` ]
-                        }]
+        this.productsFilterFormBuilders = mh.toArray(storeUiSettings.productsFilters)
+            .filter((productsFilter) => productsFilter.enabled)
+            .map((productsFilter) => {
+                const formGroupOptions: MteFormGroupOptions = {}
+
+                // Configure a checklist of taxonomy terms.
+                // TODO: Add support for AttributeValueChecklist.
+
+                if (productsFilter.filterType === ProductsFilterType.TaxonomyTermChecklist) {
+                    const taxonomy = (productsFilter.taxonomyTermOptions[0] as TaxonomyTerm).taxonomy as Taxonomy
+                    let mteFormBuilder: MteFormBuilder<ProductsFilterFormData>
+                    let lastFormValue: any
+
+                    // Build the form.
+
+                    productsFilter.taxonomyTermOptions.forEach((taxonomyTerm: TaxonomyTerm) => {
+                        formGroupOptions[camelCase(taxonomyTerm.slug)] = {
+                            defaultValue: false,
+                            label: taxonomyTerm.singularName || taxonomyTerm.slug,
+                            formControlType: 'checkbox',
+                        }
                     })
+                    mteFormBuilder = this._mteFormBuilderService.create<ProductsFilterFormData>(formGroupOptions)
 
-                    this.executeRequest(request)
-                })
-        }
+                    // Attach useful data to the form builder for convenience.
 
-        // Trigger a search whenever the query params change.
+                    mteFormBuilder.data = {
+                        taxonomy,
+                        productsFilter,
+                    }
 
-        else {
-            this.activatedRoute.queryParamMap
-                .pipe(takeWhile(() => this.isAlive))
-                .subscribe((queryParamMap) => {
-                    const requestStr = queryParamMap.get('request')
-                    const request = !!requestStr ? JSON.parse(requestStr) as GetProductsRequest : {}
-                    this.executeRequest(request)
-                })
-        }
+                    // Push a new request every time the form value changes.
+
+                    mteFormBuilder.formGroup.valueChanges
+                        .pipe(
+                            filter((formValue) => !isEqual(formValue, lastFormValue))
+                        )
+                        .subscribe((formValue) => {
+                            lastFormValue = formValue
+                            const request = this.store.state.getProductsRequest
+                            const newRequestFilters = !!request.filters
+                                ? [ ...request.filters ]
+                                : []
+                            const newRequest = {
+                                ...request,
+                                filters: newRequestFilters
+                            }
+                            const indexOfExistingFilter = newRequestFilters.findIndex((filter) => {
+                                return filter.values.some((filterValue) =>
+                                    productsFilter.taxonomyTermOptions.some((taxonomyTerm: TaxonomyTerm) =>
+                                        filterValue === taxonomyTerm.slug))
+                            })
+                            if (indexOfExistingFilter > -1) {
+                                newRequestFilters.splice(indexOfExistingFilter, 1)
+                            }
+                            newRequestFilters.push({
+                                type: GetProductsFilterType.TaxonomyTerm,
+                                values: Object.keys(formValue)
+                                    .filter((key) => !!formValue[key])
+                                    .map((key) => kebabCase(key))
+                            })
+                            this.store.dispatch(new GetProductsRequestUpdate(newRequest))
+                        })
+                    return mteFormBuilder
+                }
+            })
+            .filter((formBuilder) => formBuilder !== undefined)
+
+        // Execute the request any time it changes.
+
+        this.store.reactTo(GetProductsRequestUpdate)
+            .pipe(
+                // Makes sure that `clearFilters` doesn't trigger multiple requests.
+                debounceTime(100),
+                map(() => this.store.state)
+            )
+            .subscribe(({ getProductsRequest }) => {
+                this.executeRequest(getProductsRequest)
+
+                if (getProductsRequest.filters) {
+                    getProductsRequest.filters.forEach((filter) => {
+                        filter.values.forEach((filterValue) => {
+                            this.productsFilterFormBuilders
+                                .map((formBuilder) => formBuilder.formGroup)
+                                .forEach((formGroup) => {
+                                    const formControlName = camelCase(filterValue)
+                                    if (formGroup.get(formControlName)) {
+                                        formGroup.patchValue({
+                                            [formControlName]: true
+                                        })
+                                    }
+                                })
+                        })
+                    })
+                }
+            })
+
+        // Construct a new request when the query params change.
+        // TODO: Expose this functionality to the user by allowing them to copy a link to
+        // whatever particular search/filter they have going on (to bookmark or share).
+        // By default, no request data will be shown in the URL.
+
+        this._activatedRoute.queryParamMap
+            .pipe(takeWhile(() => this.isAlive))
+            .subscribe((queryParamMap) => {
+                const paramMap = this._activatedRoute.snapshot.paramMap
+
+                let newRequest: GetProductsRequest
+                newRequest = this._createRequestFromQueryParamMap(queryParamMap)
+                newRequest = this._mutateRequestFromRouteParamMap(newRequest, paramMap)
+
+                if (newRequest) {
+                    this.store.dispatch(new GetProductsRequestUpdate(newRequest))
+                }
+            })
+
+        // Mutate the request when the route params change.
+
+        this._activatedRoute.paramMap
+            .pipe(takeWhile(() => this.isAlive))
+            .subscribe((paramMap) => {
+                const getProductsRequest = this._mutateRequestFromRouteParamMap(
+                    this.store.state.getProductsRequest,
+                    paramMap
+                )
+                // this.stateManager.setState({ getProductsRequest })
+                this.store.dispatch(new GetProductsRequestUpdate(getProductsRequest))
+            })
     }
 
-    public executeRequest(request: GetProductsRequest): void {
-        let requestedTaxonomyTermFilter: GetProductsFilter
-        let requestedTaxonomyTermSlug: string
+    private _createRequestFromQueryParamMap(queryParamMap: ParamMap): GetProductsRequest {
 
-        this.taxonomyTerm = null
+        // Create a new request from the "r" query param.
 
-        if (request) {
-            requestedTaxonomyTermFilter = request.filters && request.filters.filter((filter) => filter.type === GetProductsFilterType.Taxonomy).length === 1
-                ? request.filters.find((filter) => filter.type === GetProductsFilterType.Taxonomy)
-                : undefined
-            requestedTaxonomyTermSlug = requestedTaxonomyTermFilter && requestedTaxonomyTermFilter.values
-                ? requestedTaxonomyTermFilter.values[0] // Note: we don't need the `key` from the filter since TaxonomyTerm slugs are unique.
-                : undefined
+        const requestStr = queryParamMap.get(ShopQueryParamKeys.request)
+        const request = !!requestStr
+            ? JSON.parse(atob(requestStr)) as GetProductsRequest
+            : new GetProductsRequest()
+        return request
+    }
+
+    private _mutateRequestFromRouteParamMap(request: GetProductsRequest, routeParamMap: ParamMap): GetProductsRequest {
+
+        // Mutate the request if the route is '/for/:taxonomySlug/:partialTermSlug'.
+
+        if (routeParamMap.get('taxonomySlug')) {
+            const taxonomySlug = routeParamMap.get('taxonomySlug')
+            const partialTermSlug = routeParamMap.get('partialTermSlug')
+
+            if (!request.filters) {
+                request.filters = []
+            }
+
+            // Always clear whichever filter was created by the last `/for/:taxonomySlug...` route.
+
+            const lastTaxonomySlugFromRoute = this.store.state.getProductsRequestFromRoute.taxonomySlug
+            const lastTaxTermSlugFromRoute = this.store.state.getProductsRequestFromRoute.taxonomyTermSlug
+            if (lastTaxonomySlugFromRoute && lastTaxTermSlugFromRoute) {
+                const indexOfFilterToRemove = request.filters.findIndex((filter) =>
+                    filter.type === GetProductsFilterType.TaxonomyTerm &&
+                    filter.key === lastTaxonomySlugFromRoute &&
+                    isEqual(filter.values, [lastTaxTermSlugFromRoute]))
+                if (indexOfFilterToRemove > -1) {
+                    request.filters.splice(indexOfFilterToRemove, 1)
+                }
+            }
+
+            // Add the new taxonomy term filter.
+
+            request.filters = uniqWith<GetProductsFilter>([
+                ...request.filters,
+                {
+                    type: GetProductsFilterType.TaxonomyTerm,
+                    values: [ `${taxonomySlug}-${partialTermSlug}` ]
+                },
+            ], isEqual)
+
+            this.store.dispatch(new GetProductsRequestFromRouteUpdate({
+                taxonomySlug,
+                taxonomyTermSlug: `${taxonomySlug}-${partialTermSlug}`
+            }))
         }
 
-        // Get products based on the parsed request.
-        if (!this.productss) {
-            this.productss = this.productService.getSource
-        }
-        this.productService.get(new GetProductsRequest(request))
-
-        // Get the taxonomy term if one is found in the request.
-        if (requestedTaxonomyTermSlug) {
-            this.taxonomyTermService.getOne(requestedTaxonomyTermSlug)
-                .pipe(takeWhile(() => this.isAlive))
-                .subscribe((term) => this.taxonomyTerm = term)
-        }
+        return request
     }
 
     // I'm pretty sure this needs to be here for AOT. #thanksaot
 
     public ngOnDestroy(): void { }
 
-    // Classes.
+    public executeRequest(request: GetProductsRequest): void {
+        let requestedTaxonomyTermFilter: GetProductsFilter
+        let requestedTaxonomyTermSlug: string
 
-    public getLeftSidebarClasses(): string[] {
-        const identifiers = [ 'products-left-sidebar' ]
-        const bootstrapLayoutClasses = [ 'col-lg-4', 'col-sm-12' ]
-        return [
-            ...bootstrapLayoutClasses,
-            ...identifiers,
-        ]
-    }
-    public getGridContainerWithSidebarClasses(): string[] {
-        const identifiers = [ 'products-grid-container' ]
-        const bootstrapLayoutClasses = [ 'col-lg-8', 'col-sm-12' ]
-        return [
-            ...bootstrapLayoutClasses,
-            ...identifiers,
-        ]
-    }
-    public getGridContainerFullWidthClasses(): string[] {
-        const identifiers = [ 'products-grid-container' ]
-        const bootstrapLayoutClasses = [ 'col-12' ]
-        return [
-            ...bootstrapLayoutClasses,
-            ...identifiers,
-        ]
+        // Figure out if we need to fetch taxonomy term data along with the products.
+        // (e.g. to display a banner for "Women's")
+
+        if (request) {
+            requestedTaxonomyTermFilter = request.filters && request.filters.filter((filter) => filter.type === GetProductsFilterType.TaxonomyTerm).length === 1
+                ? request.filters.find((filter) => filter.type === GetProductsFilterType.TaxonomyTerm)
+                : undefined
+            requestedTaxonomyTermSlug = requestedTaxonomyTermFilter &&
+                requestedTaxonomyTermFilter.values &&
+                requestedTaxonomyTermFilter.values.length === 1
+                // Note: we don't need the `key` from the filter since TaxonomyTerm slugs are unique.
+                ? requestedTaxonomyTermFilter.values[0]
+                : undefined
+        }
+
+        // Get the taxonomy term if one is found in the request.
+
+        if (requestedTaxonomyTermSlug) {
+            this._taxonomyTermService.getOne(requestedTaxonomyTermSlug)
+                .pipe(takeWhile(() => this.isAlive))
+                .subscribe((term) => this.taxonomyTerm = term)
+        }
+        else {
+            this.taxonomyTerm = null
+        }
+
+        // Get products based on the parsed request.
+
+        if (!this.productsSource) {
+            this.productsSource = this._productService.getSource
+        }
+        this._productService.get(request)
     }
 
-    // Bootstrap.
+    // Responsive design.
 
     public layoutIsMdAboves(): Observable<boolean> {
         return this.windowRef.mediaBreakpointAboves(BootstrapBreakpointKey.Md)
@@ -147,18 +314,11 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     // Event handlers.
 
     public handleProductClick(product: Product): void {
-        this.router.navigateByUrl(ShopRouterLinks.productDetail(product.slug))
+        this._router.navigateByUrl(ShopRouterLinks.productDetail(product.slug))
     }
-
-    /**
-     * Apply the filter, thus triggering a search.
-     */
-    public applyFilter(): void {
-        this.router.navigate([ShopRouterLinks.shopAll], {
-            queryParams: {
-                request: JSON.stringify(this.request)
-            }
-        })
+    public clearFilters(): void {
+        this.productsFilterFormBuilders.forEach((productsFilterFormBuilder) =>
+            productsFilterFormBuilder.formGroup.reset())
     }
 
     // Boolean methods.
@@ -168,5 +328,9 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     }
     public isTwoColLayout(): boolean {
         return !this.isOneColLayout()
+    }
+    public isChecklist(productsFilter: ProductsFilter): boolean {
+        return productsFilter.filterType === ProductsFilterType.TaxonomyTermChecklist ||
+            productsFilter.filterType === ProductsFilterType.AttributeValueChecklist
     }
 }

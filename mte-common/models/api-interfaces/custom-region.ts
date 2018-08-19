@@ -6,11 +6,11 @@ export interface CustomRegion extends MongooseDocument {
     childRegions?: CustomRegion[]
     key?: string
     className?: string
-    apiModel: string
+    apiModel?: string
     dataProperty?: string
     dataArrayProperty?: string
     pathToDataArrayPropertyLookupKey?: string
     dataArrayPropertyLookupValue?: string
-    pathToDataPropertyValue: string
-    template: string
+    pathToDataPropertyValue?: string
+    template?: string
 }

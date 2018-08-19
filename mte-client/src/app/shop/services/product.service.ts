@@ -2,16 +2,14 @@ import { HttpClient } from '@angular/common/http'
 import { Injectable } from '@angular/core'
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
 import { RestService, SimpleError } from '@mte/common/lib/ng-modules/http'
-import { Attribute } from '@mte/common/models/api-interfaces/attribute'
 import { AttributeValue } from '@mte/common/models/api-interfaces/attribute-value'
-import { Price } from '@mte/common/models/api-interfaces/price'
 import { Product } from '@mte/common/models/api-interfaces/product'
 import { SimpleAttributeValue } from '@mte/common/models/api-interfaces/simple-attribute-value'
 import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { GetProductDetailResponseBody } from '@mte/common/models/api-responses/get-product-detail/get-product-detail.response.body'
 import { Observable, Subject } from 'rxjs'
 
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class ProductService extends RestService<Product> {
     public endpoint = ApiEndpoints.Products
     public getSomeRequestType = GetProductsFromIdsRequest
@@ -22,43 +20,49 @@ export class ProductService extends RestService<Product> {
     public getDetailErrors: Observable<SimpleError>
 
     constructor (
-        protected http: HttpClient,
+        protected httpClient: HttpClient,
     ) {
-        super(http)
+        super(httpClient)
         this.getDetails = this.getDetailPump.asObservable()
         this.getDetailErrors = this.getDetailErrorPump.asObservable()
     }
 
-    public get(request = new GetProductsRequest()): void {
+    public get(request = new GetProductsRequest()): Promise<void> {
         return super.get(request)
     }
 
-    public getDetailOnce(slug: string): Promise<GetProductDetailResponseBody> {
-        return this.http.get<GetProductDetailResponseBody>(`${this.endpoint}/${slug}/detail`).toPromise()
-    }
-
-    public getDetail(slug: string): void {
-        const getDetail = async () => {
-            try {
-                const getDetailResponseBody = await this.getDetailOnce(slug)
-                this.getDetailPump.next(getDetailResponseBody)
-            }
-            catch (getDetailError) {
-                this.getDetailErrorPump.next(getDetailError)
-            }
+    public async getDetail(slug: string): Promise<void> {
+        try {
+            const getDetailResponseBody = await this.getDetailOnce(slug)
+            this.getDetailPump.next(getDetailResponseBody)
         }
-        getDetail()
+        catch (getDetailError) {
+            this.getDetailErrorPump.next(getDetailError)
+        }
     }
 
-    public getVariationsFromAttributeValues(productDetail: Product, variableAttributeValues: (AttributeValue | SimpleAttributeValue)[]): Product[] {
+    public getDetailOnce(slug: string): Promise<GetProductDetailResponseBody> {
+        return this.httpClient.get<GetProductDetailResponseBody>(`${this.endpoint}/${slug}/detail`).toPromise()
+    }
+
+    public getVariationsFromAttributeValues(
+        productDetail: Product,
+        variableAttributeValues: (AttributeValue | SimpleAttributeValue)[]
+    ): Product[] {
         return productDetail.variations.filter((product: Product) => {
             const allVariationAttributeValues = [
                 ...product.simpleAttributeValues as SimpleAttributeValue[],
                 ...product.attributeValues as AttributeValue[],
             ]
-            const condition = variableAttributeValues.filter((x) => !!x)
-                .every((variableAttributeValue) => !!allVariationAttributeValues.find((variationAttributeValue) => variableAttributeValue._id === variationAttributeValue._id))
-            return condition
+
+            // Only return variations wherein every attribute value passed into this method
+            // finds a match within the variation's attribute values.
+
+            return variableAttributeValues
+                .filter((x) => !!x) // TODO: Make sure that `variableAttributeValues` never has falsy elements.
+                .every((variableAttributeValue) =>
+                    !!allVariationAttributeValues.find((variationAttributeValue) =>
+                        variableAttributeValue._id === variationAttributeValue._id))
         }) as Product[]
     }
 }

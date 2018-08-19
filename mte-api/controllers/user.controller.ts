@@ -20,14 +20,24 @@ import { ApiController } from './api.controller'
 @controller(ApiEndpoints.User)
 export class UserController extends ApiController {
 
-    @inject(Types.UserService) private userService: UserService
+    constructor(
+        @inject(Types.UserService) private _userService: UserService,
+    ) { super() }
+
+    @httpGet('/', Types.isAuthenticated)
+    public getUser(
+        @request() req: Request,
+        @response() res: Response,
+    ): void {
+        this._userService.refreshSession(req, res)
+    }
 
     @httpPost('/login')
     public login(
         @request() req: Request,
         @response() res: Response,
     ): void {
-        this.userService.login(req.body, res)
+        this._userService.login(req.body, res)
             .catch(({message, status}) => res.status(status).json({message, status}))
     }
 
@@ -36,22 +46,14 @@ export class UserController extends ApiController {
         @requestParam('token') token: string,
         @response() res: Response,
     ): void {
-        this.handleApiResponse(this.userService.verifyEmail(token), res)
+        this.handleApiResponse(this._userService.verifyEmail(token), res)
     }
 
     @httpPost('/logout')
     public logout(
         @response() res: Response,
     ): void {
-        this.userService.logout(res)
-    }
-
-    @httpGet('/get-user', Types.isAuthenticated)
-    public getUser(
-        @request() req: Request,
-        @response() res: Response,
-    ): void {
-        this.userService.refreshSession(req, res)
+        this._userService.logout(res)
     }
 
     @httpPost('/register')
@@ -59,7 +61,7 @@ export class UserController extends ApiController {
         @request() req: Request,
         @response() res: Response,
     ): void {
-        this.userService.register(req.body, res)
+        this._userService.register(req.body, res)
             .catch(({message, status}) => res.status(status).json({message, status}))
     }
 
@@ -68,7 +70,7 @@ export class UserController extends ApiController {
         @request() req: Request,
         @response() res: Response,
     ): void {
-        this.handleApiResponse(this.userService.updateUser(req.user._id, req.body), res)
+        this.handleApiResponse(this._userService.updateUser(req.user._id, req.body), res)
     }
 
     @httpDelete('/:id', Types.isOwner)
@@ -76,6 +78,6 @@ export class UserController extends ApiController {
         @request() req: Request,
         @response() res: Response,
     ): void {
-        this.handleApiResponse(this.userService.deleteUser(req.params.id), res)
+        this.handleApiResponse(this._userService.deleteUser(req.params.id), res)
     }
 }

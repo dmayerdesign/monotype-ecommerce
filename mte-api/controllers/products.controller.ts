@@ -10,11 +10,9 @@ import {
     response,
 } from 'inversify-express-utils'
 
-import { AppConfig } from '@mte/app-config'
 import { ApiEndpoints, Types } from '@mte/common/constants'
 import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { ProductService } from '../services/product.service'
-import { WoocommerceMigrationService } from '../services/woocommerce-migration.service'
 import { ApiController } from './api.controller'
 
 @injectable()
@@ -23,13 +21,11 @@ export class ProductsController extends ApiController implements interfaces.Cont
 
     constructor(
         @inject(Types.ProductService) private productService: ProductService,
-        @inject(Types.WoocommerceMigrationService) private wms: WoocommerceMigrationService,
     ) { super() }
 
     @httpGet('/')
     public get(
         @queryParam('request') request: string,
-        @request() req: Request,
         @response() res: Response,
     ): void {
         const parsedQuery: GetProductsRequest | GetProductsFromIdsRequest = request

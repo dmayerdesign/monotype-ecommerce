@@ -11,6 +11,7 @@ import { StripeCardToken } from './stripe-card-token'
 export interface Order extends MongooseDocument {
     items: Ref<Product>[]
     discounts: Ref<Discount>[]
+    subTotal: Price
     total: Price
     taxPercent: number
     shippingCost: Price
@@ -28,7 +29,6 @@ export interface Order extends MongooseDocument {
     stripeCardId: string
     stripeOrderId: string
     stripeSource: string
-    stripeToken: string
-    stripeTokenObject: StripeCardToken
+    stripeToken: StripeCardToken
     customer: OrderCustomer
 }

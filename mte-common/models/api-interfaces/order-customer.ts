@@ -9,4 +9,5 @@ export interface OrderCustomer extends MongooseDocument {
     firstName: string
     shippingAddress: Address
     billingAddress: Address
+    savePaymentInfo: boolean
 }

@@ -3,7 +3,7 @@ import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Cart } from '@mte/common/models/api-interfaces/cart'
-import { Product } from '@mte/common/models/api-interfaces/product'
+import { CartItem } from '@mte/common/models/api-interfaces/cart-item'
 import { capitalize } from 'lodash'
 import { takeWhile } from 'rxjs/operators'
 import { CartService } from '../../../shared/services/cart/cart.service'
@@ -14,10 +14,19 @@ import { UiService } from '../../../shared/services/ui.service'
     selector: 'mte-cart',
     template: `
         <div class="container page-container">
-            <h1>{{ capitalize(organizationService.organization.branding.cartName) || 'Your Cart' }}</h1>
-            <div *ngFor="let item of cart?.items">
-                <h3 *ngIf="productNamesMap.has(item)">{{ productNamesMap.get(item) }}</h3>
-                <button (click)="cartService.remove(item)">Remove</button>
+            <div id="cart">
+                <h1>{{ capitalize(organizationService.organization.branding.cartName) || 'Your Cart' }}</h1>
+                <div *ngFor="let item of cart?.items">
+                    <h3>
+                        <ng-container *ngIf="itemNamesMap.has(item); then productName; else productSlug"></ng-container>
+                        <ng-template #productName>{{ itemNamesMap.get(item) }}</ng-template>
+                        <ng-template #productSlug>{{ item.slug }}</ng-template>
+                    </h3>
+                    <button (click)="cartService.remove(item)">Remove</button>
+                </div>
+            </div>
+            <div id="checkout">
+                <mte-checkout></mte-checkout>
             </div>
         </div>
     `,
@@ -25,7 +34,7 @@ import { UiService } from '../../../shared/services/ui.service'
 })
 @Heartbeat()
 export class CartComponent extends HeartbeatComponent implements OnInit, OnDestroy {
-    public productNamesMap = new WeakMap<Product, string>()
+    public itemNamesMap = new WeakMap<CartItem, string>()
     public cart: Cart
     public capitalize = capitalize
 
@@ -40,8 +49,12 @@ export class CartComponent extends HeartbeatComponent implements OnInit, OnDestr
             .pipe(takeWhile(() => this.isAlive))
             .subscribe((cart: Cart) => {
                 this.cart = cart
-                cart.items.forEach((item: Product) => {
-                    this.productNamesMap.set(item, ProductHelper.getName(item))
+                cart.items.forEach((item: CartItem) => {
+                    if (ProductHelper.isProduct(item)) {
+                        this.itemNamesMap.set(item, ProductHelper.getName(item))
+                    } else {
+                        this.itemNamesMap.set(item, item.name)
+                    }
                 })
             })
 

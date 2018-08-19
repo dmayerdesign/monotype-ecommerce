@@ -1,7 +1,6 @@
 import * as mongooseDelete from 'mongoose-delete'
-import { arrayProp, model, plugin, post, pre, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
+import { arrayProp, model, plugin, pre, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
 
-import { ImageHelper } from '../../helpers/image.helper'
 import { ProductClass } from '../enums/product-class'
 import { Attribute } from './attribute'
 import { AttributeValue } from './attribute-value'
@@ -11,6 +10,7 @@ import { Price } from './price'
 import { SimpleAttributeValue } from './simple-attribute-value'
 import { TaxonomyTerm } from './taxonomy-term'
 import { Units } from './units'
+import { Weight } from './weight'
 
 @pre('find', function() {
     this.populate('parent')
@@ -46,8 +46,8 @@ export class Product extends MongooseDocument {
     @prop() public name: string
     @prop() public slug: string
     @prop() public description: string
-    @arrayProp({ items: Image }) public featuredImages: Image[]
-    @arrayProp({ items: Image }) public images: Image[]
+    @arrayProp({ itemsType: Image }) public featuredImages: Image[]
+    @arrayProp({ itemsType: Image }) public images: Image[]
 
 	// Organizational.
     @prop({ unique: true }) public sku: string
@@ -56,14 +56,15 @@ export class Product extends MongooseDocument {
     @prop() public isParent: boolean
     @prop() public parentSku: string
     @prop({ ref: Product }) public parent: Ref<Product>
+    @prop({ default: 'Product' }) public cartItemsRefModelName: string
 
     // Financial.
     @prop() public price: Price
-    @arrayProp({ items: Price }) public priceRange: Price[]
+    @arrayProp({ itemsType: Price }) public priceRange: Price[]
     @prop() public salePrice: Price
-    @arrayProp({ items: Price }) public salePriceRange: Price[]
+    @arrayProp({ itemsType: Price }) public salePriceRange: Price[]
     @prop() public isOnSale: boolean
-    @arrayProp({ items: String }) public variationSkus: string[]
+    @arrayProp({ itemsType: String }) public variationSkus: string[]
     @arrayProp({ itemsRef: Product }) public variations: Ref<Product>[]
     @prop() public isVariation: boolean
     @prop() public isDefaultVariation: boolean
@@ -71,22 +72,22 @@ export class Product extends MongooseDocument {
 	// Attributes.
 	/// Own attributes.
     @arrayProp({ itemsRef: AttributeValue }) public attributeValues: Ref<AttributeValue>[]
-    @arrayProp({ items: SimpleAttributeValue }) public simpleAttributeValues: SimpleAttributeValue[]
+    @arrayProp({ itemsType: SimpleAttributeValue }) public simpleAttributeValues: SimpleAttributeValue[]
     /// Variation attributes.
-    @arrayProp({ items: String }) public variableProperties: string[]
+    @arrayProp({ itemsType: String }) public variableProperties: string[]
     @arrayProp({ itemsRef: Attribute }) public variableAttributes: Ref<Attribute>[]
     @arrayProp({ itemsRef: AttributeValue }) public variableAttributeValues: Ref<AttributeValue>[]
-    @arrayProp({ items: SimpleAttributeValue }) public variableSimpleAttributeValues: SimpleAttributeValue[]
+    @arrayProp({ itemsType: SimpleAttributeValue }) public variableSimpleAttributeValues: SimpleAttributeValue[]
 
 	// Taxonomy.
     @arrayProp({ itemsRef: TaxonomyTerm }) public taxonomyTerms: Ref<TaxonomyTerm>[]
-    @arrayProp({ items: String }) public taxonomyTermSlugs: string[]
+    @arrayProp({ itemsType: String }) public taxonomyTermSlugs: string[]
 
 	// Shipping.
     @prop() public units: Units
     @prop() public dimensions: Dimensions
-    @prop() public shippingWeight: number
-    @prop() public netWeight: number
+    @prop() public shippingWeight: Weight
+    @prop() public netWeight: Weight
 
 	// Additional tax.
     @prop() public additionalTax: number
@@ -98,6 +99,10 @@ export class Product extends MongooseDocument {
 }
 
 export class CreateProductError extends Error { }
+export class CreateProductsError extends Error { }
 export class FindProductError extends Error { }
+export class FindProductsError extends Error { }
 export class UpdateProductError extends Error { }
+export class UpdateProductsError extends Error { }
 export class DeleteProductError extends Error { }
+export class DeleteProductsError extends Error { }

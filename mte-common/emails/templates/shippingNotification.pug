@@ -65,7 +65,7 @@ block content
 											= ')'
 									+cell('Helvetica', 25, 'right')
 										strong
-											+currencySymbol(order)
+											+currencySymbol(product.price)
 										strong(style="font-size: 14px")= product.totalCost.toFixed(2)
 				tr
 					td(align="left" style="padding-top: 14px; padding-bottom: 14px; color: #707070; border-top: 3px solid #ececec")
@@ -76,15 +76,15 @@ block content
 										span Tax:&nbsp;
 									+cell('Helvetica', 25, 'right', 1)
 										strong
-											+currencySymbol(order)
+											+currencySymbol(order.total)
 											= tax.toFixed(2)
 							tr
 								+cell('Helvetica', 75, 'left', 1)
 									span Shipping:&nbsp;
 								+cell('Helvetica', 25, 'right', 1)
 									strong
-										+currencySymbol(order)
-										= order.shippingCost.toFixed(2)
+										+currencySymbol(order.total)
+										= order.shippingCost.amount.toFixed(2)
 				tr
 					td(align="left" style="padding-top: 14px; padding-bottom: 20px; color: #707070; border-top: 3px solid #ececec")
 						table(cellspacing="0" cellpadding="0" border="0" width="100%")
@@ -93,7 +93,7 @@ block content
 								+cell('Helvetica', 25, 'right')
 									span(style="font-size: 16px") Total:&nbsp;
 										strong
-											+currencySymbol(order)
+											+currencySymbol(order.total)
 										strong= TOTAL
 
 			+endMsoTable

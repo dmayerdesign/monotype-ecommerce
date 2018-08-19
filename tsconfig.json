@@ -6,7 +6,7 @@
       "@mte/app-config": [ "./app-config.ts" ],
       "@mte/environment": [ "./mte-client/src/environments/environment.ts" ],
       "mongoose": [ "./node_modules/@types/mongoose" ],
-      "stripe": [ "./node_modules/@types/stripe-node", "./node_modules/stripe" ]
+      "stripe": [ "./node_modules/@types/stripe", "./node_modules/stripe" ]
     },
     "module": "commonjs",
     "target": "es2015",

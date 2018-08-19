@@ -12,23 +12,20 @@
 <ng-container *ngIf="isOneColLayout()">
     <div class="sub-banner">Some info here</div>
 
-    <div class="products container">
-    
+    <div class="products container">    
         <div class="row">
-    
+
             <!-- Products grid -->
-            <div [ngClass]="getGridContainerFullWidthClasses()">
-                <mte-products-grid [products]="products"></mte-products-grid>
+            <div [ngClass]="[ 'products-grid-container', 'col-12' ]">
+                <mte-products-grid [productsSource]="products"></mte-products-grid>
             </div>
-    
+
         </div>
-    
     </div>
 </ng-container>
 
 <ng-container *ngIf="isTwoColLayout()">
     <div class="products container">
-    
         <div class="row">
             <!-- Left sidebar -->
             <ng-container *ngIf="layoutIsMdAboves() | async">
@@ -36,8 +33,8 @@
             </ng-container>
     
             <!-- Products grid -->
-            <div [ngClass]="getGridContainerWithSidebarClasses()">
-                <mte-products-grid [products]="productss"
+            <div [ngClass]="[ 'products-grid-container', 'col-lg-8', 'col-sm-12' ]">
+                <mte-products-grid [productsSource]="productsSource"
                     (productClick)="handleProductClick($event)">
                 </mte-products-grid>
             </div>
@@ -48,42 +45,97 @@
                 <ng-container *ngTemplateOutlet="leftSidebar"></ng-container>
             </div>
         </div>
-    
     </div>
     
     <ng-template #leftSidebar>
         <div [attr.aria-expanded]="leftSidebarIsExpandeds | async"
-             [ngClass]="getLeftSidebarClasses()">
+             [ngClass]="[ 'products-left-sidebar', 'col-lg-4', 'col-sm-12' ]">
             
             <h2>Narrow it down</h2>
     
             <div class="products-left-sidebar-filters">
+
+                <ng-container *ngFor="let formBuilder of productsFilterFormBuilders">
+
+                    <!-- Label -->
+                    <ng-container>
+                        <h3 *ngIf="!!formBuilder.data.taxonomy"
+                            [ngClass]="formBuilder.data.taxonomy?.slug + '-filter'">
+                            {{ formBuilder.data.taxonomy?.pluralName || formBuilder.data.taxonomy?.slug }}
+                        </h3>
+                    </ng-container>
+
+                    <!-- Form -->
+                    <ng-container>
+                        <form [formGroup]="formBuilder.formGroup">
+                            <ng-container *ngIf="isChecklist(formBuilder.data.productsFilter)">
+                                <mte-form-field
+                                    *ngFor="let formControlName of formBuilder.controlNames"
+                                    [options]="formBuilder.getOptions(formControlName)">
+
+                                    <input #input
+                                        type="checkbox"
+                                        [formControlName]="formControlName"
+                                    />
+                                </mte-form-field>
+                            </ng-container>
+                        </form>
+                    </ng-container>
+
+                </ng-container>
     
+                <!-- Standard filters -->
                 <div class="price-range-filter">
                     Price range
                 </div>
     
-                <div class="product-type-filter">
-                    Product type
+                <div class="categories-filter">
+                    Categories
                 </div>
-    
-                <div class="disc-type-filter">
-                    Disc type
+
+                <div class="brands-filter">
+                    Brands
                 </div>
-    
-                <div class="manufacturers-filter">
-                    Manufacturers
-                </div>
-    
-                <div class="stabilities-filter">
-                    Stabilities
-                </div>
-    
+
                 <div class="colors-filter">
                     Colors
                 </div>
     
-                <button>Clear filters</button>
+                <!-- Custom filters
+                <ng-container *ngIf="isDisplayingDiscs()">
+                    <div class="disc-type-filter">
+                        Disc type
+                    </div>
+        
+                    <form [formGroup]="stabilitiesFormGroup"
+                        class="stabilities-filter">
+                        Stabilities
+                        <div class="stabilities-filter--understable">
+                            <input id="stabilities-filter-understable-input"
+                                type="checkbox"
+                                formControlName="underStable"
+                            />
+                            <label for="stabilities-filter-understable-input">Understable</label>
+                        </div>
+                        <div class="stabilities-filter--stable">
+                            <input id="stabilities-filter-stable-input"
+                                type="checkbox"
+                                formControlName="stable"
+                            />
+                            <label for="stabilities-filter-stable-input">Stable</label>
+                        </div>
+                        <div class="stabilities-filter--overstable">
+                            <input id="stabilities-filter-overstable-input"
+                                type="checkbox"
+                                formControlName="overStable"
+                            />
+                            <label for="stabilities-filter-overstable-input">Overstable</label>
+                        </div>
+                        
+                    </form>
+                </ng-container>-->
+    
+                <button (click)="clearFilters()">Clear filters</button>
     
             </div>
     

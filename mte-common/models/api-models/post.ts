@@ -28,7 +28,7 @@ export class Reactions {
 export class Comment extends MongooseDocument {
     @prop() public author: Author
     @prop() public content: string
-    @arrayProp({ items: String }) public images: string[]
+    @arrayProp({ itemsType: String }) public images: string[]
     @prop() public linkEmbed: LinkEmbed
     @prop() public reactions: Reactions
 }
@@ -40,10 +40,10 @@ export class Post extends MongooseDocument {
     @prop() public content: Author
     @prop() public eventDate: Date
     @prop() public eventLocation: string
-    @arrayProp({ items: String }) public tags: string[]
-    @arrayProp({ items: String }) public images: string[]
+    @arrayProp({ itemsType: String }) public tags: string[]
+    @arrayProp({ itemsType: String }) public images: string[]
     @prop() public linkEmbed: LinkEmbed
-    @arrayProp({ items: Comment }) public comments: Comment[]
+    @arrayProp({ itemsType: Comment }) public comments: Comment[]
     @prop() public reactions: Reactions
 }
 

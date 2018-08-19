@@ -1,4 +1,3 @@
-import { injectable } from 'inversify'
 import { camelCase } from 'lodash'
 import { Schema, SchemaDefinition, SchemaOptions, SchemaTypeOpts } from 'mongoose'
 import { PropTypeArgs } from './models/mongoose-model'
@@ -59,8 +58,9 @@ export class ModelBuilder {
         this[which][camelCase(constructorName)] = definition
     }
 
-    public isValidPrimitiveOrObject(type): boolean {
+    public isValidPrimitiveOrObject(type: any): boolean {
         return (
+            Array.isArray(type) ||
             type === String ||
             type === Number ||
             type === Boolean ||
@@ -98,8 +98,9 @@ export class ModelBuilder {
         let type: any
 
         const nonPropertyOptions = [
-            'items',
-            'itemsRef'
+            'itemsType',
+            'itemsRef',
+            'itemsRefPath'
         ]
 
         if (!schemaDefinition) {
@@ -134,18 +135,28 @@ export class ModelBuilder {
         }
 
         if (propType === 'array') {
-            if (!options.items && !options.itemsRef) {
-                throw new InvalidArrayPropOptionsError('You must define items or itemsRef.')
-            }
+            if (options) {
+                if (!options.itemsType && !options.itemsRef && !options.itemsRefPath) {
+                    throw new InvalidArrayPropOptionsError('You must define itemsType, itemsRef, or itemsRefPath.')
+                }
 
-            if (options.items) {
-                schemaProperty = [ this.getTypeOrSchema(options.items) ]
-            }
-            else if (options.itemsRef) {
-                schemaProperty = [{
-                    type: Schema.Types.ObjectId,
-                    ref: options.itemsRef.name,
-                }]
+                if (options.itemsType) {
+                    schemaProperty.type = [ this.getTypeOrSchema(options.itemsType) ]
+                }
+                else if (options.itemsRef) {
+                    schemaProperty = [{
+                        type: Schema.Types.ObjectId,
+                        ref: options.itemsRef.name,
+                        ...schemaProperty,
+                    }]
+                }
+                else if (options.itemsRefPath) {
+                    schemaProperty = [{
+                        type: Schema.Types.ObjectId,
+                        refPath: options.itemsRefPath,
+                        ...schemaProperty,
+                    }]
+                }
             }
         }
         else {

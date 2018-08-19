@@ -1,6 +1,6 @@
 import { AppConfig } from '../../app-config'
-import { EmailOptions, EmailStyleOptions, OrderEmailOptions } from '../models/api-interfaces/email-options'
-import { Order } from '../models/api-models/order'
+import { EmailOptions, EmailServiceOptions, EmailStyleOptions } from '../models/api-interfaces/email-options'
+import { Order } from '../models/api-interfaces/order'
 import { Organization } from '../models/api-models/organization'
 
 export class EmailBuilder {
@@ -23,26 +23,33 @@ export class EmailBuilder {
         innerBgColor: '#fdfdfd',
     }
 
-    private commonData: {
+    private _commonData: {
         order?: Order
         organization?: Organization
+    } = {
+        order: null,
+        organization: null,
     }
 
     private customData: any = {}
 
-    public setOptions(options?: OrderEmailOptions): this {
+    public setOptions<T extends EmailOptions | EmailServiceOptions>(options?: T): this {
+        const commonDataKeys = Object.keys(this._commonData)
         if (options) {
-            // Email options
-            if (typeof options.fromEmail !== 'undefined') this._options.fromEmail = options.fromEmail
-            if (typeof options.fromName !== 'undefined') this._options.fromName = options.fromName
-            if (typeof options.toEmail !== 'undefined') this._options.toEmail = options.toEmail
-            if (typeof options.toName !== 'undefined') this._options.toName = options.toName
-            if (typeof options.subject !== 'undefined') this._options.subject = options.subject
-            if (typeof options.preheader !== 'undefined') this._options.preheader = options.preheader
+            Object.keys(options)
+                .filter((key) => commonDataKeys.indexOf(key) === -1)
+                .forEach((key) => {
+                    if (typeof options[key] !== 'undefined') {
+                        this._options[key] = options[key]
+                    }
+                })
 
-            // Common data
-            if (typeof options.order !== 'undefined') this.commonData.order = options.order
-            if (typeof options.organization !== 'undefined') this.commonData.organization = options.organization
+            Object.keys(this._commonData)
+                .forEach((key) => {
+                    if (typeof options[key] !== 'undefined') {
+                        this._commonData[key] = options[key]
+                    }
+                })
         }
         return this
     }
@@ -61,7 +68,7 @@ export class EmailBuilder {
         return {
             ...this._options,
             ...this.styles,
-            ...this.commonData,
+            ...this._commonData,
             ...this.customData,
         }
     }

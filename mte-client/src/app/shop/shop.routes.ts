@@ -4,7 +4,6 @@ import { ShopRoutePaths } from './constants/shop-route-paths'
 import { CartComponent } from './containers/cart/cart.component'
 import { CheckoutComponent } from './containers/checkout/checkout.component'
 import { ProductDetailComponent } from './containers/product-detail/product-detail.component'
-import { ProductsByTermComponent } from './containers/products-by-term/products-by-term.component'
 import { ShopAllComponent } from './containers/shop-all/shop-all.component'
 import { ShopHomeComponent } from './containers/shop-home/shop-home.component'
 
@@ -44,11 +43,11 @@ export const shopRoutes: Routes = [
             title: 'Cart'
         }
     },
-    {
-        path: ShopRoutePaths.checkout,
-        component: CheckoutComponent,
-        data: {
-            title: 'Checkout'
-        }
-    },
+    // {
+    //     path: ShopRoutePaths.checkout,
+    //     component: CheckoutComponent,
+    //     data: {
+    //         title: 'Checkout'
+    //     }
+    // },
 ]

@@ -4,15 +4,7 @@ export type Func = (...args: any[]) => any
 export type RequiredType = boolean | [boolean, string] | string | Func | [Func, string]
 export type PropType = 'array' | 'object'
 
-export interface BasePropOptions {
-    required?: RequiredType
-    enum?: string[] | object
-    get?: (value?: any) => any
-    default?: any
-    unique?: boolean
-    index?: boolean
-    type?: string | Function | Object | mongoose.Schema.Types.ObjectId
-}
+export interface BasePropOptions extends mongoose.SchemaTypeOpts<any> { }
 
 export interface MongooseDocument extends mongoose.Document {
     _id: string
@@ -20,13 +12,12 @@ export interface MongooseDocument extends mongoose.Document {
     updatedAt?: any
 }
 
-export interface PropOptions extends BasePropOptions {
-    ref?: any
-}
+export interface PropOptions extends BasePropOptions { }
 
 export interface ArrayPropOptions extends BasePropOptions {
     items?: any
     itemsRef?: any
+    itemsRefPath?: string
 }
 
 export interface SchemaTypeOptions extends PropOptions {

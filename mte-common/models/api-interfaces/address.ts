@@ -6,7 +6,7 @@ export interface Address extends MongooseDocument {
     street1: string
     street2?: string
     city: string
-    state: string // State or province
+    state: string
     country: string
     zip: string
     phone?: string
