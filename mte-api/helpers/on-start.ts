@@ -1,4 +1,4 @@
-import { ProductsFilterType } from '@mte/common/models/enums/products-filter-type'
+import { ProductsFilterType } from '@mte/common/constants/enums/products-filter-type'
 import * as rp from 'request-promise-native'
 import { DbClient } from '../data-access/db-client'
 import { OrganizationService } from '../services/organization.service'

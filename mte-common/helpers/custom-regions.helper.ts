@@ -1,5 +1,5 @@
-import { CustomRegion } from '../models/api-models/custom-region'
-import { CustomRegions } from '../models/api-models/custom-regions'
+import { CustomRegion } from '../api/entities/custom-region'
+import { CustomRegions } from '../api/entities/custom-regions'
 
 export class CustomRegionsHelper {
     public static hasDataForCustomRegion(customRegion: CustomRegion, data: any): boolean {

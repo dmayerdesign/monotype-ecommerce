@@ -1,5 +1,5 @@
 export class MongooseHelper {
-    public static toArray(arrayLikeObject: object): any[] {
+    public static toArray<T = any>(arrayLikeObject: object): T[] {
         if (Array.isArray(arrayLikeObject)) {
             return arrayLikeObject
         }

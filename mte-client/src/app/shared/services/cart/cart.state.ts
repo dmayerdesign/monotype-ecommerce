@@ -1,8 +1,8 @@
-import { Cart } from '@mte/common/models/api-interfaces/cart'
-import { Discount } from '@mte/common/models/api-interfaces/discount'
-import { Product } from '@mte/common/models/api-interfaces/product'
-import { Currency } from '@mte/common/models/enums/currency'
-import { CartDisplayItem } from '@mte/common/models/interfaces/ui/cart-display-item'
+import { Cart } from '@mte/common/api/interfaces/cart'
+import { Discount } from '@mte/common/api/interfaces/discount'
+import { Product } from '@mte/common/api/interfaces/product'
+import { Currency } from '@mte/common/constants/enums/currency'
+import { CartDisplayItem } from '@mte/common/models/ui/cart-display-item'
 
 export class CartState implements Cart {
     public count = 0

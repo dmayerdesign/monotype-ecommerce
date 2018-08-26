@@ -1,12 +1,12 @@
 import { HttpClient } from '@angular/common/http'
 import { Injectable } from '@angular/core'
+import { AttributeValue } from '@mte/common/api/interfaces/attribute-value'
+import { Product } from '@mte/common/api/interfaces/product'
+import { SimpleAttributeValue } from '@mte/common/api/interfaces/simple-attribute-value'
+import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/api/requests/get-products.request'
+import { GetProductDetailResponseBody } from '@mte/common/api/responses/get-product-detail/get-product-detail.response.body'
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
 import { RestService, SimpleError } from '@mte/common/lib/ng-modules/http'
-import { AttributeValue } from '@mte/common/models/api-interfaces/attribute-value'
-import { Product } from '@mte/common/models/api-interfaces/product'
-import { SimpleAttributeValue } from '@mte/common/models/api-interfaces/simple-attribute-value'
-import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
-import { GetProductDetailResponseBody } from '@mte/common/models/api-responses/get-product-detail/get-product-detail.response.body'
 import { Observable, Subject } from 'rxjs'
 
 @Injectable()

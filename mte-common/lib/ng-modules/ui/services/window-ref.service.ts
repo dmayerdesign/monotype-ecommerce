@@ -1,7 +1,7 @@
 import { fromEvent, of, BehaviorSubject, Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
-import { BootstrapBreakpoint } from '../../../../models/enums/bootstrap-breakpoint'
-import { BootstrapBreakpointKey } from '../../../../models/enums/bootstrap-breakpoint-key'
+import { BootstrapBreakpoint } from '../../../../constants/enums/bootstrap-breakpoint'
+import { BootstrapBreakpointKey } from '../../../../constants/enums/bootstrap-breakpoint-key'
 
 export class WindowRefService {
     private _window = typeof window !== 'undefined' ? window : null

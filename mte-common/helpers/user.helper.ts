@@ -1,4 +1,4 @@
-import { User } from '../models/api-models/user'
+import { User } from '../api/entities/user'
 
 export class UserHelper {
     public static getFullName(user: { firstName: string, lastName: string }): string {

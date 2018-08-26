@@ -1,11 +1,11 @@
+import { Currency } from '@mte/common/constants/enums/currency'
 import { ProductHelper } from '@mte/common/helpers/product.helper'
-import { Cart } from '@mte/common/models/api-interfaces/cart'
-import { CartItem } from '@mte/common/models/api-interfaces/cart-item'
-import { Price } from '@mte/common/models/api-interfaces/price'
-import { Product } from '@mte/common/models/api-interfaces/product'
-import { Organization } from '@mte/common/models/api-models/organization'
-import { Currency } from '@mte/common/models/enums/currency'
-import { CartDisplayItem } from '@mte/common/models/interfaces/ui/cart-display-item'
+import { Cart } from '@mte/common/api/interfaces/cart'
+import { CartItem } from '@mte/common/api/interfaces/cart-item'
+import { Price } from '@mte/common/api/interfaces/price'
+import { Product } from '@mte/common/api/interfaces/product'
+import { Organization } from '@mte/common/api/entities/organization'
+import { CartDisplayItem } from '@mte/common/models/ui/cart-display-item'
 
 export class CartHelper {
 

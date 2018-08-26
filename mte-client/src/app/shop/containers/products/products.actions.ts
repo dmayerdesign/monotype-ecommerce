@@ -1,5 +1,5 @@
+import { GetProductsRequest } from '@mte/common/api/requests/get-products.request'
 import { Action } from '@mte/common/lib/state-manager/action'
-import { GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
 import { GetProductsRequestFromRoute } from './products.state'
 
 export class GetProductsRequestUpdate extends Action<GetProductsRequest> { }

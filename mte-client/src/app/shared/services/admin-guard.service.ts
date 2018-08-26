@@ -8,7 +8,7 @@ import {
 } from '@angular/router'
 import { map } from 'rxjs/operators'
 
-import { UserRole } from '@mte/common/models/enums/user-role'
+import { UserRole } from '@mte/common/constants/enums/user-role'
 import { AppRoutes } from '../../constants/app-routes'
 import { RouteStateService } from './route-state.service'
 import { UserService } from './user.service'

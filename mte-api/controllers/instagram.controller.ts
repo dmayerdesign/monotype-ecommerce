@@ -5,7 +5,7 @@ import { controller, httpGet, interfaces, response } from 'inversify-express-uti
 
 import { ApiEndpoints } from '@mte/common/constants'
 import { Types } from '@mte/common/constants/inversify/types'
-import { InstagramPost } from '@mte/common/models/interfaces/ui/instagram-post'
+import { InstagramPost } from '@mte/common/models/ui/instagram-post'
 import { InstagramService } from '../services/instagram.service'
 import { ApiController } from './api.controller'
 

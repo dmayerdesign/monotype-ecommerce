@@ -7,8 +7,8 @@ import sharp from 'sharp'
 
 import { AppConfig } from '@mte/app-config'
 import { Types } from '@mte/common/constants/inversify'
-import { Product } from '@mte/common/models/api-models/product'
-import { Revision } from '@mte/common/models/api-models/revision'
+import { Product } from '@mte/common/api/entities/product'
+import { Revision } from '@mte/common/api/entities/revision'
 import { DbClient } from '../data-access/db-client'
 
 /**

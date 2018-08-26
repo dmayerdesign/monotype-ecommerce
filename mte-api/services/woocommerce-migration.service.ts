@@ -2,20 +2,20 @@ import { pluralize, singularize, titleize } from 'inflection'
 import { inject, injectable } from 'inversify'
 import { camelCase, cloneDeep, kebabCase } from 'lodash'
 
+import { Attribute } from '@mte/common/api/entities/attribute'
+import { AttributeValue } from '@mte/common/api/entities/attribute-value'
+import { Image } from '@mte/common/api/entities/image'
+import { Price } from '@mte/common/api/entities/price'
+import { Product } from '@mte/common/api/entities/product'
+import { Taxonomy } from '@mte/common/api/entities/taxonomy'
+import { TaxonomyTerm } from '@mte/common/api/entities/taxonomy-term'
+import { ListFromIdsRequest, ListFromQueryRequest } from '@mte/common/api/requests/list.request'
+import { ApiErrorResponse } from '@mte/common/api/responses/api-error.response'
+import { ApiResponse } from '@mte/common/api/responses/api.response'
+import { Currency } from '@mte/common/constants/enums/currency'
+import { ProductClass } from '@mte/common/constants/enums/product-class'
+import { WeightUnit } from '@mte/common/constants/enums/weight-unit'
 import { Types } from '@mte/common/constants/inversify'
-import { Attribute } from '@mte/common/models/api-models/attribute'
-import { AttributeValue } from '@mte/common/models/api-models/attribute-value'
-import { Image } from '@mte/common/models/api-models/image'
-import { Price } from '@mte/common/models/api-models/price'
-import { Product } from '@mte/common/models/api-models/product'
-import { Taxonomy } from '@mte/common/models/api-models/taxonomy'
-import { TaxonomyTerm } from '@mte/common/models/api-models/taxonomy-term'
-import { ListFromIdsRequest, ListFromQueryRequest } from '@mte/common/models/api-requests/list.request'
-import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
-import { ApiResponse } from '@mte/common/models/api-responses/api.response'
-import { Currency } from '@mte/common/models/enums/currency'
-import { ProductClass } from '@mte/common/models/enums/product-class'
-import { WeightUnit } from '@mte/common/models/enums/weight-unit'
 import { DbClient } from '../data-access/db-client'
 
 import * as productsJSON from '@mte/common/work-files/migration/hyzershop-products'
@@ -499,7 +499,7 @@ export class WoocommerceMigrationService {
                                 }
                             })
                             if (typeof product.netWeight !== 'undefined') {
-                                let netWeightStr = product.netWeight.toString()
+                                let netWeightStr = product.netWeight.amount.toString()
                                     .replace('.', '')
                                 if (netWeightStr.length === 2) netWeightStr += '00'
                                 if (netWeightStr.length === 3) netWeightStr += '0'

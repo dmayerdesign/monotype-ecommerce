@@ -7,9 +7,9 @@ import { Copy } from '@mte/common/constants/copy'
 import { HttpStatus } from '@mte/common/constants/http-status'
 import { MteHttpService, SimpleError } from '@mte/common/lib/ng-modules/http'
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
-import { ToastType } from '@mte/common/models/enums/toast-type'
-import { ModalData } from '@mte/common/models/interfaces/ui/modal-data'
-import { Toast } from '@mte/common/models/interfaces/ui/toast'
+import { ToastType } from '@mte/common/constants/enums/toast-type'
+import { ModalData } from '@mte/common/models/ui/modal-data'
+import { Toast } from '@mte/common/models/ui/toast'
 import { OrganizationService } from './organization.service'
 
 @Injectable({ providedIn: 'root' })

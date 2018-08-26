@@ -2,10 +2,10 @@ import { NextFunction, Request, Response } from 'express'
 import { injectable } from 'inversify'
 import * as jwt from 'jsonwebtoken'
 
+import { User } from '@mte/common/api/entities/user'
+import { ApiErrorResponse } from '@mte/common/api/responses/api-error.response'
 import { Cookies, Copy, HttpStatus } from '@mte/common/constants'
 import { UserHelper } from '@mte/common/helpers/user.helper'
-import { User } from '@mte/common/models/api-models/user'
-import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
 import { DbClient } from '../data-access/db-client'
 
 const jwtSecret = process.env.JWT_SECRET

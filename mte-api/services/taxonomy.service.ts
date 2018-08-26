@@ -1,5 +1,5 @@
 import { Types } from '@mte/common/constants/inversify/types'
-import { Taxonomy } from '@mte/common/models/api-models/taxonomy'
+import { Taxonomy } from '@mte/common/api/entities/taxonomy'
 import { inject, injectable } from 'inversify'
 import { DbClient } from '../data-access/db-client'
 import { CrudService } from './crud.service'

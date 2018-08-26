@@ -1,4 +1,4 @@
-import { NavigationItem } from '../models/api-models/navigation-item'
+import { NavigationItem } from '../api/entities/navigation-item'
 
 export class NavigationBuilder {
     public items(items: NavigationItem[]): NavigationItem[] {

@@ -1,9 +1,9 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core'
+import { BootstrapBreakpoint } from '@mte/common/constants/enums/bootstrap-breakpoint'
 import { ImageHelper } from '@mte/common/helpers/image.helper'
-import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component';
+import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
-import { BootstrapBreakpoint } from '@mte/common/models/enums/bootstrap-breakpoint'
 import { Observable } from 'rxjs'
 import { map, pairwise, takeWhile } from 'rxjs/operators'
 

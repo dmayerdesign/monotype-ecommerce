@@ -13,7 +13,7 @@ import {
 
 import { AppConfig } from '@mte/app-config'
 import { ApiEndpoints, Types } from '@mte/common/constants'
-import { GetTaxonomyTermsFromIdsRequest, GetTaxonomyTermsRequest } from '@mte/common/models/api-requests/get-taxonomy-terms.request'
+import { GetTaxonomyTermsFromIdsRequest, GetTaxonomyTermsRequest } from '@mte/common/api/requests/get-taxonomy-terms.request'
 import { TaxonomyTermService } from '../services/taxonomy-term.service'
 import { ApiController } from './api.controller'
 

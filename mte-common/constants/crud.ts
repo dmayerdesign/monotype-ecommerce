@@ -1,4 +1,4 @@
-import { SortDirection } from '../models/enums/sort-direction'
+import { SortDirection } from '../constants/enums/sort-direction'
 
 export class Crud {
     public static readonly Pagination = {

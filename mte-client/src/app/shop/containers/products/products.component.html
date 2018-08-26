@@ -17,7 +17,7 @@
 
             <!-- Products grid -->
             <div [ngClass]="[ 'products-grid-container', 'col-12' ]">
-                <mte-products-grid [productsSource]="products"></mte-products-grid>
+                <mte-products-grid [productsStream]="products"></mte-products-grid>
             </div>
 
         </div>
@@ -34,7 +34,7 @@
     
             <!-- Products grid -->
             <div [ngClass]="[ 'products-grid-container', 'col-lg-8', 'col-sm-12' ]">
-                <mte-products-grid [productsSource]="productsSource"
+                <mte-products-grid [productsStream]="productsStream"
                     (productClick)="handleProductClick($event)">
                 </mte-products-grid>
             </div>

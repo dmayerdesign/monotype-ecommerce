@@ -1,6 +1,6 @@
 import { CartHelper } from '@mte/common/helpers/cart.helper'
-import { Cart } from '@mte/common/models/api-interfaces/cart'
-import { CartItem } from '@mte/common/models/api-interfaces/cart-item'
+import { Cart } from '@mte/common/api/interfaces/cart'
+import { CartItem } from '@mte/common/api/interfaces/cart-item'
 import { cloneDeep } from 'lodash'
 import { CartAction, CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartTotalUpdate, CartUpdate } from './cart.actions'
 import { CartState } from './cart.state'

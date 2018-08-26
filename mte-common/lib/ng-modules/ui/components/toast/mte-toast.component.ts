@@ -5,7 +5,7 @@ import { takeWhile } from 'rxjs/operators'
 import { AppConfig } from '@mte/app-config'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
-import { Toast } from '../../../../../models/interfaces/ui/toast'
+import { Toast } from '../../../../../models/ui/toast'
 import { timeout } from '../../utils/timeout'
 
 @Component({

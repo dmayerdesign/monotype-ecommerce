@@ -1,4 +1,4 @@
-import { BootstrapBreakpointKey } from '../../models/enums/bootstrap-breakpoint-key'
+import { BootstrapBreakpointKey } from '../../constants/enums/bootstrap-breakpoint-key'
 
 export const bootstrapBreakpointKeys = [
     BootstrapBreakpointKey.Xs,
