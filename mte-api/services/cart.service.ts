@@ -1,8 +1,8 @@
 import { Types } from '@mte/common/constants/inversify/types'
-import { CartItem } from '@mte/common/models/api-interfaces/cart-item'
-import { GetCartItemsFromIdsRequest } from '@mte/common/models/api-requests/get-cart-items-from-ids.request'
-import { ApiErrorResponse } from '@mte/common/models/api-responses/api-error.response'
-import { ApiResponse } from '@mte/common/models/api-responses/api.response'
+import { CartItem } from '@mte/common/api/interfaces/cart-item'
+import { GetCartItemsFromIdsRequest } from '@mte/common/api/requests/get-cart-items-from-ids.request'
+import { ApiErrorResponse } from '@mte/common/api/responses/api-error.response'
+import { ApiResponse } from '@mte/common/api/responses/api.response'
 import { inject, injectable } from 'inversify'
 import { ProductService } from './product.service'
 

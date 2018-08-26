@@ -1,6 +1,6 @@
 <div class="grid">
     <div class="row">
-        <ng-container *ngFor="let product of productsSource | async">
+        <ng-container *ngFor="let product of productsStream | async">
             <div [ngClass]="[
                     'grid-product',
                     'col-lg-4', 'col-md-4', 'col-sm-6', 'col-xs-12'

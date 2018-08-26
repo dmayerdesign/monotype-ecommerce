@@ -1,13 +1,13 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
+import { CustomRegions } from '@mte/common/api/interfaces/custom-regions'
+import { Organization } from '@mte/common/api/interfaces/organization'
+import { Product } from '@mte/common/api/interfaces/product'
 import { CartHelper } from '@mte/common/helpers/cart.helper'
 import { CustomRegionsHelper } from '@mte/common/helpers/custom-regions.helper'
 import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
-import { CustomRegions } from '@mte/common/models/api-interfaces/custom-regions'
-import { Organization } from '@mte/common/models/api-interfaces/organization'
-import { Product } from '@mte/common/models/api-interfaces/product'
 import { switchMap, takeWhile } from 'rxjs/operators'
 import { CartService } from '../../../shared/services/cart/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
@@ -16,112 +16,7 @@ import { ProductService } from '../../services/product.service'
 
 @Component({
     selector: 'mte-product-detail',
-    template: `
-    <div *ngIf="displayedProduct"
-        [ngClass]="[
-            'product-detail',
-            'page-container',
-            'container'
-        ]">
-
-        <div class="product-detail-main row">
-            <div [ngClass]="[
-                'product-detail-images',
-                'col-sm-4',
-                'pl-0',
-                'pr-5'
-            ]">
-                <mte-product-image
-                    [src]="getMainImage()"
-                    [hasMagnifier]="true">
-                </mte-product-image>
-            </div>
-            <div [ngClass]="[
-                'product-detail-info',
-                'col-sm-8'
-            ]">
-                <header class="product-detail-info--header">
-                    <span [ngClass]="[
-                        'product-detail-info--brand',
-                        'ff-display-2 h3 text-uppercase'
-                    ]">{{ brandName }}</span>
-                    <h1 class="product-detail-info--name">{{ productName }}</h1>
-
-                    <!-- Custom regions: productDetailInfoHeader -->
-                    <div class="product-detail-info--header-custom-regions">
-                        <ng-container *ngFor="let region of customRegions.productDetailInfoHeader; let i = index">
-                            <ng-container *ngIf="customRegionsHelper.hasDataForCustomRegion(region, parentOrStandalone)">
-                                <div [ngClass]="[
-                                        ('product-detail-info--header-custom-region-' + i),
-                                        (region.className || '')
-                                    ]"
-                                    [innerHTML]="customRegionsHelper.getCustomRegionHtml(region, parentOrStandalone)">
-                                </div>
-                                <br>
-                            </ng-container>
-                        </ng-container>
-                    </div>
-                </header>
-
-                <div class="product-detail-info--price">
-                    {{ productHelper.getPriceString(parentOrStandalone) }}
-                </div>
-
-                <p class="product-detail-info--description"
-                    [innerHTML]="parentOrStandalone.description">
-                </p>
-
-                <product-detail-variable-attributes
-                    *ngIf="hasVariations()"
-                    [productDetail]="parentOrStandalone"
-                    (displayedProductChange)="handleDisplayedProductChange($event)"
-                    (selectedProductChange)="handleSelectedProductChange($event)">
-                </product-detail-variable-attributes>
-
-                <ng-container *ngIf="parentOrStandalone.isStandalone || isParentWithVariations()">
-                    <div class="product-detail-add-to-cart">
-                        <div class="product-detail-add-to-cart--quantity">
-                            <mte-form-field [options]="{ label: 'Quantity', hideLabel: true }">
-                                <input #input
-                                    id="add-to-cart--quantity-input"
-                                    type="number"
-                                    [disabled]="!selectedProduct"
-                                    [attr.max]="quantityInputMax"
-                                    [attr.min]="0"
-                                    [(ngModel)]="quantityToAdd">
-                            </mte-form-field>
-                        </div>
-                        <div class="product-detail-add-to-cart--submit">
-                            <button (click)="addToCart()"
-                                [disabled]="addToCartShouldBeDisabled()">
-                                Add to {{ organization.branding.cartName || 'cart' }}
-                            </button>
-                            <div *ngIf="showAddToCartSuccess"
-                                class="product-detail-add-to-cart--success">
-                                Added! <button (click)="undoAddToCart()">Undo</button>
-                            </div>
-                        </div>
-                    </div>
-                </ng-container>
-
-                <!-- Custom regions: productDetailMid -->
-                <div class="product-detail-mid--custom-regions">
-                    <ng-container *ngFor="let region of customRegions.productDetailMid; let i = index">
-                        <ng-container *ngIf="customRegionsHelper.hasDataForCustomRegion(region, parentOrStandalone)">
-                            <div [ngClass]="[
-                                    ('product-detail-mid--custom-region-' + i),
-                                    (region.className || '')
-                                ]"
-                                [innerHTML]="customRegionsHelper.getCustomRegionHtml(region, parentOrStandalone)">
-                            </div>
-                            <br>
-                        </ng-container>
-                    </ng-container>
-                </div>
-            </div>
-        </div>
-    </div>
-    `,
+    templateUrl: './product-detail.component.html',
     styleUrls: ['./product-detail.component.scss'],
     encapsulation: ViewEncapsulation.None,
     providers: [
@@ -130,7 +25,6 @@ import { ProductService } from '../../services/product.service'
 })
 @Heartbeat()
 export class ProductDetailComponent extends HeartbeatComponent implements OnInit, OnDestroy {
-
     // State.
 
     public organization: Organization

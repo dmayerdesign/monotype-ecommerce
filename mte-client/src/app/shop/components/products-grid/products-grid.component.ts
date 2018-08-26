@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core'
-import { Product } from '@mte/common/models/api-interfaces/product'
+import { Product } from '@mte/common/api/interfaces/product'
 import { Observable } from 'rxjs'
 
 @Component({
@@ -8,6 +8,6 @@ import { Observable } from 'rxjs'
     styleUrls: ['./products-grid.component.scss'],
 })
 export class ProductsGridComponent {
-    @Input() public productsSource: Observable<Product[]>
+    @Input() public productsStream: Observable<Product[]>
     @Output() public productClick = new EventEmitter<Product>()
 }

@@ -9,8 +9,8 @@ import {
     response,
 } from 'inversify-express-utils'
 
+import { GetCartItemsFromIdsRequest } from '@mte/common/api/requests/get-cart-items-from-ids.request'
 import { ApiEndpoints, Types } from '@mte/common/constants'
-import { GetCartItemsFromIdsRequest } from '@mte/common/models/api-requests/get-cart-items-from-ids.request'
 import { CartService } from '../services/cart.service'
 import { ApiController } from './api.controller'
 

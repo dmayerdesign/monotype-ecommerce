@@ -1,7 +1,7 @@
-import { Price } from '@mte/common/models/api-interfaces/price'
-import { Product } from '@mte/common/models/api-interfaces/product'
-import { TaxonomyTerm } from '@mte/common/models/api-interfaces/taxonomy-term'
-import { Currency } from '@mte/common/models/enums/currency'
+import { Price } from '@mte/common/api/interfaces/price'
+import { Product } from '@mte/common/api/interfaces/product'
+import { TaxonomyTerm } from '@mte/common/api/interfaces/taxonomy-term'
+import { Currency } from '@mte/common/constants/enums/currency'
 
 export class ProductHelper {
     public static isProduct(obj: any): boolean {

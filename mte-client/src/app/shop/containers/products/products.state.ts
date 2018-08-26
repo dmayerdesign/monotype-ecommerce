@@ -1,4 +1,4 @@
-import { GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
+import { GetProductsRequest } from '@mte/common/api/requests/get-products.request'
 import { Stateful } from '@mte/common/models/common/stateful'
 
 export interface GetProductsRequestFromRoute {

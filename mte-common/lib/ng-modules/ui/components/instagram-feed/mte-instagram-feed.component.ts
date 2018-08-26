@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http'
 import { Component, Input, OnInit } from '@angular/core'
-import { InstagramPost } from '@mte/common/models/interfaces/ui/instagram-post'
+import { InstagramPost } from '@mte/common/models/ui/instagram-post'
 import { Observable } from 'rxjs'
 
 @Component({

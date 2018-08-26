@@ -12,8 +12,8 @@ import {
 } from 'inversify-express-utils'
 
 import { ApiEndpoints, Types } from '@mte/common/constants'
-import { Product } from '@mte/common/models/api-models/product'
-import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
+import { Product } from '@mte/common/api/entities/product'
+import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/api/requests/get-products.request'
 import { ProductService } from '../services/product.service'
 import { WoocommerceMigrationService } from '../services/woocommerce-migration.service'
 import { ApiController } from './api.controller'

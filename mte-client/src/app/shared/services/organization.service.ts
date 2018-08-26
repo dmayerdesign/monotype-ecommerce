@@ -1,10 +1,9 @@
 import { HttpClient } from '@angular/common/http'
 import { Injectable } from '@angular/core'
-import { ReplaySubject, Subject } from 'rxjs'
-
+import { Organization } from '@mte/common/api/interfaces/organization'
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
 import { SimpleError } from '@mte/common/lib/ng-modules/http'
-import { Organization } from '@mte/common/models/api-interfaces/organization'
+import { ReplaySubject, Subject } from 'rxjs'
 
 @Injectable({ providedIn: 'root' })
 export class OrganizationService {
@@ -26,7 +25,6 @@ export class OrganizationService {
                 organization => {
                     this.organization = organization
                     this.organizationPump.next(organization)
-                    console.log(this.organization)
                 },
                 (error: SimpleError) => this.organizationErrorPump.next(error),
             )

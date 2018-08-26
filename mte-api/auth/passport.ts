@@ -1,9 +1,9 @@
 import * as passport from 'passport'
 import * as FacebookStrategy from 'passport-facebook'
 
+import { User } from '@mte/common/api/entities/user'
 import { Copy, Types } from '@mte/common/constants'
-import { User } from '@mte/common/models/api-models/user'
-import { bind, container } from '../config/inversify.config'
+import { bind } from '../config/inversify.config'
 import { DbClient } from '../data-access/db-client'
 
 const facebookStrategyConfig = {

@@ -1,16 +1,16 @@
 import { Component, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output, ViewEncapsulation } from '@angular/core'
+import { Attribute } from '@mte/common/api/interfaces/attribute'
+import { AttributeValue } from '@mte/common/api/interfaces/attribute-value'
+import { Product } from '@mte/common/api/interfaces/product'
+import { SimpleAttributeValue } from '@mte/common/api/interfaces/simple-attribute-value'
+import { VariableAttributeSelectOptionType } from '@mte/common/constants/enums/variable-attribute-select-option-type'
 import { MongooseHelper as mh } from '@mte/common/helpers/mongoose.helper'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
-import { Attribute } from '@mte/common/models/api-interfaces/attribute'
-import { AttributeValue } from '@mte/common/models/api-interfaces/attribute-value'
-import { Product } from '@mte/common/models/api-interfaces/product'
-import { SimpleAttributeValue } from '@mte/common/models/api-interfaces/simple-attribute-value'
-import { VariableAttributeSelectOptionType } from '@mte/common/models/enums/variable-attribute-select-option-type'
-import { VariableAttributeSelect, VariableAttributeSelectOption } from '@mte/common/models/ui-models/variable-attribute-select'
+import { VariableAttributeSelect, VariableAttributeSelectOption } from '@mte/common/models/ui/variable-attribute-select'
 import { isEqual } from 'lodash'
 import { zip } from 'rxjs'
-import { map, takeWhile } from 'rxjs/operators'
+import { delay, map, take, takeWhile } from 'rxjs/operators'
 import { CartService } from '../../../../shared/services/cart/cart.service'
 import { OrganizationService } from '../../../../shared/services/organization.service'
 import { ProductService } from '../../../services/product.service'
@@ -34,10 +34,6 @@ import { ProductService } from '../../../services/product.service'
                                 Select {{ variableAttrSelect.attribute.displayName || variableAttrSelect.attribute.slug }}
                             </option>
 
-                            <!--
-                                TODO: Disable an option if it's in stock but the last one has been
-                                added to cart.
-                            -->
                             <option *ngFor="let option of variableAttrSelect.options"
                                 [ngValue]="option"
                                 [disabled]="!variableAttrSelect.optionIsAvailable(option)">
@@ -70,6 +66,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
     public matchingVariations: Product[] = []
     public variableAttributeSelects: VariableAttributeSelect[] = []
     public selectedVariation: Product
+    private _selectedOptions: VariableAttributeSelectOption[] = []
 
     constructor(
         public productService: ProductService,
@@ -82,67 +79,38 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
 
     public ngOnInit(): void {
         // We can trust this to always fire at least once, since it's attached to a BehaviorSubject.
-        this.cartService.store.states.subscribe(() => this.initForm())
+        this.cartService.store.states
+            .pipe(take(1))
+            .subscribe(() => this.initForm())
+
+        this.cartService.store.states
+            .pipe(delay(0))
+            .subscribe(() => this.getMatchingVariationsAndUpdate())
     }
 
     public ngOnDestroy(): void { }
 
     public initForm(): void {
 
-        // First, create a list of variations that haven't yet been added to cart.
+        // First, create a list of all variations.
 
-        this.variations = (this.productDetail.variations as Product[]).filter((variation) => {
-            return !this.cartService.cart.items.find((item: Product) => item._id === variation._id)
-        })
+        this.variations = this.productDetail.variations as Product[]
 
         // Create an observable that maps each `select` to an array of all selected options whenever
         // one changes.
 
         const variableAttributeSelects = this.variableAttributeSelects = this.getVariableAttributeSelects()
-        const selectedOptionsSources = this.variableAttributeSelects.map((select) => select.selectedOptionSource)
-        zip(...selectedOptionsSources)
+        const selectedOptionsStreams = this.variableAttributeSelects.map((select) => select.selectedOptionStream)
+        zip(...selectedOptionsStreams)
             .pipe(
                 takeWhile(() => this.variableAttributeSelects === variableAttributeSelects),
-                map((selectedOptions) => selectedOptions.filter((selectedOption) => selectedOption !== null)),
+                map((selectedOptions) => selectedOptions.filter(
+                    (selectedOption) => selectedOption !== null)
+                ),
             )
             .subscribe((selectedOptions) => {
-
-                // Update the list of matching variations and let each VariableAttributeSelect know.
-
-                this.matchingVariations = this.getMatchingVariations(selectedOptions)
-                    .filter((variation) => variation.stockQuantity && variation.stockQuantity > 0)
-                this.variableAttributeSelects.forEach((variableAttrSelect) => {
-                    variableAttrSelect.setStateSilently({ matchingVariations: this.matchingVariations })
-                    setTimeout(() => variableAttrSelect.update(true))
-                })
-
-                // If there's only 1 matching variation, select it!
-
-                if (this.matchingVariations.length === 1) {
-                    const unselectedAttributeSelects = this.variableAttributeSelects.filter((attrSelect) => attrSelect.state.selectedOption === null) || []
-                    const matchedVariation = this.matchingVariations[0]
-                    this.selectedVariation = matchedVariation
-                    this.displayedProductChange.emit(matchedVariation)
-                    this.selectedProductChange.emit(matchedVariation)
-
-                    // If there's a newly selected variation but some selects don't have a selection,
-                    // give them one (each should only have 1 available option in this situation).
-
-                    if (!!unselectedAttributeSelects.length) {
-                        unselectedAttributeSelects.forEach((unselectedAttrSelect) => {
-                            const newSelectedOption = unselectedAttrSelect.options.find((option) => {
-                                return unselectedAttrSelect.optionIsAvailable(option)
-                            })
-                            unselectedAttrSelect.select(newSelectedOption)
-                        })
-                    }
-                }
-
-                // If there's more than one, display the first one.
-
-                else if (this.matchingVariations.length > 1) {
-                    this.displayedProductChange.emit(this.matchingVariations[0])
-                }
+                this._selectedOptions = selectedOptions
+                this.getMatchingVariationsAndUpdate()
             })
     }
 
@@ -156,6 +124,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
 
     public getVariableAttributeSelects(): VariableAttributeSelect[] {
         const variations = this.variations
+            // .filter((variation) => variation.stockQuantity > 0)
 
         // Get the variable attributes for the product, trusting the attribute values on each variation
         // rather than the `variableAttributes` field on the parent. Loop through each variation to
@@ -214,7 +183,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
                     mh.toArray(combination).indexOf(keyOrSlug) === -1)
             })
 
-        // For each one, create a `VariableAttributeSelect` and build it.
+        // For each one, build a `VariableAttributeSelect`.
 
         const selects = attributesAndProperties
             .map((variableAttributeOrProperty) => {
@@ -270,36 +239,94 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
     }
 
     public getMatchingVariations(selectedOptions: VariableAttributeSelectOption[]): Product[] {
-        return this.variations.filter((variation) => {
-            const variationContainsOptionValue = (option: VariableAttributeSelectOption) => {
-                switch (option.type) {
-                    case VariableAttributeSelectOptionType.PropertyValue:
-                        return isEqual(option.data, variation[option.key])
-                    case VariableAttributeSelectOptionType.SimpleAttributeValue:
-                        return !!variation.simpleAttributeValues
-                            .find((simpleAttrValue) => isEqual(option.data as SimpleAttributeValue, simpleAttrValue))
-                    case VariableAttributeSelectOptionType.AttributeValue:
-                        return !!variation.attributeValues
-                            .find((attrValue: AttributeValue) => {
-                                return (option.data as AttributeValue)._id === attrValue._id
-                            })
-                    case VariableAttributeSelectOptionType.Combination:
-                        return option.sourceOptions.every((sourceOption) => {
-                            return variationContainsOptionValue(sourceOption)
-                        })
-                }
-            }
+        return this.variations
+            // .filter((variation) => variation.stockQuantity && variation.stockQuantity > 0)
+            .filter((variation) => {
 
-            return selectedOptions
-                .every(variationContainsOptionValue)
+                // Filter out variations which have all their stock either unavailable or added
+                // to the cart.
+
+                const variationsAddedToCart = this.cartService.store.state.items
+                    .filter((cartItem) => cartItem._id === variation._id)
+                const lastOneHasBeenAddedToCart = !!variationsAddedToCart.length &&
+                    variationsAddedToCart.length === variationsAddedToCart[0].stockQuantity
+                if (lastOneHasBeenAddedToCart) {
+                    return false
+                }
+
+                // Filter out variations that don't contain the option value.
+
+                const variationContainsOptionValue = (option: VariableAttributeSelectOption) => {
+                    switch (option.type) {
+                        case VariableAttributeSelectOptionType.PropertyValue:
+                            return isEqual(option.data, variation[option.key])
+                        case VariableAttributeSelectOptionType.SimpleAttributeValue:
+                            return !!variation.simpleAttributeValues
+                                .find((simpleAttrValue) =>
+                                    isEqual(option.data as SimpleAttributeValue, simpleAttrValue))
+                        case VariableAttributeSelectOptionType.AttributeValue:
+                            return !!variation.attributeValues
+                                .find((attrValue: AttributeValue) => {
+                                    return (option.data as AttributeValue)._id === attrValue._id
+                                })
+                        case VariableAttributeSelectOptionType.Combination:
+                            return option.sourceOptions.every((sourceOption) =>
+                                variationContainsOptionValue(sourceOption))
+                    }
+                }
+
+                return selectedOptions
+                    .every(variationContainsOptionValue)
+            })
+    }
+
+    public getMatchingVariationsAndUpdate(): void {
+
+        // Update the list of matching variations and let each VariableAttributeSelect know.
+
+        this.matchingVariations = this.getMatchingVariations(this._selectedOptions)
+        this.variableAttributeSelects.forEach((variableAttrSelect) => {
+            variableAttrSelect.setStateSilently({ matchingVariations: this.matchingVariations })
+            setTimeout(() => variableAttrSelect.update(true))
         })
+
+        // If there's only 1 in-stock matching variation, select it!
+
+        if (this.matchingVariations.filter((variation) => variation.stockQuantity > 0).length === 1) {
+            const unselectedAttributeSelects = this.variableAttributeSelects.filter((attrSelect) => attrSelect.state.selectedOption === null) || []
+            const matchedVariation = this.matchingVariations[0]
+            this.selectedVariation = matchedVariation
+            this.displayedProductChange.emit(matchedVariation)
+            this.selectedProductChange.emit(matchedVariation)
+
+            // If there's a newly selected variation but some selects don't have a selection,
+            // give them one (each should only have 1 available option in this situation).
+
+            if (!!unselectedAttributeSelects.length) {
+                unselectedAttributeSelects.forEach((unselectedAttrSelect) => {
+                    const newSelectedOption = unselectedAttrSelect.options.find((option) => {
+                        return unselectedAttrSelect.optionIsAvailable(option)
+                    })
+                    unselectedAttrSelect.select(newSelectedOption)
+                })
+            }
+        }
+
+        // If there's more than one, display the first one.
+
+        else if (this.matchingVariations.length > 1) {
+            this.displayedProductChange.emit(this.matchingVariations[0])
+        }
     }
 
     public reset(): void {
-        this.matchingVariations = [ ...this.variations ]
+        this._selectedOptions = []
+        this.getMatchingVariationsAndUpdate()
+        this.variableAttributeSelects.forEach((variableAttributeSelect) => {
+            variableAttributeSelect.reset()
+        })
         this.selectedVariation = null
         this.selectedProductChange.emit(null)
-        this.initForm()
     }
 
     public variableAttributeSelectsAreAllNull(): boolean {

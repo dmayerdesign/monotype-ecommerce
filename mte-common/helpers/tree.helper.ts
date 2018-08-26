@@ -1,4 +1,4 @@
-import { Tree } from '../models/interfaces/common/tree'
+import { Tree } from '../models/common/tree'
 
 export class TreeHelper {
     public static hasChildren<T extends Tree>(item: T): boolean {

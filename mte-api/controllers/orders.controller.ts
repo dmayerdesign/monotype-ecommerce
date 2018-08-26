@@ -12,9 +12,9 @@ import {
     response,
 } from 'inversify-express-utils'
 
+import { GetOrdersRequest } from '@mte/common/api/requests/get-orders.request'
+import { PlaceOrderRequest } from '@mte/common/api/requests/place-order.request'
 import { ApiEndpoints, Types } from '@mte/common/constants'
-import { GetOrdersRequest } from '@mte/common/models/api-requests/get-orders.request'
-import { PlaceOrderRequest } from '@mte/common/models/api-requests/place-order.request'
 import { OrderService } from '../services/order.service'
 import { ApiController } from './api.controller'
 

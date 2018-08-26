@@ -1,6 +1,6 @@
-import { HttpClient, HttpErrorResponse, HttpEvent, HttpParams } from '@angular/common/http'
+import { HttpClient, HttpParams } from '@angular/common/http'
 import { Observable, Subject } from 'rxjs'
-import { ListFromIdsRequest, ListRequest } from '../../../models/api-requests/list.request'
+import { ListFromIdsRequest, ListRequest } from '../../../api/requests/list.request'
 import { SimpleError } from './http.models'
 
 export abstract class RestService<T> {
@@ -10,15 +10,15 @@ export abstract class RestService<T> {
 
     public documents: T[]
     protected getPump = new Subject<T[]>()
-    public getSource: Observable<T[]>
+    public getStream: Observable<T[]>
     protected getErrorPump = new Subject<SimpleError>()
-    public getErrorSource: Observable<SimpleError>
+    public getErrorStream: Observable<SimpleError>
 
     constructor(protected httpClient: HttpClient) {
-        this.getSource = this.getPump.asObservable()
-        this.getErrorSource = this.getErrorPump.asObservable()
+        this.getStream = this.getPump.asObservable()
+        this.getErrorStream = this.getErrorPump.asObservable()
 
-        this.getSource.subscribe(documents => {
+        this.getStream.subscribe(documents => {
             this.documents = documents
         })
     }

@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core'
 import { bootstrapBreakpointKeys } from '../../../../../constants/bootstrap/bootstrap-breakpoint-keys'
-import { BootstrapBreakpoint } from '../../../../../models/enums/bootstrap-breakpoint'
+import { BootstrapBreakpoint } from '../../../../../constants/enums/bootstrap-breakpoint'
 import { WindowRefService } from '../../services/window-ref.service'
 
 @Component({

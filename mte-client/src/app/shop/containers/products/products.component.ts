@@ -1,5 +1,13 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
 import { ActivatedRoute, ParamMap, Router } from '@angular/router'
+import { Attribute } from '@mte/common/api/interfaces/attribute'
+import { Product } from '@mte/common/api/interfaces/product'
+import { ProductsFilter } from '@mte/common/api/interfaces/products-filter'
+import { Taxonomy } from '@mte/common/api/interfaces/taxonomy'
+import { TaxonomyTerm } from '@mte/common/api/interfaces/taxonomy-term'
+import { GetProductsFilter, GetProductsFilterType, GetProductsRequest } from '@mte/common/api/requests/get-products.request'
+import { BootstrapBreakpointKey } from '@mte/common/constants/enums/bootstrap-breakpoint-key'
+import { ProductsFilterType } from '@mte/common/constants/enums/products-filter-type'
 import { MongooseHelper as mh } from '@mte/common/helpers/mongoose.helper'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
@@ -8,14 +16,6 @@ import { MteFormBuilderService } from '@mte/common/lib/ng-modules/forms/services
 import { MteFormBuilder } from '@mte/common/lib/ng-modules/forms/utilities/form.builder'
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
 import { Store } from '@mte/common/lib/state-manager/store'
-import { Attribute } from '@mte/common/models/api-interfaces/attribute'
-import { Product } from '@mte/common/models/api-interfaces/product'
-import { ProductsFilter } from '@mte/common/models/api-interfaces/products-filter'
-import { Taxonomy } from '@mte/common/models/api-interfaces/taxonomy'
-import { TaxonomyTerm } from '@mte/common/models/api-interfaces/taxonomy-term'
-import { GetProductsFilter, GetProductsFilterType, GetProductsRequest } from '@mte/common/models/api-requests/get-products.request'
-import { BootstrapBreakpointKey } from '@mte/common/models/enums/bootstrap-breakpoint-key'
-import { ProductsFilterType } from '@mte/common/models/enums/products-filter-type'
 import { camelCase, isEqual, kebabCase, uniqWith } from 'lodash'
 import { BehaviorSubject, Observable } from 'rxjs'
 import { debounceTime, filter, map, takeWhile } from 'rxjs/operators'
@@ -45,7 +45,7 @@ export interface ProductsFilterFormData {
 @Heartbeat()
 export class ProductsComponent extends HeartbeatComponent implements OnInit, OnDestroy {
     @Input() public title: string
-    public productsSource: Observable<Product[]>
+    public productsStream: Observable<Product[]>
     public taxonomyTerm: TaxonomyTerm
     public leftSidebarIsExpandeds: BehaviorSubject<boolean>
     public store = new Store<ProductsState>(new ProductsState(), productsReducer)
@@ -73,7 +73,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
         // Set up the filters.
         // TODO: Instead of importing `productsFilters`, get `organization.storeUiSettings.productsFilters`.
 
-        this.productsFilterFormBuilders = mh.toArray(storeUiSettings.productsFilters)
+        this.productsFilterFormBuilders = mh.toArray<ProductsFilter>(storeUiSettings.productsFilters)
             .filter((productsFilter) => productsFilter.enabled)
             .map((productsFilter) => {
                 const formGroupOptions: MteFormGroupOptions = {}
@@ -81,7 +81,10 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                 // Configure a checklist of taxonomy terms.
                 // TODO: Add support for AttributeValueChecklist.
 
-                if (productsFilter.filterType === ProductsFilterType.TaxonomyTermChecklist) {
+                if (
+                    productsFilter.filterType === ProductsFilterType.TaxonomyTermChecklist &&
+                    productsFilter.taxonomyTermOptions.length
+                ) {
                     const taxonomy = (productsFilter.taxonomyTermOptions[0] as TaxonomyTerm).taxonomy as Taxonomy
                     let mteFormBuilder: MteFormBuilder<ProductsFilterFormData>
                     let lastFormValue: any
@@ -295,8 +298,8 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
 
         // Get products based on the parsed request.
 
-        if (!this.productsSource) {
-            this.productsSource = this._productService.getSource
+        if (!this.productsStream) {
+            this.productsStream = this._productService.getStream
         }
         this._productService.get(request)
     }

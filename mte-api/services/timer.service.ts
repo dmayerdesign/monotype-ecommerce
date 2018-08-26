@@ -2,8 +2,8 @@ import { inject, injectable } from 'inversify'
 import * as rp from 'request-promise-native'
 
 import { Types } from '@mte/common/constants/inversify'
-import { Timer } from '@mte/common/models/api-models/timer'
-import { ListFromQueryRequest } from '@mte/common/models/api-requests/list.request'
+import { Timer } from '@mte/common/api/entities/timer'
+import { ListFromQueryRequest } from '@mte/common/api/requests/list.request'
 import { DbClient } from '../data-access/db-client'
 import { ErrorService } from './error.service'
 

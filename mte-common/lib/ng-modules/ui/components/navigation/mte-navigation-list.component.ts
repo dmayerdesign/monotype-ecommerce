@@ -1,8 +1,8 @@
 import { Component, Input } from '@angular/core'
 import { ArrayHelper } from '../../../../../helpers/array.helper'
 import { TreeHelper } from '../../../../../helpers/tree.helper'
-import { NavigationItem } from '../../../../../models/api-models/navigation-item'
-import { BootstrapBreakpointKey } from '../../../../../models/enums/bootstrap-breakpoint-key'
+import { NavigationItem } from '../../../../../api/entities/navigation-item'
+import { BootstrapBreakpointKey } from '../../../../../constants/enums/bootstrap-breakpoint-key'
 import { WindowRefService } from '../../services/window-ref.service'
 
 export interface NavigationListContext {

@@ -1,7 +1,7 @@
 import { Response } from 'express'
 import { injectable } from 'inversify'
 
-import { ApiResponse } from '@mte/common/models/api-responses/api.response'
+import { ApiResponse } from '@mte/common/api/responses/api.response'
 
 @injectable()
 export class ApiController<T = any> {

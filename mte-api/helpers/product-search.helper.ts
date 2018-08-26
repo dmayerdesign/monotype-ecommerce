@@ -1,4 +1,4 @@
-import { GetProductsFilter } from '@mte/common/models/api-requests/get-products.request'
+import { GetProductsFilter } from '@mte/common/api/requests/get-products.request'
 import { injectable } from 'inversify'
 import { cloneDeep } from 'lodash'
 import { MongoHelper } from './mongo.helper'
