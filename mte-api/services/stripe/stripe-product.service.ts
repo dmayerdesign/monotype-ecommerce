@@ -1,10 +1,13 @@
 import { inject, injectable } from 'inversify'
 import * as Stripe from 'stripe'
 
-import { Copy } from '@mte/common/constants/copy'
-import { Types } from '@mte/common/constants/inversify'
+import { Attribute } from '@mte/common/api/entities/attribute'
+import { AttributeValue } from '@mte/common/api/entities/attribute-value'
 import { Price } from '@mte/common/api/entities/price'
 import { Product } from '@mte/common/api/entities/product'
+import { SimpleAttributeValue } from '@mte/common/api/entities/simple-attribute-value'
+import { Copy } from '@mte/common/constants/copy'
+import { Types } from '@mte/common/constants/inversify'
 import { ProductService } from '../product.service'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -27,33 +30,36 @@ export class StripeProductService {
         if (products.some((product) => product.isVariation)) {
             throw new Error('Attempted to create Stripe products from product variations.')
         }
-        if (!products || !products.length || products.every((product) => product.isEnteredIntoStripe)) {
+        if (!products || !products.length || products.every((product) => product.existsInStripe)) {
             return []
         }
         if (products.some((product) => product.stockQuantity === 0)) {
             throw new Error(Copy.ErrorMessages.itemOutOfStockError)
         }
-        const stripeCreateProductPromises: Promise<Stripe.products.IProduct>[] = []
-        let stripeProducts: Stripe.products.IProduct[]
-        for (const dbProduct of products) {
-            if (dbProduct.isEnteredIntoStripe) {
-                continue
-            }
-            try {
-                stripeCreateProductPromises.push(stripe.products.create(
-                    this._getProductCreationOptionsFromProduct(dbProduct)
-                ))
-                stripeProducts = await Promise.all(stripeCreateProductPromises)
-                return stripeProducts
-            }
-            catch (error) {
-                if (error.message.indexOf('exists') > -1) {
-                    return stripeProducts
+        const stripeProducts: Stripe.products.IProduct[] = []
+        try {
+            for (const dbProduct of products) {
+                if (dbProduct.existsInStripe) {
+                    continue
                 }
-                else {
-                    throw error
+                try {
+                    const stripeProduct = await stripe.products.create(
+                        this._getProductCreationOptionsFromProduct(dbProduct)
+                    )
+                    stripeProducts.push(stripeProduct)
+                }
+                catch (error) {
+                    if (error.message.indexOf('exists') > -1) {
+                        continue
+                    } else {
+                        throw error
+                    }
                 }
             }
+            return stripeProducts
+        }
+        catch (error) {
+            throw error
         }
     }
 
@@ -61,31 +67,35 @@ export class StripeProductService {
         if (products.some((product) => product.isParent)) {
             throw new Error('Attempted to create Stripe skus from parent products.')
         }
-        if (!products || !products.length || products.every((product) => product.isEnteredIntoStripe)) {
+        if (!products || !products.length || products.every((product) => product.existsInStripe)) {
             return []
         }
         if (products.some((product) => product.stockQuantity === 0)) {
             throw new Error(Copy.ErrorMessages.itemOutOfStockError)
         }
-        const stripeCreateProductPromises: Promise<Stripe.skus.ISku>[] = []
-        let stripeProducts: Stripe.skus.ISku[]
 
-        for (const dbProduct of products) {
-            try {
-                stripeCreateProductPromises.push(stripe.skus.create(
-                    this._getSkuCreationOptionsFromProduct(dbProduct)
-                ))
-                stripeProducts = await Promise.all(stripeCreateProductPromises)
-                return stripeProducts
-            }
-            catch (error) {
-                if (error.message.indexOf('exists') > -1) {
-                    return stripeProducts
+        const stripeSkus: Stripe.skus.ISku[] = []
+        try {
+            for (const dbProduct of products.filter((product) => !product.existsInStripe)) {
+                try {
+                    const parentProduct = await this.productService.getParentProduct(dbProduct)
+                    const skuCreationOptions = this._getSkuCreationOptionsFromProduct(dbProduct, parentProduct)
+                    const stripeSku = await stripe.skus.create(skuCreationOptions)
+                    stripeSkus.push(stripeSku)
                 }
-                else {
-                    throw error
+                catch (error) {
+                    if (error.message.indexOf('exists') > -1) {
+                        continue
+                    } else {
+                        throw error
+                    }
                 }
             }
+
+            return stripeSkus
+        }
+        catch (error) {
+            throw error
         }
     }
 
@@ -95,11 +105,43 @@ export class StripeProductService {
             name: product.name,
             description: product.description,
             type: 'good',
+            attributes: [
+                ...product.variableAttributes.map((attribute: Attribute) => attribute.slug),
+                ...product.variableProperties,
+            ]
         }
     }
 
-    private _getSkuCreationOptionsFromProduct(product: Product): Stripe.skus.ISkuCreationOptions {
+    private _getSkuCreationOptionsFromProduct(
+        product: Product,
+        parentProduct: Product,
+    ): Stripe.skus.ISkuCreationOptions {
         const priceAmount = (this.productService.determinePrice(product) as Price).amount
+        const attributeDictionary: Stripe.skus.ISkuAttributes = {}
+
+        parentProduct.variableAttributes.forEach((variableAttribute: Attribute) => {
+            let attributeValue: AttributeValue | SimpleAttributeValue = product.attributeValues
+                .find((_attributeValue: AttributeValue) =>
+                    _attributeValue.attribute.toString() === variableAttribute._id.toString()) as AttributeValue
+            if (!attributeValue) {
+                attributeValue = product.simpleAttributeValues.find((_simpleAttributeValue) =>
+                    _simpleAttributeValue.attribute.toString() === variableAttribute._id.toString())
+            }
+            if (attributeValue) {
+                attributeDictionary[variableAttribute.slug] = attributeValue.value
+            }
+        })
+
+        parentProduct.variableProperties.forEach((variableProperty) => {
+            let value = product[variableProperty]
+            if (typeof value === 'object') {
+                if (!!value.amount) {
+                    value = value.amount
+                }
+            }
+            attributeDictionary[variableProperty] = value
+        })
+
         return {
             id: product.sku,
             product: product.parentSku,
@@ -108,9 +150,10 @@ export class StripeProductService {
                 quantity: product.stockQuantity,
                 type: 'finite',
             },
-            // Stripe stores price in the lowest denomination.
-            // By multiplying by 100, we're assuming USD.
+            // Stripe stores price in the lowest currency denomination.
+            // By multiplying by 100 (cents), we're assuming USD.
             price: priceAmount * 100,
+            attributes: attributeDictionary,
         }
     }
 }

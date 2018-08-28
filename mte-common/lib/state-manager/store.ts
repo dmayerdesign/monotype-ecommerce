@@ -7,6 +7,7 @@ import { Reducer } from './reducer'
 export class Store<StateType> {
     private _statePump: BehaviorSubject<StateType>
     private _states: Observable<StateType>
+    private _initialState: StateType
     private _incomingActionPump: ReplaySubject<Action>
     private _incomingActions: Observable<Action>
     private _completedActionPump: ReplaySubject<Action>
@@ -15,6 +16,7 @@ export class Store<StateType> {
     private _future: { action: Action, state: StateType }[] = []
 
     constructor(initialState: StateType, private _reducer: Reducer<StateType>, private _historyMaxLength = 5) {
+        this._initialState = initialState
         this._statePump = new BehaviorSubject<StateType>(Object.assign({}, initialState))
         this._states = this._statePump.asObservable()
         this._incomingActionPump = new ReplaySubject<Action>(1)
@@ -23,14 +25,23 @@ export class Store<StateType> {
         this._completedActions = this._completedActionPump.asObservable()
         this._history.push({
             action: null,
-            state: initialState,
+            state: this._initialState,
         })
     }
+
+    // Workhorse methods.
 
     public dispatch(action: Action): Observable<boolean> {
         const currentState = this._statePump.getValue()
         try {
-            const newState = this._reducer(Object.assign({}, currentState), action)
+            let newState: StateType
+            if (action === null) {
+                newState = Object.assign({}, this._initialState)
+                this._history = []
+            }
+            else {
+                newState = this._reducer(Object.assign({}, currentState), action)
+            }
             this._incomingActionPump.next(action)
             this._statePump.next(newState)
             this._completedActionPump.next(action)
@@ -101,23 +112,11 @@ export class Store<StateType> {
         return observableOf(false)
     }
 
-    /** Experimental */
-    public redoPreviousAction(): Observable<boolean> {
-        if (this._history.length > 0) {
-            const { action } = this._history[this._history.length - 1]
-            return this.dispatch(action)
-        }
-        return observableOf(false)
+    public reset(): Observable<boolean> {
+        return this.dispatch(null)
     }
 
-    /** Experimental */
-    public doNextAction(): Observable<boolean> {
-        if (this._future.length > 0) {
-            const { action } = this._future[this._future.length - 1]
-            return this.dispatch(action)
-        }
-        return observableOf(false)
-    }
+    // Getters.
 
     public get states(): Observable<StateType> {
         return this._states

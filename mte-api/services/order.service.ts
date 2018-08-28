@@ -1,13 +1,13 @@
 import { inject, injectable } from 'inversify'
 
-import { Types } from '@mte/common/constants/inversify/types'
-import { CartHelper } from '@mte/common/helpers/cart.helper'
-import { UserHelper } from '@mte/common/helpers/user.helper'
 import { Order } from '@mte/common/api/entities/order'
 import { Product } from '@mte/common/api/entities/product'
 import { GetCartItemsFromIdsRequest } from '@mte/common/api/requests/get-cart-items-from-ids.request'
 import { ApiErrorResponse } from '@mte/common/api/responses/api-error.response'
 import { StripeSubmitOrderResponse } from '@mte/common/api/responses/stripe/stripe-submit-order.response'
+import { Types } from '@mte/common/constants/inversify/types'
+import { CartHelper } from '@mte/common/helpers/cart.helper'
+import { UserHelper } from '@mte/common/helpers/user.helper'
 import { DbClient } from '../data-access/db-client'
 import { CartService } from './cart.service'
 import { CrudService } from './crud.service'
@@ -55,10 +55,10 @@ export class OrderService extends CrudService<Order> {
 
             this.productService.updateInventory(allProducts, paidOrder)
 
-            // Set `enteredIntoStripe` asynchronously.
+            // Set `existsInStripe` asynchronously.
 
             this.productService.update(allProducts.map((product) => product._id), {
-                enteredIntoStripe: true,
+                existsInStripe: true,
             })
 
             // Send a receipt.

@@ -136,7 +136,7 @@ export class WoocommerceMigrationService {
                                         else {
                                             const value = newProduct[key]
                                             const attributeValueSlug = kebabCase(theKey + '-' + newProduct[key].replace(/\s/g, '-').replace(/[\(\)]/g, '').toLowerCase())
-                                            const attributeSlug = theKey
+                                            const attributeSlug = kebabCase(theKey)
                                             try {
                                                 const attribute = await this.dbClient.findOrCreate(Attribute, {
                                                     slug: attributeSlug

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core'
+import { Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
 import { CustomRegions } from '@mte/common/api/interfaces/custom-regions'
 import { Organization } from '@mte/common/api/interfaces/organization'
@@ -13,6 +13,7 @@ import { CartService } from '../../../shared/services/cart/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { UiService } from '../../../shared/services/ui.service'
 import { ProductService } from '../../services/product.service'
+import { ProductDetailVariableAttributesComponent } from './product-detail-variable-attributes/product-detail-variable-attributes.component'
 
 @Component({
     selector: 'mte-product-detail',
@@ -25,6 +26,12 @@ import { ProductService } from '../../services/product.service'
 })
 @Heartbeat()
 export class ProductDetailComponent extends HeartbeatComponent implements OnInit, OnDestroy {
+
+    // Child components.
+
+    @ViewChild(ProductDetailVariableAttributesComponent)
+    public variableAttributesComponent: ProductDetailVariableAttributesComponent
+
     // State.
 
     public organization: Organization
@@ -171,6 +178,8 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
         await this.cartService.add(this.selectedProduct._id, this.quantityToAdd)
         this.addingToCart = false
         this.showAddToCartSuccess = true
+        this.cartService.store.reset()
+        this.variableAttributesComponent.reset()
         setTimeout(() => this.showAddToCartSuccess = false, 10000)
     }
 

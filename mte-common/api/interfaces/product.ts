@@ -65,5 +65,5 @@ export interface Product extends MongooseDocument {
 	// Sales.
     stockQuantity: number
     totalSales: number
-    isEnteredIntoStripe: boolean
+    existsInStripe: boolean
 }

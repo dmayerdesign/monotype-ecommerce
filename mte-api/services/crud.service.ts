@@ -1,7 +1,7 @@
-import { MongooseDocument } from '@mte/common/lib/goosetype'
 import { ListFromIdsRequest, ListFromQueryRequest, ListFromSearchRequest } from '@mte/common/api/requests/list.request'
 import { ApiErrorResponse } from '@mte/common/api/responses/api-error.response'
 import { ApiResponse } from '@mte/common/api/responses/api.response'
+import { MongooseDocument } from '@mte/common/lib/goosetype'
 import { Response } from 'express'
 import { injectable } from 'inversify'
 import { DbClient } from '../data-access/db-client'
@@ -88,6 +88,7 @@ export abstract class CrudService<T extends MongooseDocument> {
     public async update(ids: string[], updateObj: object, concatArrays?: boolean): Promise<ApiResponse<T[]>> {
         try {
             const updatedDocs = await this.dbClient.update<T>(this.model, ids, updateObj, concatArrays)
+console.log('UPDATED', updateObj, updatedDocs)
             return new ApiResponse(updatedDocs)
         }
         catch (error) {

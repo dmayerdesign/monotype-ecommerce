@@ -1,13 +1,10 @@
-import { Copy, HttpStatus } from '@mte/common/constants'
-import { Types } from '@mte/common/constants/inversify'
-import { UserHelper } from '@mte/common/helpers/user.helper'
 import { Order } from '@mte/common/api/entities/order'
-import { Organization } from '@mte/common/api/entities/organization'
-import { FindProductsError } from '@mte/common/api/entities/product'
-import { Product } from '@mte/common/api/entities/product'
+import { FindProductsError, Product } from '@mte/common/api/entities/product'
 import { ListFromIdsRequest, ListFromQueryRequest } from '@mte/common/api/requests/list.request'
 import { ApiErrorResponse } from '@mte/common/api/responses/api-error.response'
 import { StripeSubmitOrderResponse } from '@mte/common/api/responses/stripe/stripe-submit-order.response'
+import { Copy, HttpStatus } from '@mte/common/constants'
+import { Types } from '@mte/common/constants/inversify'
 import { inject, injectable } from 'inversify'
 import 'stripe'
 import { DbClient } from '../../data-access/db-client'
@@ -54,7 +51,10 @@ export class StripeOrderService {
                 query: { sku: { $in: variationAndStandaloneSkus } },
                 limit: 0,
             })
-            const variationsAndStandalones = await this.dbClient.findQuery<Product>(Product, request)
+            const variationsAndStandalones = await this.dbClient.findQuery<Product>(Product, request, null, [
+                'attributeValues',
+                'simpleAttributeValues',
+            ])
             const variations = variationsAndStandalones.filter((variationOrStandalone) => variationOrStandalone.isVariation)
             const standalones = variationsAndStandalones.filter((variationOrStandalone) => !variationOrStandalone.isVariation)
 
@@ -78,16 +78,19 @@ export class StripeOrderService {
                 ids: parentIds,
                 limit: 0
             })
-            const parents = await this.dbClient.findIds<Product>(Product, findParentsRequest)
+            const parents = await this.dbClient.findIds<Product>(Product, findParentsRequest, [
+                'variableAttributes',
+                'variableAttributeValues',
+            ])
 
             // Create the products and SKUs in Stripe.
-            await this.stripeProductService.createProducts([ ...parents, ...standalones ])
+            const stripeProducts = await this.stripeProductService.createProducts([ ...parents, ...standalones ])
+console.log('Stripe products:', stripeProducts)
             await this.stripeProductService.createSkus([ ...variations, ...standalones ])
 
             // Create the order in Stripe.
             const createOrderResponse = await this.stripeOrderActionsService.createOrder(orderData)
             const { order } = createOrderResponse.body
-
             // If the customer opted to save their payment info, create the customer in Stripe.
             if (order.customer.savePaymentInfo) {
                 const stripeCustomer = await this.stripeCustomerService.createCustomer(order)

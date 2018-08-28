@@ -94,7 +94,7 @@ export class Product extends MongooseDocument {
 	// Sales.
     @prop() public stockQuantity: number
     @prop() public totalSales: number
-    @prop() public isEnteredIntoStripe: boolean
+    @prop() public existsInStripe: boolean
 }
 
 export class CreateProductError extends Error { }
