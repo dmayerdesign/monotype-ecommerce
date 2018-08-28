@@ -130,7 +130,11 @@ export class DbClient<M extends MongooseDocument> {
      * @param {string[]} ids An array of `ObjectId`s
      * @memberof DbClient
      */
-    public async findIds<T extends MongooseDocument = M>(_model: typeof MongooseDocument, { skip, limit, sortBy, sortDirection, ids }: ListFromIdsRequest): Promise<T[]> {
+    public async findIds<T extends MongooseDocument = M>(
+        _model: typeof MongooseDocument,
+        { skip, limit, sortBy, sortDirection, ids }: ListFromIdsRequest,
+        populateOptionsArr?: (PopulateOptions | string)[]
+    ): Promise<T[]> {
         try {
             return await this.findQuery<T>(_model, new ListFromQueryRequest({
                 skip,
@@ -138,7 +142,7 @@ export class DbClient<M extends MongooseDocument> {
                 sortBy,
                 sortDirection,
                 query: { _id: { $in: ids } },
-            }))
+            }), null, populateOptionsArr)
         }
         catch (error) {
             throw error

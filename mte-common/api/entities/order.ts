@@ -1,6 +1,5 @@
 import { OrderStatus } from '../../constants/enums/order-status'
 import { arrayProp, model, prop, MongooseDocument, MongooseSchemaOptions, Ref } from '../../lib/goosetype'
-import { Order as IOrder } from '../interfaces/order'
 import { Discount } from './discount'
 import { EasypostRate } from './easypost-rate'
 import { OrderCustomer } from './order-customer'
@@ -9,7 +8,7 @@ import { Product } from './product'
 import { StripeCardToken } from './stripe-card-token'
 
 @model(Order, MongooseSchemaOptions.timestamped)
-export class Order extends MongooseDocument implements IOrder {
+export class Order extends MongooseDocument {
     @arrayProp({ itemsRef: Product }) public items: Ref<Product>[]
     @arrayProp({ itemsRef: Discount }) public discounts: Ref<Discount>[]
     @prop() public subTotal: Price

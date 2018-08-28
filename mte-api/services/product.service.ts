@@ -1,10 +1,6 @@
 import { Response } from 'express'
 import { inject, injectable } from 'inversify'
 
-import { HttpStatus } from '@mte/common/constants'
-import { Types } from '@mte/common/constants/inversify'
-import { ProductHelper } from '@mte/common/helpers/product.helper'
-import { Price } from '@mte/common/api/interfaces/price'
 import { Attribute } from '@mte/common/api/entities/attribute'
 import { AttributeValue } from '@mte/common/api/entities/attribute-value'
 import { Order } from '@mte/common/api/entities/order'
@@ -12,11 +8,15 @@ import { Organization } from '@mte/common/api/entities/organization'
 import { Product } from '@mte/common/api/entities/product'
 import { Taxonomy } from '@mte/common/api/entities/taxonomy'
 import { TaxonomyTerm } from '@mte/common/api/entities/taxonomy-term'
+import { Price } from '@mte/common/api/interfaces/price'
 import { GetProductsFilterType, GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/api/requests/get-products.request'
 import { ListFromQueryRequest } from '@mte/common/api/requests/list.request'
 import { ApiErrorResponse } from '@mte/common/api/responses/api-error.response'
 import { ApiResponse } from '@mte/common/api/responses/api.response'
 import { GetProductDetailResponseBody } from '@mte/common/api/responses/get-product-detail/get-product-detail.response.body'
+import { HttpStatus } from '@mte/common/constants'
+import { Types } from '@mte/common/constants/inversify'
+import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { DbClient } from '../data-access/db-client'
 import { ProductSearchHelper } from '../helpers/product-search.helper'
 import { CrudService } from './crud.service'
@@ -373,6 +373,16 @@ export class ProductService extends CrudService<Product> {
             }
         }
         return parentProducts
+    }
+
+    public async getParentProduct(product: Product): Promise<Product> {
+        if (!product.isVariation) {
+            return null
+        }
+        return this.dbClient.findOne(Product, { sku: product.parentSku }, [
+            'variableAttributes',
+            'variableAttributeValues',
+        ])
     }
 
     // Helpers.
