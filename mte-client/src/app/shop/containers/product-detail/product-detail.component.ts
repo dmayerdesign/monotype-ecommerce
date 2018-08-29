@@ -178,7 +178,6 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
         await this.cartService.add(this.selectedProduct._id, this.quantityToAdd)
         this.addingToCart = false
         this.showAddToCartSuccess = true
-        this.cartService.store.reset()
         this.variableAttributesComponent.reset()
         setTimeout(() => this.showAddToCartSuccess = false, 10000)
     }

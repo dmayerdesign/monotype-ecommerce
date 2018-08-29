@@ -1,6 +1,8 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
 import { ActivatedRoute, ParamMap, Router } from '@angular/router'
 import { Attribute } from '@mte/common/api/interfaces/attribute'
+import { AttributeValue } from '@mte/common/api/interfaces/attribute-value'
+import { Price } from '@mte/common/api/interfaces/price'
 import { Product } from '@mte/common/api/interfaces/product'
 import { ProductsFilter } from '@mte/common/api/interfaces/products-filter'
 import { Taxonomy } from '@mte/common/api/interfaces/taxonomy'
@@ -46,6 +48,7 @@ export interface ProductsFilterFormData {
 export class ProductsComponent extends HeartbeatComponent implements OnInit, OnDestroy {
     @Input() public title: string
     public productsStream: Observable<Product[]>
+    public priceRange: Price[]
     public taxonomyTerm: TaxonomyTerm
     public leftSidebarIsExpandeds: BehaviorSubject<boolean>
     public store = new Store<ProductsState>(new ProductsState(), productsReducer)
@@ -80,7 +83,6 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
 
                 // Configure a checklist of taxonomy terms.
                 // TODO: Add support for AttributeValueChecklist.
-
                 if (
                     productsFilter.filterType === ProductsFilterType.TaxonomyTermChecklist &&
                     productsFilter.taxonomyTermOptions.length
@@ -141,6 +143,69 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                         })
                     return mteFormBuilder
                 }
+
+                // Or, configure a checklist of attribute values.
+
+                if (
+                    productsFilter.filterType === ProductsFilterType.AttributeValueChecklist &&
+                    productsFilter.attributeValueOptions.length
+                ) {
+                    const attribute = (productsFilter.attributeValueOptions[0] as AttributeValue).attribute as Attribute
+                    let mteFormBuilder: MteFormBuilder<ProductsFilterFormData>
+                    let lastFormValue: any
+
+                    // Build the form.
+
+                    productsFilter.attributeValueOptions.forEach((attributeValue: AttributeValue) => {
+                        formGroupOptions[camelCase(attributeValue.slug)] = {
+                            defaultValue: false,
+                            label: attributeValue.name || attributeValue.slug,
+                            formControlType: 'checkbox',
+                        }
+                    })
+                    mteFormBuilder = this._mteFormBuilderService.create<ProductsFilterFormData>(formGroupOptions)
+
+                    // Attach useful data to the form builder for convenience.
+
+                    mteFormBuilder.data = {
+                        attribute,
+                        productsFilter,
+                    }
+
+                    // Push a new request every time the form value changes.
+
+                    mteFormBuilder.formGroup.valueChanges
+                        .pipe(
+                            filter((formValue) => !isEqual(formValue, lastFormValue))
+                        )
+                        .subscribe((formValue) => {
+                            lastFormValue = formValue
+                            const request = this.store.state.getProductsRequest
+                            const newRequestFilters = !!request.filters
+                                ? [ ...request.filters ]
+                                : []
+                            const newRequest = {
+                                ...request,
+                                filters: newRequestFilters
+                            }
+                            const indexOfExistingFilter = newRequestFilters.findIndex((filter) => {
+                                return filter.values.some((filterValue) =>
+                                    productsFilter.attributeValueOptions.some((attributeValue: AttributeValue) =>
+                                        filterValue === attributeValue.slug))
+                            })
+                            if (indexOfExistingFilter > -1) {
+                                newRequestFilters.splice(indexOfExistingFilter, 1)
+                            }
+                            newRequestFilters.push({
+                                type: GetProductsFilterType.AttributeValue,
+                                values: Object.keys(formValue)
+                                    .filter((key) => !!formValue[key])
+                                    .map((key) => kebabCase(key))
+                            })
+                            this.store.dispatch(new GetProductsRequestUpdate(newRequest))
+                        })
+                    return mteFormBuilder
+                }
             })
             .filter((formBuilder) => formBuilder !== undefined)
 
@@ -171,6 +236,11 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                         })
                     })
                 }
+            })
+
+        this._productService.getPriceRange()
+            .then((priceRange) => {
+                this.priceRange = priceRange
             })
 
         // Construct a new request when the query params change.

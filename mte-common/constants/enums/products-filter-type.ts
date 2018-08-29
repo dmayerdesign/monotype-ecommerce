@@ -1,7 +1,7 @@
 export enum ProductsFilterType {
     // Defaults.
     PriceRange = 'price-range',
-    Categories = 'categories',
+    ProductTypes = 'product-types',
     Brands = 'brands',
     Colors = 'colors',
 

@@ -1,15 +1,13 @@
 import { HttpClient, HttpParams } from '@angular/common/http'
 import { Injectable } from '@angular/core'
-import { ApiEndpoints } from '@mte/common/constants'
-import { LocalStorageKeys } from '@mte/common/constants/local-storage-keys'
-import { CartHelper } from '@mte/common/helpers/cart.helper'
-import { Action } from '@mte/common/lib/state-manager/action'
-import { Store } from '@mte/common/lib/state-manager/store'
 import { Cart } from '@mte/common/api/interfaces/cart'
 import { CartItem } from '@mte/common/api/interfaces/cart-item'
 import { GetCartItemsFromIdsRequest } from '@mte/common/api/requests/get-cart-items-from-ids.request'
+import { ApiEndpoints } from '@mte/common/constants'
+import { LocalStorageKeys } from '@mte/common/constants/local-storage-keys'
+import { CartHelper } from '@mte/common/helpers/cart.helper'
+import { Store } from '@mte/common/lib/state-manager/store'
 import { Observable } from 'rxjs'
-import { filter } from 'rxjs/operators'
 import { OrganizationService } from '../organization.service'
 import { UserService } from '../user.service'
 import { UtilService } from '../util.service'
@@ -71,6 +69,7 @@ export class CartService {
     public async add(id: string, quantity = 1): Promise<Cart> {
         try {
             const item: CartItem = await this.getItem(id)
+console.log('ITEM TO ADD', item)
             this.store.dispatch(new CartItemAddition({ item, quantity }))
         }
         catch (error) {

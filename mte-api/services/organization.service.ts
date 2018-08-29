@@ -1,6 +1,3 @@
-import { Copy } from '@mte/common/constants/copy'
-import { HttpStatus } from '@mte/common/constants/http-status'
-import { Types } from '@mte/common/constants/inversify/types'
 import { Attribute } from '@mte/common/api/entities/attribute'
 import { AttributeValue } from '@mte/common/api/entities/attribute-value'
 import { NavigationItem } from '@mte/common/api/entities/navigation-item'
@@ -9,8 +6,11 @@ import { Taxonomy } from '@mte/common/api/entities/taxonomy'
 import { TaxonomyTerm } from '@mte/common/api/entities/taxonomy-term'
 import { ApiErrorResponse } from '@mte/common/api/responses/api-error.response'
 import { ApiResponse } from '@mte/common/api/responses/api.response'
+import { Copy } from '@mte/common/constants/copy'
 import { Currency } from '@mte/common/constants/enums/currency'
 import { ProductsFilterType } from '@mte/common/constants/enums/products-filter-type'
+import { HttpStatus } from '@mte/common/constants/http-status'
+import { Types } from '@mte/common/constants/inversify/types'
 import { inject, injectable } from 'inversify'
 import { DbClient } from '../data-access/db-client'
 import { CrudService } from './crud.service'
@@ -190,7 +190,7 @@ export class OrganizationService extends CrudService<Organization> {
                             displayAlways: true,
                         },
                         {
-                            filterType: ProductsFilterType.Categories,
+                            filterType: ProductsFilterType.ProductTypes,
                             enabled: true,
                             displayAlways: true,
                         },

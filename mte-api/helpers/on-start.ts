@@ -30,7 +30,7 @@ export async function onStart(): Promise<void> {
                         displayAlways: true,
                     },
                     {
-                        filterType: ProductsFilterType.Categories,
+                        filterType: ProductsFilterType.ProductTypes,
                         enabled: true,
                         displayAlways: true,
                     },

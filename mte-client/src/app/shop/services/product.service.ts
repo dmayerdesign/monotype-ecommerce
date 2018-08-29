@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http'
+import { HttpClient, HttpParams } from '@angular/common/http'
 import { Injectable } from '@angular/core'
 import { AttributeValue } from '@mte/common/api/interfaces/attribute-value'
 import { Product } from '@mte/common/api/interfaces/product'
@@ -8,6 +8,7 @@ import { GetProductDetailResponseBody } from '@mte/common/api/responses/get-prod
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
 import { RestService, SimpleError } from '@mte/common/lib/ng-modules/http'
 import { Observable, Subject } from 'rxjs'
+import { Price } from '@mte/common/api/interfaces/price';
 
 @Injectable()
 export class ProductService extends RestService<Product> {
@@ -29,6 +30,12 @@ export class ProductService extends RestService<Product> {
 
     public get(request = new GetProductsRequest()): Promise<void> {
         return super.get(request)
+    }
+
+    public getPriceRange(request = new GetProductsRequest()): Promise<Price[]> {
+        let params = new HttpParams()
+        if (request) params = params.set('request', JSON.stringify(request))
+        return this.httpClient.get<Price[]>(`${this.endpoint}/price-range`, { params }).toPromise()
     }
 
     public async getDetail(slug: string): Promise<void> {
