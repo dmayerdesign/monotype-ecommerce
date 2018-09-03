@@ -3,5 +3,5 @@ import { ProductsFilterDisplayWhen as IProductsFilterDisplayWhen } from '../inte
 
 @schema(ProductsFilterDisplayWhen)
 export class ProductsFilterDisplayWhen extends MongooseDocument implements IProductsFilterDisplayWhen {
-    @prop() public taxonomyTerm: string
+    @prop() public taxonomyTermSlug: string
 }

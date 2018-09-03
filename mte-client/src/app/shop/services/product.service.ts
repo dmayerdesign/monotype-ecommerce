@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http'
 import { Injectable } from '@angular/core'
 import { AttributeValue } from '@mte/common/api/interfaces/attribute-value'
+import { Price } from '@mte/common/api/interfaces/price'
 import { Product } from '@mte/common/api/interfaces/product'
 import { SimpleAttributeValue } from '@mte/common/api/interfaces/simple-attribute-value'
 import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/api/requests/get-products.request'
@@ -8,7 +9,6 @@ import { GetProductDetailResponseBody } from '@mte/common/api/responses/get-prod
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
 import { RestService, SimpleError } from '@mte/common/lib/ng-modules/http'
 import { Observable, Subject } from 'rxjs'
-import { Price } from '@mte/common/api/interfaces/price';
 
 @Injectable()
 export class ProductService extends RestService<Product> {

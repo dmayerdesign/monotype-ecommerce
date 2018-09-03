@@ -1,4 +1,4 @@
-{
+export const hyzershop = {
     "defaultsHaveBeenSet": false,
     "name": "Hyzer Shop",
     "dbaNames": [],
@@ -120,7 +120,7 @@
                 "displayAlways": true
             },
             {
-                "filterType": "categories",
+                "filterType": "product-types",
                 "enabled": true,
                 "displayAlways": true
             },

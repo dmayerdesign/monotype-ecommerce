@@ -1,3 +1,3 @@
 export interface ProductsFilterDisplayWhen {
-    taxonomyTerm: string
+    taxonomyTermSlug: string
 }

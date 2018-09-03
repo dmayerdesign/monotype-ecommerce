@@ -11,7 +11,6 @@ import { BootstrapBreakpointKey } from '@mte/common/constants/enums/bootstrap-br
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
 import { CartService } from '../../../shared/services/cart/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
-import { UiService } from '../../../shared/services/ui.service'
 import { UserService } from '../../../shared/services/user.service'
 import { ShopRouterLinks } from '../../constants/shop-router-links'
 
@@ -106,7 +105,11 @@ export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
             }
         }
 
-        if (this.organization && this.organization.globalStyles && this.organization.globalStyles.shoppingCartIcons) {
+        if (
+            this.organization &&
+            this.organization.globalStyles &&
+            this.organization.globalStyles.shoppingCartIcons
+        ) {
             return this.organization.globalStyles.shoppingCartIcons[getIconSuffix()]
         }
         else {
