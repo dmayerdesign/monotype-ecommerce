@@ -1,6 +1,21 @@
-<p>
-  home works!
+<div style="width: 200px; margin-left: 200px; margin-top: 100px">
+  <mte-range-slider
+    [(ngModel)]="range"
+    [step]="5"
+    [minLimit]="0"
+    [maxLimit]="400"
+    knobColor="#929"
+    knobInnerColor="#fff"
+    trackColor="#000"
+    (mouseUp)="handleMouseUp()">
+  </mte-range-slider>
+</div>
+
+model: {{ range }}
+
+<!--
   <mte-instagram-feed [apiEndpoint]="instagramEndpoint"></mte-instagram-feed>
   <mte-login></mte-login>
   <mte-signup></mte-signup>
-</p>
+-->
+
