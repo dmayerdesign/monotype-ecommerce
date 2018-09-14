@@ -10,11 +10,12 @@ import { Taxonomy } from '@mte/common/api/entities/taxonomy'
 import { TaxonomyTerm } from '@mte/common/api/entities/taxonomy-term'
 import { Price } from '@mte/common/api/interfaces/price'
 import { GetProductsFilterType, GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/api/requests/get-products.request'
-import { ListFromQueryRequest } from '@mte/common/api/requests/list.request'
+import { ListFromQueryRequest, ListRequest } from '@mte/common/api/requests/list.request'
 import { ApiErrorResponse } from '@mte/common/api/responses/api-error.response'
 import { ApiResponse } from '@mte/common/api/responses/api.response'
 import { GetProductDetailResponseBody } from '@mte/common/api/responses/get-product-detail/get-product-detail.response.body'
 import { HttpStatus } from '@mte/common/constants'
+import { Currency } from '@mte/common/constants/enums/currency'
 import { Types } from '@mte/common/constants/inversify'
 import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { DbClient } from '../data-access/db-client'
@@ -146,122 +147,7 @@ export class ProductService extends CrudService<Product> {
      * @param {express.Response} [res] The express Response; pass this in if you want the documents fetched as a stream and piped into the response
      */
     public async getProducts(body: GetProductsRequest, res?: Response): Promise<ApiResponse<Product[]>|void> {
-        const {
-            limit,
-            skip,
-            search,
-            filters,
-            sortBy,
-            sortDirection,
-        } = new GetProductsRequest(body)
-        let taxonomyTermIdsToSearch: string[]
-        const searchRegExp = search ? new RegExp(search, 'gi') : undefined
-        const searchOr: {
-            $or: {
-                [key: string]: { $regex: RegExp } | { $in: string[] }
-            }[]
-        } = { $or: [] }
-        let allQuery: any
-        let searchQuery: { $and: object[] }
-        let query: any
-
-        // If it's a search or filter, create a basic `$and` query for parent and standalone products.
-
-        if (search || filters) {
-            searchQuery = {
-                $and: [
-                    { isVariation: { $ne: true } },
-                ],
-            }
-        }
-
-        // Else, display parent and standalone products unfiltered.
-
-        else {
-            allQuery = { isVariation: { $ne: true } }
-        }
-
-        // If there's a search:
-
-        if (searchRegExp) {
-
-            // Find taxonomy terms from the taxonomies defined by the organization as searchable.
-
-            let organization: Organization
-            try {
-                organization = (await this.organizationService.getOrganization()).body
-                const searchableTaxonomiesQuery = {
-                    taxonomy: { $in: organization.searchableTaxonomies },
-                    name: { $regex: searchRegExp },
-                    slug: { $regex: searchRegExp },
-                }
-                taxonomyTermIdsToSearch = (await this.dbClient.findQuery<TaxonomyTerm>(TaxonomyTerm, new ListFromQueryRequest({ query: searchableTaxonomiesQuery })))
-                    .map((taxonomyTerm) => taxonomyTerm._id)
-            }
-            catch (error) {
-                throw error
-            }
-
-            // Add the regex queries for name, description, and taxonomy.
-            searchOr.$or.push({ name: { $regex: searchRegExp } })
-            searchOr.$or.push({ description: { $regex: searchRegExp } })
-            searchOr.$or.push({ taxonomyTerms: { $in: taxonomyTermIdsToSearch } })
-
-            searchQuery.$and.push(searchOr)
-        }
-
-        // If there are filters, convert each filter to MongoDB query syntax and add it to `searchQuery.$and`.
-
-        if (filters) {
-            for (let i = 0; i < filters.length; i++) {
-                const filter = filters[i]
-
-                if (!filter.values || !filter.values.length) {
-                    continue
-                }
-
-                // Property Filter.
-
-                if (filter.type === GetProductsFilterType.Property) {
-                    searchQuery = this.productSearchHelper.propertyFilter(filter, searchQuery)
-                }
-
-                // Simple Attribute Value Filter - performs an `$elemMatch` on `Product.simpleAttributeValues` and `Product.variableSimpleAttributeValues`.
-
-                if (filter.type === GetProductsFilterType.SimpleAttributeValue) {
-                    searchQuery = this.productSearchHelper.simpleAttributeValueFilter(filter, searchQuery)
-                }
-
-                // Attribute Value Filter - performs an `$or` query on `Product.attributeValues` and `Product.variableAttributeValues`.
-
-                if (filter.type === GetProductsFilterType.AttributeValue) {
-                    searchQuery = this.productSearchHelper.attributeValueFilter(filter, searchQuery)
-                }
-
-                // Taxonomy Filter - performs an `$or` query on `Product.taxonomyTerms`.
-                    // Note: here we're using `slug`s rather than `id`s so that all the front end needs
-                    // to provide is the `slug`. For AttributeValues, we're fetching them in order to display
-                    // them anyway, so providing the `id` is easier.
-
-                if (filter.type === GetProductsFilterType.TaxonomyTerm) {
-                    const taxonomyTerms = await this.dbClient.findQuery<TaxonomyTerm>(TaxonomyTerm, {
-                        query: { slug: { $in: filter.values } }
-                    })
-                    const taxonomyTermIds = taxonomyTerms ? taxonomyTerms.map((term) => term._id) : []
-                    searchQuery = this.productSearchHelper.taxonomyTermFilter(taxonomyTermIds, searchQuery)
-                }
-            }
-        }
-
-        query = allQuery || searchQuery
-
-        const listFromQueryRequest = new ListFromQueryRequest({
-            limit,
-            skip,
-            sortBy,
-            sortDirection,
-            query
-        })
+        const listFromQueryRequest = await this._createGetProductsRequestQuery(body)
 
         const populates = [
             'taxonomyTerms',
@@ -282,6 +168,49 @@ export class ProductService extends CrudService<Product> {
                 throw new ApiErrorResponse(error)
             }
         }
+    }
+
+    public async getPriceRangeForRequest(body: GetProductsRequest): Promise<ApiResponse<Price[]>> {
+        const listFromQueryRequest = await this._createGetProductsRequestQuery(body)
+        listFromQueryRequest.skip = 0
+        listFromQueryRequest.limit = 0
+        try {
+            const products = await this.dbClient.findQuery(Product, listFromQueryRequest)
+            const _priceRange = products.reduce<Price[]>((priceRange, product) => {
+                const price = ProductHelper.getPrice(product)
+                if (Array.isArray(price)) {
+                    if (priceRange[0].amount === 0 || price[0].amount < priceRange[0].amount) {
+                        priceRange[0] = price[0]
+                    }
+                    if (price[1].amount > priceRange[1].amount) {
+                        priceRange[1] = price[1]
+                    }
+                } else {
+                    if (price.amount < priceRange[0].amount) {
+                        priceRange[0] = price
+                    }
+                    if (price.amount > priceRange[1].amount) {
+                        priceRange[1] = price
+                    }
+                }
+                return priceRange
+            }, [
+                { amount: 0, currency: Currency.USD },
+                { amount: 0, currency: Currency.USD },
+            ])
+            return new ApiResponse(_priceRange)
+        }
+        catch (error) {
+            throw new ApiErrorResponse(error)
+        }
+    }
+
+    public async getPriceRangeForShop(): Promise<ApiResponse<Price[]>> {
+        const getProductsRequest = new GetProductsRequest({
+            skip: 0,
+            limit: 0
+        })
+        return this.getPriceRangeForRequest(getProductsRequest)
     }
 
     public createOne(product: Product): Promise<ApiResponse<Product>> {
@@ -416,6 +345,125 @@ export class ProductService extends CrudService<Product> {
             catch (error) {
                 reject(new ApiErrorResponse(error))
             }
+        })
+    }
+
+    private async _createGetProductsRequestQuery(body: GetProductsRequest): Promise<ListFromQueryRequest> {
+        const {
+            limit,
+            skip,
+            search,
+            filters,
+            sortBy,
+            sortDirection,
+        } = new GetProductsRequest(body)
+        let taxonomyTermIdsToSearch: string[]
+        const searchRegExp = search ? new RegExp(search, 'gi') : undefined
+        const searchOr: {
+            $or: {
+                [key: string]: { $regex: RegExp } | { $in: string[] }
+            }[]
+        } = { $or: [] }
+        let allQuery: any
+        let searchQuery: { $and: object[] }
+        let query: any
+
+        // If it's a search or filter, create a basic `$and` query for parent and standalone products.
+
+        if (search || filters) {
+            searchQuery = {
+                $and: [
+                    { isVariation: { $ne: true } },
+                ],
+            }
+        }
+
+        // Else, display parent and standalone products unfiltered.
+
+        else {
+            allQuery = { isVariation: { $ne: true } }
+        }
+
+        // If there's a search:
+
+        if (searchRegExp) {
+
+            // Find taxonomy terms from the taxonomies defined by the organization as searchable.
+
+            let organization: Organization
+            try {
+                organization = (await this.organizationService.getOrganization()).body
+                const searchableTaxonomiesQuery = {
+                    taxonomy: { $in: organization.searchableTaxonomies },
+                    name: { $regex: searchRegExp },
+                    slug: { $regex: searchRegExp },
+                }
+                taxonomyTermIdsToSearch = (await this.dbClient.findQuery<TaxonomyTerm>(TaxonomyTerm, new ListFromQueryRequest({ query: searchableTaxonomiesQuery })))
+                    .map((taxonomyTerm) => taxonomyTerm._id)
+            }
+            catch (error) {
+                throw error
+            }
+
+            // Add the regex queries for name, description, and taxonomy.
+            searchOr.$or.push({ name: { $regex: searchRegExp } })
+            searchOr.$or.push({ description: { $regex: searchRegExp } })
+            searchOr.$or.push({ taxonomyTerms: { $in: taxonomyTermIdsToSearch } })
+
+            searchQuery.$and.push(searchOr)
+        }
+
+        // If there are filters, convert each filter to MongoDB query syntax and add it to `searchQuery.$and`.
+
+        if (filters) {
+            for (let i = 0; i < filters.length; i++) {
+                const filter = filters[i]
+
+                if (!filter.values || !filter.values.length) {
+                    continue
+                }
+
+                // Property Filter.
+
+                if (filter.type === GetProductsFilterType.Property) {
+                    searchQuery = this.productSearchHelper.propertyFilter(filter, searchQuery)
+                }
+
+                // Simple Attribute Value Filter - performs an `$elemMatch` on `Product.simpleAttributeValues` and `Product.variableSimpleAttributeValues`.
+
+                if (filter.type === GetProductsFilterType.SimpleAttributeValue) {
+                    searchQuery = this.productSearchHelper.simpleAttributeValueFilter(filter, searchQuery)
+                }
+
+                // Attribute Value Filter - performs an `$or` query on `Product.attributeValues` and `Product.variableAttributeValues`.
+
+                if (filter.type === GetProductsFilterType.AttributeValue) {
+                    searchQuery = this.productSearchHelper.attributeValueFilter(filter, searchQuery)
+                }
+
+                // Taxonomy Filter - performs an `$or` query on `Product.taxonomyTerms`.
+                    // Note: here we're using `slug`s rather than `id`s so that all the front end needs
+                    // to provide is the `slug`. For AttributeValues, we're fetching them in order to display
+                    // them anyway, so providing the `id` is easier.
+
+                if (filter.type === GetProductsFilterType.TaxonomyTerm) {
+                    const taxonomyTerms = await this.dbClient.findQuery<TaxonomyTerm>(TaxonomyTerm, {
+                        query: { slug: { $in: filter.values } }
+                    })
+                    const taxonomyTermIds = taxonomyTerms ? taxonomyTerms.map((term) => term._id) : []
+                    searchQuery = this.productSearchHelper.taxonomyTermFilter(taxonomyTermIds, searchQuery)
+                }
+            }
+        }
+
+        query = allQuery || searchQuery
+
+        return new ListFromQueryRequest({
+            limit,
+            skip,
+            sortBy,
+            sortDirection,
+            query
         })
     }
 }

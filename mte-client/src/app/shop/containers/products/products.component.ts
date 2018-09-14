@@ -1,12 +1,15 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core'
 import { ActivatedRoute, ParamMap, Router } from '@angular/router'
 import { Attribute } from '@mte/common/api/interfaces/attribute'
+import { AttributeValue } from '@mte/common/api/interfaces/attribute-value'
+import { Price } from '@mte/common/api/interfaces/price'
 import { Product } from '@mte/common/api/interfaces/product'
 import { ProductsFilter } from '@mte/common/api/interfaces/products-filter'
 import { Taxonomy } from '@mte/common/api/interfaces/taxonomy'
 import { TaxonomyTerm } from '@mte/common/api/interfaces/taxonomy-term'
 import { GetProductsFilter, GetProductsFilterType, GetProductsRequest } from '@mte/common/api/requests/get-products.request'
 import { BootstrapBreakpointKey } from '@mte/common/constants/enums/bootstrap-breakpoint-key'
+import { Currency } from '@mte/common/constants/enums/currency'
 import { ProductsFilterType } from '@mte/common/constants/enums/products-filter-type'
 import { MongooseHelper as mh } from '@mte/common/helpers/mongoose.helper'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
@@ -17,8 +20,8 @@ import { MteFormBuilder } from '@mte/common/lib/ng-modules/forms/utilities/form.
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
 import { Store } from '@mte/common/lib/state-manager/store'
 import { camelCase, isEqual, kebabCase, uniqWith } from 'lodash'
-import { BehaviorSubject, Observable } from 'rxjs'
-import { debounceTime, filter, map, takeWhile } from 'rxjs/operators'
+import { BehaviorSubject, Observable, Subject } from 'rxjs'
+import { debounceTime, filter, map, take, takeUntil, takeWhile, tap } from 'rxjs/operators'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { ShopQueryParamKeys } from '../../constants/shop-query-param-keys'
 import { ShopRouterLinks } from '../../constants/shop-router-links'
@@ -46,10 +49,23 @@ export interface ProductsFilterFormData {
 export class ProductsComponent extends HeartbeatComponent implements OnInit, OnDestroy {
     @Input() public title: string
     public productsStream: Observable<Product[]>
+    public priceRange: Price[]
     public taxonomyTerm: TaxonomyTerm
     public leftSidebarIsExpandeds: BehaviorSubject<boolean>
     public store = new Store<ProductsState>(new ProductsState(), productsReducer)
     public productsFilterFormBuilders: MteFormBuilder[]
+    private _productsFilterFormBuilders: MteFormBuilder[]
+    private _productsFilterFormValuesMap = new Map<ProductsFilter, any>()
+    private _shouldExecuteRequestOnFormValueChanges = false
+    private _existingFilterFinderMap = new Map<
+        ProductsFilterType,
+        (productsFilter?: ProductsFilter) => (getProductsFilter: GetProductsFilter) => boolean
+    >()
+    private _formGroupOptionsFactoryMap = new Map<
+        ProductsFilterType,
+        (productsFilter?: ProductsFilter) => MteFormGroupOptions
+    >()
+    private _newRequestFilterFactoryMap = new Map<ProductsFilterType, (formValue: any) => GetProductsFilter>()
 
     constructor(
         public windowRef: WindowRefService,
@@ -62,7 +78,6 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     ) { super() }
 
     public ngOnInit(): void {
-        const { storeUiSettings } = this._organizationService.organization
 
         // Expand the left sidebar if the screen width is large or above.
 
@@ -70,107 +85,30 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
             this.windowRef.mediaBreakpointAbove(BootstrapBreakpointKey.Lg)
         )
 
-        // Set up the filters.
-        // TODO: Instead of importing `productsFilters`, get `organization.storeUiSettings.productsFilters`.
-
-        this.productsFilterFormBuilders = mh.toArray<ProductsFilter>(storeUiSettings.productsFilters)
-            .filter((productsFilter) => productsFilter.enabled)
-            .map((productsFilter) => {
-                const formGroupOptions: MteFormGroupOptions = {}
-
-                // Configure a checklist of taxonomy terms.
-                // TODO: Add support for AttributeValueChecklist.
-
-                if (
-                    productsFilter.filterType === ProductsFilterType.TaxonomyTermChecklist &&
-                    productsFilter.taxonomyTermOptions.length
-                ) {
-                    const taxonomy = (productsFilter.taxonomyTermOptions[0] as TaxonomyTerm).taxonomy as Taxonomy
-                    let mteFormBuilder: MteFormBuilder<ProductsFilterFormData>
-                    let lastFormValue: any
-
-                    // Build the form.
-
-                    productsFilter.taxonomyTermOptions.forEach((taxonomyTerm: TaxonomyTerm) => {
-                        formGroupOptions[camelCase(taxonomyTerm.slug)] = {
-                            defaultValue: false,
-                            label: taxonomyTerm.singularName || taxonomyTerm.slug,
-                            formControlType: 'checkbox',
-                        }
-                    })
-                    mteFormBuilder = this._mteFormBuilderService.create<ProductsFilterFormData>(formGroupOptions)
-
-                    // Attach useful data to the form builder for convenience.
-
-                    mteFormBuilder.data = {
-                        taxonomy,
-                        productsFilter,
-                    }
-
-                    // Push a new request every time the form value changes.
-
-                    mteFormBuilder.formGroup.valueChanges
-                        .pipe(
-                            filter((formValue) => !isEqual(formValue, lastFormValue))
-                        )
-                        .subscribe((formValue) => {
-                            lastFormValue = formValue
-                            const request = this.store.state.getProductsRequest
-                            const newRequestFilters = !!request.filters
-                                ? [ ...request.filters ]
-                                : []
-                            const newRequest = {
-                                ...request,
-                                filters: newRequestFilters
-                            }
-                            const indexOfExistingFilter = newRequestFilters.findIndex((filter) => {
-                                return filter.values.some((filterValue) =>
-                                    productsFilter.taxonomyTermOptions.some((taxonomyTerm: TaxonomyTerm) =>
-                                        filterValue === taxonomyTerm.slug))
-                            })
-                            if (indexOfExistingFilter > -1) {
-                                newRequestFilters.splice(indexOfExistingFilter, 1)
-                            }
-                            newRequestFilters.push({
-                                type: GetProductsFilterType.TaxonomyTerm,
-                                values: Object.keys(formValue)
-                                    .filter((key) => !!formValue[key])
-                                    .map((key) => kebabCase(key))
-                            })
-                            this.store.dispatch(new GetProductsRequestUpdate(newRequest))
-                        })
-                    return mteFormBuilder
-                }
-            })
-            .filter((formBuilder) => formBuilder !== undefined)
-
         // Execute the request any time it changes.
 
         this.store.reactTo(GetProductsRequestUpdate)
             .pipe(
-                // Makes sure that `clearFilters` doesn't trigger multiple requests.
+                // Make sure that `clearFilters` doesn't trigger multiple requests.
                 debounceTime(100),
-                map(() => this.store.state)
+                // Drill down to the `GetProductsRequest`.
+                map(() => this.store.state.getProductsRequest)
             )
-            .subscribe(({ getProductsRequest }) => {
+            .subscribe((getProductsRequest) => {
+                this._initFiltersShowing()
                 this.executeRequest(getProductsRequest)
+            })
 
-                if (getProductsRequest.filters) {
-                    getProductsRequest.filters.forEach((filter) => {
-                        filter.values.forEach((filterValue) => {
-                            this.productsFilterFormBuilders
-                                .map((formBuilder) => formBuilder.formGroup)
-                                .forEach((formGroup) => {
-                                    const formControlName = camelCase(filterValue)
-                                    if (formGroup.get(formControlName)) {
-                                        formGroup.patchValue({
-                                            [formControlName]: true
-                                        })
-                                    }
-                                })
-                        })
-                    })
-                }
+        this._productService.getPriceRange()
+            .then((priceRange) => {
+                this._updateFormSilently(() => {
+                    this.priceRange = priceRange
+                    const priceRangeFormBuilder = this._productsFilterFormBuilders.find((mteFormBuilder) =>
+                        !!mteFormBuilder.formGroup.get('priceRange'))
+                    priceRangeFormBuilder.formGroup.get('priceRange').setValue(
+                        this.priceRange.map((price) => price.amount)
+                    )
+                })
             })
 
         // Construct a new request when the query params change.
@@ -201,9 +139,207 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                     this.store.state.getProductsRequest,
                     paramMap
                 )
-                // this.stateManager.setState({ getProductsRequest })
                 this.store.dispatch(new GetProductsRequestUpdate(getProductsRequest))
             })
+
+        // Register handler functions to handle value changes to the filter forms.
+
+        // ...for `TaxonomyTermChecklist`s.
+
+        this._registerExistingFilterFinder(ProductsFilterType.TaxonomyTermChecklist,
+            (productsFilter) =>
+                (getProductsFilter) =>
+                    getProductsFilter.values && getProductsFilter.values.some((filterValue) =>
+                        productsFilter.taxonomyTermOptions.some((taxonomyTerm: TaxonomyTerm) =>
+                            filterValue === taxonomyTerm.slug)))
+        this._registerFormGroupOptionsFactory(ProductsFilterType.TaxonomyTermChecklist,
+            (productsFilter) => {
+                const formGroupOptions: MteFormGroupOptions = {}
+                productsFilter.taxonomyTermOptions.forEach((taxonomyTerm: TaxonomyTerm) => {
+                    formGroupOptions[camelCase(taxonomyTerm.slug)] = {
+                        defaultValue: false,
+                        label: taxonomyTerm.singularName || taxonomyTerm.slug,
+                        formControlType: 'checkbox',
+                    }
+                })
+                return formGroupOptions
+            })
+        this._registerNewRequestFilterFactory(ProductsFilterType.TaxonomyTermChecklist, (formValue) => {
+            return {
+                type: GetProductsFilterType.TaxonomyTerm,
+                values: Object.keys(formValue)
+                    .filter((key) => !!formValue[key])
+                    .map((key) => kebabCase(key))
+            }
+        })
+
+        // ...for `AttributeValueChecklist`s.
+
+        this._registerExistingFilterFinder(ProductsFilterType.AttributeValueChecklist,
+            (productsFilter) =>
+                (getProductsFilter) =>
+                    getProductsFilter.values && getProductsFilter.values.some((filterValue) =>
+                        productsFilter.attributeValueOptions.some((attributeValue: AttributeValue) =>
+                            filterValue === attributeValue.slug)))
+        this._registerFormGroupOptionsFactory(ProductsFilterType.AttributeValueChecklist,
+            (productsFilter) => {
+                const formGroupOptions: MteFormGroupOptions = {}
+                productsFilter.attributeValueOptions.forEach((attributeValue: AttributeValue) => {
+                    formGroupOptions[camelCase(attributeValue.slug)] = {
+                        defaultValue: false,
+                        label: attributeValue.name || attributeValue.slug,
+                        formControlType: 'checkbox',
+                    }
+                })
+                return formGroupOptions
+            })
+        this._registerNewRequestFilterFactory(ProductsFilterType.AttributeValueChecklist, (formValue) => {
+            return {
+                type: GetProductsFilterType.AttributeValue,
+                values: Object.keys(formValue)
+                    .filter((key) => !!formValue[key])
+                    .map((key) => kebabCase(key))
+            }
+        })
+
+        // ...for `PriceRange`.
+
+        this._registerExistingFilterFinder(ProductsFilterType.PriceRange,
+            () =>
+                (getProductsFilter) =>
+                    getProductsFilter.type === GetProductsFilterType.Property &&
+                    !!getProductsFilter.range &&
+                    getProductsFilter.key === 'price')
+        this._registerFormGroupOptionsFactory(ProductsFilterType.PriceRange, () => {
+            const formGroupOptions: MteFormGroupOptions = {}
+            formGroupOptions.priceRange = {
+                label: 'Price range',
+                formControlType: 'input',
+                defaultValue: [0, 1000]
+            }
+            return formGroupOptions
+        })
+        this._registerNewRequestFilterFactory(ProductsFilterType.PriceRange, (formValue) => {
+            return {
+                type: GetProductsFilterType.Property,
+                key: 'price',
+                range: formValue.priceRange.map((value) => {
+                    return {
+                        amount: value,
+                        currency: Currency.USD,
+                    }
+                })
+            }
+        })
+
+        // Now, set up the filters.
+
+        this._initFilters()
+        this._initFiltersShowing()
+    }
+
+    private _initFiltersShowing(): void {
+        this.productsFilterFormBuilders = this._productsFilterFormBuilders
+            .filter((formBuilder) =>
+                this._shouldDisplayProductsFilter(formBuilder.data.productsFilter))
+    }
+
+    private _initFilters(): void {
+        const { storeUiSettings } = this._organizationService.organization
+
+        this._productsFilterFormBuilders = mh.toArray<ProductsFilter>(storeUiSettings.productsFilters)
+            .filter((productsFilter) => productsFilter.enabled)
+            .map((productsFilter) => {
+                let mteFormBuilder: MteFormBuilder<ProductsFilterFormData>
+                let existingFilterFinder: (productsFilter?: ProductsFilter) =>
+                    (getProductsFilter: GetProductsFilter) => boolean
+                let newRequestFilterFactory: (formValue: any) => GetProductsFilter
+                let formGroupOptions: MteFormGroupOptions
+                let taxonomy: Taxonomy
+                let attribute: Attribute
+
+                if (
+                    productsFilter.filterType === ProductsFilterType.TaxonomyTermChecklist &&
+                    productsFilter.taxonomyTermOptions.length
+                ) {
+                    taxonomy = (productsFilter.taxonomyTermOptions[0] as TaxonomyTerm).taxonomy as Taxonomy
+                    formGroupOptions = this._formGroupOptionsFactoryMap
+                        .get(ProductsFilterType.TaxonomyTermChecklist)(productsFilter)
+                    existingFilterFinder = this._existingFilterFinderMap
+                        .get(ProductsFilterType.TaxonomyTermChecklist)
+                    newRequestFilterFactory = this._newRequestFilterFactoryMap
+                        .get(ProductsFilterType.TaxonomyTermChecklist)
+                }
+
+                if (
+                    productsFilter.filterType === ProductsFilterType.AttributeValueChecklist &&
+                    productsFilter.attributeValueOptions.length
+                ) {
+                    attribute = (productsFilter.attributeValueOptions[0] as AttributeValue).attribute as Attribute
+                    formGroupOptions = this._formGroupOptionsFactoryMap
+                        .get(ProductsFilterType.AttributeValueChecklist)(productsFilter)
+                    existingFilterFinder = this._existingFilterFinderMap
+                        .get(ProductsFilterType.AttributeValueChecklist)
+                    newRequestFilterFactory = this._newRequestFilterFactoryMap
+                        .get(ProductsFilterType.AttributeValueChecklist)
+                }
+
+                if (productsFilter.filterType === ProductsFilterType.PriceRange) {
+                    formGroupOptions = this._formGroupOptionsFactoryMap
+                        .get(ProductsFilterType.PriceRange)(productsFilter)
+                    existingFilterFinder = this._existingFilterFinderMap
+                        .get(ProductsFilterType.PriceRange)
+                    newRequestFilterFactory = this._newRequestFilterFactoryMap
+                        .get(ProductsFilterType.PriceRange)
+                }
+
+                // Create the form.
+
+                mteFormBuilder = this._mteFormBuilderService.create<ProductsFilterFormData>(formGroupOptions)
+
+                // Attach useful data to the form builder for convenience.
+
+                mteFormBuilder.data = {
+                    attribute,
+                    taxonomy,
+                    productsFilter,
+                }
+
+                // Push a new request every time the form value changes.
+
+                mteFormBuilder.formGroup.valueChanges
+                    .pipe(
+                        filter((formValue) => !isEqual(
+                            formValue,
+                            this._productsFilterFormValuesMap.get(productsFilter),
+                        )),
+                        filter(() => !this._shouldExecuteRequestOnFormValueChanges)
+                    )
+                    .subscribe((formValue) => {
+                        this._productsFilterFormValuesMap.set(productsFilter, formValue)
+                        const request = this.store.state.getProductsRequest
+                        const newRequestFilters = !!request.filters
+                            ? [ ...request.filters ]
+                            : []
+                        const newRequest = {
+                            ...request,
+                            filters: newRequestFilters
+                        }
+                        const indexOfExistingFilter = newRequestFilters.findIndex(
+                            existingFilterFinder(productsFilter)
+                        )
+                        if (indexOfExistingFilter > -1) {
+                            newRequestFilters.splice(indexOfExistingFilter, 1)
+                        }
+                        newRequestFilters.push(newRequestFilterFactory(formValue))
+                        this.store.dispatch(new GetProductsRequestUpdate(newRequest))
+                    })
+
+                return mteFormBuilder
+            })
+            .filter((formBuilder) => formBuilder !== undefined)
+
+        this._updateFilterFormsFromRequest(this.store.state.getProductsRequest)
     }
 
     private _createRequestFromQueryParamMap(queryParamMap: ParamMap): GetProductsRequest {
@@ -266,7 +402,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
 
     public ngOnDestroy(): void { }
 
-    public executeRequest(request: GetProductsRequest): void {
+    public executeRequest(request: GetProductsRequest): Promise<Product[]> {
         let requestedTaxonomyTermFilter: GetProductsFilter
         let requestedTaxonomyTermSlug: string
 
@@ -302,6 +438,8 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
             this.productsStream = this._productService.getStream
         }
         this._productService.get(request)
+
+        return this._productService.getStream.pipe(take(1)).toPromise()
     }
 
     // Responsive design.
@@ -320,7 +458,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
         this._router.navigateByUrl(ShopRouterLinks.productDetail(product.slug))
     }
     public clearFilters(): void {
-        this.productsFilterFormBuilders.forEach((productsFilterFormBuilder) =>
+        this._productsFilterFormBuilders.forEach((productsFilterFormBuilder) =>
             productsFilterFormBuilder.formGroup.reset())
     }
 
@@ -335,5 +473,112 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     public isChecklist(productsFilter: ProductsFilter): boolean {
         return productsFilter.filterType === ProductsFilterType.TaxonomyTermChecklist ||
             productsFilter.filterType === ProductsFilterType.AttributeValueChecklist
+    }
+    public isPriceRange(productsFilter: ProductsFilter): boolean {
+        return productsFilter.filterType === ProductsFilterType.PriceRange
+    }
+    private _shouldDisplayProductsFilter(productsFilter: ProductsFilter): boolean {
+        if (productsFilter.displayAlways) return true
+
+        // Display when a particular taxonomy term is included in the request.
+        // TODO: Support conditions other than taxonomy terms.
+
+        const expectedTaxonomyTermSlug = productsFilter.displayWhen.taxonomyTermSlug
+        if (typeof expectedTaxonomyTermSlug !== 'undefined') {
+            const requestFilters = this.store.state.getProductsRequest.filters
+
+            // If we're in a taxonomy term view, we just need to check if the taxonomy term matches
+            // the one we expect.
+
+            return (this.taxonomyTerm && expectedTaxonomyTermSlug === this.taxonomyTerm.slug) ||
+
+                // Otherwise, we need to check if there are any filters present in the request.
+
+                (
+                    !requestFilters ||
+                    !requestFilters.length ||
+
+                    // If there are filters present, check if there are any TaxonomyTerm filters.
+                    // If not, then it's OK to display the filter.
+
+                    !requestFilters.find((getProductsFilter) =>
+                        getProductsFilter.type === GetProductsFilterType.TaxonomyTerm
+                    ) ||
+
+                    // If there are TaxonomyTerm filters present, THEN we need to validate that
+                    // at least one of them matches our expected taxonomy term.
+
+                    !!requestFilters.find((getProductsFilter) =>
+                        getProductsFilter.type === GetProductsFilterType.TaxonomyTerm &&
+                        getProductsFilter.values.find((taxonomyTermSlug) =>
+                            taxonomyTermSlug === expectedTaxonomyTermSlug
+                        )
+                    )
+                )
+        }
+        return true
+    }
+
+    private _updateFilterFormsFromRequest(getProductsRequest: GetProductsRequest): void {
+        this._updateFormSilently(() => {
+            if (getProductsRequest.filters) {
+                getProductsRequest.filters.forEach((filter) => {
+                    if (!!filter.values) {
+                        filter.values
+                            .filter((filterValue) => typeof filterValue === 'string')
+                            .forEach((filterValue) => {
+                                this._productsFilterFormBuilders
+                                    .map((formBuilder) => formBuilder.formGroup)
+                                    .forEach((formGroup) => {
+                                        const formControlName = camelCase(filterValue)
+                                        if (formGroup.get(formControlName)) {
+                                            formGroup.patchValue({
+                                                [formControlName]: true
+                                            })
+                                        }
+                                    })
+                            })
+                    }
+                    if (!!filter.range) {
+                        const formControlName = camelCase(filter.key)
+                        const formControl = this._productsFilterFormBuilders
+                            .map((formBuilder) => formBuilder.formGroup)
+                            .find((formGroup) => !!formGroup.get(formControlName))
+                        if (formControl) {
+                            formControl.patchValue({
+                                [formControlName]: [ filter.range.min, filter.range.max ],
+                            })
+                        }
+                    }
+                })
+            }
+        })
+    }
+
+    private _registerExistingFilterFinder(
+        type: ProductsFilterType,
+        finderFn: (productsFilter?: ProductsFilter) => (getProductsFilter: GetProductsFilter) => boolean
+    ): void {
+        this._existingFilterFinderMap.set(type, finderFn)
+    }
+
+    private _registerFormGroupOptionsFactory(
+        type: ProductsFilterType,
+        formGroupOptionsFactory: (productsFilter?: ProductsFilter) => MteFormGroupOptions
+    ): void {
+        this._formGroupOptionsFactoryMap.set(type, formGroupOptionsFactory)
+    }
+
+    private _registerNewRequestFilterFactory(
+        type: ProductsFilterType,
+        newRequestFilterFactory: (formValue: any) => GetProductsFilter
+    ): void {
+        this._newRequestFilterFactoryMap.set(type, newRequestFilterFactory)
+    }
+
+    private _updateFormSilently(formUpdateFn: (...args: any[]) => any): void {
+        this._shouldExecuteRequestOnFormValueChanges = false
+        formUpdateFn()
+        setTimeout(() => this._shouldExecuteRequestOnFormValueChanges = false)
     }
 }

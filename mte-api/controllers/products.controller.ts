@@ -1,17 +1,15 @@
-import { Request, Response } from 'express'
+import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/api/requests/get-products.request'
+import { ApiEndpoints, Types } from '@mte/common/constants'
+import { Response } from 'express'
 import { inject, injectable } from 'inversify'
 import {
     controller,
     httpGet,
     interfaces,
     queryParam,
-    request,
     requestParam,
     response,
 } from 'inversify-express-utils'
-
-import { ApiEndpoints, Types } from '@mte/common/constants'
-import { GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/api/requests/get-products.request'
 import { ProductService } from '../services/product.service'
 import { ApiController } from './api.controller'
 
@@ -40,6 +38,17 @@ export class ProductsController extends ApiController implements interfaces.Cont
             // Pipe a stream of products into the response.
             this.productService.getProducts(new GetProductsRequest(parsedQuery as GetProductsRequest), res)
         }
+    }
+
+    @httpGet('/price-range')
+    public getPriceRange(
+        @queryParam('request') request: string,
+        @response() res: Response,
+    ): void {
+        const parsedQuery: GetProductsRequest = request
+            ? JSON.parse(request)
+            : new GetProductsRequest()
+        this.handleApiResponse(this.productService.getPriceRangeForShop(), res)
     }
 
     /**

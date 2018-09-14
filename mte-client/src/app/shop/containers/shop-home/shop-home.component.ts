@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core'
+import { Component } from '@angular/core'
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
 
 @Component({
@@ -6,8 +6,6 @@ import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
     templateUrl: './shop-home.component.html',
     styleUrls: ['./shop-home.component.scss']
 })
-export class ShopHomeComponent implements OnInit {
+export class ShopHomeComponent {
     public instagramEndpoint = ApiEndpoints.Instagram
-
-    public ngOnInit(): void { }
 }

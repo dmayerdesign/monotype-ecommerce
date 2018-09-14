@@ -68,6 +68,8 @@
                     <!-- Form -->
                     <ng-container>
                         <form [formGroup]="formBuilder.formGroup">
+
+                            <!-- Taxonomy term/attribute value checklist -->
                             <ng-container *ngIf="isChecklist(formBuilder.data.productsFilter)">
                                 <mte-form-field
                                     *ngFor="let formControlName of formBuilder.controlNames"
@@ -79,6 +81,19 @@
                                     />
                                 </mte-form-field>
                             </ng-container>
+
+                            <ng-container *ngIf="priceRange && isPriceRange(formBuilder.data.productsFilter)">
+                                <mte-range-slider
+                                    [formControlName]="formBuilder.controlNames[0]"
+                                    [step]="5"
+                                    [minLimit]="priceRange[0]?.amount"
+                                    [maxLimit]="priceRange[1]?.amount"
+                                    knobColor="#929"
+                                    knobInnerColor="#fff"
+                                    trackColor="#000">
+                                </mte-range-slider>
+                            </ng-container>
+
                         </form>
                     </ng-container>
 
@@ -87,10 +102,11 @@
                 <!-- Standard filters -->
                 <div class="price-range-filter">
                     Price range
+                    <pre>{{ priceRange | json }}</pre>
                 </div>
-    
-                <div class="categories-filter">
-                    Categories
+
+                <div class="product-types-filter">
+                    Product types
                 </div>
 
                 <div class="brands-filter">

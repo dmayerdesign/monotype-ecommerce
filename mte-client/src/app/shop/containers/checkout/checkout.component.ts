@@ -1,17 +1,17 @@
 import { Component, OnDestroy, OnInit } from '@angular/core'
-import { FormGroup, Validators } from '@angular/forms'
+import { FormGroup } from '@angular/forms'
 import { AppConfig } from '@mte/app-config'
-import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
-import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
-import { MteFormBuilderService } from '@mte/common/lib/ng-modules/forms/services/form-builder.service'
-import { MteFormBuilder } from '@mte/common/lib/ng-modules/forms/utilities/form.builder'
-import { platform } from '@mte/common/lib/ng-modules/ui/utils/platform'
 import { Order } from '@mte/common/api/interfaces/order'
 import { OrderCustomer } from '@mte/common/api/interfaces/order-customer'
 import { Organization } from '@mte/common/api/interfaces/organization'
 import { Product } from '@mte/common/api/interfaces/product'
 import { Currency } from '@mte/common/constants/enums/currency'
 import { OrderStatus } from '@mte/common/constants/enums/order-status'
+import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
+import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
+import { MteFormBuilderService } from '@mte/common/lib/ng-modules/forms/services/form-builder.service'
+import { MteFormBuilder } from '@mte/common/lib/ng-modules/forms/utilities/form.builder'
+import { platform } from '@mte/common/lib/ng-modules/ui/utils/platform'
 import { fromEvent } from 'rxjs'
 import { filter, takeWhile } from 'rxjs/operators'
 import * as stripe from 'stripe'
@@ -284,8 +284,6 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
                 billingAddressZip: address_zip
             })
         }
-
-        console.log(this.checkoutFormGroup)
     }
 
     private _populateStripeCardFormFromCard(stripeCard: any): void {
@@ -315,11 +313,12 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
         else {
             this.order.stripeToken = stripeCreateTokenResult.token
 
-            this.processOrder()
+            this.placeOrder()
         }
     }
 
-    public async processOrder(): Promise<void> {
+    public async placeOrder(): Promise<void> {
         await this.orderService.place(this.order).toPromise()
+        this.cartService.store.reset()
     }
 }
