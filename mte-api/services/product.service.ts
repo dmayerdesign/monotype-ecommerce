@@ -10,7 +10,7 @@ import { Taxonomy } from '@mte/common/api/entities/taxonomy'
 import { TaxonomyTerm } from '@mte/common/api/entities/taxonomy-term'
 import { Price } from '@mte/common/api/interfaces/price'
 import { GetProductsFilterType, GetProductsFromIdsRequest, GetProductsRequest } from '@mte/common/api/requests/get-products.request'
-import { ListFromQueryRequest } from '@mte/common/api/requests/list.request'
+import { ListFromQueryRequest, ListRequest } from '@mte/common/api/requests/list.request'
 import { ApiErrorResponse } from '@mte/common/api/responses/api-error.response'
 import { ApiResponse } from '@mte/common/api/responses/api.response'
 import { GetProductDetailResponseBody } from '@mte/common/api/responses/get-product-detail/get-product-detail.response.body'
@@ -170,7 +170,7 @@ export class ProductService extends CrudService<Product> {
         }
     }
 
-    public async getPriceRange(body: GetProductsRequest): Promise<ApiResponse<Price[]>> {
+    public async getPriceRangeForRequest(body: GetProductsRequest): Promise<ApiResponse<Price[]>> {
         const listFromQueryRequest = await this._createGetProductsRequestQuery(body)
         listFromQueryRequest.skip = 0
         listFromQueryRequest.limit = 0
@@ -203,6 +203,14 @@ export class ProductService extends CrudService<Product> {
         catch (error) {
             throw new ApiErrorResponse(error)
         }
+    }
+
+    public async getPriceRangeForShop(): Promise<ApiResponse<Price[]>> {
+        const getProductsRequest = new GetProductsRequest({
+            skip: 0,
+            limit: 0
+        })
+        return this.getPriceRangeForRequest(getProductsRequest)
     }
 
     public createOne(product: Product): Promise<ApiResponse<Product>> {

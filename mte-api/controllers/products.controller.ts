@@ -48,9 +48,7 @@ export class ProductsController extends ApiController implements interfaces.Cont
         const parsedQuery: GetProductsRequest = request
             ? JSON.parse(request)
             : new GetProductsRequest()
-        this.handleApiResponse(this.productService.getPriceRange(
-            new GetProductsRequest(parsedQuery as GetProductsRequest)
-        ), res)
+        this.handleApiResponse(this.productService.getPriceRangeForShop(), res)
     }
 
     /**

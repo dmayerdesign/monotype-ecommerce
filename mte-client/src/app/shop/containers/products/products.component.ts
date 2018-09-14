@@ -21,7 +21,7 @@ import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-
 import { Store } from '@mte/common/lib/state-manager/store'
 import { camelCase, isEqual, kebabCase, uniqWith } from 'lodash'
 import { BehaviorSubject, Observable, Subject } from 'rxjs'
-import { debounceTime, filter, map, take, takeUntil, takeWhile } from 'rxjs/operators'
+import { debounceTime, filter, map, take, takeUntil, takeWhile, tap } from 'rxjs/operators'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { ShopQueryParamKeys } from '../../constants/shop-query-param-keys'
 import { ShopRouterLinks } from '../../constants/shop-router-links'
@@ -54,9 +54,9 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     public leftSidebarIsExpandeds: BehaviorSubject<boolean>
     public store = new Store<ProductsState>(new ProductsState(), productsReducer)
     public productsFilterFormBuilders: MteFormBuilder[]
-    private _filtersResetPump = new Subject<void>()
+    private _productsFilterFormBuilders: MteFormBuilder[]
     private _productsFilterFormValuesMap = new Map<ProductsFilter, any>()
-    private _isUpdatingFilterFormsFromRequest = false
+    private _shouldExecuteRequestOnFormValueChanges = false
     private _existingFilterFinderMap = new Map<
         ProductsFilterType,
         (productsFilter?: ProductsFilter) => (getProductsFilter: GetProductsFilter) => boolean
@@ -95,17 +95,20 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                 map(() => this.store.state.getProductsRequest)
             )
             .subscribe((getProductsRequest) => {
+                this._initFiltersShowing()
                 this.executeRequest(getProductsRequest)
-                    .then(() => this._initFilters())
             })
 
         this._productService.getPriceRange()
             .then((priceRange) => {
-                this.priceRange = priceRange
-                const priceRangeFormBuilder = this.productsFilterFormBuilders.find((mteFormBuilder) =>
-                    !!mteFormBuilder.formGroup.get('priceMin') && !!mteFormBuilder.formGroup.get('priceMax'))
-                priceRangeFormBuilder.formGroup.get('priceMin').setValue(this.priceRange[0])
-                priceRangeFormBuilder.formGroup.get('priceMax').setValue(this.priceRange[1])
+                this._updateFormSilently(() => {
+                    this.priceRange = priceRange
+                    const priceRangeFormBuilder = this._productsFilterFormBuilders.find((mteFormBuilder) =>
+                        !!mteFormBuilder.formGroup.get('priceRange'))
+                    priceRangeFormBuilder.formGroup.get('priceRange').setValue(
+                        this.priceRange.map((price) => price.amount)
+                    )
+                })
             })
 
         // Construct a new request when the query params change.
@@ -209,40 +212,43 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                     getProductsFilter.key === 'price')
         this._registerFormGroupOptionsFactory(ProductsFilterType.PriceRange, () => {
             const formGroupOptions: MteFormGroupOptions = {}
-            formGroupOptions.priceMin = {
-                label: 'Min',
+            formGroupOptions.priceRange = {
+                label: 'Price range',
                 formControlType: 'input',
-                defaultValue: { amount: 1, currency: Currency.USD }
-            }
-            formGroupOptions.priceMax = {
-                label: 'Max',
-                formControlType: 'input',
-                defaultValue: { amount: 1000, currency: Currency.USD }
+                defaultValue: [0, 1000]
             }
             return formGroupOptions
         })
         this._registerNewRequestFilterFactory(ProductsFilterType.PriceRange, (formValue) => {
             return {
                 type: GetProductsFilterType.Property,
-                range: {
-                    min: formValue.priceMin,
-                    max: formValue.priceMax,
-                }
+                key: 'price',
+                range: formValue.priceRange.map((value) => {
+                    return {
+                        amount: value,
+                        currency: Currency.USD,
+                    }
+                })
             }
         })
 
         // Now, set up the filters.
 
         this._initFilters()
+        this._initFiltersShowing()
+    }
+
+    private _initFiltersShowing(): void {
+        this.productsFilterFormBuilders = this._productsFilterFormBuilders
+            .filter((formBuilder) =>
+                this._shouldDisplayProductsFilter(formBuilder.data.productsFilter))
     }
 
     private _initFilters(): void {
         const { storeUiSettings } = this._organizationService.organization
-        this._filtersResetPump.next()
 
-        this.productsFilterFormBuilders = mh.toArray<ProductsFilter>(storeUiSettings.productsFilters)
+        this._productsFilterFormBuilders = mh.toArray<ProductsFilter>(storeUiSettings.productsFilters)
             .filter((productsFilter) => productsFilter.enabled)
-            .filter((productsFilter) => this._shouldDisplayProductsFilter(productsFilter))
             .map((productsFilter) => {
                 let mteFormBuilder: MteFormBuilder<ProductsFilterFormData>
                 let existingFilterFinder: (productsFilter?: ProductsFilter) =>
@@ -307,8 +313,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                             formValue,
                             this._productsFilterFormValuesMap.get(productsFilter),
                         )),
-                        filter(() => !this._isUpdatingFilterFormsFromRequest),
-                        takeUntil(this._filtersResetPump)
+                        filter(() => !this._shouldExecuteRequestOnFormValueChanges)
                     )
                     .subscribe((formValue) => {
                         this._productsFilterFormValuesMap.set(productsFilter, formValue)
@@ -320,7 +325,9 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                             ...request,
                             filters: newRequestFilters
                         }
-                        const indexOfExistingFilter = newRequestFilters.findIndex(existingFilterFinder(productsFilter))
+                        const indexOfExistingFilter = newRequestFilters.findIndex(
+                            existingFilterFinder(productsFilter)
+                        )
                         if (indexOfExistingFilter > -1) {
                             newRequestFilters.splice(indexOfExistingFilter, 1)
                         }
@@ -451,7 +458,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
         this._router.navigateByUrl(ShopRouterLinks.productDetail(product.slug))
     }
     public clearFilters(): void {
-        this.productsFilterFormBuilders.forEach((productsFilterFormBuilder) =>
+        this._productsFilterFormBuilders.forEach((productsFilterFormBuilder) =>
             productsFilterFormBuilder.formGroup.reset())
     }
 
@@ -467,67 +474,85 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
         return productsFilter.filterType === ProductsFilterType.TaxonomyTermChecklist ||
             productsFilter.filterType === ProductsFilterType.AttributeValueChecklist
     }
+    public isPriceRange(productsFilter: ProductsFilter): boolean {
+        return productsFilter.filterType === ProductsFilterType.PriceRange
+    }
     private _shouldDisplayProductsFilter(productsFilter: ProductsFilter): boolean {
         if (productsFilter.displayAlways) return true
+
+        // Display when a particular taxonomy term is included in the request.
+        // TODO: Support conditions other than taxonomy terms.
+
         const expectedTaxonomyTermSlug = productsFilter.displayWhen.taxonomyTermSlug
         if (typeof expectedTaxonomyTermSlug !== 'undefined') {
+            const requestFilters = this.store.state.getProductsRequest.filters
+
+            // If we're in a taxonomy term view, we just need to check if the taxonomy term matches
+            // the one we expect.
+
             return (this.taxonomyTerm && expectedTaxonomyTermSlug === this.taxonomyTerm.slug) ||
+
+                // Otherwise, we need to check if there are any filters present in the request.
+
                 (
-                    !this.store.state.getProductsRequest.filters ||
-                    !this.store.state.getProductsRequest.filters.length ||
-                    !this.store.state.getProductsRequest.filters.find((getProductsFilter) =>
+                    !requestFilters ||
+                    !requestFilters.length ||
+
+                    // If there are filters present, check if there are any TaxonomyTerm filters.
+                    // If not, then it's OK to display the filter.
+
+                    !requestFilters.find((getProductsFilter) =>
+                        getProductsFilter.type === GetProductsFilterType.TaxonomyTerm
+                    ) ||
+
+                    // If there are TaxonomyTerm filters present, THEN we need to validate that
+                    // at least one of them matches our expected taxonomy term.
+
+                    !!requestFilters.find((getProductsFilter) =>
                         getProductsFilter.type === GetProductsFilterType.TaxonomyTerm &&
-                        !getProductsFilter.values.find((taxonomyTermSlug) =>
-                            taxonomyTermSlug.split('-')[0] !== expectedTaxonomyTermSlug.split('-')[0]))
+                        getProductsFilter.values.find((taxonomyTermSlug) =>
+                            taxonomyTermSlug === expectedTaxonomyTermSlug
+                        )
+                    )
                 )
         }
         return true
     }
 
     private _updateFilterFormsFromRequest(getProductsRequest: GetProductsRequest): void {
-        this._isUpdatingFilterFormsFromRequest = true
-        if (getProductsRequest.filters) {
-            getProductsRequest.filters.forEach((filter) => {
-                if (!!filter.values) {
-                    filter.values
-                        .filter((filterValue) => typeof filterValue === 'string')
-                        .forEach((filterValue) => {
-                            this.productsFilterFormBuilders
-                                .map((formBuilder) => formBuilder.formGroup)
-                                .forEach((formGroup) => {
-                                    const formControlName = camelCase(filterValue)
-                                    if (formGroup.get(formControlName)) {
-                                        formGroup.patchValue({
-                                            [formControlName]: true
-                                        })
-                                    }
-                                })
-                        })
-                }
-                if (!!filter.range) {
-                    this.productsFilterFormBuilders
-                        .map((formBuilder) => formBuilder.formGroup)
-                        .forEach((formGroup) => {
-                            const minFormControlName = camelCase(filter.key + 'Min')
-                            const maxFormControlName = camelCase(filter.key + 'Max')
-                            if (formGroup.get(minFormControlName)) {
-                                formGroup.patchValue({
-                                    [minFormControlName]: filter.range.min
-                                })
-                            }
-                            if (formGroup.get(maxFormControlName)) {
-                                formGroup.patchValue({
-                                    [maxFormControlName]: filter.range.max
-                                })
-                            }
-                        })
-                }
-            })
-        }
-
-        // Patch the forms without triggering an api call.
-
-        setTimeout(() => this._isUpdatingFilterFormsFromRequest = false)
+        this._updateFormSilently(() => {
+            if (getProductsRequest.filters) {
+                getProductsRequest.filters.forEach((filter) => {
+                    if (!!filter.values) {
+                        filter.values
+                            .filter((filterValue) => typeof filterValue === 'string')
+                            .forEach((filterValue) => {
+                                this._productsFilterFormBuilders
+                                    .map((formBuilder) => formBuilder.formGroup)
+                                    .forEach((formGroup) => {
+                                        const formControlName = camelCase(filterValue)
+                                        if (formGroup.get(formControlName)) {
+                                            formGroup.patchValue({
+                                                [formControlName]: true
+                                            })
+                                        }
+                                    })
+                            })
+                    }
+                    if (!!filter.range) {
+                        const formControlName = camelCase(filter.key)
+                        const formControl = this._productsFilterFormBuilders
+                            .map((formBuilder) => formBuilder.formGroup)
+                            .find((formGroup) => !!formGroup.get(formControlName))
+                        if (formControl) {
+                            formControl.patchValue({
+                                [formControlName]: [ filter.range.min, filter.range.max ],
+                            })
+                        }
+                    }
+                })
+            }
+        })
     }
 
     private _registerExistingFilterFinder(
@@ -549,5 +574,11 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
         newRequestFilterFactory: (formValue: any) => GetProductsFilter
     ): void {
         this._newRequestFilterFactoryMap.set(type, newRequestFilterFactory)
+    }
+
+    private _updateFormSilently(formUpdateFn: (...args: any[]) => any): void {
+        this._shouldExecuteRequestOnFormValueChanges = false
+        formUpdateFn()
+        setTimeout(() => this._shouldExecuteRequestOnFormValueChanges = false)
     }
 }
