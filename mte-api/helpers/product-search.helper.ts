@@ -1,4 +1,5 @@
 import { GetProductsFilter } from '@mte/common/api/requests/get-products.request'
+import { RangeLimit } from '@mte/common/constants/enums/range-limit'
 import { injectable } from 'inversify'
 import { cloneDeep } from 'lodash'
 import { MongoHelper } from './mongo.helper'
@@ -8,7 +9,6 @@ export class ProductSearchHelper {
 
     public propertyFilter(filter: GetProductsFilter, query: typeof MongoHelper.andOperation): typeof MongoHelper.andOperation {
         const newQuery = cloneDeep(query)
-
         if (filter.values && filter.values.length) {
             const propertyVOs = filter.values.map(val => {
                 return {
@@ -18,15 +18,17 @@ export class ProductSearchHelper {
             newQuery.$and.push({ $or: propertyVOs })
         }
         if (filter.range) {
-            const lowerLimit: any = {
-                [filter.key]: { $gte: filter.range.min },
+            let lowerLimit, upperLimit
+            lowerLimit = {
+                [`${filter.key}.amount`]: { $gte: filter.range[RangeLimit.Min] },
             }
-            const upperLimit: any = {
-                [filter.key]: { $lte: filter.range.max },
+            upperLimit = {
+                [`${filter.key}.amount`]: { $lte: filter.range[RangeLimit.Max] },
             }
 
             newQuery.$and = newQuery.$and.concat([lowerLimit, upperLimit])
         }
+
         return newQuery
     }
 
@@ -62,12 +64,12 @@ export class ProductSearchHelper {
         if (filter.range) {
             const lowerLimit: any = {
                 [filter.key]: {
-                    value: { $gte: filter.range.min },
+                    value: { $gte: filter.range[RangeLimit.Min] },
                 }
             }
             const upperLimit: any = {
                 [filter.key]: {
-                    value: { $lte: filter.range.max },
+                    value: { $lte: filter.range[RangeLimit.Max] },
                 }
             }
 

@@ -2,6 +2,7 @@ import { Price } from '@mte/common/api/interfaces/price'
 import { Product } from '@mte/common/api/interfaces/product'
 import { TaxonomyTerm } from '@mte/common/api/interfaces/taxonomy-term'
 import { Currency } from '@mte/common/constants/enums/currency'
+import { RangeLimit } from '@mte/common/constants/enums/range-limit'
 
 export class ProductHelper {
     public static isProduct(obj: any): boolean {
@@ -42,7 +43,7 @@ export class ProductHelper {
 
     public static getPriceString(product: Product): string {
         if (this.hasPriceRange(product)) {
-            return `$${(this.getPrice(product) as Price[])[0].amount.toFixed(2)} - $${(this.getPrice(product) as Price[])[1].amount.toFixed(2)}`
+            return `$${(this.getPrice(product) as Price[])[RangeLimit.Min].amount.toFixed(2)} - $${(this.getPrice(product) as Price[])[RangeLimit.Max].amount.toFixed(2)}`
         }
         else {
             return `$${(this.getPrice(product) as Price).amount.toFixed(2)}`

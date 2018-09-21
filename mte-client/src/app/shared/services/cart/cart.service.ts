@@ -36,14 +36,20 @@ export class CartService {
 
         // Register side effects.
 
-        this.store.reactTo()
+        this.store.reactTo() // React to all actions.
             .subscribe((action) => {
                 if (
                     !(action instanceof CartTotalUpdate) &&
                     !(action instanceof CartItemsUpdate)
                 ) {
-                    this.updateAndStream()
+                    this._updateAndStream()
                 }
+            })
+
+        this.store.reactTo(CartTotalUpdate)
+            .subscribe(() => {
+                this._userService.updateCart(this.cart)
+                this._util.saveToLocalStorage(LocalStorageKeys.Cart, this.cart)
             })
 
         // Set state.
@@ -78,12 +84,12 @@ console.log('ITEM TO ADD', item)
         return this.cart
     }
 
-    public incrementQuantity(item: CartItem, direction: 1|-1): Observable<boolean> {
+    public incrementQuantity(item: CartItem, direction: 1|-1): void {
         if (direction === 1) {
-            return this.store.dispatch(new CartItemQuantityIncrement(item))
+            this.store.dispatch(new CartItemQuantityIncrement(item))
         }
         else if (direction === -1) {
-            return this.store.dispatch(new CartItemQuantityDecrement(item))
+            this.store.dispatch(new CartItemQuantityDecrement(item))
         }
     }
 
@@ -98,22 +104,18 @@ console.log('ITEM TO ADD', item)
         .toPromise()
     }
 
-    private async updateAndStream(): Promise<void> {
+    private async _updateAndStream(): Promise<CartState> {
         const ids = this.cart.items.map((item: CartItem) => item._id)
         const request = new GetCartItemsFromIdsRequest({ ids })
         const params = new HttpParams()
             .set('request', JSON.stringify(request))
 
-        this._httpClient.get<CartItem[]>(`${ApiEndpoints.Cart}/refresh`, { params })
-            .subscribe((items) => {
-                this.store.dispatch(new CartItemsUpdate(items))
-                const subTotal = this.cart.subTotal
-                const total = CartHelper.getTotal(subTotal, this._organizationService.organization)
-                this.store.dispatch(new CartTotalUpdate(total))
-                    .subscribe(() => {
-                        this._userService.updateCart(this.cart)
-                        this._util.saveToLocalStorage(LocalStorageKeys.Cart, this.cart)
-                    })
-            })
+        const items = await this._httpClient.get<CartItem[]>(`${ApiEndpoints.Cart}/refresh`, { params })
+            .toPromise()
+        await this.store.dispatch(new CartItemsUpdate(items))
+        const subTotal = this.cart.subTotal
+        const total = CartHelper.getTotal(subTotal, this._organizationService.organization)
+        await this.store.dispatch(new CartTotalUpdate(total))
+        return this.store.state
     }
 }

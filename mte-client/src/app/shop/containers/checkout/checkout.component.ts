@@ -319,6 +319,6 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
 
     public async placeOrder(): Promise<void> {
         await this.orderService.place(this.order).toPromise()
-        this.cartService.store.reset()
+        this.cartService.store.clear()
     }
 }

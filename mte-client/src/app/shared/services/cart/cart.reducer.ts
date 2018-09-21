@@ -9,6 +9,7 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
     let cart = cloneDeep(state)
 
     // Update cart.
+
     if (action instanceof CartUpdate) {
         const payload = action.payload as CartState
         cart = {
@@ -18,15 +19,17 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
     }
 
     // Update items.
+
     if (action instanceof CartItemsUpdate) {
-        const payload = action.payload
+        const items = action.payload
         cart = {
             ...cart,
-            items: payload
+            items,
         }
     }
 
     // Add item.
+
     if (action instanceof CartItemAddition) {
         const { item, quantity } = action.payload
         const itemsAvailable = CartHelper.getNumberAvailableToAdd(cart as Cart, item)
