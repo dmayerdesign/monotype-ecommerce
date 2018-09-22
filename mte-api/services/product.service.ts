@@ -46,7 +46,7 @@ export class ProductService extends CrudService<Product> {
     constructor(
         @inject(Types.DbClient) protected dbClient: DbClient<Product>,
         @inject(Types.ProductSearchHelper) private productSearchHelper: ProductSearchHelper,
-        @inject(Types.OrganizationService) private organizationService: OrganizationService
+        @inject(Types.OrganizationService) private organizationService: OrganizationService,
     ) {
         super()
     }

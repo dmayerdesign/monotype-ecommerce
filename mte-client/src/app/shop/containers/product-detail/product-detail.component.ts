@@ -193,9 +193,4 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
     public handleDisplayedProductChange(variation: Product): void {
         this.displayedProduct = variation
     }
-
-    public undoAddToCart(): void {
-        this.cartService.store.stepBackward(4)
-        this.showAddToCartSuccess = false
-    }
 }

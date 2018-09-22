@@ -22,7 +22,7 @@ mte() {
             --app mte-client-universal
     fi
     if [ "$1" = "dev:server" ]; then
-        mte build:server && mte watch:server; nodemon dist/server.js;
+        mte build:server; nodemon dist/server.js & mte watch:server;
     fi
     if [ "$1" = "build" ]; then
         mte clean; mte build:app && mte build:server
@@ -60,7 +60,6 @@ mte() {
     fi
     if [ "$1" = "build:server" ]; then
         mte prebuild:api && webpack --config mte-api/config/webpack.server-config.js
-        return 1
     fi
     if [ "$1" = "watch:server" ]; then
         webpack --config mte-api/config/webpack.server-config.js --watch

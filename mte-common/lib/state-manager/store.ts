@@ -7,7 +7,7 @@ import { AsyncReducer, Reducer } from './reducer'
 
 export class Store<StateType> {
     private _statePump: BehaviorSubject<StateType>
-    private _eventSource = new ReplaySubject<SourceEvent<StateType>>(null)
+    private _eventSource = new ReplaySubject<SourceEvent<StateType>>(500)
     private _states: Observable<StateType>
     private _initialState: StateType
     private _incomingActionPump: ReplaySubject<Action>

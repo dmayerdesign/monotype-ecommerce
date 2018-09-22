@@ -238,7 +238,7 @@ export class MteRangeSliderComponent extends HeartbeatComponent implements Contr
     }
     public getMaxLimit(): number {
         if (this.maxLimit % this.step) {
-            return this.maxLimit - (this.maxLimit % this.step) + this.maxLimit
+            return this.maxLimit + this.step - (this.maxLimit % this.step)
         }
         return this.maxLimit
     }

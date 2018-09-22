@@ -1,7 +1,7 @@
-import { Action } from '@mte/common/lib/state-manager/action'
 import { Cart } from '@mte/common/api/interfaces/cart'
 import { CartItem } from '@mte/common/api/interfaces/cart-item'
 import { Price } from '@mte/common/api/interfaces/price'
+import { Action } from '@mte/common/lib/state-manager/action'
 
 export class CartUpdate extends Action<Cart> { }
 
