@@ -9,8 +9,8 @@ import { Taxonomy } from '@mte/common/api/interfaces/taxonomy'
 import { TaxonomyTerm } from '@mte/common/api/interfaces/taxonomy-term'
 import { GetProductsFilter, GetProductsFilterType, GetProductsRequest } from '@mte/common/api/requests/get-products.request'
 import { BootstrapBreakpointKey } from '@mte/common/constants/enums/bootstrap-breakpoint-key'
-import { Currency } from '@mte/common/constants/enums/currency'
 import { ProductsFilterType } from '@mte/common/constants/enums/products-filter-type'
+import { RangeLimit } from '@mte/common/constants/enums/range-limit'
 import { MongooseHelper as mh } from '@mte/common/helpers/mongoose.helper'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
@@ -54,6 +54,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     public leftSidebarIsExpandeds: BehaviorSubject<boolean>
     public store = new Store<ProductsState>(new ProductsState(), productsReducer)
     public productsFilterFormBuilders: MteFormBuilder[]
+    public rangeLimit = RangeLimit
     private _productsFilterFormBuilders: MteFormBuilder[]
     private _productsFilterFormValuesMap = new Map<ProductsFilter, any>()
     private _shouldExecuteRequestOnFormValueChanges = false
@@ -87,7 +88,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
 
         // Execute the request any time it changes.
 
-        this.store.reactTo(GetProductsRequestUpdate)
+        this.store.reactTo.oneOf(GetProductsRequestUpdate)
             .pipe(
                 // Make sure that `clearFilters` doesn't trigger multiple requests.
                 debounceTime(100),
@@ -223,17 +224,11 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
             return {
                 type: GetProductsFilterType.Property,
                 key: 'price',
-                range: formValue.priceRange.map((value) => {
-                    return {
-                        amount: value,
-                        currency: Currency.USD,
-                    }
-                })
+                range: formValue.priceRange
             }
         })
 
         // Now, set up the filters.
-
         this._initFilters()
         this._initFiltersShowing()
     }
@@ -313,7 +308,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                             formValue,
                             this._productsFilterFormValuesMap.get(productsFilter),
                         )),
-                        filter(() => !this._shouldExecuteRequestOnFormValueChanges)
+                        filter(() => this._shouldExecuteRequestOnFormValueChanges),
                     )
                     .subscribe((formValue) => {
                         this._productsFilterFormValuesMap.set(productsFilter, formValue)
@@ -325,13 +320,17 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                             ...request,
                             filters: newRequestFilters
                         }
-                        const indexOfExistingFilter = newRequestFilters.findIndex(
-                            existingFilterFinder(productsFilter)
-                        )
-                        if (indexOfExistingFilter > -1) {
-                            newRequestFilters.splice(indexOfExistingFilter, 1)
+                        if (typeof existingFilterFinder === 'function') {
+                            const indexOfExistingFilter = newRequestFilters.findIndex(
+                                existingFilterFinder(productsFilter)
+                            )
+                            if (indexOfExistingFilter > -1) {
+                                newRequestFilters.splice(indexOfExistingFilter, 1)
+                            }
                         }
-                        newRequestFilters.push(newRequestFilterFactory(formValue))
+                        if (typeof newRequestFilterFactory === 'function') {
+                            newRequestFilters.push(newRequestFilterFactory(formValue))
+                        }
                         this.store.dispatch(new GetProductsRequestUpdate(newRequest))
                     })
 
@@ -546,7 +545,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
                             .find((formGroup) => !!formGroup.get(formControlName))
                         if (formControl) {
                             formControl.patchValue({
-                                [formControlName]: [ filter.range.min, filter.range.max ],
+                                [formControlName]: filter.range,
                             })
                         }
                     }
@@ -579,6 +578,8 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
     private _updateFormSilently(formUpdateFn: (...args: any[]) => any): void {
         this._shouldExecuteRequestOnFormValueChanges = false
         formUpdateFn()
-        setTimeout(() => this._shouldExecuteRequestOnFormValueChanges = false)
+        setTimeout(() => {
+            this._shouldExecuteRequestOnFormValueChanges = true
+        }, 100)
     }
 }

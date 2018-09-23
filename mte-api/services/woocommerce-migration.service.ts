@@ -14,6 +14,7 @@ import { ApiErrorResponse } from '@mte/common/api/responses/api-error.response'
 import { ApiResponse } from '@mte/common/api/responses/api.response'
 import { Currency } from '@mte/common/constants/enums/currency'
 import { ProductClass } from '@mte/common/constants/enums/product-class'
+import { RangeLimit } from '@mte/common/constants/enums/range-limit'
 import { WeightUnit } from '@mte/common/constants/enums/weight-unit'
 import { Types } from '@mte/common/constants/inversify'
 import { DbClient } from '../data-access/db-client'
@@ -291,8 +292,8 @@ export class WoocommerceMigrationService {
                                             currency: Currency.USD,
                                         } as Price,
                                     ]
-                                    newProduct.priceRange[0].amount = parseFloat(priceRangeTotals[0])
-                                    newProduct.priceRange[1].amount = parseFloat(priceRangeTotals[1])
+                                    newProduct.priceRange[RangeLimit.Min].amount = parseFloat(priceRangeTotals[RangeLimit.Min])
+                                    newProduct.priceRange[RangeLimit.Max].amount = parseFloat(priceRangeTotals[RangeLimit.Max])
                                     delete newProduct[key]
                                 }
                                 else {
@@ -315,8 +316,8 @@ export class WoocommerceMigrationService {
                                             currency: Currency.USD,
                                         } as Price,
                                     ]
-                                    newProduct.salePriceRange[0].amount = parseFloat(salePriceRangeTotals[0])
-                                    newProduct.salePriceRange[1].amount = parseFloat(salePriceRangeTotals[1])
+                                    newProduct.salePriceRange[RangeLimit.Min].amount = parseFloat(salePriceRangeTotals[RangeLimit.Min])
+                                    newProduct.salePriceRange[RangeLimit.Max].amount = parseFloat(salePriceRangeTotals[RangeLimit.Max])
                                     delete newProduct.salePrice
                                 }
                                 else {

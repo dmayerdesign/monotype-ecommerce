@@ -3,13 +3,9 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms'
 import { cloneDeep } from 'lodash'
 import { fromEvent, merge, BehaviorSubject, Observable } from 'rxjs'
 import { delay, filter, map, scan } from 'rxjs/operators'
+import { RangeLimit } from '../../../../../constants/enums/range-limit'
 import { HeartbeatComponent } from '../../../../heartbeat/heartbeat.component'
 import { Heartbeat } from '../../../../heartbeat/heartbeat.decorator'
-
-export enum RangeLimit {
-    Min = 0,
-    Max = 1,
-}
 
 @Component({
     selector: 'mte-range-slider',
@@ -23,7 +19,7 @@ export enum RangeLimit {
                     [min]="getMinMin()"
                     [max]="getMinMax()"
                     [step]="displayStep"
-                    [ngModel]="value[0]"
+                    [ngModel]="value[rangeLimit.Min]"
                     (change)="handleInputChange($event.target)"
                     (input)="handleInputChange($event.target)"
                 />
@@ -34,7 +30,7 @@ export enum RangeLimit {
                     [min]="getMaxMin()"
                     [max]="getMaxMax()"
                     [step]="displayStep"
-                    [ngModel]="value[1]"
+                    [ngModel]="value[rangeLimit.Max]"
                     (change)="handleInputChange($event.target)"
                     (input)="handleInputChange($event.target)"
                 />
@@ -111,7 +107,7 @@ export class MteRangeSliderComponent extends HeartbeatComponent implements Contr
     public isMouseDownOnMax = false
     public rangeLimit = RangeLimit
     private _onChange: (value: any) => void
-    private _value: number[] = [this.minLimit, this.maxLimit]
+    private _value: number[] = null
     private _lastMouseDownOffset: number
     private _modelChanges = new BehaviorSubject<number[]>(this.value)
     private _viewChanges = new BehaviorSubject<number[]>(this.value)
@@ -121,6 +117,7 @@ export class MteRangeSliderComponent extends HeartbeatComponent implements Contr
     ) { super() }
 
     public ngOnInit(): void {
+        this._value = [ this.getMinLimit(), this.getMaxLimit() ]
         this.minXPositions = merge(
             fromEvent(document, 'mousemove').pipe(
                 filter(() => this.isMouseDownOnMin),
@@ -133,7 +130,7 @@ export class MteRangeSliderComponent extends HeartbeatComponent implements Contr
                     const allowedValues = this._getAllowedValues()
                     const value = this._getLimitFromPosition(currentPosition)
                     const allowedValue = allowedValues.find((val) => value < val + 5 && value > val - 5)
-                    if (allowedValue > this.value[1]) {
+                    if (allowedValue > this.value[RangeLimit.Max]) {
                         return accumulator
                     }
                     const newPosition = this._getPositionFromLimit(allowedValue)
@@ -143,7 +140,10 @@ export class MteRangeSliderComponent extends HeartbeatComponent implements Contr
                     return accumulator
                 }),
             ),
-            this._modelChanges.pipe(map((value) => this._getPositionFromLimit(value[0]))),
+            this._modelChanges.pipe(
+                filter((value) => !!value),
+                map((value) => this._getPositionFromLimit(value[RangeLimit.Min])),
+            ),
         )
 
         this.maxXPositions = merge(
@@ -158,7 +158,7 @@ export class MteRangeSliderComponent extends HeartbeatComponent implements Contr
                     const allowedValues = this._getAllowedValues()
                     const value = this._getLimitFromPosition(currentPosition)
                     const allowedValue = allowedValues.find((val) => value < val + 5 && value > val - 5)
-                    if (allowedValue < this.value[0]) {
+                    if (allowedValue < this.value[RangeLimit.Min]) {
                         return accumulator
                     }
                     const newPosition = this._getPositionFromLimit(allowedValue)
@@ -168,28 +168,37 @@ export class MteRangeSliderComponent extends HeartbeatComponent implements Contr
                     return accumulator
                 }),
             ),
-            this._modelChanges.pipe(map((value) => this._getPositionFromLimit(value[1]))),
+            this._modelChanges.pipe(
+                filter((value) => !!value),
+                map((value) => this._getPositionFromLimit(value[RangeLimit.Max])),
+            ),
         )
 
         merge(
             this.minXPositions.pipe(map((minXPos) => this._getLimitFromPosition(minXPos))),
-            this._modelChanges.pipe(map((value) => value[0])),
+            this._modelChanges.pipe(
+                filter((value) => !!value),
+                map((value) => value[RangeLimit.Min]),
+            ),
         )
             .pipe(delay(0))
             .subscribe((value) => {
                 const newValue = [ ...this.value ]
-                newValue[0] = value
+                newValue[RangeLimit.Min] = value
                 this.handleViewUpdate(newValue)
             })
 
         merge(
             this.maxXPositions.pipe(map((maxXPos) => this._getLimitFromPosition(maxXPos))),
-            this._modelChanges.pipe(map((value) => value[1])),
+            this._modelChanges.pipe(
+                filter((value) => !!value),
+                map((value) => value[RangeLimit.Max])
+            ),
         )
             .pipe(delay(0))
             .subscribe((value) => {
                 const newValue = [ ...this.value ]
-                newValue[1] = value
+                newValue[RangeLimit.Max] = value
                 this.handleViewUpdate(newValue)
             })
     }
@@ -221,17 +230,29 @@ export class MteRangeSliderComponent extends HeartbeatComponent implements Contr
         return this.step
     }
 
-    public getMinMin(): number {
+    public getMinLimit(): number {
+        if (this.minLimit % this.step) {
+            return this.minLimit - (this.minLimit % this.step)
+        }
         return this.minLimit
     }
+    public getMaxLimit(): number {
+        if (this.maxLimit % this.step) {
+            return this.maxLimit + this.step - (this.maxLimit % this.step)
+        }
+        return this.maxLimit
+    }
+    public getMinMin(): number {
+        return this.getMinLimit()
+    }
     public getMinMax(): number {
-        return Math.min(this.maxLimit, this.value[1])
+        return Math.min(this.getMaxLimit(), this.value[RangeLimit.Max])
     }
     public getMaxMin(): number {
-        return Math.max(this.minLimit, this.value[0])
+        return Math.max(this.getMinLimit(), this.value[RangeLimit.Min])
     }
     public getMaxMax(): number {
-        return this.maxLimit
+        return this.getMaxLimit()
     }
 
     // view -> model
@@ -247,7 +268,7 @@ export class MteRangeSliderComponent extends HeartbeatComponent implements Contr
             : inputElement.value
 
         newValue[indexOfRangeLimit] = parseFloat(inputValue)
-        if (newValue[0] <= newValue[1]) {
+        if (newValue[RangeLimit.Min] <= newValue[RangeLimit.Max]) {
             this.handleViewUpdate(newValue)
 
             if (inputElement.hasAttribute('data-min')) {
@@ -260,8 +281,11 @@ export class MteRangeSliderComponent extends HeartbeatComponent implements Contr
     }
 
     public handleViewUpdate(newValue: number[]): void {
-        if (newValue[0] <= newValue[1]) {
-            newValue = newValue.map((x) => Math.floor(x))
+        if (newValue[RangeLimit.Min] <= newValue[RangeLimit.Max]) {
+            newValue = [
+                Math.floor(newValue[RangeLimit.Min]),
+                Math.ceil(newValue[RangeLimit.Max]),
+            ]
             this._value = newValue
             this._onChange(this.value)
             this._viewChanges.next(this.value)
@@ -280,12 +304,18 @@ export class MteRangeSliderComponent extends HeartbeatComponent implements Contr
         else if (!!value && value.length > 2) {
             console.warn('The value supplied to the range slider was an array with more than 2 elements.')
         }
-        else if (!value || value.length < 2) {
-            return
+        else if (value && value.length < 2) {
+            min = value[RangeLimit.Min]
+            max = this.getMaxLimit()
         }
-
-        min = value[0]
-        max = value[1]
+        else if (!value) {
+            min = this.getMinLimit()
+            max = this.getMaxLimit()
+        }
+        else {
+            min = value[RangeLimit.Min]
+            max = value[RangeLimit.Max]
+        }
 
         if (typeof min !== 'number') {
             if (min === '') {
@@ -310,8 +340,21 @@ export class MteRangeSliderComponent extends HeartbeatComponent implements Contr
             }
         }
 
+        if (min % this.step) {
+            min = min - (min % this.step)
+            if (min < 0) min = 0
+        }
+
+        if (max % this.step) {
+            max = max - (max % this.step) + this.step
+            if (max < 0) max = 0
+        }
+
         if (min <= max) {
-            this._value = value.map((x) => Math.floor(x))
+            this._value = [
+                Math.floor(min),
+                Math.ceil(max),
+            ]
             this._renderer.setValue(this.min.nativeElement, `${min}`)
             this._renderer.setValue(this.max.nativeElement, `${max}`)
             this._modelChanges.next(this.value)
@@ -345,21 +388,21 @@ export class MteRangeSliderComponent extends HeartbeatComponent implements Contr
         let limit = 0
         if (this.sliderWidth) {
             const fraction = position / this.sliderWidth
-            limit = this.minLimit + ((this.maxLimit - this.minLimit) * fraction)
+            limit = this.getMinLimit() + ((this.getMaxLimit() - this.getMinLimit()) * fraction)
         }
         return limit
     }
 
     private _getPositionFromLimit(limit: number): number {
         let position = 0
-        if (limit < this.minLimit) {
-            return this.minLimit
+        if (limit < this.getMinLimit()) {
+            return this.getMinLimit()
         }
-        if (limit > this.maxLimit) {
-            return this.maxLimit
+        if (limit > this.getMaxLimit()) {
+            return this.getMaxLimit()
         }
         if (this.sliderWidth) {
-            const fraction = (limit - this.minLimit) / (this.maxLimit - this.minLimit)
+            const fraction = (limit - this.getMinLimit()) / (this.getMaxLimit() - this.getMinLimit())
             position = this.sliderWidth * fraction
         }
         return position
@@ -369,7 +412,7 @@ export class MteRangeSliderComponent extends HeartbeatComponent implements Contr
         const self = this
         return Array.from(
             (function*() {
-                for (let x = self.minLimit; x <= self.maxLimit; x++) {
+                for (let x = self.getMinLimit(); x <= self.getMaxLimit(); x++) {
                     if (x % self.step === 0) {
                         yield x
                     }

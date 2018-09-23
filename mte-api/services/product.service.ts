@@ -16,6 +16,7 @@ import { ApiResponse } from '@mte/common/api/responses/api.response'
 import { GetProductDetailResponseBody } from '@mte/common/api/responses/get-product-detail/get-product-detail.response.body'
 import { HttpStatus } from '@mte/common/constants'
 import { Currency } from '@mte/common/constants/enums/currency'
+import { RangeLimit } from '@mte/common/constants/enums/range-limit'
 import { Types } from '@mte/common/constants/inversify'
 import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { DbClient } from '../data-access/db-client'
@@ -45,7 +46,7 @@ export class ProductService extends CrudService<Product> {
     constructor(
         @inject(Types.DbClient) protected dbClient: DbClient<Product>,
         @inject(Types.ProductSearchHelper) private productSearchHelper: ProductSearchHelper,
-        @inject(Types.OrganizationService) private organizationService: OrganizationService
+        @inject(Types.OrganizationService) private organizationService: OrganizationService,
     ) {
         super()
     }
@@ -146,7 +147,7 @@ export class ProductService extends CrudService<Product> {
      * @param {GetProductsRequest} body The search options
      * @param {express.Response} [res] The express Response; pass this in if you want the documents fetched as a stream and piped into the response
      */
-    public async getProducts(body: GetProductsRequest, res?: Response): Promise<ApiResponse<Product[]>|void> {
+    public async getProducts(body?: GetProductsRequest, res?: Response): Promise<ApiResponse<Product[]>|void> {
         const listFromQueryRequest = await this._createGetProductsRequestQuery(body)
 
         const populates = [
@@ -179,18 +180,18 @@ export class ProductService extends CrudService<Product> {
             const _priceRange = products.reduce<Price[]>((priceRange, product) => {
                 const price = ProductHelper.getPrice(product)
                 if (Array.isArray(price)) {
-                    if (priceRange[0].amount === 0 || price[0].amount < priceRange[0].amount) {
-                        priceRange[0] = price[0]
+                    if (priceRange[RangeLimit.Min].amount === 0 || price[RangeLimit.Min].amount < priceRange[RangeLimit.Min].amount) {
+                        priceRange[RangeLimit.Min] = price[RangeLimit.Min]
                     }
-                    if (price[1].amount > priceRange[1].amount) {
-                        priceRange[1] = price[1]
+                    if (price[RangeLimit.Max].amount > priceRange[RangeLimit.Max].amount) {
+                        priceRange[RangeLimit.Max] = price[RangeLimit.Max]
                     }
                 } else {
-                    if (price.amount < priceRange[0].amount) {
-                        priceRange[0] = price
+                    if (price.amount < priceRange[RangeLimit.Min].amount) {
+                        priceRange[RangeLimit.Min] = price
                     }
-                    if (price.amount > priceRange[1].amount) {
-                        priceRange[1] = price
+                    if (price.amount > priceRange[RangeLimit.Max].amount) {
+                        priceRange[RangeLimit.Max] = price
                     }
                 }
                 return priceRange
@@ -419,7 +420,10 @@ export class ProductService extends CrudService<Product> {
             for (let i = 0; i < filters.length; i++) {
                 const filter = filters[i]
 
-                if (!filter.values || !filter.values.length) {
+                if (
+                    (!filter.values || !filter.values.length) &&
+                    !filter.range
+                ) {
                     continue
                 }
 

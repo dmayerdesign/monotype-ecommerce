@@ -86,8 +86,8 @@
                                 <mte-range-slider
                                     [formControlName]="formBuilder.controlNames[0]"
                                     [step]="5"
-                                    [minLimit]="priceRange[0]?.amount"
-                                    [maxLimit]="priceRange[1]?.amount"
+                                    [minLimit]="priceRange[rangeLimit.Min]?.amount"
+                                    [maxLimit]="priceRange[rangeLimit.Max]?.amount"
                                     knobColor="#929"
                                     knobInnerColor="#fff"
                                     trackColor="#000">
