@@ -1,10 +1,9 @@
-import { Currency } from '@mte/common/constants/enums/currency'
-import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { Cart } from '@mte/common/api/interfaces/cart'
 import { CartItem } from '@mte/common/api/interfaces/cart-item'
 import { Price } from '@mte/common/api/interfaces/price'
 import { Product } from '@mte/common/api/interfaces/product'
-import { Organization } from '@mte/common/api/entities/organization'
+import { Currency } from '@mte/common/constants/enums/currency'
+import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { CartDisplayItem } from '@mte/common/models/ui/cart-display-item'
 
 export class CartHelper {
@@ -56,10 +55,13 @@ export class CartHelper {
             }, { amount: 0, currency: Currency.USD })
     }
 
-    public static getTotal(subTotal: Price, organization: Organization): Price {
-        const taxPercent =
-            organization.retailSettings.addSalesTax
-            ? organization.retailSettings.salesTaxPercentage
+    public static getTotal(
+        subTotal: Price,
+        shouldAddSalesTax: boolean,
+        salesTaxPercentage: number,
+    ): Price {
+        const taxPercent = shouldAddSalesTax
+            ? salesTaxPercentage
             : 0
         return {
             amount: subTotal.amount + (subTotal.amount * taxPercent / 100),

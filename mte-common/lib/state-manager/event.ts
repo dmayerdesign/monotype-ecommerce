@@ -1,15 +1,13 @@
 import { Action } from './action'
 
-export class SourceEvent<StateType = any> {
-    public beforeState: StateType
+export class DomainEvent<StateType = any> {
     public action: Action<StateType>
-    public afterState?: StateType
-    public asyncBefore?: boolean
-    public asyncAfter?: boolean
+    public state: StateType
+    public completed: boolean
 
-    constructor({ beforeState, action, afterState }: SourceEvent) {
-        this.beforeState = beforeState
+    constructor({ state, action, completed }: DomainEvent) {
+        this.state = state
         this.action = action
-        this.afterState = afterState
+        this.completed = completed
     }
 }

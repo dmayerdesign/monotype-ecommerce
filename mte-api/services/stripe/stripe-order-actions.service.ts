@@ -1,6 +1,3 @@
-import { Copy } from '@mte/common/constants'
-import { Types } from '@mte/common/constants/inversify'
-import { StripeOrder } from '@mte/common/lib/stripe-shims/stripe-order'
 import { Discount } from '@mte/common/api/entities/discount'
 import { Order } from '@mte/common/api/entities/order'
 import { Product } from '@mte/common/api/entities/product'
@@ -9,7 +6,10 @@ import { ListFromIdsRequest } from '@mte/common/api/requests/list.request'
 import { ApiErrorResponse } from '@mte/common/api/responses/api-error.response'
 import { StripeCreateOrderResponse } from '@mte/common/api/responses/stripe/stripe-create-order.response'
 import { StripePayOrderResponse } from '@mte/common/api/responses/stripe/stripe-pay-order.response'
+import { Copy } from '@mte/common/constants'
 import { OrderStatus } from '@mte/common/constants/enums/order-status'
+import { Types } from '@mte/common/constants/inversify'
+import { StripeOrder } from '@mte/common/lib/stripe-shims/stripe-order'
 import { inject, injectable } from 'inversify'
 import * as Stripe from 'stripe'
 import { DbClient } from '../../data-access/db-client'
@@ -67,7 +67,11 @@ export class StripeOrderActionsService {
             const orderItemsResponse = await this.productService.getIds(orderItemsRequest)
             orderItems = orderItemsResponse.body
             order.subTotal = this.orderHelper.getSubTotal(orderItems)
-            order.total = this.orderHelper.getTotal(order.subTotal, organization)
+            order.total = this.orderHelper.getTotal(
+                order.subTotal,
+                organization.retailSettings.addSalesTax,
+                organization.retailSettings.salesTaxPercentage
+            )
         }
         catch (getItemsError) {
             throw getItemsError

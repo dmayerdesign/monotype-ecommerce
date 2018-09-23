@@ -1,6 +1,6 @@
-export abstract class Action<T = any> {
+export abstract class Action<PayloadType = any> {
     public description?: any
-    constructor(public payload: T) { }
+    constructor(public payload: PayloadType) { }
 }
 
 export class Clear extends Action {
