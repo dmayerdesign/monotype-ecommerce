@@ -2,7 +2,7 @@ import { Cart } from '@mte/common/api/interfaces/cart'
 import { CartItem } from '@mte/common/api/interfaces/cart-item'
 import { CartHelper } from '@mte/common/helpers/cart.helper'
 import { cloneDeep } from 'lodash'
-import { CartAction, CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartTotalUpdate, CartUpdate } from './cart.actions'
+import { CartAction, CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartUpdate } from './cart.actions'
 import { CartState } from './cart.state'
 
 export function cartReducer(state: CartState, action: CartAction): CartState {
@@ -21,10 +21,14 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
     // Update items.
 
     if (action instanceof CartItemsUpdate) {
-        const items = action.payload
+        const { items, addSalesTax, salesTaxPercentage } = action.payload
+        const subTotal = CartHelper.getSubTotal(items)
+        const total = CartHelper.getTotal(subTotal, addSalesTax, salesTaxPercentage)
         cart = {
             ...cart,
             items,
+            subTotal,
+            total,
         }
     }
 
@@ -65,11 +69,6 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
         while (cart.items.findIndex((i: CartItem) => i.slug === item.slug) > -1) {
             cart.items.splice(cart.items.findIndex((i: CartItem) => i.slug === item.slug), 1)
         }
-    }
-
-    // Update the total.
-    if (action instanceof CartTotalUpdate) {
-        cart.total = action.payload
     }
 
     cart.count = cart.items.length

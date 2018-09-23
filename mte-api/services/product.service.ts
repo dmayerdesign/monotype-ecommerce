@@ -147,7 +147,7 @@ export class ProductService extends CrudService<Product> {
      * @param {GetProductsRequest} body The search options
      * @param {express.Response} [res] The express Response; pass this in if you want the documents fetched as a stream and piped into the response
      */
-    public async getProducts(body: GetProductsRequest, res?: Response): Promise<ApiResponse<Product[]>|void> {
+    public async getProducts(body?: GetProductsRequest, res?: Response): Promise<ApiResponse<Product[]>|void> {
         const listFromQueryRequest = await this._createGetProductsRequestQuery(body)
 
         const populates = [
