@@ -11,8 +11,9 @@ import { VariableAttributeSelect, VariableAttributeSelectOption } from '@mte/com
 import { isEqual } from 'lodash'
 import { zip } from 'rxjs'
 import { delay, map, take, takeWhile } from 'rxjs/operators'
-import { CartService } from '../../../../shared/services/cart/cart.service'
+import { CartService } from '../../../../shared/services/cart.service'
 import { OrganizationService } from '../../../../shared/services/organization.service'
+import { CartStore } from '../../../../shared/stores/cart/cart.store'
 import { ProductService } from '../../../services/product.service'
 
 @Component({
@@ -73,17 +74,18 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
         public organizationService: OrganizationService,
         public cartService: CartService,
         public ngZone: NgZone,
+        private _cartStore: CartStore,
     ) {
         super()
     }
 
     public ngOnInit(): void {
         // We can trust this to always fire at least once, since it's attached to a BehaviorSubject.
-        this.cartService.store.states
+        this._cartStore.states
             .pipe(take(1))
             .subscribe(() => this.initForm())
 
-        this.cartService.store.states
+        this._cartStore.states
             .pipe(delay(0))
             .subscribe(() => this.getMatchingVariationsAndUpdate())
     }
@@ -246,7 +248,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
                 // Filter out variations which have all their stock either unavailable or added
                 // to the cart.
 
-                const variationsAddedToCart = this.cartService.store.state.items
+                const variationsAddedToCart = this._cartStore.state.items
                     .filter((cartItem) => cartItem._id === variation._id)
                 const lastOneHasBeenAddedToCart = !!variationsAddedToCart.length &&
                     variationsAddedToCart.length === variationsAddedToCart[0].stockQuantity

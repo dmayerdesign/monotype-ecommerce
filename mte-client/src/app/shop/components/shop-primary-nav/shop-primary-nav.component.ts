@@ -9,9 +9,10 @@ import { User } from '@mte/common/api/interfaces/user'
 import { NavigationBuilder } from '@mte/common/builders/navigation.builder'
 import { BootstrapBreakpointKey } from '@mte/common/constants/enums/bootstrap-breakpoint-key'
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
-import { CartService } from '../../../shared/services/cart/cart.service'
+import { CartService } from '../../../shared/services/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { UserService } from '../../../shared/services/user.service'
+import { CartStore } from '../../../shared/stores/cart/cart.store'
 import { ShopRouterLinks } from '../../constants/shop-router-links'
 
 @Component({
@@ -43,6 +44,7 @@ export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
         public windowRefService: WindowRefService,
         public cartService: CartService,
         public router: Router,
+        private _cartStore: CartStore,
     ) { }
 
     public ngOnInit(): void {
@@ -54,7 +56,7 @@ export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
                     .filter((item: NavigationItem) => item.isTopLevel) as NavigationItem[]
             )
         })
-        this.cartService.store.states.subscribe((cart) => {
+        this._cartStore.states.subscribe((cart) => {
             this.cartTemplateContext.count = cart.count || 0
             this.cartTemplateContext.total = !!cart.total ? (cart.total.amount || 0) : 0
         })

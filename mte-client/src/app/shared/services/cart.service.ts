@@ -5,39 +5,34 @@ import { CartItem } from '@mte/common/api/interfaces/cart-item'
 import { GetCartItemsFromIdsRequest } from '@mte/common/api/requests/get-cart-items-from-ids.request'
 import { ApiEndpoints } from '@mte/common/constants'
 import { LocalStorageKeys } from '@mte/common/constants/local-storage-keys'
-import { Store } from '@mte/common/lib/state-manager/store'
-import { OrganizationService } from '../organization.service'
-import { UserService } from '../user.service'
-import { UtilService } from '../util.service'
+import { OrganizationService } from '../../services/organization.service'
+import { UserService } from '../../services/user.service'
+import { UtilService } from '../../services/util.service'
 import { CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartUpdate } from './cart.actions'
-import { CartAction } from './cart.actions'
-import { cartReducer } from './cart.reducer'
-import { CartState } from './cart.state'
+import { CartStore } from './cart.store'
 
 @Injectable({ providedIn: 'root' })
 export class CartService {
-    public store = new Store<CartState, CartAction>(new CartState(), cartReducer)
-
     constructor(
         private _util: UtilService,
         private _httpClient: HttpClient,
         private _organizationService: OrganizationService,
         private _userService: UserService,
+        private _cartStore: CartStore
     ) {
         this._organizationService.organizations.subscribe(() => this.init())
     }
 
     public get cart(): Cart {
-        return this.store.state as Cart
+        return this._cartStore.state as Cart
     }
 
     public init(): void {
 
         // Register side effects.
 
-        // Any time the cart changes, make sure its items are up-to-date, and update the cart
-        // in the database.
-        this.store.reactTo.allBut(CartItemsUpdate)
+        // Any time the cart changes, make sure its items are up-to-date.
+        this._cartStore.reactTo.allBut(CartItemsUpdate)
             .subscribe(async () => {
                 const ids = this.cart.items.map((item: CartItem) => item._id)
                 const request = new GetCartItemsFromIdsRequest({ ids })
@@ -48,14 +43,15 @@ export class CartService {
                     .get<CartItem[]>(`${ApiEndpoints.Cart}/refresh`, { params })
                     .toPromise()
 
-                await this.store.dispatch(new CartItemsUpdate({
+                await this._cartStore.dispatch(new CartItemsUpdate({
                     items,
                     addSalesTax: this._organizationService.organization.retailSettings.addSalesTax,
                     salesTaxPercentage: this._organizationService.organization.retailSettings.salesTaxPercentage
                 }))
             })
 
-        this.store.reactTo.oneOf(CartItemsUpdate)
+        // Any time the cart items change, persist the changes.
+        this._cartStore.reactTo.oneOf(CartItemsUpdate)
             .subscribe(() => {
                 this._userService.updateCart(this.cart)
                 this._util.saveToLocalStorage(LocalStorageKeys.Cart, this.cart)
@@ -67,7 +63,7 @@ export class CartService {
         const cart = this._util.getFromLocalStorage(LocalStorageKeys.Cart) as Cart
         if (cart && (!!cart.items || !!cart.discounts)) {
             if (cart.items.length || cart.discounts.length) {
-                this.store.dispatch(new CartUpdate(cart))
+                this._cartStore.dispatch(new CartUpdate(cart))
             }
         }
 
@@ -75,7 +71,7 @@ export class CartService {
         this._userService.users.subscribe((user) => {
             if (user && user.cart && (!!user.cart.items || !!user.cart.discounts)) {
                 if (user.cart.items.length || user.cart.discounts.length) {
-                    this.store.dispatch(new CartUpdate(user.cart))
+                    this._cartStore.dispatch(new CartUpdate(user.cart))
                 }
             }
         })
@@ -84,7 +80,7 @@ export class CartService {
     public async add(id: string, quantity = 1): Promise<Cart> {
         try {
             const item: CartItem = await this.getItem(id)
-            this.store.dispatch(new CartItemAddition({ item, quantity }))
+            this._cartStore.dispatch(new CartItemAddition({ item, quantity }))
         }
         catch (error) {
             console.log('Could not find the item in the database.')
@@ -94,15 +90,15 @@ export class CartService {
 
     public incrementQuantity(item: CartItem, direction: 1|-1): void {
         if (direction === 1) {
-            this.store.dispatch(new CartItemQuantityIncrement(item))
+            this._cartStore.dispatch(new CartItemQuantityIncrement(item))
         }
         else if (direction === -1) {
-            this.store.dispatch(new CartItemQuantityDecrement(item))
+            this._cartStore.dispatch(new CartItemQuantityDecrement(item))
         }
     }
 
     public remove(item: CartItem): void {
-        this.store.dispatch(new CartItemRemoval(item))
+        this._cartStore.dispatch(new CartItemRemoval(item))
     }
 
     // API calls.
