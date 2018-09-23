@@ -10,12 +10,13 @@ import { OrganizationService } from '../organization.service'
 import { UserService } from '../user.service'
 import { UtilService } from '../util.service'
 import { CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartUpdate } from './cart.actions'
+import { CartAction } from './cart.actions'
 import { cartReducer } from './cart.reducer'
 import { CartState } from './cart.state'
 
 @Injectable({ providedIn: 'root' })
 export class CartService {
-    public store = new Store<CartState>(new CartState(), cartReducer)
+    public store = new Store<CartState, CartAction>(new CartState(), cartReducer)
 
     constructor(
         private _util: UtilService,
