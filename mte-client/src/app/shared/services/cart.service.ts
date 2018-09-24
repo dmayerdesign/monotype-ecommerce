@@ -5,11 +5,11 @@ import { CartItem } from '@mte/common/api/interfaces/cart-item'
 import { GetCartItemsFromIdsRequest } from '@mte/common/api/requests/get-cart-items-from-ids.request'
 import { ApiEndpoints } from '@mte/common/constants'
 import { LocalStorageKeys } from '@mte/common/constants/local-storage-keys'
-import { OrganizationService } from '../../services/organization.service'
-import { UserService } from '../../services/user.service'
-import { UtilService } from '../../services/util.service'
-import { CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartUpdate } from './cart.actions'
-import { CartStore } from './cart.store'
+import { CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartUpdate } from '../stores/cart/cart.actions'
+import { CartStore } from '../stores/cart/cart.store'
+import { OrganizationService } from './organization.service'
+import { UserService } from './user.service'
+import { UtilService } from './util.service'
 
 @Injectable({ providedIn: 'root' })
 export class CartService {

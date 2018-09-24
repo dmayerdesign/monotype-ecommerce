@@ -4,7 +4,7 @@ import { ListFromIdsRequest, ListFromQueryRequest } from '@mte/common/api/reques
 import { ApiErrorResponse } from '@mte/common/api/responses/api-error.response'
 import { StripeSubmitOrderResponse } from '@mte/common/api/responses/stripe/stripe-submit-order.response'
 import { Copy, HttpStatus } from '@mte/common/constants'
-import { Types } from '@mte/common/constants/inversify'
+import { Types } from '@mte/common/constants/inversify/types'
 import { inject, injectable } from 'inversify'
 import 'stripe'
 import { DbClient } from '../../data-access/db-client'

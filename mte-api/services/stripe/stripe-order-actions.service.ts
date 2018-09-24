@@ -8,7 +8,7 @@ import { StripeCreateOrderResponse } from '@mte/common/api/responses/stripe/stri
 import { StripePayOrderResponse } from '@mte/common/api/responses/stripe/stripe-pay-order.response'
 import { Copy } from '@mte/common/constants'
 import { OrderStatus } from '@mte/common/constants/enums/order-status'
-import { Types } from '@mte/common/constants/inversify'
+import { Types } from '@mte/common/constants/inversify/types'
 import { StripeOrder } from '@mte/common/lib/stripe-shims/stripe-order'
 import { inject, injectable } from 'inversify'
 import * as Stripe from 'stripe'

@@ -3,7 +3,7 @@ import { Easypost } from '@mte/common/types/node-easypost'
 import { inject, injectable } from 'inversify'
 import * as mongoose from 'mongoose'
 
-import { Types } from '@mte/common/constants/inversify'
+import { Types } from '@mte/common/constants/inversify/types'
 import { Address } from '@mte/common/api/entities/address'
 import { EasypostRate } from '@mte/common/api/entities/easypost-rate'
 import { FindOrderError, Order, UpdateOrderError } from '@mte/common/api/entities/order'

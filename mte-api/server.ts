@@ -38,7 +38,6 @@ function serverConfig(app) {
     }))
     app.set('view engine', 'html')
     app.set('views', 'dist/public')
-
     app.set('port', process.env.PORT)
     app.use(cookieParser())
     app.use(express.static('dist/public'))

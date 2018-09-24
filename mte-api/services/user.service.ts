@@ -5,7 +5,7 @@ import * as jwt from 'jsonwebtoken'
 
 import { AuthConfig } from '@mte/common/config/auth.config'
 import { Cookies, Copy, HttpStatus } from '@mte/common/constants'
-import { Types } from '@mte/common/constants/inversify'
+import { Types } from '@mte/common/constants/inversify/types'
 import { UserHelper } from '@mte/common/helpers/user.helper'
 import { Login } from '@mte/common/api/interfaces/login'
 import { PopulateOptions } from '@mte/common/api/interfaces/populate-options'

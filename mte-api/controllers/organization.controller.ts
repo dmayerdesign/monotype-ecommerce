@@ -8,7 +8,7 @@ import {
 } from 'inversify-express-utils'
 
 import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
-import { Types } from '@mte/common/constants/inversify'
+import { Types } from '@mte/common/constants/inversify/types'
 import { Organization } from '@mte/common/api/entities/organization'
 import { OrganizationService } from '../services/organization.service'
 import { ApiController } from './api.controller'

@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify'
 
-import { Types } from '@mte/common/constants/inversify'
 import { Discount } from '@mte/common/api/entities/discount'
+import { Types } from '@mte/common/constants/inversify/types'
 import { DbClient } from '../data-access/db-client'
 import { CrudService } from './crud.service'
 

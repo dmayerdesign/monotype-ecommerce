@@ -17,7 +17,7 @@ import { GetProductDetailResponseBody } from '@mte/common/api/responses/get-prod
 import { HttpStatus } from '@mte/common/constants'
 import { Currency } from '@mte/common/constants/enums/currency'
 import { RangeLimit } from '@mte/common/constants/enums/range-limit'
-import { Types } from '@mte/common/constants/inversify'
+import { Types } from '@mte/common/constants/inversify/types'
 import { ProductHelper } from '@mte/common/helpers/product.helper'
 import { DbClient } from '../data-access/db-client'
 import { ProductSearchHelper } from '../helpers/product-search.helper'
@@ -30,7 +30,7 @@ import { OrganizationService } from './organization.service'
  * TODO:
  * - Write simple method for querying related products
  * -- *Simple match* on one or more attributes/taxonomies (in this case probably brand and stability)
- * -- Those that match all go first, all but one next, etc.
+ * -- Those that match all go first, those that match all but one go next, etc.
  *
  * @export
  * @class ProductService

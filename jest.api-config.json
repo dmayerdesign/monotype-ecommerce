@@ -1,0 +1,12 @@
+{
+  "preset": "ts-jest",
+  "testEnvironment": "node",
+  "bail": true,
+  "verbose": true,
+  "moduleNameMapper": {
+    "@mte/common/(.*)": "<rootDir>/mte-common/$1",
+    "@mte/app-config": "<rootDir>/app-config.ts",
+    "@mte/environment": "<rootDir>/mte-client/src/environments/environment.ts",
+    "stripe": "<rootDir>/node_modules/@types/stripe"
+  }
+}

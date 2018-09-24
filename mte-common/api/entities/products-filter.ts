@@ -15,9 +15,4 @@ export class ProductsFilter extends MongooseDocument implements IProductsFilter 
     @prop() public label?: string
     @arrayProp({ itemsRef: TaxonomyTerm }) public taxonomyTermOptions?: Ref<TaxonomyTerm>[]
     @arrayProp({ itemsType: {} }) public attributeValueOptions?: (Ref<AttributeValue> | SimpleAttributeValue)[]
-
-    constructor() {
-        super()
-        setTimeout(() => console.log(ProductsFilter.__schema), 100)
-    }
 }

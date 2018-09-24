@@ -2,19 +2,19 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "paths": {
+      "@mte/common/*": [ "./mte-common/*" ],
+      "@mte/app-config": [ "./app-config.ts" ],
+      "@mte/environment": [ "./mte-client/src/environments/environment.ts" ],
+      "mongoose": [ "./node_modules/@types/mongoose" ],
+      "stripe": [ "./node_modules/@types/stripe", "./node_modules/stripe" ]
+    },
     "module": "commonjs",
     "target": "es5",
     "types": [
       "jasmine",
-      "node"
+      "node",
+      "jest"
     ]
-  },
-  "files": [
-    "test.ts",
-    "polyfills.ts"
-  ],
-  "include": [
-    "**/*.spec.ts",
-    "**/*.d.ts"
-  ]
+  }
 }

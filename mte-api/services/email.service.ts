@@ -2,9 +2,9 @@ import { inject, injectable } from 'inversify'
 const mailgun = require('mailgun-js')({ apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN })
 
 import { AppConfig } from '@mte/app-config'
-import { EmailBuilder } from '@mte/common/builders/email.builder'
-import { Types } from '@mte/common/constants/inversify'
 import { EmailOptions, EmailServiceOptions, OrderEmailOptions } from '@mte/common/api/interfaces/email-options'
+import { EmailBuilder } from '@mte/common/builders/email.builder'
+import { Types } from '@mte/common/constants/inversify/types'
 import { OrderHelper } from '../helpers/order.helper'
 
 const receipt = require('@mte/common/emails/templates/receipt')

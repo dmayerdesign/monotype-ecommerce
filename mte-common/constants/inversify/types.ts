@@ -1,7 +1,10 @@
 export class Types {
+    // Middleware.
     public static isAuthenticated = Symbol('isAuthenticated')
     public static isOwner = Symbol('isOwner')
     public static Authenticate = Symbol('Authenticate')
+
+    // Services.
     public static CartService = Symbol('CartService')
     public static DbClient = Symbol('DbClient')
     public static DiscountService = Symbol('DiscountService')
@@ -26,4 +29,15 @@ export class Types {
     public static UserService = Symbol('UserService')
     public static WishlistService = Symbol('WishlistService')
     public static WoocommerceMigrationService = Symbol('WoocommerceMigrationService')
+
+    // Controllers.
+    public static AppController = Symbol('AppController')
+    public static CartController = Symbol('CartController')
+    public static InstagramController = Symbol('InstagramController')
+    public static OrdersController = Symbol('OrdersController')
+    public static OrganizationController = Symbol('OrganizationController')
+    public static ProductsAdminController = Symbol('ProductsAdminController')
+    public static ProductsController = Symbol('ProductsController')
+    public static TaxonomyTermsController = Symbol('TaxonomyTermsController')
+    public static UserController = Symbol('UserController')
 }

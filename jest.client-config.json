@@ -1,0 +1,18 @@
+{
+  "preset": "jest-preset-angular",
+  "testEnvironment": "jsdom",
+  "bail": true,
+  "verbose": true,
+  "moduleNameMapper": {
+    "@mte/common/(.*)": "../../mte-common/$1",
+    "@mte/app-config": "../../app-config.ts",
+    "@mte/environment": "./environments/environment.ts",
+    "stripe": "../../node_modules/@types/stripe"
+  },
+  "globals": {
+    "ts-jest": {
+      "__TRANSFORM_HTML__": false,
+      "stringifyContentPathRegex": true
+    }
+  }
+}

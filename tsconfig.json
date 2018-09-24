@@ -15,7 +15,7 @@
       "es2015",
       "es2016"
     ],
-    "types": [ "node" ],
+    "types": [ "node", "jest" ],
     "typeRoots": [
       "./mte-common/types",
       "./node_modules/@types"
