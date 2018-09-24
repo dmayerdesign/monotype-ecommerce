@@ -4,13 +4,14 @@
   "bail": true,
   "verbose": true,
   "moduleNameMapper": {
-    "@mte/common/(.*)": "../../mte-common/$1",
-    "@mte/app-config": "../../app-config.ts",
-    "@mte/environment": "./environments/environment.ts",
-    "stripe": "../../node_modules/@types/stripe"
+    "@mte/common/(.*)": "<rootDir>/mte-common/$1",
+    "@mte/app-config": "<rootDir>/app-config.ts",
+    "@mte/environment": "<rootDir>/mte-client/src/environments/environment.ts",
+    "stripe": "<rootDir>/node_modules/@types/stripe"
   },
   "globals": {
     "ts-jest": {
+      "tsConfigFile": "<rootDir>/tsconfig.spec.json",
       "__TRANSFORM_HTML__": false,
       "stringifyContentPathRegex": true
     }
