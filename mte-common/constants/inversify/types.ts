@@ -31,13 +31,13 @@ export class Types {
     public static WoocommerceMigrationService = Symbol('WoocommerceMigrationService')
 
     // Controllers.
-    public static AppController = Symbol('AppController')
-    public static CartController = Symbol('CartController')
-    public static InstagramController = Symbol('InstagramController')
-    public static OrdersController = Symbol('OrdersController')
-    public static OrganizationController = Symbol('OrganizationController')
-    public static ProductsAdminController = Symbol('ProductsAdminController')
-    public static ProductsController = Symbol('ProductsController')
-    public static TaxonomyTermsController = Symbol('TaxonomyTermsController')
-    public static UserController = Symbol('UserController')
+    public static AppController = 'AppController'
+    public static CartController = 'CartController'
+    public static InstagramController = 'InstagramController'
+    public static OrdersController = 'OrdersController'
+    public static OrganizationController = 'OrganizationController'
+    public static ProductsAdminController = 'ProductsAdminController'
+    public static ProductsController = 'ProductsController'
+    public static TaxonomyTermsController = 'TaxonomyTermsController'
+    public static UserController = 'UserController'
 }

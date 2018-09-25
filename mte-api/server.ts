@@ -14,7 +14,7 @@ import * as xhr from 'xmlhttprequest'
 
 import { passportConfig } from './auth/passport'
 import { container } from './config/inversify.config'
-import { connect } from './data-access/mongo-connection'
+import { establishDbConnection } from './data-access/establish-db-connection'
 import { isProduction } from './helpers/env.helper'
 import { onStart } from './helpers/on-start'
 
@@ -59,7 +59,7 @@ function serverConfig(app) {
 
 // Connect to the database and start the server
 const server = new InversifyExpressServer(container)
-connect().then(() => {
+establishDbConnection().then(() => {
     server
         .setConfig(serverConfig)
         .setErrorConfig(serverErrorConfig)
@@ -67,4 +67,4 @@ connect().then(() => {
         .listen(process.env.PORT, () => console.log(`Server started on port ${process.env.PORT} :D`))
 })
 
-exports = module.exports = server
+export default server
