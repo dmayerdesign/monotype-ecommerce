@@ -21,6 +21,7 @@ import { DbClient } from '../data-access/db-client'
 import { isDev } from '../helpers/env.helper'
 import { OrderHelper } from '../helpers/order.helper'
 import { ProductSearchHelper } from '../helpers/product-search.helper'
+import { EmailService as IEmailService } from '../interfaces/email-service'
 import { CartService } from '../services/cart.service'
 import { CrudService } from '../services/crud.service'
 import { DiscountService } from '../services/discount.service'
@@ -62,7 +63,7 @@ container.bind<DbClient<MongooseDocument>>(Types.DbClient).to(DbClient)
 container.bind<CartService>(Types.CartService).to(CartService)
 container.bind<CrudService<Discount>>(Types.DiscountService).to(DiscountService)
 container.bind<EasypostService>(Types.EasypostService).to(EasypostService)
-container.bind<EmailService>(Types.EmailService).to(EmailService)
+container.bind<IEmailService>(Types.EmailService).to(EmailService)
 container.bind<ErrorService>(Types.ErrorService).to(ErrorService)
 container.bind<InstagramService>(Types.InstagramService).to(InstagramService)
 container.bind<OrderHelper>(Types.OrderHelper).to(OrderHelper)

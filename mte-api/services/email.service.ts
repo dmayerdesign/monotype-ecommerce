@@ -6,6 +6,7 @@ import { EmailOptions, EmailServiceOptions, OrderEmailOptions } from '@mte/commo
 import { EmailBuilder } from '@mte/common/builders/email.builder'
 import { Types } from '@mte/common/constants/inversify/types'
 import { OrderHelper } from '../helpers/order.helper'
+import { EmailService as IEmailService } from '../interfaces/email-service'
 
 const receipt = require('@mte/common/emails/templates/receipt')
 const shippingNotification = require('@mte/common/emails/templates/shippingNotification')
@@ -15,7 +16,7 @@ const emailVerification = require('@mte/common/emails/templates/emailVerificatio
  * Send emails with Mailgun
  */
 @injectable()
-export class EmailService {
+export class EmailService implements IEmailService {
     constructor(
         @inject(Types.OrderHelper) private orderHelper: OrderHelper,
     ) {}
@@ -55,7 +56,7 @@ export class EmailService {
      *
      * @param {OrderEmailOptions} options
      */
-    public sendReceipt(options: OrderEmailOptions): void {
+    public sendReceipt(options: OrderEmailOptions): Promise<void> {
         const emailBuilder = new EmailBuilder()
             .setOptions<OrderEmailOptions>({
                 ...options,
@@ -64,7 +65,7 @@ export class EmailService {
             })
             .setHtml(receipt)
 
-        this.sendEmail(emailBuilder.sendEmailOptions)
+        return this.sendEmail(emailBuilder.sendEmailOptions)
     }
 
     /**
@@ -72,7 +73,7 @@ export class EmailService {
      *
      * @param {OrderEmailOptions} options
      */
-    public sendShippingNotification(options: OrderEmailOptions) {
+    public sendShippingNotification(options: OrderEmailOptions): Promise<any> {
         const emailBuilder = new EmailBuilder()
             .setOptions({
                 ...options,
@@ -94,7 +95,7 @@ export class EmailService {
      * @param {User} options.user
      * @param {string} options.verificationCode
      */
-    public sendEmailVerification(options: EmailServiceOptions) {
+    public sendEmailVerification(options: EmailServiceOptions): Promise<any> {
         const emailBuilder = new EmailBuilder()
             .setOptions({
                 ...options,
@@ -111,7 +112,7 @@ export class EmailService {
      *
      * @param {Error} error
      */
-    public reportError(error: Error) {
+    public reportError(error: Error): Promise<any> {
         const options: EmailOptions = {
             toEmail: AppConfig.developer_email,
             fromName: AppConfig.brand_name,
