@@ -29,7 +29,6 @@ mte() {
         ng build && ng build mte-client-universal
     fi
     if [ "$1" = "build:staging-app" ]; then
-        npm i && \
         ng build \
             --prod \
             --environment=staging && \
@@ -38,7 +37,6 @@ mte() {
             --environment=staging
     fi
     if [ "$1" = "build:prod-app" ]; then
-        npm i && \
         ng build \
             --prod \
             --environment=prod && \
@@ -57,7 +55,7 @@ mte() {
         node dist/server
     fi
     if [ "$1" = "clean" ]; then
-        rimraf ./dist; mkdir -p dist/public
+        rm -rf ./dist; mkdir -p dist/public
     fi
 }
 
