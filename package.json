@@ -6,7 +6,7 @@
     "node": "7.10.1"
   },
   "scripts": {
-    "mte": "sh ~/Apps/monotype/ecommerce/build.sh",
+    "mte": "sh ./build.sh",
     "start": "node dist/server",
     "test:api": "node_modules/jest/bin/jest.js mte-api/test --config=jest.api-config.json --runInBand",
     "test:app": "ng test",
