@@ -9,9 +9,10 @@ import { Types } from '@mte/common/constants/inversify/types'
 import { CartHelper } from '@mte/common/helpers/cart.helper'
 import { UserHelper } from '@mte/common/helpers/user.helper'
 import { DbClient } from '../data-access/db-client'
+import { EmailService } from '../interfaces/email-service'
+import { OrderService as IOrderService } from '../interfaces/order-service'
 import { CartService } from './cart.service'
 import { CrudService } from './crud.service'
-import { EmailService } from './email.service'
 import { OrganizationService } from './organization.service'
 import { ProductService } from './product.service'
 import { StripeOrderService } from './stripe/stripe-order.service'
@@ -24,7 +25,7 @@ import { StripeOrderService } from './stripe/stripe-order.service'
  * --- { productId: string, purchasedWithProducts: { productId: string, count: number }[] }
  */
 @injectable()
-export class OrderService extends CrudService<Order> {
+export class OrderService extends CrudService<Order> implements IOrderService {
 
     protected model = Order
 

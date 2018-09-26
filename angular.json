@@ -14,7 +14,6 @@
                         "outputPath": "./dist/public",
                         "main": "mte-client/src/main.ts",
                         "tsConfig": "tsconfig.app.json",
-                        "serviceWorker": false,
                         "stylePreprocessorOptions": {
                             "includePaths": [
                                 "mte-client/src/styles"
@@ -77,15 +76,9 @@
                     }
                 },
                 "test": {
-                    "builder": "@angular-devkit/build-angular:karma",
+                    "builder": "@angular-builders/jest:run",
                     "options": {
-                        "main": "mte-client/src/test.ts",
-                        "polyfills": "mte-client/src/polyfills.ts",
-                        "tsConfig": "tsconfig.spec.json",
-                        "karmaConfig": "mte-client/src/karma.conf.js",
-                        "styles": [],
-                        "scripts": [],
-                        "assets": []
+                        "configPath": "../../jest.client-config.json"
                     }
                 },
                 "serve": {
@@ -127,8 +120,7 @@
                     "options": {
                         "outputPath": "./dist/server-app",
                         "main": "mte-client/src/main.server.ts",
-                        "tsConfig": "tsconfig.server.json",
-                        "serviceWorker": false,
+                        "tsConfig": "tsconfig.server-app.json",
                         "stylePreprocessorOptions": {
                             "includePaths": [
                                 "mte-client/src/styles"

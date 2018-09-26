@@ -6,20 +6,12 @@ mte() {
         mte dev:app &
         mte dev:server;
     fi
-    if [ "$1" = "prebuild" ]; then
-        node ./build-utils/mte-client.prebuild
-    fi
-    if [ "$1" = "prebuild:api" ]; then
-        node ./build-utils/mte-api.prebuild
-    fi
     if [ "$1" = "dev:app" ]; then
-        mte prebuild:app && \
         ng build \
             --watch \
             --aot=true && \
-        ng build \
-            --watch \
-            --app mte-client-universal
+        ng build mte-client-universal \
+            --watch
     fi
     if [ "$1" = "dev:server" ]; then
         mte build:server; nodemon dist/server.js & mte watch:server;
@@ -34,38 +26,38 @@ mte() {
         mte clean; npm i; mte build:prod-app && mte build:server
     fi
     if [ "$1" = "build:app" ]; then
-        mte prebuild:app && ng build && ng build --app mte-client-universal
+        ng build && ng build mte-client-universal
     fi
     if [ "$1" = "build:staging-app" ]; then
-        npm i
-        mte prebuild:app && \
+        npm i && \
         ng build \
             --prod \
             --environment=staging && \
-        ng build \
-            --app mte-client-universal \
+        ng build mte-client-universal \
             --prod \
             --environment=staging
     fi
     if [ "$1" = "build:prod-app" ]; then
-        mte prebuild:app && \
+        npm i && \
         ng build \
             --prod \
             --environment=prod && \
-        ng build \
+        ng build mte-client-universal \
             --prod \
             --aot=false \
-            --environment=prod \
-            --app mte-client-universal
+            --environment=prod
     fi
     if [ "$1" = "build:server" ]; then
-        mte prebuild:api && webpack --config mte-api/config/webpack.server-config.js
+        webpack --config mte-api/config/webpack.server-config.js
     fi
     if [ "$1" = "watch:server" ]; then
         webpack --config mte-api/config/webpack.server-config.js --watch
     fi
     if [ "$1" = "start:local" ]; then
         node dist/server
+    fi
+    if [ "$1" = "clean" ]; then
+        rimraf ./dist; mkdir -p dist/public
     fi
 }
 

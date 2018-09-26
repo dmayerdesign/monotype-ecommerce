@@ -93,31 +93,8 @@ export class Store<StateType, ActionType extends Action = Action> {
      * @param {Action} action An instance of (a subclass of) Action, representing some event taking
      * place in the UI.
      */
-    public async dispatch(action: Action): Promise<void> {
-
-        // This block should be considered the source of truth for all the Store's event streams.
-
-        // Get the current state.
-        const beforeState = action instanceof Clear
-            ? this._initialState
-            : this._statePump.getValue()
-
-        // Stream the action for anticipators to consume.
-        this._eventPump.next({ state: beforeState, action, completed: false })
-
-        // Create the new state.
-        const afterStateOrPromise = this._reducer(Object.assign({}, beforeState), action)
-        let afterState: StateType
-        if (typeof((afterStateOrPromise as Promise<StateType>).then) === 'function') {
-            afterState = await (afterStateOrPromise as Promise<StateType>)
-        }
-        else {
-            afterState = afterStateOrPromise as StateType
-        }
-
-        // Publish the new state.
-        this._statePump.next(afterState)
-        this._eventPump.next({ state: afterState, action, completed: true })
+    public dispatch(action: ActionType | Clear): void {
+        this._dispatch(action)
     }
 
     /**
@@ -149,5 +126,41 @@ export class Store<StateType, ActionType extends Action = Action> {
 
     public get completedActions(): Observable<Action> {
         return this._completedActions
+    }
+
+    // Logic.
+
+    /** This method acts as the source of truth for all the Store's event streams. */
+    private async _dispatch(action: ActionType | Clear): Promise<void> {
+
+        // Get the current state.
+        const beforeState = action instanceof Clear
+            ? this._initialState
+            : this._statePump.getValue()
+
+        // Stream the action for anticipators to consume.
+        this._eventPump.next({
+            action,
+            state: beforeState,
+            completed: false,
+        })
+
+        // Create the new state.
+        const afterStateOrPromise = this._reducer(Object.assign({}, beforeState), action)
+        let afterState: StateType
+        if (typeof((afterStateOrPromise as Promise<StateType>).then) === 'function') {
+            afterState = await (afterStateOrPromise as Promise<StateType>)
+        }
+        else {
+            afterState = afterStateOrPromise as StateType
+        }
+
+        // Publish the new state.
+        this._statePump.next(afterState)
+        this._eventPump.next({
+            action,
+            state: afterState,
+            completed: true,
+        })
     }
 }

@@ -16,7 +16,7 @@ import { Currency } from '@mte/common/constants/enums/currency'
 import { ProductClass } from '@mte/common/constants/enums/product-class'
 import { RangeLimit } from '@mte/common/constants/enums/range-limit'
 import { WeightUnit } from '@mte/common/constants/enums/weight-unit'
-import { Types } from '@mte/common/constants/inversify'
+import { Types } from '@mte/common/constants/inversify/types'
 import { DbClient } from '../data-access/db-client'
 
 import * as productsJSON from '@mte/common/work-files/migration/hyzershop-products'

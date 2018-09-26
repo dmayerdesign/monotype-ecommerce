@@ -4,12 +4,10 @@ import { ListFromIdsRequest, ListFromQueryRequest } from '@mte/common/api/reques
 import { ApiErrorResponse } from '@mte/common/api/responses/api-error.response'
 import { StripeSubmitOrderResponse } from '@mte/common/api/responses/stripe/stripe-submit-order.response'
 import { Copy, HttpStatus } from '@mte/common/constants'
-import { Types } from '@mte/common/constants/inversify'
+import { Types } from '@mte/common/constants/inversify/types'
 import { inject, injectable } from 'inversify'
 import 'stripe'
 import { DbClient } from '../../data-access/db-client'
-import { EmailService } from '../email.service'
-import { ProductService } from '../product.service'
 import { StripeCustomerService } from './stripe-customer.service'
 import { StripeOrderActionsService } from './stripe-order-actions.service'
 import { StripeProductService } from './stripe-product.service'
@@ -26,11 +24,9 @@ export class StripeOrderService {
 
     constructor(
         @inject(Types.DbClient) private dbClient: DbClient<any>,
-        @inject(Types.EmailService) private email: EmailService,
         @inject(Types.StripeCustomerService) private stripeCustomerService: StripeCustomerService,
         @inject(Types.StripeOrderActionsService) private stripeOrderActionsService: StripeOrderActionsService,
         @inject(Types.StripeProductService) private stripeProductService: StripeProductService,
-        @inject(Types.ProductService) private productService: ProductService,
     ) { }
 
     /**
@@ -85,7 +81,6 @@ export class StripeOrderService {
 
             // Create the products and SKUs in Stripe.
             const stripeProducts = await this.stripeProductService.createProducts([ ...parents, ...standalones ])
-console.log('Stripe products:', stripeProducts)
             await this.stripeProductService.createSkus([ ...variations, ...standalones ])
 
             // Create the order in Stripe.

@@ -15,9 +15,9 @@ import { platform } from '@mte/common/lib/ng-modules/ui/utils/platform'
 import { fromEvent } from 'rxjs'
 import { filter, takeWhile } from 'rxjs/operators'
 import * as stripe from 'stripe'
-import { CartService } from '../../../shared/services/cart/cart.service'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { UserService } from '../../../shared/services/user.service'
+import { CartStore } from '../../../shared/stores/cart/cart.store'
 import { OrderService } from '../../services/order.service'
 import { PaymentServiceProviderService } from '../../services/payment-service-provider.service'
 import { checkoutForm } from './checkout-form'
@@ -61,12 +61,12 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
     private _cardExpiryInput: HTMLInputElement
 
     constructor(
-        private cartService: CartService,
-        private orderService: OrderService,
-        private organizationService: OrganizationService,
-        private paymentServiceProviderService: PaymentServiceProviderService,
-        private mteFormBuilder: MteFormBuilderService,
-        private userService: UserService,
+        private _cartStore: CartStore,
+        private _orderService: OrderService,
+        private _organizationService: OrganizationService,
+        private _paymentServiceProviderService: PaymentServiceProviderService,
+        private _mteFormBuilder: MteFormBuilderService,
+        private _userService: UserService,
     ) { super() }
 
     public async ngOnInit(): Promise<void> {
@@ -95,11 +95,11 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
 
         // Get the organization.
 
-        this.organization = this.organizationService.organization
+        this.organization = this._organizationService.organization
 
         // Create the checkout form.
 
-        this.checkoutForm = this.mteFormBuilder.create(checkoutForm)
+        this.checkoutForm = this._mteFormBuilder.create(checkoutForm)
         this.checkoutFormGroup = this.checkoutForm.formGroup
 
         // Subscribe to checkout form changes.
@@ -114,7 +114,7 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
 
         // Get the cart.
 
-        this.cartService.store.states.subscribe(() => {
+        this._cartStore.states.subscribe(() => {
             this.populateOrder()
         })
 
@@ -127,9 +127,9 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
 
         // If a user exists and it has a `stripeCustomerId`, get the Stripe Customer.
 
-        if (this.userService.user && this.userService.user.stripeCustomerId) {
-            this.paymentServiceProviderService
-                .getStripeCustomer(this.userService.user.stripeCustomerId)
+        if (this._userService.user && this._userService.user.stripeCustomerId) {
+            this._paymentServiceProviderService
+                .getStripeCustomer(this._userService.user.stripeCustomerId)
                 .pipe(filter((customer) => !!customer))
                 .subscribe((customer) => {
                     if (customer.sources) {
@@ -214,9 +214,9 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
      * Should behave idempotently once `this.cartService.cart.items` and `this.orderCustomer` populate.
      */
     public async populateOrder(): Promise<Order> {
-        this.order.items = this.cartService.cart.items.map((item: Product) => item._id)
-        this.order.subTotal = this.cartService.cart.subTotal
-        this.order.total = this.cartService.cart.total
+        this.order.items = this._cartStore.state.items.map((item: Product) => item._id)
+        this.order.subTotal = this._cartStore.state.subTotal
+        this.order.total = this._cartStore.state.total
 
         this.order.taxPercent =
             this.organization.retailSettings.addSalesTax
@@ -318,7 +318,7 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
     }
 
     public async placeOrder(): Promise<void> {
-        await this.orderService.place(this.order).toPromise()
-        this.cartService.store.clear()
+        await this._orderService.place(this.order).toPromise()
+        this._cartStore.clear()
     }
 }

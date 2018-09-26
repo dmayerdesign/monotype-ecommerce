@@ -1,14 +1,12 @@
 const EasypostModule = require('@easypost/api')
 import { Easypost } from '@mte/common/types/node-easypost'
 import { inject, injectable } from 'inversify'
-import * as mongoose from 'mongoose'
 
-import { Types } from '@mte/common/constants/inversify'
 import { Address } from '@mte/common/api/entities/address'
 import { EasypostRate } from '@mte/common/api/entities/easypost-rate'
 import { FindOrderError, Order, UpdateOrderError } from '@mte/common/api/entities/order'
 import { OrderStatus } from '@mte/common/constants/enums/order-status'
-import { DbClient } from '../data-access/db-client'
+import { Types } from '@mte/common/constants/inversify/types'
 import { OrderService } from './order.service'
 
 const easypost = new EasypostModule(process.env.EASYPOST_API_KEY) as Easypost

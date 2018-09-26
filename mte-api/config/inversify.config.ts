@@ -1,9 +1,9 @@
-import { Tags, Types } from '@mte/common/constants/inversify'
-import { MongooseDocument } from '@mte/common/lib/goosetype'
 import { Discount } from '@mte/common/api/entities/discount'
 import { Order } from '@mte/common/api/entities/order'
 import { Organization } from '@mte/common/api/entities/organization'
 import { Product } from '@mte/common/api/entities/product'
+import { Types } from '@mte/common/constants/inversify/types'
+import { MongooseDocument } from '@mte/common/lib/goosetype'
 import { Container } from 'inversify'
 import { interfaces, TYPE } from 'inversify-express-utils'
 import { makeLoggerMiddleware } from 'inversify-logger-middleware'
@@ -21,6 +21,7 @@ import { DbClient } from '../data-access/db-client'
 import { isDev } from '../helpers/env.helper'
 import { OrderHelper } from '../helpers/order.helper'
 import { ProductSearchHelper } from '../helpers/product-search.helper'
+import { EmailService as IEmailService } from '../interfaces/email-service'
 import { CartService } from '../services/cart.service'
 import { CrudService } from '../services/crud.service'
 import { DiscountService } from '../services/discount.service'
@@ -53,12 +54,16 @@ if (isDev()) {
   container.applyMiddleware(logger)
 }
 
+// Middleware.
+container.bind(Types.isAuthenticated).toConstantValue(Authenticate.isAuthenticated)
+container.bind(Types.isOwner).toConstantValue(Authenticate.isAuthorized(1))
+
 // Services.
 container.bind<DbClient<MongooseDocument>>(Types.DbClient).to(DbClient)
 container.bind<CartService>(Types.CartService).to(CartService)
 container.bind<CrudService<Discount>>(Types.DiscountService).to(DiscountService)
 container.bind<EasypostService>(Types.EasypostService).to(EasypostService)
-container.bind<EmailService>(Types.EmailService).to(EmailService)
+container.bind<IEmailService>(Types.EmailService).to(EmailService)
 container.bind<ErrorService>(Types.ErrorService).to(ErrorService)
 container.bind<InstagramService>(Types.InstagramService).to(InstagramService)
 container.bind<OrderHelper>(Types.OrderHelper).to(OrderHelper)
@@ -77,20 +82,16 @@ container.bind<UserService>(Types.UserService).to(UserService)
 container.bind<WishlistService>(Types.WishlistService).to(WishlistService)
 container.bind<WoocommerceMigrationService>(Types.WoocommerceMigrationService).to(WoocommerceMigrationService)
 
-// Middleware.
-container.bind(Types.isAuthenticated).toConstantValue(Authenticate.isAuthenticated)
-container.bind(Types.isOwner).toConstantValue(Authenticate.isAuthorized(1))
-
 // Controllers.
-container.bind<interfaces.Controller>(TYPE.Controller).to(AppController).whenTargetNamed(Tags.AppController)
-container.bind<interfaces.Controller>(TYPE.Controller).to(CartController).whenTargetNamed(Tags.CartController)
-container.bind<interfaces.Controller>(TYPE.Controller).to(InstagramController).whenTargetNamed(Tags.InstagramController)
-container.bind<interfaces.Controller>(TYPE.Controller).to(OrdersController).whenTargetNamed(Tags.OrdersController)
-container.bind<interfaces.Controller>(TYPE.Controller).to(OrganizationController).whenTargetNamed(Tags.OrganizationController)
-container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsAdminController).whenTargetNamed(Tags.ProductsAdminController)
-container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsController).whenTargetNamed(Tags.ProductsController)
-container.bind<interfaces.Controller>(TYPE.Controller).to(TaxonomyTermsController).whenTargetNamed(Tags.TaxonomyTermsController)
-container.bind<interfaces.Controller>(TYPE.Controller).to(UserController).whenTargetNamed(Tags.UserController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(AppController).whenTargetNamed(Types.AppController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(CartController).whenTargetNamed(Types.CartController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(InstagramController).whenTargetNamed(Types.InstagramController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(OrdersController).whenTargetNamed(Types.OrdersController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(OrganizationController).whenTargetNamed(Types.OrganizationController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsAdminController).whenTargetNamed(Types.ProductsAdminController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(ProductsController).whenTargetNamed(Types.ProductsController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(TaxonomyTermsController).whenTargetNamed(Types.TaxonomyTermsController)
+container.bind<interfaces.Controller>(TYPE.Controller).to(UserController).whenTargetNamed(Types.UserController)
 
 // Helper function for injecting into functions.
 function bind(func: (...args: any[]) => any, dependencies: (string|symbol)[]): (...args: any[]) => any {

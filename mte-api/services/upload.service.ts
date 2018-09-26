@@ -6,7 +6,7 @@ import * as path from 'path'
 import sharp from 'sharp'
 
 import { AppConfig } from '@mte/app-config'
-import { Types } from '@mte/common/constants/inversify'
+import { Types } from '@mte/common/constants/inversify/types'
 import { Product } from '@mte/common/api/entities/product'
 import { Revision } from '@mte/common/api/entities/revision'
 import { DbClient } from '../data-access/db-client'

@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify'
 import * as Stripe from 'stripe'
 
-import { Types } from '@mte/common/constants/inversify'
+import { Types } from '@mte/common/constants/inversify/types'
 import { Order } from '@mte/common/api/entities/order'
 import { User } from '@mte/common/api/entities/user'
 import { ApiErrorResponse } from '@mte/common/api/responses/api-error.response'

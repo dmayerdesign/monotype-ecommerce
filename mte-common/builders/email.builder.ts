@@ -1,7 +1,7 @@
 import { AppConfig } from '../../app-config'
+import { Organization } from '../api/entities/organization'
 import { EmailOptions, EmailServiceOptions, EmailStyleOptions } from '../api/interfaces/email-options'
 import { Order } from '../api/interfaces/order'
-import { Organization } from '../api/entities/organization'
 
 export class EmailBuilder {
 

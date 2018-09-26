@@ -1,4 +1,4 @@
-export const hyzershop = {
+exports.hyzershop = {
     "defaultsHaveBeenSet": false,
     "name": "Hyzer Shop",
     "dbaNames": [],
