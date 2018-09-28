@@ -88,7 +88,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
 
         // Execute the request any time it changes.
 
-        this.store.reactTo.oneOf(GetProductsRequestUpdate)
+        this.store.reactTo([GetProductsRequestUpdate])
             .pipe(
                 // Make sure that `clearFilters` doesn't trigger multiple requests.
                 debounceTime(100),

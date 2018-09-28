@@ -13,7 +13,8 @@
     "pree2e": "webdriver-manager update --standalone false --gecko false --quiet",
     "e2e": "protractor ./mte-client/protractor.conf.js",
     "e2e:app": "ng e2e",
-    "lint:app": "ng lint"
+    "lint:app": "ng lint",
+    "postinstall": "npm rebuild node-sass"
   },
   "dependencies": {
     "@angular/animations": "6.1.8",
