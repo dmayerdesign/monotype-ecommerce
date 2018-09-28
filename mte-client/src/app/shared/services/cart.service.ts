@@ -32,30 +32,12 @@ export class CartService {
         // Register side effects.
 
         // Any time the cart changes, make sure its items are up-to-date.
-        this._cartStore.reactTo.allBut(CartItemsUpdate)
-            .subscribe(async () => {
-                const ids = this.cart.items.map((item: CartItem) => item._id)
-                const request = new GetCartItemsFromIdsRequest({ ids })
-                const params = new HttpParams()
-                    .set('request', JSON.stringify(request))
-
-                const items = await this._httpClient
-                    .get<CartItem[]>(`${ApiEndpoints.Cart}/refresh`, { params })
-                    .toPromise()
-
-                await this._cartStore.dispatch(new CartItemsUpdate({
-                    items,
-                    addSalesTax: this._organizationService.organization.retailSettings.addSalesTax,
-                    salesTaxPercentage: this._organizationService.organization.retailSettings.salesTaxPercentage
-                }))
-            })
+        this._cartStore.reactTo([CartItemsUpdate], true)
+            .subscribe(() => this._reactToAllButCartItemsUpdate())
 
         // Any time the cart items change, persist the changes.
-        this._cartStore.reactTo.oneOf(CartItemsUpdate)
-            .subscribe(() => {
-                this._userService.updateCart(this.cart)
-                this._util.saveToLocalStorage(LocalStorageKeys.Cart, this.cart)
-            })
+        this._cartStore.reactTo([CartItemsUpdate])
+            .subscribe(() => this._reactToCartItemsUpdate())
 
         // Set state.
 
@@ -79,7 +61,7 @@ export class CartService {
 
     public async add(id: string, quantity = 1): Promise<Cart> {
         try {
-            const item: CartItem = await this.getItem(id)
+            const item: CartItem = await this._getItem(id)
             this._cartStore.dispatch(new CartItemAddition({ item, quantity }))
         }
         catch (error) {
@@ -103,8 +85,30 @@ export class CartService {
 
     // API calls.
 
-    private async getItem(id: string): Promise<CartItem> {
+    private async _getItem(id: string): Promise<CartItem> {
         return this._httpClient.get<CartItem>(`${ApiEndpoints.Cart}/get-item/${id}`)
         .toPromise()
+    }
+
+    private async _reactToAllButCartItemsUpdate(): Promise<void> {
+        const ids = this.cart.items.map((item: CartItem) => item._id)
+        const request = new GetCartItemsFromIdsRequest({ ids })
+        const params = new HttpParams()
+            .set('request', JSON.stringify(request))
+
+        const items = await this._httpClient
+            .get<CartItem[]>(`${ApiEndpoints.Cart}/refresh`, { params })
+            .toPromise()
+
+        await this._cartStore.dispatch(new CartItemsUpdate({
+            items,
+            addSalesTax: this._organizationService.organization.retailSettings.addSalesTax,
+            salesTaxPercentage: this._organizationService.organization.retailSettings.salesTaxPercentage
+        }))
+    }
+
+    private _reactToCartItemsUpdate(): void {
+        this._userService.updateCart(this.cart)
+        this._util.saveToLocalStorage(LocalStorageKeys.Cart, this.cart)
     }
 }
