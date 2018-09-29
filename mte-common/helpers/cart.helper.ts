@@ -70,6 +70,8 @@ export class CartHelper {
     }
 
     public static getNumberAvailableToAdd(cart: Cart, item: CartItem): number {
-        return item.stockQuantity - cart.items.filter((_item: CartItem) => _item._id === item._id).length
+        return !!cart ?
+            item.stockQuantity - cart.items.filter((_item: CartItem) => _item._id === item._id).length
+            : 0
     }
 }

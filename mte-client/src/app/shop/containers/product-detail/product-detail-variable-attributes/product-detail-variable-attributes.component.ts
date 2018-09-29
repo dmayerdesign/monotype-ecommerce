@@ -8,12 +8,14 @@ import { MongooseHelper as mh } from '@mte/common/helpers/mongoose.helper'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { VariableAttributeSelect, VariableAttributeSelectOption } from '@mte/common/models/ui/variable-attribute-select'
+import { Store } from '@ngrx/store'
 import { isEqual } from 'lodash'
 import { zip } from 'rxjs'
-import { delay, map, take, takeWhile } from 'rxjs/operators'
+import { delay, map, take, takeWhile, withLatestFrom } from 'rxjs/operators'
+import { CartState } from '../../../../shared/modules/cart/cart.state'
 import { CartService } from '../../../../shared/services/cart.service'
 import { OrganizationService } from '../../../../shared/services/organization.service'
-import { CartStore } from '../../../../shared/stores/cart/cart.store'
+import { AppState } from '../../../../state/app.state'
 import { ProductService } from '../../../services/product.service'
 
 @Component({
@@ -74,20 +76,20 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
         public organizationService: OrganizationService,
         public cartService: CartService,
         public ngZone: NgZone,
-        private _cartStore: CartStore,
+        private _store: Store<AppState>,
     ) {
         super()
     }
 
     public ngOnInit(): void {
         // We can trust this to always fire at least once, since it's attached to a BehaviorSubject.
-        this._cartStore.states
+        this._store.select('cart')
             .pipe(take(1))
             .subscribe(() => this.initForm())
 
-        this._cartStore.states
+        this._store.select('cart')
             .pipe(delay(0))
-            .subscribe(() => this.getMatchingVariationsAndUpdate())
+            .subscribe((cartState) => this.getMatchingVariationsAndUpdate(cartState))
     }
 
     public ngOnDestroy(): void { }
@@ -109,10 +111,11 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
                 map((selectedOptions) => selectedOptions.filter(
                     (selectedOption) => selectedOption !== null)
                 ),
+                withLatestFrom(this._store.select('cart'))
             )
-            .subscribe((selectedOptions) => {
+            .subscribe(([selectedOptions, cartState]) => {
                 this._selectedOptions = selectedOptions
-                this.getMatchingVariationsAndUpdate()
+                this.getMatchingVariationsAndUpdate(cartState)
             })
     }
 
@@ -240,7 +243,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
             })
     }
 
-    public getMatchingVariations(selectedOptions: VariableAttributeSelectOption[]): Product[] {
+    public getMatchingVariations(selectedOptions: VariableAttributeSelectOption[], cartState: CartState): Product[] {
         return this.variations
             // .filter((variation) => variation.stockQuantity && variation.stockQuantity > 0)
             .filter((variation) => {
@@ -248,8 +251,8 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
                 // Filter out variations which have all their stock either unavailable or added
                 // to the cart.
 
-                const variationsAddedToCart = this._cartStore.state.items
-                    .filter((cartItem) => cartItem._id === variation._id)
+                const variationsAddedToCart = (cartState.items as Product[])
+                    .filter((cartItem: Product) => cartItem._id === variation._id)
                 const lastOneHasBeenAddedToCart = !!variationsAddedToCart.length &&
                     variationsAddedToCart.length === variationsAddedToCart[0].stockQuantity
                 if (lastOneHasBeenAddedToCart) {
@@ -282,11 +285,11 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
             })
     }
 
-    public getMatchingVariationsAndUpdate(): void {
+    public getMatchingVariationsAndUpdate(cartState: CartState): void {
 
         // Update the list of matching variations and let each VariableAttributeSelect know.
 
-        this.matchingVariations = this.getMatchingVariations(this._selectedOptions)
+        this.matchingVariations = this.getMatchingVariations(this._selectedOptions, cartState)
         this.variableAttributeSelects.forEach((variableAttrSelect) => {
             variableAttrSelect.setStateSilently({ matchingVariations: this.matchingVariations })
             setTimeout(() => variableAttrSelect.update(true))
@@ -322,13 +325,17 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
     }
 
     public reset(): void {
-        this._selectedOptions = []
-        this.getMatchingVariationsAndUpdate()
-        this.variableAttributeSelects.forEach((variableAttributeSelect) => {
-            variableAttributeSelect.reset()
-        })
-        this.selectedVariation = null
-        this.selectedProductChange.emit(null)
+        this._store.select('cart')
+            .pipe(take(1))
+            .subscribe((cartState) => {
+            this._selectedOptions = []
+                this.getMatchingVariationsAndUpdate(cartState)
+                this.variableAttributeSelects.forEach((variableAttributeSelect) => {
+                    variableAttributeSelect.reset()
+                })
+                this.selectedVariation = null
+                this.selectedProductChange.emit(null)
+            })
     }
 
     public variableAttributeSelectsAreAllNull(): boolean {

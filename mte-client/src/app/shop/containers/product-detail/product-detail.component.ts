@@ -57,11 +57,11 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
     public productHelper = ProductHelper
 
     constructor(
-        private activatedRoute: ActivatedRoute,
-        private cartService: CartService,
-        private productService: ProductService,
-        private organizationService: OrganizationService,
-        private uiService: UiService,
+        private _activatedRoute: ActivatedRoute,
+        private _cartService: CartService,
+        private _productService: ProductService,
+        private _organizationService: OrganizationService,
+        private _uiService: UiService,
     ) {
         super()
     }
@@ -69,11 +69,11 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
     // Lifecycle methods.
 
     public ngOnInit(): void {
-        this.activatedRoute.params
+        this._activatedRoute.params
             .pipe(
                 switchMap((params: { slug: string }) => {
-                    this.productService.getDetail(params.slug)
-                    return this.productService.getDetails
+                    this._productService.getDetail(params.slug)
+                    return this._productService.getDetails
                 }),
                 takeWhile(() => this.isAlive)
             )
@@ -84,7 +84,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
                 this.populateSelectedProduct()
             })
 
-        this.organizationService.organizations.subscribe((organization) => {
+        this._organizationService.organizations.subscribe((organization) => {
             this.organization = organization
             this.customRegions = CustomRegionsHelper.getActiveCustomRegions(this.organization.storeUiContent.customRegions)
         })
@@ -117,7 +117,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
             this.displayedProduct = this.parentOrStandalone
         }
 
-        this.uiService.setTitle(ProductHelper.getName(this.parentOrStandalone))
+        this._uiService.setTitle(ProductHelper.getName(this.parentOrStandalone))
     }
 
     public getMainImage(): string {
@@ -167,7 +167,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
         return !this.selectedProduct
             || !this.quantityToAdd
             || this.addingToCart
-            || !CartHelper.getNumberAvailableToAdd(this.cartService.cart, this.selectedProduct)
+            || !CartHelper.getNumberAvailableToAdd(this._cartService.cart, this.selectedProduct)
     }
 
     // Interactions.
@@ -175,7 +175,7 @@ export class ProductDetailComponent extends HeartbeatComponent implements OnInit
     public async addToCart(): Promise<void> {
         if (!this.selectedProduct) return
         this.addingToCart = true
-        await this.cartService.add(this.selectedProduct._id, this.quantityToAdd)
+        await this._cartService.add(this.selectedProduct._id, this.quantityToAdd)
         this.addingToCart = false
         this.showAddToCartSuccess = true
         this.variableAttributesComponent.reset()

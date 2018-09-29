@@ -1,15 +1,15 @@
 import { HttpClient } from '@angular/common/http'
 import { Injectable } from '@angular/core'
 import { Router } from '@angular/router'
-import { Observable, ReplaySubject } from 'rxjs'
-
-import { LocalStorageKeys } from '@mte/common/constants'
-import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
-import { MteHttpService } from '@mte/common/lib/ng-modules/http'
 import { Cart } from '@mte/common/api/interfaces/cart'
 import { Login } from '@mte/common/api/interfaces/login'
 import { User } from '@mte/common/api/interfaces/user'
 import { UserRegistration } from '@mte/common/api/interfaces/user-registration'
+import { LocalStorageKeys } from '@mte/common/constants'
+import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
+import { MteHttpService } from '@mte/common/lib/ng-modules/http'
+import { of as observableOf, Observable, ReplaySubject } from 'rxjs'
+import { map } from 'rxjs/operators'
 import { AppRoutes } from '../../constants/app-routes'
 import { UtilService } from './util.service'
 
@@ -69,20 +69,21 @@ export class UserService {
 
     public logout(): void {
         this.http.post(`${ApiEndpoints.User}/logout`, {})
-            .subscribe(successResponse => {
+            .subscribe(() => {
                 this.clearSession()
 
                 // If the route is protected, navigate away.
-
                 this.router.navigateByUrl(AppRoutes.Shop)
             })
     }
 
-    public updateCart(cart: Cart): void {
+    public updateCart(cart: Cart): Observable<Cart> {
         if (this.user) {
-            this.http.post(`${ApiEndpoints.User}/update-cart`, cart)
+            return this.http.post<User>(`${ApiEndpoints.User}/update`, { cart })
+                .pipe(map((user) => user.cart))
         } else {
             this.utilService.saveToLocalStorage(LocalStorageKeys.Cart, cart)
+            return observableOf(cart)
         }
     }
 
