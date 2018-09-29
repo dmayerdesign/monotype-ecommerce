@@ -79,7 +79,7 @@ export class UserService {
 
     public updateCart(cart: Cart): Observable<Cart> {
         if (this.user) {
-            return this.http.post<User>(`${ApiEndpoints.User}/update`, { cart })
+            return this.http.put<User>(`${ApiEndpoints.User}/update`, { cart })
                 .pipe(map((user) => user.cart))
         } else {
             this.utilService.saveToLocalStorage(LocalStorageKeys.Cart, cart)
