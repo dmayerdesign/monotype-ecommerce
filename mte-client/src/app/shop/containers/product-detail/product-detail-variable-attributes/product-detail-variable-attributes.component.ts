@@ -12,9 +12,10 @@ import { Store } from '@ngrx/store'
 import { isEqual } from 'lodash'
 import { zip } from 'rxjs'
 import { delay, map, take, takeWhile, withLatestFrom } from 'rxjs/operators'
-import { CartState } from '../../../../shared/modules/cart/cart.state'
-import { CartService } from '../../../../shared/services/cart.service'
-import { OrganizationService } from '../../../../shared/services/organization.service'
+import { cartSelectorKey } from '../../../../cart/cart.selectors'
+import { CartService } from '../../../../cart/cart.service'
+import { CartState } from '../../../../cart/cart.state'
+import { OrganizationService } from '../../../../services/organization.service'
 import { AppState } from '../../../../state/app.state'
 import { ProductService } from '../../../services/product.service'
 
@@ -83,11 +84,11 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
 
     public ngOnInit(): void {
         // We can trust this to always fire at least once, since it's attached to a BehaviorSubject.
-        this._store.select('cart')
+        this._store.select(cartSelectorKey)
             .pipe(take(1))
             .subscribe(() => this.initForm())
 
-        this._store.select('cart')
+        this._store.select(cartSelectorKey)
             .pipe(delay(0))
             .subscribe((cartState) => this.getMatchingVariationsAndUpdate(cartState))
     }
@@ -111,7 +112,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
                 map((selectedOptions) => selectedOptions.filter(
                     (selectedOption) => selectedOption !== null)
                 ),
-                withLatestFrom(this._store.select('cart'))
+                withLatestFrom(this._store.select(cartSelectorKey))
             )
             .subscribe(([selectedOptions, cartState]) => {
                 this._selectedOptions = selectedOptions
@@ -325,7 +326,7 @@ export class ProductDetailVariableAttributesComponent extends HeartbeatComponent
     }
 
     public reset(): void {
-        this._store.select('cart')
+        this._store.select(cartSelectorKey)
             .pipe(take(1))
             .subscribe((cartState) => {
             this._selectedOptions = []

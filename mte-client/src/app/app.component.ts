@@ -1,9 +1,9 @@
 import { Component, Injector, OnInit } from '@angular/core'
 import { ActivatedRoute, ActivatedRouteSnapshot, NavigationEnd, Router } from '@angular/router'
 import { Organization } from '@mte/common/api/interfaces/organization'
-import { filter, tap } from 'rxjs/operators'
-import { OrganizationService } from './shared/services/organization.service'
-import { UiService } from './shared/services/ui.service'
+import { filter } from 'rxjs/operators'
+import { OrganizationService } from './services/organization.service'
+import { UiService } from './services/ui.service'
 
 @Component({
     selector: 'app-root',

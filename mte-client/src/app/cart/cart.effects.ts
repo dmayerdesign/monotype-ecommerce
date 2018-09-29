@@ -8,11 +8,12 @@ import { Actions, Effect } from '@ngrx/effects'
 import { Store } from '@ngrx/store'
 import { Observable } from 'rxjs'
 import { filter, map, mergeMap, switchMap, take, tap } from 'rxjs/operators'
-import { AppState } from '../../../state/app.state'
-import { OrganizationService } from '../../services/organization.service'
-import { UserService } from '../../services/user.service'
-import { UtilService } from '../../services/util.service'
+import { OrganizationService } from '../services/organization.service'
+import { UserService } from '../services/user.service'
+import { UtilService } from '../services/util.service'
+import { AppState } from '../state/app.state'
 import { CartAction, CartItemsUpdate, CartItemsUpdateSuccess } from './cart.actions'
+import { cartSelectorKey } from './cart.selectors'
 
 @Injectable()
 export class CartEffects {
@@ -23,7 +24,7 @@ export class CartEffects {
             filter((action) =>
                 !(action instanceof CartItemsUpdate) &&
                 !(action instanceof CartItemsUpdateSuccess)),
-            switchMap(() => this._store.select('cart').pipe(take(1))),
+            switchMap(() => this._store.select(cartSelectorKey).pipe(take(1))),
             mergeMap((cartState) => {
                 const ids = cartState.items.map((item: CartItem) => item._id)
                 const request = new GetCartItemsFromIdsRequest({ ids })
@@ -50,7 +51,7 @@ export class CartEffects {
     public cartItemsUpdateSuccesses: Observable<CartItemsUpdateSuccess> = this._actions
         .pipe(
             filter((action) => action instanceof CartItemsUpdate),
-            switchMap(() => this._store.select('cart').pipe(take(1))),
+            switchMap(() => this._store.select(cartSelectorKey).pipe(take(1))),
             mergeMap((cartState) => {
                 this._utilService.saveToLocalStorage(LocalStorageKeys.Cart, cartState)
                 return this._userService.updateCart(cartState)

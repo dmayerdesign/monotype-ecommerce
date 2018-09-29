@@ -1,4 +1,5 @@
 // Angular dependencies.
+import { CommonModule } from '@angular/common'
 import { NgModule } from '@angular/core'
 
 // Components.
@@ -17,7 +18,10 @@ import { ShopComponent } from './containers/shop/shop.component'
 import { TaxonomyComponent } from './containers/taxonomy/taxonomy.component'
 
 // Modules.
-import { SharedModule } from '../shared/shared.module'
+import { MteFormsModule } from '@mte/common/lib/ng-modules/forms'
+import { MteHttpModule } from '@mte/common/lib/ng-modules/http'
+import { MteUiModule } from '@mte/common/lib/ng-modules/ui'
+import { SharedComponentsModule } from '../shared-components/shared-components.module'
 
 /// Routing modules.
 import { TopNavComponent } from './components/top-nav/top-nav.component'
@@ -27,7 +31,11 @@ import { ShopRoutingModule } from './shop.routing.module'
 @NgModule({
     // We need some @NgModules,
     imports: [
-        SharedModule.forChild(),
+        CommonModule,
+        MteFormsModule,
+        MteHttpModule.forChild(),
+        MteUiModule.forChild(),
+        SharedComponentsModule,
         ShopRoutingModule,
     ],
     // some components/directives/pipes,

@@ -9,9 +9,10 @@ import { BootstrapBreakpointKey } from '@mte/common/constants/enums/bootstrap-br
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
 import { Store } from '@ngrx/store'
 import { filter } from 'rxjs/operators'
-import { CartService } from '../../../shared/services/cart.service'
-import { OrganizationService } from '../../../shared/services/organization.service'
-import { UserService } from '../../../shared/services/user.service'
+import { cartSelectorKey } from '../../../cart/cart.selectors'
+import { CartService } from '../../../cart/cart.service'
+import { OrganizationService } from '../../../services/organization.service'
+import { UserService } from '../../../services/user.service'
 import { AppState } from '../../../state/app.state'
 import { ShopRouterLinks } from '../../constants/shop-router-links'
 
@@ -56,7 +57,7 @@ export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
                     .filter((item: NavigationItem) => item.isTopLevel) as NavigationItem[]
             )
         })
-        this._store.select('cart').subscribe((cart) => {
+        this._store.select(cartSelectorKey).subscribe((cart) => {
             this.cartTemplateContext.count = cart.count || 0
             this.cartTemplateContext.total = !!cart.total ? (cart.total.amount || 0) : 0
         })

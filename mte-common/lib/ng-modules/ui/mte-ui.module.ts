@@ -69,4 +69,10 @@ export class MteUiModule {
             ]
         }
     }
+
+    public static forChild(): ModuleWithProviders {
+        return {
+            ngModule: MteUiModule
+        }
+    }
 }

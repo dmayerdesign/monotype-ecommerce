@@ -1,13 +1,11 @@
 import { Injectable } from '@angular/core'
 import { Title } from '@angular/platform-browser'
-import { BehaviorSubject, Observable, Subject } from 'rxjs'
+import { BehaviorSubject, Subject } from 'rxjs'
 
-import { InjectionTokens } from '@mte/common/constants/angular/injection-tokens'
 import { Copy } from '@mte/common/constants/copy'
+import { ToastType } from '@mte/common/constants/enums/toast-type'
 import { HttpStatus } from '@mte/common/constants/http-status'
 import { MteHttpService, SimpleError } from '@mte/common/lib/ng-modules/http'
-import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
-import { ToastType } from '@mte/common/constants/enums/toast-type'
 import { ModalData } from '@mte/common/models/ui/modal-data'
 import { Toast } from '@mte/common/models/ui/toast'
 import { OrganizationService } from './organization.service'
@@ -21,7 +19,6 @@ export class UiService {
     constructor(
         private titleService: Title,
         private mteHttpService: MteHttpService,
-        private windowRef: WindowRefService,
         private organizationService: OrganizationService
     ) {
         this.mteHttpService.errors.subscribe((error) => {

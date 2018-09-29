@@ -7,15 +7,16 @@ import { LocalStorageKeys } from '@mte/common/constants/local-storage-keys'
 import { Actions } from '@ngrx/effects'
 import { Store } from '@ngrx/store'
 import { filter, switchMap, take } from 'rxjs/operators'
-import { AppState } from '../../state/app.state'
-import { CartAction, CartItemAddition, CartItemAdditionSuccess, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartUpdate } from '../modules/cart/cart.actions'
-import { CartState } from '../modules/cart/cart.state'
-import { SharedModule } from '../shared.module'
-import { OrganizationService } from './organization.service'
-import { UserService } from './user.service'
-import { UtilService } from './util.service'
+import { OrganizationService } from '../services/organization.service'
+import { UserService } from '../services/user.service'
+import { UtilService } from '../services/util.service'
+import { AppState } from '../state/app.state'
+import { CartAction, CartItemAddition, CartItemAdditionSuccess, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartUpdate } from './cart.actions'
+import { CartModule } from './cart.module'
+import { cartSelectorKey } from './cart.selectors'
+import { CartState } from './cart.state'
 
-@Injectable({ providedIn: SharedModule })
+@Injectable({ providedIn: CartModule })
 export class CartService {
     private _cart: CartState
 
@@ -28,7 +29,7 @@ export class CartService {
         private _actions: Actions<CartAction>
     ) {
         this._organizationService.organizations.subscribe(() => this.init())
-        this._store.select('cart').subscribe((cartState) => this._cart = cartState)
+        this._store.select(cartSelectorKey).subscribe((cartState) => this._cart = cartState)
     }
 
     public get cart(): Cart {
@@ -62,7 +63,7 @@ export class CartService {
         this._store.dispatch(new CartItemAddition({ item, quantity }))
         return this._actions.pipe(
             filter((action) => action instanceof CartItemAdditionSuccess),
-            switchMap(() => this._store.select('cart')),
+            switchMap(() => this._store.select(cartSelectorKey)),
             take(1),
         ).toPromise()
     }
