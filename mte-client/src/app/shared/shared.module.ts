@@ -7,6 +7,7 @@ import { HttpSettings } from './config/http.settings'
 import { MteFormsModule } from '@mte/common/lib/ng-modules/forms'
 import { HttpInjectionTokens, MteHttpModule } from '@mte/common/lib/ng-modules/http'
 import { MteUiModule } from '@mte/common/lib/ng-modules/ui'
+import { CartModule } from './modules/cart/cart.module'
 
 // Components.
 import { LoginComponent } from './components/login/login.component'
@@ -18,6 +19,7 @@ import { SiteLocatorComponent } from './components/site-locator/site-locator.com
         MteFormsModule,
         MteHttpModule.forRoot(),
         MteUiModule.forRoot(),
+        CartModule
     ],
     declarations: [
         SiteLocatorComponent,
@@ -28,6 +30,7 @@ import { SiteLocatorComponent } from './components/site-locator/site-locator.com
         MteFormsModule,
         MteHttpModule,
         MteUiModule,
+        CartModule,
         SiteLocatorComponent,
         LoginComponent,
         SignupComponent,

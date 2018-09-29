@@ -11,7 +11,7 @@ export class ApiController<T = any> {
                 res.status(status).json(body)
             })
             .catch(({ message, status }) => {
-                res.status(status).json({message, status})
+                res.status(status).json({ message, status })
             })
     }
 }

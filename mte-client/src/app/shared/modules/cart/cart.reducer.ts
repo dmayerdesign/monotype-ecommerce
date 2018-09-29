@@ -1,12 +1,19 @@
 import { Cart } from '@mte/common/api/interfaces/cart'
 import { CartItem } from '@mte/common/api/interfaces/cart-item'
+import { Product } from '@mte/common/api/interfaces/product'
 import { CartHelper } from '@mte/common/helpers/cart.helper'
 import { cloneDeep } from 'lodash'
-import { CartAction, CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartUpdate } from './cart.actions'
-import { CartState } from './cart.state'
+import { CartAction, CartClear, CartItemsUpdate, CartItemAddition, CartItemQuantityDecrement, CartItemQuantityIncrement, CartItemRemoval, CartUpdate } from './cart.actions'
+import { initialCartState, CartState } from './cart.state'
 
 export function cartReducer(state: CartState, action: CartAction): CartState {
     let cart = cloneDeep(state)
+
+    // Clear cart.
+
+    if (action instanceof CartClear) {
+        cart = initialCartState
+    }
 
     // Update cart.
 
@@ -72,8 +79,8 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
     }
 
     cart.count = cart.items.length
-    cart.subTotal = CartHelper.getSubTotal(cart.items)
-    cart.displayItems = CartHelper.getDisplayItems(cart.items)
+    cart.subTotal = CartHelper.getSubTotal(cart.items as Product[])
+    cart.displayItems = CartHelper.getDisplayItems(cart.items as Product[])
 
     return cart
 }

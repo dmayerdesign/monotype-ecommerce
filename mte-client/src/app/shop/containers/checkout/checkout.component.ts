@@ -12,12 +12,15 @@ import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { MteFormBuilderService } from '@mte/common/lib/ng-modules/forms/services/form-builder.service'
 import { MteFormBuilder } from '@mte/common/lib/ng-modules/forms/utilities/form.builder'
 import { platform } from '@mte/common/lib/ng-modules/ui/utils/platform'
+import { Store } from '@ngrx/store'
 import { fromEvent } from 'rxjs'
 import { filter, takeWhile } from 'rxjs/operators'
 import * as stripe from 'stripe'
+import { CartClear } from '../../../shared/modules/cart/cart.actions'
+import { CartState } from '../../../shared/modules/cart/cart.state'
 import { OrganizationService } from '../../../shared/services/organization.service'
 import { UserService } from '../../../shared/services/user.service'
-import { CartStore } from '../../../shared/stores/cart/cart.store'
+import { AppState } from '../../../state/app.state'
 import { OrderService } from '../../services/order.service'
 import { PaymentServiceProviderService } from '../../services/payment-service-provider.service'
 import { checkoutForm } from './checkout-form'
@@ -61,7 +64,7 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
     private _cardExpiryInput: HTMLInputElement
 
     constructor(
-        private _cartStore: CartStore,
+        private _store: Store<AppState>,
         private _orderService: OrderService,
         private _organizationService: OrganizationService,
         private _paymentServiceProviderService: PaymentServiceProviderService,
@@ -114,9 +117,9 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
 
         // Get the cart.
 
-        this._cartStore.states.subscribe(() => {
-            this.populateOrder()
-        })
+        this._store.select('cart').subscribe(
+            (cartState) => this.populateOrder(cartState)
+        )
 
         // Initialize Stripe.
 
@@ -211,12 +214,12 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
 
     /**
      * Populate the order with items and other data.
-     * Should behave idempotently once `this.cartService.cart.items` and `this.orderCustomer` populate.
+     * Should behave idempotently once `cart.items` and `this.orderCustomer` populate.
      */
-    public async populateOrder(): Promise<Order> {
-        this.order.items = this._cartStore.state.items.map((item: Product) => item._id)
-        this.order.subTotal = this._cartStore.state.subTotal
-        this.order.total = this._cartStore.state.total
+    public async populateOrder(cartState: CartState): Promise<Order> {
+        this.order.items = cartState.items.map((item: Product) => item._id)
+        this.order.subTotal = cartState.subTotal
+        this.order.total = cartState.total
 
         this.order.taxPercent =
             this.organization.retailSettings.addSalesTax
@@ -300,8 +303,6 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
     public async submit(): Promise<void> {
         if (!this.cardElement) return
 
-        this.populateOrder()
-
         const stripeCreateTokenResult: { error: Error, token: any } = await this.stripe
             .createToken(this.cardElement)
 
@@ -319,6 +320,6 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
 
     public async placeOrder(): Promise<void> {
         await this._orderService.place(this.order).toPromise()
-        this._cartStore.clear()
+        this._store.dispatch(new CartClear())
     }
 }
