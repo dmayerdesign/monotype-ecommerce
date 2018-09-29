@@ -1,13 +1,13 @@
 import { NgModule } from '@angular/core'
 import { BrowserModule } from '@angular/platform-browser'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
+import { HttpInjectionTokens } from '@mte/common/lib/ng-modules/http'
 import { EffectsModule } from '@ngrx/effects'
 import { StoreModule } from '@ngrx/store'
 import { AppComponent } from './app.component'
 import { AppRoutingModule } from './app.routing.module'
-import { CartEffects } from './shared/modules/cart/cart.effects'
-import { cartReducer } from './shared/modules/cart/cart.reducer'
-import { initialCartState } from './shared/modules/cart/cart.state'
+import { CartModule } from './cart/cart.module'
+import { HttpSettings } from './config/http.settings'
 import { SharedModule } from './shared/shared.module'
 
 @NgModule({
@@ -15,16 +15,11 @@ import { SharedModule } from './shared/shared.module'
         // ANGULAR UNIVERSAL
         BrowserModule.withServerTransition({ appId: 'mte-client-universal' }),
         BrowserAnimationsModule,
-        SharedModule.forRoot(),
         AppRoutingModule,
-        StoreModule.forRoot({
-            cart: cartReducer
-        }, {
-            initialState: {
-                cart: initialCartState
-            }
-        }),
-        EffectsModule.forRoot([ CartEffects ]),
+        SharedModule.forRoot(),
+        CartModule,
+        StoreModule.forRoot({}),
+        EffectsModule.forRoot([]),
     ],
     declarations: [
         AppComponent,

@@ -1,7 +1,7 @@
 import { Component, Injector, OnInit } from '@angular/core'
 import { AppComponent } from './app.component'
-import { OrganizationService } from './shared/services/organization.service'
-import { UiService } from './shared/services/ui.service'
+import { OrganizationService } from './services/organization.service'
+import { UiService } from './services/ui.service'
 
 @Component({
     selector: 'app-root',

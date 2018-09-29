@@ -16,10 +16,11 @@ import { Store } from '@ngrx/store'
 import { fromEvent } from 'rxjs'
 import { filter, takeWhile } from 'rxjs/operators'
 import * as stripe from 'stripe'
-import { CartClear } from '../../../shared/modules/cart/cart.actions'
-import { CartState } from '../../../shared/modules/cart/cart.state'
-import { OrganizationService } from '../../../shared/services/organization.service'
-import { UserService } from '../../../shared/services/user.service'
+import { CartClear } from '../../../cart/cart.actions'
+import { cartSelectorKey } from '../../../cart/cart.selectors'
+import { CartState } from '../../../cart/cart.state'
+import { OrganizationService } from '../../../services/organization.service'
+import { UserService } from '../../../services/user.service'
 import { AppState } from '../../../state/app.state'
 import { OrderService } from '../../services/order.service'
 import { PaymentServiceProviderService } from '../../services/payment-service-provider.service'
@@ -117,7 +118,7 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
 
         // Get the cart.
 
-        this._store.select('cart').subscribe(
+        this._store.select(cartSelectorKey).subscribe(
             (cartState) => this.populateOrder(cartState)
         )
 

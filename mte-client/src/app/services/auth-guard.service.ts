@@ -8,13 +8,12 @@ import {
 } from '@angular/router'
 import { map } from 'rxjs/operators'
 
-import { UserRole } from '@mte/common/constants/enums/user-role'
-import { AppRoutes } from '../../constants/app-routes'
+import { AppRoutes } from '../constants/app-routes'
 import { RouteStateService } from './route-state.service'
 import { UserService } from './user.service'
 
 @Injectable({ providedIn: 'root' })
-export class AdminGuardService implements CanActivate, CanActivateChild {
+export class AuthGuardService implements CanActivate, CanActivateChild {
 
     constructor(
         private userService: UserService,
@@ -25,8 +24,7 @@ export class AdminGuardService implements CanActivate, CanActivateChild {
     public canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
         return this.userService.users.pipe(
             map(user => {
-                if (user && user.role === UserRole.Admin) {
-                    console.log('\'Sup, admin!')
+                if (user) {
                     return true
                 }
                 else {

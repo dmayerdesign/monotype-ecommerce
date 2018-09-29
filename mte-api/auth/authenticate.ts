@@ -22,34 +22,36 @@ export class Authenticate {
         let payload: User = null
 
         if (!token) {
-            res.status(HttpStatus.CLIENT_ERROR_UNAUTHORIZED).send(new ApiErrorResponse(new Error(Copy.ErrorMessages.userNotAuthenticated), HttpStatus.CLIENT_ERROR_UNAUTHORIZED))
-            return
+            res.status(HttpStatus.CLIENT_ERROR_UNAUTHORIZED)
+                .json(new ApiErrorResponse(new Error(Copy.ErrorMessages.userNotAuthenticated), HttpStatus.CLIENT_ERROR_UNAUTHORIZED))
         }
-
-        try {
-            payload = jwt.verify(token, jwtSecret) as User
-        }
-        catch (error) {
-            res.status(HttpStatus.CLIENT_ERROR_UNAUTHORIZED).json(new ApiErrorResponse(new Error(Copy.ErrorMessages.userNotAuthenticated), HttpStatus.CLIENT_ERROR_UNAUTHORIZED))
-            return
-        }
-
-        if (payload.email) {
-            req.user = UserHelper.cleanUser(payload)
-            next()
-            return
-        }
-
-        Authenticate.dbClient.findById(User, payload._id).then((user) => {
-            if (user) {
-                req.user = user
-                next()
-            } else {
-                res.status(HttpStatus.CLIENT_ERROR_UNAUTHORIZED).json(new Error(Copy.ErrorMessages.userNotAuthorized))
+        else {
+            try {
+                payload = jwt.verify(token, jwtSecret) as User
+            }
+            catch (error) {
+                res.status(HttpStatus.CLIENT_ERROR_UNAUTHORIZED)
+                    .json(new ApiErrorResponse(new Error(Copy.ErrorMessages.userNotAuthenticated), HttpStatus.CLIENT_ERROR_UNAUTHORIZED))
                 return
             }
-        })
 
+            if (payload.email) {
+                req.user = UserHelper.cleanUser(payload)
+                next()
+                return
+            }
+
+            Authenticate.dbClient.findById(User, payload._id).then((user) => {
+                if (user) {
+                    req.user = user
+                    next()
+                } else {
+                    res.status(HttpStatus.CLIENT_ERROR_UNAUTHORIZED)
+                        .json(new Error(Copy.ErrorMessages.userNotAuthorized))
+                    return
+                }
+            })
+        }
     }
 
     // If the user has the specified role, call `next()`. Else, send an error response.
@@ -61,7 +63,8 @@ export class Authenticate {
                     return next()
                 }
                 else {
-                    res.status(HttpStatus.CLIENT_ERROR_FORBIDDEN).json(new Error(Copy.ErrorMessages.userNotAuthorized))
+                    res.status(HttpStatus.CLIENT_ERROR_FORBIDDEN)
+                        .json(new Error(Copy.ErrorMessages.userNotAuthorized))
                 }
             })
         }

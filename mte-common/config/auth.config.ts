@@ -4,5 +4,5 @@ export class AuthConfig {
         maxAge: 315400000000, // 10 years
         httpOnly: true,
     }
-    public static JwtOptions = { expiresIn: "7d" }
+    public static JwtOptions = { expiresIn: '7d' }
 }

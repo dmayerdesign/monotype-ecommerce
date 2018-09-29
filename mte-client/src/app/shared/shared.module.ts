@@ -1,25 +1,19 @@
+import { CommonModule } from '@angular/common'
 import { ModuleWithProviders, NgModule } from '@angular/core'
-
-// Settings.
-import { HttpSettings } from './config/http.settings'
-
-// Feature modules.
 import { MteFormsModule } from '@mte/common/lib/ng-modules/forms'
 import { HttpInjectionTokens, MteHttpModule } from '@mte/common/lib/ng-modules/http'
 import { MteUiModule } from '@mte/common/lib/ng-modules/ui'
-import { CartModule } from './modules/cart/cart.module'
-
-// Components.
+import { HttpSettings } from '../config/http.settings'
 import { LoginComponent } from './components/login/login.component'
 import { SignupComponent } from './components/signup/signup.component'
 import { SiteLocatorComponent } from './components/site-locator/site-locator.component'
 
 @NgModule({
     imports: [
+        CommonModule,
         MteFormsModule,
         MteHttpModule.forRoot(),
         MteUiModule.forRoot(),
-        CartModule
     ],
     declarations: [
         SiteLocatorComponent,
@@ -27,13 +21,12 @@ import { SiteLocatorComponent } from './components/site-locator/site-locator.com
         SignupComponent,
     ],
     exports: [
-        MteFormsModule,
-        MteHttpModule,
-        MteUiModule,
-        CartModule,
         SiteLocatorComponent,
         LoginComponent,
         SignupComponent,
+        MteFormsModule,
+        MteHttpModule,
+        MteUiModule,
     ],
 })
 export class SharedModule {
@@ -51,7 +44,7 @@ export class SharedModule {
 
     public static forChild(): ModuleWithProviders {
         return {
-            ngModule: SharedModule,
+            ngModule: SharedModule
         }
     }
 }

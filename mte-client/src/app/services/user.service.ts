@@ -10,7 +10,7 @@ import { ApiEndpoints } from '@mte/common/constants/api-endpoints'
 import { MteHttpService } from '@mte/common/lib/ng-modules/http'
 import { of as observableOf, Observable, ReplaySubject } from 'rxjs'
 import { map } from 'rxjs/operators'
-import { AppRoutes } from '../../constants/app-routes'
+import { AppRoutes } from '../constants/app-routes'
 import { UtilService } from './util.service'
 
 @Injectable({ providedIn: 'root' })
@@ -79,7 +79,7 @@ export class UserService {
 
     public updateCart(cart: Cart): Observable<Cart> {
         if (this.user) {
-            return this.http.post<User>(`${ApiEndpoints.User}/update`, { cart })
+            return this.http.put<User>(`${ApiEndpoints.User}/update`, { cart })
                 .pipe(map((user) => user.cart))
         } else {
             this.utilService.saveToLocalStorage(LocalStorageKeys.Cart, cart)

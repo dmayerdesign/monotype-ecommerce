@@ -31,4 +31,10 @@ export class MteHttpModule {
             ],
         }
     }
+
+    public static forChild(): ModuleWithProviders {
+        return {
+            ngModule: MteHttpModule
+        }
+    }
 }
