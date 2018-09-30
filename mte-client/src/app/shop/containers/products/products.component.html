@@ -9,7 +9,7 @@
     </mte-responsive-image>
 </div>
 
-<ng-container *ngIf="isOneColLayout()">
+<ng-container *ngIf="isOneColLayout | async">
     <div class="sub-banner">Some info here</div>
 
     <div class="products container">    
@@ -24,7 +24,7 @@
     </div>
 </ng-container>
 
-<ng-container *ngIf="isTwoColLayout()">
+<ng-container *ngIf="isTwoColLayout | async">
     <div class="products container">
         <div class="row">
             <!-- Left sidebar -->

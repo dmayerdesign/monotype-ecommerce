@@ -12,14 +12,17 @@ export class UserHelper {
     }
 
     public static cleanUser(user: User): User {
-        const cleanUser = Object.assign({}, user)
-        delete cleanUser.role
-        delete cleanUser.password
+        delete user.role
+        delete user.password
 
         // Delete JWT properties.
-        delete (cleanUser as any).iat
-        delete (cleanUser as any).exp
+        delete (user as any).iat
+        delete (user as any).exp
 
-        return cleanUser
+        return user
+    }
+
+    public static cleanUserForJwt(user: User): User {
+        return JSON.parse(JSON.stringify(user))
     }
 }

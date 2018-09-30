@@ -7,14 +7,14 @@ import { SharedModule } from '../shared/shared.module'
 import { CartEffects } from './cart.effects'
 import { cartReducer } from './cart.reducer'
 import { cartSelectorKey } from './cart.selectors'
-import { initialCartState } from './cart.state'
+import { initialCartState as initialState } from './cart.state'
 
 @NgModule({
     imports: [
         CommonModule,
         HttpClientModule,
         SharedModule.forChild(),
-        StoreModule.forFeature(cartSelectorKey, cartReducer, { initialState: initialCartState }),
+        StoreModule.forFeature(cartSelectorKey, cartReducer, { initialState }),
         EffectsModule.forFeature([ CartEffects ])
     ],
     providers: [

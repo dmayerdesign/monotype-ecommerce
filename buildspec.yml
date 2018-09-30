@@ -9,4 +9,3 @@ phases:
   build:
     commands:
       - npm run mte build:staging
-      - chmod a+x dist

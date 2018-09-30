@@ -388,8 +388,10 @@ export class DbClient<RecordType extends MongooseDocument> {
     }
 
     public async save<T extends MongooseDocument = RecordType>(document: T): Promise<T> {
+console.log('\n\nattempt to save\n\n', document)
         try {
             const documentResult: T = await document.save()
+console.log('\n\nsave result\n\n', documentResult)
             if (documentResult) {
                 const savedDocument: T = documentResult
                 return savedDocument

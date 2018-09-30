@@ -49,10 +49,10 @@ const container = new Container()
 
 // If we're developing, apply logger middleware.
 
-if (isDev()) {
-  const logger = makeLoggerMiddleware()
-  container.applyMiddleware(logger)
-}
+// if (isDev()) {
+//   const logger = makeLoggerMiddleware()
+//   container.applyMiddleware(logger)
+// }
 
 // Middleware.
 container.bind(Types.isAuthenticated).toConstantValue(Authenticate.isAuthenticated)
