@@ -5,7 +5,7 @@ import { Product } from '@mte/common/api/interfaces/product'
 import { GetCartItemsFromIdsRequest } from '@mte/common/api/requests/get-cart-items-from-ids.request'
 import { ApiEndpoints, LocalStorageKeys } from '@mte/common/constants'
 import { Actions, Effect } from '@ngrx/effects'
-import { Store } from '@ngrx/store'
+import { select, Store } from '@ngrx/store'
 import { Observable } from 'rxjs'
 import { filter, map, mergeMap, switchMap, take, tap } from 'rxjs/operators'
 import { OrganizationService } from '../services/organization.service'
@@ -13,7 +13,7 @@ import { UserService } from '../services/user.service'
 import { UtilService } from '../services/util.service'
 import { AppState } from '../state/app.state'
 import { CartAction, CartItemsUpdate, CartItemsUpdateSuccess } from './cart.actions'
-import { cartSelectorKey } from './cart.selectors'
+import { selectCart } from './cart.selectors'
 
 @Injectable()
 export class CartEffects {
@@ -22,9 +22,13 @@ export class CartEffects {
     public cartItemsUpdates: Observable<CartItemsUpdate> = this._actions
         .pipe(
             filter((action) =>
+                action instanceof CartAction &&
                 !(action instanceof CartItemsUpdate) &&
                 !(action instanceof CartItemsUpdateSuccess)),
-            switchMap(() => this._store.select(cartSelectorKey).pipe(take(1))),
+            switchMap(() => this._store.pipe(
+                selectCart,
+                take(1)
+            )),
             mergeMap((cartState) => {
                 const ids = cartState.items.map((item: CartItem) => item._id)
                 const request = new GetCartItemsFromIdsRequest({ ids })
@@ -51,7 +55,7 @@ export class CartEffects {
     public cartItemsUpdateSuccesses: Observable<CartItemsUpdateSuccess> = this._actions
         .pipe(
             filter((action) => action instanceof CartItemsUpdate),
-            switchMap(() => this._store.select(cartSelectorKey).pipe(take(1))),
+            switchMap(() => this._store.pipe(selectCart, take(1))),
             mergeMap((cartState) => {
                 this._utilService.saveToLocalStorage(LocalStorageKeys.Cart, cartState)
                 return this._userService.updateCart(cartState)

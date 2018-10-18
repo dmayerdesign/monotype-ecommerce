@@ -7,9 +7,9 @@ import { User } from '@mte/common/api/interfaces/user'
 import { NavigationBuilder } from '@mte/common/builders/navigation.builder'
 import { BootstrapBreakpointKey } from '@mte/common/constants/enums/bootstrap-breakpoint-key'
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
-import { Store } from '@ngrx/store'
+import { select, Store } from '@ngrx/store'
 import { filter } from 'rxjs/operators'
-import { cartSelectorKey } from '../../../cart/cart.selectors'
+import { selectCart } from '../../../cart/cart.selectors'
 import { CartService } from '../../../cart/cart.service'
 import { OrganizationService } from '../../../services/organization.service'
 import { UserService } from '../../../services/user.service'
@@ -57,7 +57,7 @@ export class ShopPrimaryNavComponent implements AfterViewInit, OnInit {
                     .filter((item: NavigationItem) => item.isTopLevel) as NavigationItem[]
             )
         })
-        this._store.select(cartSelectorKey).subscribe((cart) => {
+        this._store.pipe(selectCart).subscribe((cart) => {
             this.cartTemplateContext.count = cart.count || 0
             this.cartTemplateContext.total = !!cart.total ? (cart.total.amount || 0) : 0
         })

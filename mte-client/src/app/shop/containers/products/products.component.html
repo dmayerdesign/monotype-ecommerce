@@ -55,7 +55,7 @@
     
             <div class="products-left-sidebar-filters">
 
-                <ng-container *ngFor="let formBuilder of productsFilterFormBuilders">
+                <ng-container *ngFor="let formBuilder of productsFilterFormBuildersStream | async">
 
                     <!-- Label -->
                     <ng-container>

@@ -20,7 +20,7 @@ export interface ShopState {
 
 export const initialShopState: ShopState = {
     products: {
-        getProductsRequest: new GetProductsRequest(),
+        getProductsRequest: {},
         getProductsRequestFromRoute: {
             taxonomySlug: null,
             taxonomyTermSlug: null,

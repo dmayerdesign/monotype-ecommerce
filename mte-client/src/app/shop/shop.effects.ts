@@ -1,53 +1,24 @@
 import { Injectable } from '@angular/core'
-import { Product } from '@mte/common/api/interfaces/product'
-import { GetProductsFilter, GetProductsFilterType, GetProductsRequest } from '@mte/common/api/requests/get-products.request'
+import { GetProductsFilter, GetProductsFilterType } from '@mte/common/api/requests/get-products.request'
 import { Actions, Effect } from '@ngrx/effects'
-import { Store } from '@ngrx/store'
-import { Observable } from 'rxjs'
-import { debounceTime, filter, map, mergeMap, switchMap, take } from 'rxjs/operators'
-import { AppState } from '../state/app.state'
+import { of as observableOf, Observable } from 'rxjs'
+import { debounceTime, filter, map, mergeMap, switchMap, take, takeWhile, tap } from 'rxjs/operators'
 import { ProductsFiltersService } from './services/products-filters.service'
 import { TaxonomyTermService } from './services/taxonomy-term.service'
-import { GetProductsRequestUpdate, GetProductsSuccess, ShopAction, TaxonomyTermInViewUpdate, TaxonomyTermInViewUpdateSuccess } from './shop.actions'
+import { filterByType, GetProductsRequestUpdate, GetProductsSuccess, ProductsFilterFormBuildersUpdate, ShopAction, TaxonomyTermInViewUpdate, TaxonomyTermInViewUpdateSuccess } from './shop.actions'
 
 @Injectable()
 export class ShopEffects {
 
     @Effect()
     public getProductsSuccesses: Observable<GetProductsSuccess> = this._shopActions.pipe(
-        filter<GetProductsRequestUpdate>((action) => action instanceof GetProductsRequestUpdate),
+        filterByType<GetProductsRequestUpdate>(GetProductsRequestUpdate),
         // Make sure that `clearFilters` doesn't trigger multiple requests.
         debounceTime(100),
-        switchMap(({ payload }) => {
+        switchMap((action) => {
+            const payload = action.payload
             const getProductsRequest = payload.request
             const productService = payload.crudService
-            let requestedTaxonomyTermFilter: GetProductsFilter
-            let requestedTaxonomyTermSlug: string
-
-            this._productsFiltersService.initFiltersShowing()
-
-            // Figure out if we need to fetch taxonomy term data along with the products.
-            // (e.g. to display a banner for "Women's")
-
-            if (getProductsRequest) {
-                requestedTaxonomyTermFilter = getProductsRequest.filters && getProductsRequest.filters.filter((filter) => filter.type === GetProductsFilterType.TaxonomyTerm).length === 1
-                    ? getProductsRequest.filters.find((filter) => filter.type === GetProductsFilterType.TaxonomyTerm)
-                    : undefined
-            }
-
-            // Get the taxonomy term if ONLY ONE is found in the request.
-
-            requestedTaxonomyTermSlug = requestedTaxonomyTermFilter &&
-                requestedTaxonomyTermFilter.values &&
-                requestedTaxonomyTermFilter.values.length === 1
-                    ? requestedTaxonomyTermFilter.values[0]
-                    : undefined
-            if (requestedTaxonomyTermSlug) {
-                this._store.dispatch(new TaxonomyTermInViewUpdate(requestedTaxonomyTermSlug))
-            }
-            else {
-                this._store.dispatch(new TaxonomyTermInViewUpdate(null))
-            }
 
             // Get products based on the parsed request.
 
@@ -60,18 +31,122 @@ export class ShopEffects {
     )
 
     @Effect()
+    public productsFilterFormBuildersUpdates: Observable<ProductsFilterFormBuildersUpdate> = this._shopActions.pipe(
+        filterByType<GetProductsRequestUpdate>(GetProductsRequestUpdate),
+        // Make sure that `clearFilters` doesn't trigger multiple requests.
+        debounceTime(100),
+        map(({ payload: { request: getProductsRequest } }) => new ProductsFilterFormBuildersUpdate(
+            this._productsFilterService.getFiltersForRequest(getProductsRequest)
+        ))
+    )
+
+    @Effect()
+    public taxonomyTermInViewUpdates: Observable<TaxonomyTermInViewUpdate> = this._shopActions.pipe(
+        filterByType<GetProductsRequestUpdate>(GetProductsRequestUpdate),
+        // Make sure that `clearFilters` doesn't trigger multiple requests.
+        debounceTime(100),
+        map(({ payload: { request: getProductsRequest } }) => {
+            let requestedTaxonomyTermFilter: GetProductsFilter
+
+            // Figure out if we need to fetch taxonomy term data along with the products.
+            // (e.g. to display a banner for "Women's")
+
+            if (getProductsRequest) {
+                requestedTaxonomyTermFilter = getProductsRequest.filters && getProductsRequest.filters.filter((filter) => filter.type === GetProductsFilterType.TaxonomyTerm).length === 1
+                    ? getProductsRequest.filters.find((filter) => filter.type === GetProductsFilterType.TaxonomyTerm)
+                    : undefined
+            }
+
+            // Get the taxonomy term if ONLY ONE is found in the request.
+
+            const requestedTaxonomyTermSlug = requestedTaxonomyTermFilter &&
+                requestedTaxonomyTermFilter.values &&
+                requestedTaxonomyTermFilter.values.length === 1
+                    ? requestedTaxonomyTermFilter.values[0]
+                    : undefined
+            if (requestedTaxonomyTermSlug) {
+                return new TaxonomyTermInViewUpdate(requestedTaxonomyTermSlug)
+            }
+            else {
+                return new TaxonomyTermInViewUpdate(null)
+            }
+        })
+    )
+
+    @Effect()
     public taxonomyTermInViewUpdateSuccesses = this._shopActions.pipe(
-        filter<TaxonomyTermInViewUpdate>((shopAction) => shopAction instanceof TaxonomyTermInViewUpdate),
-        mergeMap(({ payload: requestedTaxonomyTermSlug }) =>
-            this._taxonomyTermService.getOne(requestedTaxonomyTermSlug).pipe(
-                map((taxonomyTerm) => new TaxonomyTermInViewUpdateSuccess(taxonomyTerm))
-            ))
+        filterByType<TaxonomyTermInViewUpdate>(TaxonomyTermInViewUpdate),
+        mergeMap(({ payload: requestedTaxonomyTermSlug }) => {
+            if (requestedTaxonomyTermSlug) {
+                return this._taxonomyTermService.getOne(requestedTaxonomyTermSlug).pipe(
+                    map((taxonomyTerm) => new TaxonomyTermInViewUpdateSuccess(taxonomyTerm))
+                )
+            }
+            return observableOf(new TaxonomyTermInViewUpdateSuccess(null))
+        })
+    )
+
+    @Effect()
+    public getProductsRequestUpdates = this._shopActions.pipe(
+        filterByType<ProductsFilterFormBuildersUpdate>(ProductsFilterFormBuildersUpdate),
+        mergeMap(({ payload: mteFormBuilder }) => {
+            return mteFormBuilder.formGroup.valueChanges
+                .pipe(
+                    // takeWhile(() => {}),
+                    filter((formValue) => !isEqual(
+                        formValue,
+                        this._productsFilterFormValuesMap.get(productsFilter),
+                    )),
+                    tap(async (formValue) => {
+                        const formGroupOptions = this._formGroupOptionsFactoryMap
+                            .get(mteFormBuilder.data.productsFilter.filterType)(productsFilter)
+                        const existingFilterFinder = this._existingFilterFinderMap
+                            .get(mteFormBuilder.data.productsFilter.filterType)
+                        const newRequestFilterFactory = this._newRequestFilterFactoryMap
+                            .get(mteFormBuilder.data.productsFilter.filterType)
+                        this._productsFilterFormValuesMap.set(productsFilter, formValue)
+
+                        const request = await this._store
+                            .pipe(
+                                selectProducts,
+                                take(1),
+                                map((productsState) => productsState.getProductsRequest)
+                            )
+                            .toPromise()
+
+                        const newRequestFilters = !!request.filters
+                            ? [ ...request.filters ]
+                            : []
+                        const newRequest = {
+                            ...request,
+                            filters: newRequestFilters
+                        }
+
+                        if (typeof existingFilterFinder === 'function') {
+                            const indexOfExistingFilter = newRequestFilters
+                                .findIndex(existingFilterFinder(productsFilter))
+                            if (indexOfExistingFilter > -1) {
+                                newRequestFilters.splice(indexOfExistingFilter, 1)
+                            }
+                        }
+
+                        if (typeof newRequestFilterFactory === 'function') {
+                            newRequestFilters.push(newRequestFilterFactory(formValue))
+                        }
+
+                        return new GetProductsRequestUpdate({
+                            request: newRequest,
+                            crudService: this._productService,
+                            filtersService: this,
+                        })
+                    })
+                )
+        })
     )
 
     constructor(
         private _shopActions: Actions<ShopAction>,
-        private _store: Store<AppState>,
-        private _productsFiltersService: ProductsFiltersService,
+        private _productsFilterService: ProductsFiltersService,
         private _taxonomyTermService: TaxonomyTermService,
     ) { }
 }

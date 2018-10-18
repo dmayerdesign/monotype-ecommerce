@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash'
-import { GetProductsRequestFromRouteUpdate, GetProductsRequestUpdate, ProductsFilterFormsReset, ShopAction, TaxonomyTermInViewUpdate, TaxonomyTermInViewUpdateSuccess } from './shop.actions'
+import { GetProductsRequestFromRouteUpdate, GetProductsRequestUpdate, ProductsFilterFormsReset, ProductsFilterFormBuildersUpdate, ShopAction, TaxonomyTermInViewUpdate, TaxonomyTermInViewUpdateSuccess } from './shop.actions'
 import { ShopState } from './shop.state'
 
 export function shopReducer(state: ShopState, action: ShopAction): ShopState {
@@ -26,6 +26,10 @@ export function shopReducer(state: ShopState, action: ShopAction): ShopState {
     if (action instanceof ProductsFilterFormsReset) {
         shopState.products.productsFilterFormBuilders.forEach((productsFilterFormBuilder) =>
             productsFilterFormBuilder.formGroup.reset())
+    }
+
+    if (action instanceof ProductsFilterFormBuildersUpdate) {
+        shopState.products.productsFilterFormBuilders = action.payload
     }
 
     // After any action is executed, make sure there are no filters without values.

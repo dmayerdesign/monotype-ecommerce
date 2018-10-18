@@ -18,7 +18,7 @@ export abstract class RestService<T> {
         this.getStream = this.getPump.asObservable()
         this.getErrorStream = this.getErrorPump.asObservable()
 
-        this.getStream.subscribe(documents => {
+        this.getStream.subscribe((documents) => {
             this.documents = documents
         })
     }

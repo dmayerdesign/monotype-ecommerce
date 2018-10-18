@@ -1,8 +1,9 @@
 import { Cart } from '@mte/common/api/interfaces/cart'
 import { CartItem } from '@mte/common/api/interfaces/cart-item'
-import { NgrxAction } from '@mte/common/models/ui/ngrx-action'
+import { NgrxAction, NgrxMessage } from '@mte/common/models/ui/ngrx-action'
 
-export abstract class CartAction<PayloadType = any> extends NgrxAction<PayloadType> { }
+export abstract class CartAction<PayloadType = any> extends NgrxMessage<PayloadType> { }
+export abstract class CartActionSansPayload extends NgrxAction { }
 
 export class CartClear extends CartAction {
     public type = 'Cart Clear'

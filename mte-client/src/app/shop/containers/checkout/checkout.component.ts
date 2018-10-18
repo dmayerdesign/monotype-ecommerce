@@ -17,7 +17,7 @@ import { fromEvent } from 'rxjs'
 import { filter, takeWhile } from 'rxjs/operators'
 import * as stripe from 'stripe'
 import { CartClear } from '../../../cart/cart.actions'
-import { cartSelectorKey } from '../../../cart/cart.selectors'
+import { selectCart } from '../../../cart/cart.selectors'
 import { CartState } from '../../../cart/cart.state'
 import { OrganizationService } from '../../../services/organization.service'
 import { UserService } from '../../../services/user.service'
@@ -118,7 +118,7 @@ export class CheckoutComponent extends HeartbeatComponent implements OnDestroy, 
 
         // Get the cart.
 
-        this._store.select(cartSelectorKey).subscribe(
+        this._store.pipe(selectCart).subscribe(
             (cartState) => this.populateOrder(cartState)
         )
 

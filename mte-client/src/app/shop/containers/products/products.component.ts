@@ -11,19 +11,20 @@ import { BootstrapBreakpointKey } from '@mte/common/constants/enums/bootstrap-br
 import { RangeLimit } from '@mte/common/constants/enums/range-limit'
 import { HeartbeatComponent } from '@mte/common/lib/heartbeat/heartbeat.component'
 import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
+import { MteFormBuilder } from '@mte/common/lib/ng-modules/forms/utilities/form.builder'
 import { WindowRefService } from '@mte/common/lib/ng-modules/ui/services/window-ref.service'
 import { Store } from '@ngrx/store'
 import { isEqual, uniqWith } from 'lodash'
-import { BehaviorSubject, Observable } from 'rxjs'
-import { map, take, takeWhile, withLatestFrom } from 'rxjs/operators'
+import { combineLatest, BehaviorSubject, Observable } from 'rxjs'
+import { distinctUntilChanged, map, take, takeWhile } from 'rxjs/operators'
 import { AppState } from '../../../state/app.state'
 import { ShopQueryParamKeys } from '../../constants/shop-query-param-keys'
 import { ShopRouterLinks } from '../../constants/shop-router-links'
 import { ProductService } from '../../services/product.service'
 import { ProductsFiltersService } from '../../services/products-filters.service'
-import { GetProductsRequestFromRouteUpdate, GetProductsRequestUpdate, ProductsFilterFormsReset } from '../../shop.actions'
-import { shopSelectorKey } from '../../shop.selectors'
-import { ShopState } from '../../shop.state'
+import { GetProductsRequestFromRouteUpdate, GetProductsRequestUpdate, ProductsFilterFormsReset, RequestCreationFromParamMaps } from '../../shop.actions'
+import { selectProducts } from '../../shop.selectors'
+import { GetProductsRequestFromRoute } from '../../shop.state'
 
 export interface ProductsFilterFormData {
     taxonomy?: Taxonomy
@@ -63,8 +64,9 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
 
         this.productsStream = this._productService.getStream
 
-        this.isOneColLayout = this._store.select<ShopState>(shopSelectorKey).pipe(
-            map((shopState) => shopState.products.taxonomyTerm),
+        this.isOneColLayout = this._store.pipe(
+            selectProducts,
+            map((productsState) => productsState.taxonomyTerm),
             map((taxonomyTerm) => taxonomyTerm && !!taxonomyTerm.archiveGroupsTaxonomy),
         )
         this.isTwoColLayout = this.isOneColLayout.pipe(
@@ -77,106 +79,38 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
             this.windowRef.mediaBreakpointAbove(BootstrapBreakpointKey.Lg)
         )
 
-        // Construct a new request when the query params change.
+        // Construct a new request when the query params or route params change.
         // TODO: Expose this functionality to the user by allowing them to copy a link to
         // whatever particular search/filter they have going on (to bookmark or share).
         // By default, no request data will be shown in the URL.
-
-        this._activatedRoute.queryParamMap
+        combineLatest(
+            this._activatedRoute.queryParamMap,
+            this._activatedRoute.paramMap,
+        )
             .pipe(takeWhile(() => this.isAlive))
-            .subscribe((queryParamMap) => {
-                const paramMap = this._activatedRoute.snapshot.paramMap
-
-                let getProductsRequest: GetProductsRequest
-                getProductsRequest = this._createRequestFromQueryParamMap(queryParamMap)
-                getProductsRequest = this._mutateRequestFromRouteParamMap(getProductsRequest, paramMap)
-
-                if (getProductsRequest) {
-                    this._store.dispatch(new GetProductsRequestUpdate({
-                        request: getProductsRequest,
-                        crudService: this._productService,
-                    }))
-                }
-            })
-
-        // Mutate the request when the route params change.
-
-        this._activatedRoute.paramMap
-            .pipe(
-                takeWhile(() => this.isAlive),
-                withLatestFrom(this._store.select<ShopState>(shopSelectorKey)),
-            )
-            .subscribe(([paramMap, shopState]) => {
-                const getProductsRequest = this._mutateRequestFromRouteParamMap(
-                    shopState.products.getProductsRequest,
-                    paramMap
-                )
-                this._store.dispatch(new GetProductsRequestUpdate({
-                    request: getProductsRequest,
-                    crudService: this._productService,
+            .subscribe(async ([ queryParamMap, routeParamMap ]) => {
+                this._store.dispatch(new RequestCreationFromParamMaps({
+                    queryParamMap,
+                    routeParamMap,
                 }))
+
+                const { getProductsRequest, getProductsRequestFromRoute } = await this._store.pipe(
+                    selectProducts,
+                    take(1),
+                ).toPromise()
             })
     }
 
-    private _createRequestFromQueryParamMap(queryParamMap: ParamMap): GetProductsRequest {
-
-        // Create a new request from the "r" query param.
-
-        const requestStr = queryParamMap.get(ShopQueryParamKeys.request)
-        const request = !!requestStr
-            ? JSON.parse(atob(requestStr)) as GetProductsRequest
-            : new GetProductsRequest()
-        return request
+    public isChecklist(productsFilter: ProductsFilter): boolean {
+        return this._productsFiltersService.isChecklist(productsFilter)
     }
 
-    private _mutateRequestFromRouteParamMap(request: GetProductsRequest, routeParamMap: ParamMap): GetProductsRequest {
+    public isPriceRange(productsFilter: ProductsFilter): boolean {
+        return this._productsFiltersService.isPriceRange(productsFilter)
+    }
 
-        // Mutate the request if the route is '/for/:taxonomySlug/:partialTermSlug'.
-
-        if (routeParamMap.get('taxonomySlug')) {
-            const taxonomySlug = routeParamMap.get('taxonomySlug')
-            const partialTermSlug = routeParamMap.get('partialTermSlug')
-
-            if (!request.filters) request.filters = []
-
-            // Always clear whichever filter was created by the last `/for/:taxonomySlug...` route.
-
-            this._store.select<ShopState>(shopSelectorKey)
-                .pipe(
-                    map((shopState) => shopState.products.getProductsRequestFromRoute),
-                    take(1),
-                )
-                .subscribe((getProductsRequestFromRoute) => {
-                    const lastTaxonomySlugFromRoute = getProductsRequestFromRoute.taxonomySlug
-                    const lastTaxTermSlugFromRoute = getProductsRequestFromRoute.taxonomyTermSlug
-                    if (lastTaxonomySlugFromRoute && lastTaxTermSlugFromRoute) {
-                        const indexOfFilterToRemove = request.filters.findIndex((filter) =>
-                            filter.type === GetProductsFilterType.TaxonomyTerm &&
-                            filter.key === lastTaxonomySlugFromRoute &&
-                            isEqual(filter.values, [lastTaxTermSlugFromRoute]))
-                        if (indexOfFilterToRemove > -1) {
-                            request.filters.splice(indexOfFilterToRemove, 1)
-                        }
-                    }
-
-                    // Add the new taxonomy term filter.
-
-                    request.filters = uniqWith<GetProductsFilter>([
-                        ...request.filters,
-                        {
-                            type: GetProductsFilterType.TaxonomyTerm,
-                            values: [ `${taxonomySlug}-${partialTermSlug}` ]
-                        },
-                    ], isEqual)
-
-                    this._store.dispatch(new GetProductsRequestFromRouteUpdate({
-                        taxonomySlug,
-                        taxonomyTermSlug: `${taxonomySlug}-${partialTermSlug}`
-                    }))
-                })
-        }
-
-        return request
+    public get productsFilterFormBuildersStream(): Observable<MteFormBuilder[]> {
+        return this._productsFiltersService.productsFilterFormBuildersStream
     }
 
     // I'm pretty sure this needs to be here for AOT. #thanksaot
@@ -185,7 +119,7 @@ export class ProductsComponent extends HeartbeatComponent implements OnInit, OnD
 
     // Template accessors.
 
-    public priceRange(): Price[] {
+    public get priceRange(): Price[] {
         return this._productsFiltersService.priceRange
     }
 

@@ -7,7 +7,7 @@ import { Heartbeat } from '@mte/common/lib/heartbeat/heartbeat.decorator'
 import { Store } from '@ngrx/store'
 import { capitalize } from 'lodash'
 import { takeWhile } from 'rxjs/operators'
-import { cartSelectorKey } from '../../../cart/cart.selectors'
+import { selectCart } from '../../../cart/cart.selectors'
 import { CartService } from '../../../cart/cart.service'
 import { OrganizationService } from '../../../services/organization.service'
 import { UiService } from '../../../services/ui.service'
@@ -49,8 +49,11 @@ export class CartComponent extends HeartbeatComponent implements OnInit, OnDestr
     ) { super() }
 
     public ngOnInit(): void {
-        this._store.select(cartSelectorKey)
-            .pipe(takeWhile(() => this.isAlive))
+        this._store
+            .pipe(
+                selectCart,
+                takeWhile(() => this.isAlive)
+            )
             .subscribe((cart) => {
                 this.cart = cart
                 cart.items.forEach((item: CartItem) => {

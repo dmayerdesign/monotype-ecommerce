@@ -13,19 +13,18 @@ import { MteFormBuilderService } from '@mte/common/lib/ng-modules/forms/services
 import { MteFormBuilder } from '@mte/common/lib/ng-modules/forms/utilities/form.builder'
 import { Store } from '@ngrx/store'
 import { camelCase, isEqual, kebabCase } from 'lodash'
-import { filter, map, take, withLatestFrom } from 'rxjs/operators'
+import { Observable, Subject } from 'rxjs'
+import { filter, map, take } from 'rxjs/operators'
 import { OrganizationService } from '../../services/organization.service'
 import { AppState } from '../../state/app.state'
 import { ProductsFilterFormData } from '../containers/products/products.component'
 import { GetProductsRequestUpdate, ProductsFilterFormBuildersUpdate } from '../shop.actions'
-import { ShopModule } from '../shop.module'
-import { shopSelectorKey } from '../shop.selectors'
-import { ShopState } from '../shop.state'
+import { selectGetProductsRequest, selectProducts } from '../shop.selectors'
 import { ProductService } from './product.service'
 
 @Injectable()
 export class ProductsFiltersService {
-    private _productsFilterFormBuildersShowing: MteFormBuilder[]
+    private _productsFilterFormBuildersShowingSubject = new Subject<MteFormBuilder[]>()
     private _taxonomyTerm: TaxonomyTerm
     private _productsFilterFormBuilders: MteFormBuilder[]
     private _productsFilterFormValuesMap = new Map<ProductsFilter, any>()
@@ -39,7 +38,8 @@ export class ProductsFiltersService {
         (productsFilter?: ProductsFilter) => MteFormGroupOptions
     >()
     private _newRequestFilterFactoryMap = new Map<ProductsFilterType, (formValue: any) => GetProductsFilter>()
-    public priceRange: Price[]
+    private _priceRange: Price[]
+    public productsFilterFormBuildersStream: Observable<MteFormBuilder[]>
 
     constructor(
         private _store: Store<AppState>,
@@ -47,8 +47,8 @@ export class ProductsFiltersService {
         private _organizationService: OrganizationService,
         private _productService: ProductService,
     ) {
-        this._store.select<ShopState>(shopSelectorKey)
-            .pipe(map((shopState) => shopState.products))
+        this._store
+            .pipe(selectProducts)
             .subscribe((productsState) => {
                 this._taxonomyTerm = productsState.taxonomyTerm
                 this._productsFilterFormBuilders = productsState.productsFilterFormBuilders
@@ -57,12 +57,14 @@ export class ProductsFiltersService {
         this._productService.getPriceRange()
             .then((priceRange) => {
                 this._updateFormSilently(() => {
-                    this.priceRange = priceRange
+                    this._priceRange = priceRange
                     const priceRangeFormBuilder = this._productsFilterFormBuilders.find((mteFormBuilder) =>
                         !!mteFormBuilder.formGroup.get('priceRange'))
-                    priceRangeFormBuilder.formGroup.get('priceRange').setValue(
-                        this.priceRange.map((price) => price.amount)
-                    )
+                    if (priceRangeFormBuilder) {
+                        priceRangeFormBuilder.formGroup.get('priceRange').setValue(
+                            this._priceRange.map((price) => price.amount)
+                        )
+                    }
                 })
             })
 
@@ -151,142 +153,97 @@ export class ProductsFiltersService {
         // Now, set up the filters.
 
         this._initFilters()
-        this.initFiltersShowing()
+
+        this.productsFilterFormBuildersStream = this._store.pipe(
+            selectGetProductsRequest,
+            map((getProductsRequest) =>
+                this._productsFilterFormBuilders.filter((formBuilder) =>
+                    this._shouldDisplayProductsFilter(
+                        formBuilder.data.productsFilter,
+                        getProductsRequest,
+                    )
+                )
+            )
+        )
     }
 
-    public initFiltersShowing(): void {
-        this._store.select<ShopState>(shopSelectorKey)
-            .pipe(
-                map((shopState) => shopState.products.getProductsRequest),
-                take(1),
+    // Public API.
+
+    public getFiltersForRequest(getProductsRequest: GetProductsRequest): MteFormBuilder[] {
+        return this._productsFilterFormBuilders.filter((formBuilder) =>
+            this._shouldDisplayProductsFilter(
+                formBuilder.data.productsFilter,
+                getProductsRequest,
             )
-            .subscribe((getProductsRequest) => {
-                this._productsFilterFormBuildersShowing = this._productsFilterFormBuilders
-                    .filter((formBuilder) =>
-                        this._shouldDisplayProductsFilter(
-                            formBuilder.data.productsFilter,
-                            getProductsRequest,
-                        )
-                    )
-            })
+        )
     }
 
     public isChecklist(productsFilter: ProductsFilter): boolean {
         return productsFilter.filterType === ProductsFilterType.TaxonomyTermChecklist ||
             productsFilter.filterType === ProductsFilterType.AttributeValueChecklist
     }
+
     public isPriceRange(productsFilter: ProductsFilter): boolean {
         return productsFilter.filterType === ProductsFilterType.PriceRange
     }
 
-    public get productsFilterFormBuilders(): MteFormBuilder[] {
-        return this._productsFilterFormBuildersShowing
+    public get priceRange(): Price[] {
+        return this._priceRange
+    }
+
+    // Logic.
+
+    private _getFormBuildersForProductsFilters(productsFilters: ProductsFilter[]): MteFormBuilder<ProductsFilterFormData>[] {
+        return MongooseHelper.toArray<ProductsFilter>(productsFilters)
+            .filter((productsFilter) => productsFilter.enabled)
+            .map((productsFilter) => {
+                let mteFormBuilder: MteFormBuilder<ProductsFilterFormData>
+                let taxonomy: Taxonomy
+                let attribute: Attribute
+
+                if (
+                    productsFilter.filterType === ProductsFilterType.TaxonomyTermChecklist &&
+                    productsFilter.taxonomyTermOptions.length
+                ) {
+                    taxonomy = (productsFilter.taxonomyTermOptions[0] as TaxonomyTerm).taxonomy as Taxonomy
+                }
+
+                if (
+                    productsFilter.filterType === ProductsFilterType.AttributeValueChecklist &&
+                    productsFilter.attributeValueOptions.length
+                ) {
+                    attribute = (productsFilter.attributeValueOptions[0] as AttributeValue).attribute as Attribute
+                }
+
+                // Create the form.
+
+                mteFormBuilder = this._mteFormBuilderService.create<ProductsFilterFormData>(
+                    this._formGroupOptionsFactoryMap.get(productsFilter.filterType)(productsFilter)
+                )
+
+                // Attach useful data to the form builder for convenience.
+
+                mteFormBuilder.data = {
+                    attribute,
+                    taxonomy,
+                    productsFilter,
+                }
+
+                return mteFormBuilder
+            })
     }
 
     private _initFilters(): void {
         const { storeUiSettings } = this._organizationService.organization
+
         this._store.dispatch(new ProductsFilterFormBuildersUpdate(
-            MongooseHelper.toArray<ProductsFilter>(storeUiSettings.productsFilters)
-                .filter((productsFilter) => productsFilter.enabled)
-                .map((productsFilter) => {
-                    let mteFormBuilder: MteFormBuilder<ProductsFilterFormData>
-                    let existingFilterFinder: (productsFilter?: ProductsFilter) =>
-                        (getProductsFilter: GetProductsFilter) => boolean
-                    let newRequestFilterFactory: (formValue: any) => GetProductsFilter
-                    let formGroupOptions: MteFormGroupOptions
-                    let taxonomy: Taxonomy
-                    let attribute: Attribute
-
-                    if (
-                        productsFilter.filterType === ProductsFilterType.TaxonomyTermChecklist &&
-                        productsFilter.taxonomyTermOptions.length
-                    ) {
-                        taxonomy = (productsFilter.taxonomyTermOptions[0] as TaxonomyTerm).taxonomy as Taxonomy
-                        formGroupOptions = this._formGroupOptionsFactoryMap
-                            .get(ProductsFilterType.TaxonomyTermChecklist)(productsFilter)
-                        existingFilterFinder = this._existingFilterFinderMap
-                            .get(ProductsFilterType.TaxonomyTermChecklist)
-                        newRequestFilterFactory = this._newRequestFilterFactoryMap
-                            .get(ProductsFilterType.TaxonomyTermChecklist)
-                    }
-
-                    if (
-                        productsFilter.filterType === ProductsFilterType.AttributeValueChecklist &&
-                        productsFilter.attributeValueOptions.length
-                    ) {
-                        attribute = (productsFilter.attributeValueOptions[0] as AttributeValue).attribute as Attribute
-                        formGroupOptions = this._formGroupOptionsFactoryMap
-                            .get(ProductsFilterType.AttributeValueChecklist)(productsFilter)
-                        existingFilterFinder = this._existingFilterFinderMap
-                            .get(ProductsFilterType.AttributeValueChecklist)
-                        newRequestFilterFactory = this._newRequestFilterFactoryMap
-                            .get(ProductsFilterType.AttributeValueChecklist)
-                    }
-
-                    if (productsFilter.filterType === ProductsFilterType.PriceRange) {
-                        formGroupOptions = this._formGroupOptionsFactoryMap
-                            .get(ProductsFilterType.PriceRange)(productsFilter)
-                        existingFilterFinder = this._existingFilterFinderMap
-                            .get(ProductsFilterType.PriceRange)
-                        newRequestFilterFactory = this._newRequestFilterFactoryMap
-                            .get(ProductsFilterType.PriceRange)
-                    }
-
-                    // Create the form.
-
-                    mteFormBuilder = this._mteFormBuilderService.create<ProductsFilterFormData>(formGroupOptions)
-
-                    // Attach useful data to the form builder for convenience.
-
-                    mteFormBuilder.data = {
-                        attribute,
-                        taxonomy,
-                        productsFilter,
-                    }
-
-                    // Push a new request every time the form value changes.
-
-                    mteFormBuilder.formGroup.valueChanges
-                        .pipe(
-                            filter((formValue) => !isEqual(
-                                formValue,
-                                this._productsFilterFormValuesMap.get(productsFilter),
-                            )),
-                            filter(() => this._shouldExecuteRequestOnFormValueChanges),
-                            withLatestFrom(this._store.select(shopSelectorKey)),
-                        )
-                        .subscribe(([formValue, shopState]) => {
-                            this._productsFilterFormValuesMap.set(productsFilter, formValue)
-                            const request = shopState.getProductsRequest
-                            const newRequestFilters = !!request.filters
-                                ? [ ...request.filters ]
-                                : []
-                            const newRequest = {
-                                ...request,
-                                filters: newRequestFilters
-                            }
-                            if (typeof existingFilterFinder === 'function') {
-                                const indexOfExistingFilter = newRequestFilters.findIndex(
-                                    existingFilterFinder(productsFilter)
-                                )
-                                if (indexOfExistingFilter > -1) {
-                                    newRequestFilters.splice(indexOfExistingFilter, 1)
-                                }
-                            }
-                            if (typeof newRequestFilterFactory === 'function') {
-                                newRequestFilters.push(newRequestFilterFactory(formValue))
-                            }
-                            this._store.dispatch(new GetProductsRequestUpdate(newRequest))
-                        })
-
-                    return mteFormBuilder
-                })
-                .filter((formBuilder) => formBuilder !== undefined)
+            this._getFormBuildersForProductsFilters(storeUiSettings.productsFilters)
         ))
 
-        this._store.select<ShopState>(shopSelectorKey)
+        this._store
             .pipe(
-                map((shopState) => shopState.products.getProductsRequest),
+                selectProducts,
+                map((productsState) => productsState.getProductsRequest),
                 take(1),
             )
             .subscribe((getProductsRequest) => {
